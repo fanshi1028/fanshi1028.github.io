@@ -14,9 +14,10 @@ title: First Post in Hakyll
 | (1,1)   | (1,2)   |
 | (2,1)   | (2,2)   |
 
-** Some code blocks in some of the languages that I knew
+** Some simple code examples in some of the languages that I knew
 
 *** Shell
+- Let's look at some of our tools provided by nix
 #+begin_src bash :exports both
 which tsc
 which node
