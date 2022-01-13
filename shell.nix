@@ -87,7 +87,7 @@ in project.shellFor {
   # See overlays/tools.nix for more details
 
   # Some you may need to get some other way.
-  buildInputs = [ ];
+  buildInputs = with import ./nix/pkgs.nix { inherit nixpkgsPin; }; [];
 
   # Sellect cross compilers to include.
   crossPlatforms = ps:

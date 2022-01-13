@@ -1,8 +1,11 @@
 import Hakyll
-  ( Configuration (destinationDirectory),
+  ( Command (Rebuild),
+    Configuration (destinationDirectory),
     Context,
+    Options (Options),
     applyAsTemplate,
     compile,
+    compressCss,
     compressCssCompiler,
     constField,
     copyFileCompiler,
@@ -12,7 +15,7 @@ import Hakyll
     defaultContext,
     fromList,
     getResourceBody,
-    hakyllWith,
+    hakyllWithArgs,
     idRoute,
     listField,
     loadAll,
@@ -26,60 +29,65 @@ import Hakyll
     setExtension,
     templateBodyCompiler,
   )
+import Text.Pandoc.Highlighting (pygments, styleToCss)
 
 main :: IO ()
-main = hakyllWith defaultConfiguration {destinationDirectory = "docs"} $ do
-  match "images/*" $ do
-    route idRoute
-    compile copyFileCompiler
+main = hakyllWithArgs
+  defaultConfiguration {destinationDirectory = "docs"}
+  (Options True Rebuild)
+  $ do
+    match "images/*" $ do
+      route idRoute
+      compile copyFileCompiler
 
-  match "css/*" $ do
-    route idRoute
-    compile compressCssCompiler
+    create ["css/syntax.css"] $ do
+      route idRoute
+      compile $ makeItem $ compressCss $ styleToCss pygments
+    -- compile $ makeItem $ compressCss $ styleToCss espresso
+    -- compile $ makeItem $ compressCss $ styleToCss zenburn
 
-  match (fromList ["about.rst", "contact.markdown"]) $ do
-    route $ setExtension "html"
-    compile $
-      pandocCompiler
-        >>= loadAndApplyTemplate "templates/default.html" defaultContext
-        >>= relativizeUrls
+    match "css/*" $ do
+      route idRoute
+      compile compressCssCompiler
 
-  match "posts/*" $ do
-    route $ setExtension "html"
-    compile $
-      pandocCompiler
-        >>= loadAndApplyTemplate "templates/post.html" postCtx
-        >>= loadAndApplyTemplate "templates/default.html" postCtx
-        >>= relativizeUrls
+    match (fromList ["about.rst", "contact.markdown"]) $ do
+      route $ setExtension "html"
+      compile $
+        pandocCompiler
+          >>= loadAndApplyTemplate "templates/default.html" defaultContext
+          >>= relativizeUrls
 
-  create ["archive.html"] $ do
-    route idRoute
-    compile $ do
-      posts <- recentFirst =<< loadAll "posts/*"
-      let archiveCtx =
-            listField "posts" postCtx (return posts)
-              <> constField "title" "Archives"
-              <> defaultContext
+    match "posts/*" $ do
+      route $ setExtension "html"
+      compile $
+        pandocCompiler
+          >>= loadAndApplyTemplate "templates/post.html" postCtx
+          >>= loadAndApplyTemplate "templates/default.html" postCtx
+          >>= relativizeUrls
 
-      makeItem ""
-        >>= loadAndApplyTemplate "templates/archive.html" archiveCtx
-        >>= loadAndApplyTemplate "templates/default.html" archiveCtx
-        >>= relativizeUrls
+    let postsListCtx = listField "posts" postCtx $ recentFirst =<< loadAll "posts/*"
 
-  match "index.html" $ do
-    route idRoute
-    compile $ do
-      posts <- recentFirst =<< loadAll "posts/*"
-      let indexCtx =
-            listField "posts" postCtx (return posts)
-              <> defaultContext
+    create ["archive.html"] $ do
+      route idRoute
+      compile $ do
+        let archiveCtx = postsListCtx <> constField "title" "Archives" <> defaultContext
 
-      getResourceBody
-        >>= applyAsTemplate indexCtx
-        >>= loadAndApplyTemplate "templates/default.html" indexCtx
-        >>= relativizeUrls
+        makeItem ""
+          >>= loadAndApplyTemplate "templates/archive.html" archiveCtx
+          >>= loadAndApplyTemplate "templates/default.html" archiveCtx
+          >>= relativizeUrls
 
-  match "templates/*" $ compile templateBodyCompiler
+    match "index.html" $ do
+      route idRoute
+      compile $ do
+        let indexCtx = postsListCtx <> defaultContext
+
+        getResourceBody
+          >>= applyAsTemplate indexCtx
+          >>= loadAndApplyTemplate "templates/default.html" indexCtx
+          >>= relativizeUrls
+
+    match "templates/*" $ compile templateBodyCompiler
 
 postCtx :: Context String
 postCtx =

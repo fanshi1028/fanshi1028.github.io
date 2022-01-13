@@ -24,3 +24,5 @@ cabal.project.local~
 /_cache/
 /.direnv/
 /.envrc
+/posts/.nrepl-port
+/.ghcid
