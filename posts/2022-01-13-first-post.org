@@ -1,0 +1,408 @@
+---
+title: First Post in Hakyll
+---
+
+* Preface
+- What :: this is the first post on this blog
+- Why :: obviously for testing purpose.
+
+* Test
+** Here we have a table
+
+| column1 | column2 |
+|---------+---------|
+| (1,1)   | (1,2)   |
+| (2,1)   | (2,2)   |
+
+** Some code blocks in some of the languages that I knew
+
+*** Shell
+#+begin_src bash :exports both
+which tsc
+which node
+which python
+which ghc
+which clojure
+which lein
+which clj-kondo
+#+end_src
+
+#+RESULTS:
+| /nix/store/qxgp2m30ld2qacf0c646mih7r1cpak7l-typescript-4.4.4/bin/tsc                  |
+| /nix/store/wxhzlb69ngi6ma818q8f0v757wyz09p6-nodejs-14.18.1/bin/node                   |
+| /nix/store/x0fw0l4d6zwgfdwbpp23iwhm3c6a1hh3-python3-3.9.6/bin/python                  |
+| /nix/store/5q85iaargcvq8zdk1r48d18m5kfmq8hw-ghc-shell-for-blog-ghc-8.10.7-env/bin/ghc |
+| /nix/store/jd98jncylhsg4cj9ga9vi9zq0n3yx4z0-clojure-1.10.3.1029/bin/clojure           |
+| /nix/store/ibgkkwg83zv306zhwrgd6wk5pqnwma36-leiningen-2.9.7/bin/lein                  |
+| /nix/store/zi2hj1kfsgp580r139jwh5b4f0vrzcw3-clj-kondo-2021.12.01/bin/clj-kondo        |
+
+*** Typescript
+**** Quick Sort
+#+begin_src typescript :exports both :results output :strict
+function swap(arr: number[], i: number, j: number) {
+  const temp = arr[i]
+  arr[i] = arr[j]
+  arr[j] = temp
+}
+
+function partition(arr: number[], low: number, high: number) {
+  const pivot = arr[high]
+  let i = low, j = low
+  while (j <= high - 1) {
+    if (arr[j] < pivot) {
+      swap(arr, i, j)
+      i++
+    }
+    j++
+  }
+  swap(arr, i, high)
+  return i
+}
+
+function quick_sort(arr: number[]) {
+  const stacks = [[0, arr.length - 1]]
+  while (stacks.length > 0) {
+      const stack = stacks.pop()
+      if (!stack) throw new Error("impossible")
+      const [start, end] = stack
+      if (start < end) {
+          const p = partition(arr, start, end)
+          stacks.push([start, p - 1])
+          stacks.push([p + 1, end])
+      }
+  }
+  return arr
+}
+
+console.log(quick_sort([0,2,4,-100,0.4,3,5,8]))
+#+end_src
+
+#+RESULTS:
+: [
+:   -100, 0, 0.4, 2,
+:      3, 4,   5, 8
+: ]
+
+**** Merge Sort
+#+begin_src typescript :exports both :results output :strict
+function merge(arr1: number[], arr2: number[]) {
+    const result: number[] = []
+    let idx1 = 0
+    let idx2 = 0
+    while (idx1 < arr1.length && idx2 < arr2.length) {
+        if (arr1[idx1] <= arr2[idx2]) {
+           result.push(arr1[idx1])
+           idx1++
+        } else {
+           result.push(arr2[idx2])
+           idx2++
+        }
+    }
+    return result.concat(idx1 < arr1.length ? arr1.slice(idx1) : arr2.slice(idx2))
+}
+
+type StartEnd = { start: number, end: number }
+type Results = Record<`${number},${number}`, number[]>
+
+function mergeSort(arr: number[]) {
+    const mid = Math.floor(arr.length/2)
+    const stacks: StartEnd[][] = [[{ start: 0, end: mid}, {start: mid, end: arr.length}]]
+    while (true) {
+        const steps = stacks[stacks.length - 1].reduce((acc: StartEnd[], {start, end}) => {
+            if (end - start > 1) {
+                const _mid = start + Math.floor((end - start)/2)
+                acc.push({start, end: _mid})
+                acc.push({start: _mid, end})
+            }
+            return acc
+        }, [])
+        if (steps.length === 0) break
+        else stacks.push(steps)
+    }
+    let results: Results = {}
+    while (stacks.length > 0) {
+        const stack = stacks.pop()
+        if (stack == null) throw new Error("impossible")
+        const next_results: Results = {}
+        while (stack.length > 0) {
+            const a = stack.shift()
+            const b = stack.shift()
+            if (a == null || b == null) throw new Error("impossible")
+            next_results[`${a.start},${b.end}`] = merge(
+                results[`${a.start},${a.end}`] || arr.slice(a.start,a.end),
+                results[`${b.start},${b.end}`] || arr.slice(b.start,b.end)
+            )
+        }
+        results = next_results
+    }
+    return results[`${0},${arr.length}`]
+}
+
+console.log(mergeSort([0,2,4,-100,0.4,3,5,8]))
+#+end_src
+
+#+RESULTS:
+: [
+:   -100, 0, 0.4, 2,
+:      3, 4,   5, 8
+: ]
+
+*** Python
+**** Quick Sort
+#+begin_src python :results output :exports both
+def swap(arr, i, j):
+    temp = arr[i]
+    arr[i] = arr[j]
+    arr[j] = temp
+
+def partition(arr, low, high):
+    i, j, pivot = low, low, arr[high]
+    while j < high:
+        if arr[j] <= pivot:
+            swap(arr, i, j)
+            i += 1
+        j += 1
+    swap(arr, i, high)
+    return i
+
+def quick_sort(arr):
+    stacks = [[0, len(arr) - 1]]
+    while len(stacks) > 0:
+        start, end = stacks.pop()
+        if (start < end):
+            p = partition(arr, start, end)
+            stacks.append([start, p - 1])
+            stacks.append([p + 1, end])
+    return arr
+
+print(quick_sort([0,2,4,-100,0.4,3,5,8]))
+#+end_src
+
+#+RESULTS:
+: [-100, 0, 0.4, 2, 3, 4, 5, 8]
+
+**** Merge Sort
+#+begin_src python :results output :exports both
+import math
+
+def merge(arr1, arr2):
+    result, idx1, idx2 = [], 0, 0
+    while idx1 < len(arr1) and idx2 < len(arr2):
+        if (arr1[idx1] <= arr2[idx2]):
+           result.append(arr1[idx1])
+           idx1 += 1
+        else:
+           result.append(arr2[idx2])
+           idx2 +=  1
+    if idx1 < len(arr1):
+        result.extend(arr1[idx1:])
+    else:
+        result.extend(arr2[idx2:])
+    return result
+
+def mergeSort(arr):
+    mid = math.floor(len(arr)/2)
+    stacks = [[{ "start": 0, "end": mid}, {"start": mid, "end": len(arr)}]]
+    while any(map(lambda d: d["end"] - d["start"] > 1, next_steps := stacks[ len(stacks) - 1 ])):
+        steps = []
+        for step in next_steps:
+            if step["end"] - step["start"] > 1:
+                _mid = step["start"] + math.floor((step["end"] - step["start"])/2)
+                steps.append({"start": step["start"], "end": _mid})
+                steps.append({"start": _mid, "end": step["end"]})
+        stacks.append(steps)
+    results = {}
+    while (len(stacks) > 0):
+        stack = stacks.pop()
+        next_results = {}
+        while (len(stack) > 0):
+            a = stack.pop(0)
+            b = stack.pop(0)
+            v = None
+            l = results.get("{},{}".format(a["start"],a["end"]))
+            r = results.get("{},{}".format(b["start"],b["end"]))
+
+            if l is not None:
+                if r is not None:
+                    v = merge(l, r)
+                else:
+                    v = merge(l, arr[b["start"]:b["end"]])
+            else:
+                if r is not None:
+                    v = merge(arr[a["start"]:a["end"]], r)
+                else:
+                    v = merge(arr[a["start"]:a["end"]], arr[b["start"]:b["end"]])
+
+            next_results["{},{}".format(a["start"], b["end"])] = v
+        results = next_results
+    return results["{},{}".format(0,len(arr))]
+
+print(mergeSort([0,2,4,-100,0.4,3,5,8]))
+#+end_src
+
+#+RESULTS:
+: [-100, 0, 0.4, 2, 3, 4, 5, 8]
+
+*** Haskell
+**** Quick Sort
+- beatiful but not practical as it is not in-place
+#+begin_src haskell :exports both :compile yes :results output
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
+newtype Sorted a = Sorted
+  { getSorted :: [a]
+  }
+  deriving (Show)
+  deriving newtype (Semigroup, Monoid, Functor, Applicative)
+
+partition :: Ord a => a -> [a] -> ([a], [a])
+partition _ [] = ([], [])
+partition x [y] = if x < y then ([],[y]) else ([y],[])
+partition x (y:ys) =
+  let (l, r) = partition x ys
+  in if x < y then (l, y:r) else (y:l, r)
+
+quickSort :: Ord a => [a] -> Sorted a
+quickSort [] = mempty
+quickSort (x:xs) =
+  let (l, r) = partition x xs
+  in quickSort l <> pure x <> quickSort r
+
+main :: IO ()
+main = print $ quickSort [0,2,4,-100,0.4,3,5,8]
+#+end_src
+
+#+RESULTS:
+: Sorted {getSorted = [-100.0,0.0,0.4,2.0,3.0,4.0,5.0,8.0]}
+
+**** Merge Sort
+#+begin_src haskell :exports both :compile yes :results output
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
+import Data.Function (on)
+
+newtype Sorted a = Sorted
+  { getSorted :: [a]
+  }
+  deriving (Show)
+  deriving newtype (Monoid, Functor, Applicative)
+
+merge :: Ord a => Sorted a -> Sorted a -> Sorted a
+merge (Sorted as) (Sorted bs) = Sorted $ go as bs
+  where
+    go [] ys = ys
+    go xs [] = xs
+    go (x : xs) (y : ys)
+      | x >= y = y : go (x : xs) ys
+      | otherwise = x : go xs (y : ys)
+
+instance Ord a => Semigroup (Sorted a) where (<>) = merge
+
+mergeSort :: Ord a => [a] -> Sorted a
+mergeSort = go
+  where
+    go [] = mempty
+    go [a] = pure a
+    go ls = let (xs, ys) = splitAt (length ls `div` 2) ls in ((<>) `on` go) xs ys
+
+main :: IO ()
+main = print $ mergeSort [0,2,4,-100,0.4,3,5,8]
+#+end_src
+
+#+RESULTS:
+: Sorted {getSorted = [-100.0,0.0,0.4,2.0,3.0,4.0,5.0,8.0]}
+
+*** Clojure
+**** Quick Sort
+#+begin_src clojure :results value :exports both
+(defn my-swap! [arr i j]
+  (let [temp (nth arr i)]
+    (-> arr (assoc! i (nth arr j) j temp))))
+
+(defn my-partition! [arr start end]
+  (loop [i start j start]
+    (cond (>= j end) (and (my-swap! arr i end) i)
+          (< (nth arr j) (nth arr end)) (and (my-swap! arr i j) (recur (inc i) (inc j)))
+          :else (recur i (inc j)))))
+
+(defn quick-sort [arr]
+  (let [xs (transient arr)]
+    (loop [stacks (transient [{:start 0 :end (-> arr count dec)}])]
+      (if (-> stacks count (= 0)) (persistent! xs)
+          (let [{:keys [ start end ]} (nth stacks (-> stacks count dec))]
+            (if (>= start end)
+              (recur (pop! stacks))
+              (let [i (my-partition! xs start end)]
+                (recur (-> stacks pop!
+                           (conj! {:start start :end (dec i)})
+                           (conj! {:start (inc i) :end end}))))))))))
+
+(quick-sort [ 0 2 4 -100 0.4 3 5 8 ])
+#+end_src
+
+#+RESULTS:
+| #'user/my-swap!        |
+| #'user/my-partition!   |
+| #'user/quick-sort      |
+| [-100 0 0.4 2 3 4 5 8] |
+
+**** Merge Sort
+#+begin_src clojure :results value :exports both
+(defn my-merge [as bs]
+  (loop [xs as
+         ys bs
+         r (transient [])]
+    (cond
+      (empty? xs) (-> r persistent! (into ys))
+      (empty? ys) (-> r persistent! (into xs))
+      :else (let [[x & xx] xs
+                  [y & yy] ys]
+              (if (< x y)
+                (recur xx ys (conj! r x))
+                (recur xs yy (conj! r y)))))))
+
+(defn to-mid [start end] (-> end (- start) (quot 2) (+ start)))
+
+(defn make-next-stack [ acc {:keys [start end] :as r} ]
+  (let [mid (to-mid start end)]
+    (if (-> end (- start) (<= 1)) acc
+        (-> acc (conj! (assoc r :end mid))
+                (conj! (assoc r :start mid))))))
+
+(defn make-next-cache [arr cache acc {:keys [start end]}]
+  (assoc! acc (str start "," end)
+         (if (-> end (- start) (<= 1))
+           [(get arr start)]
+           (let [mid (to-mid start end)]
+             (my-merge
+              (get cache (str start "," mid))
+              (get cache (str mid "," end)))))))
+
+(defn merge-sort [arr]
+  (let [l (count arr)]
+    (if (<= l 1) arr
+        (loop
+          [stacks (transient [[{:start 0 :end l}]])]
+          (let [peek! #(nth % (-> % count dec)) ;; https://clojure.atlassian.net/browse/CLJ-2464
+                new_stack (persistent! (reduce make-next-stack (transient []) (peek! stacks)))]
+            (if (seq new_stack) (recur (conj! stacks new_stack))
+              (loop [cache {}]
+                (if (-> stacks count (= 0)) (get cache (str 0 "," l))
+                (let [stack (peek! stacks)]
+                  (recur (do (pop! stacks)
+                             (persistent!
+                              (reduce (partial make-next-cache arr cache)
+                                      (transient {}) stack)))))))))))))
+
+(merge-sort [0 2 4 -100 0.4 3 5 8])
+#+end_src
+
+#+RESULTS:
+| #'user/my-merge        |
+| #'user/to-mid          |
+| #'user/make-next-stack |
+| #'user/make-next-cache |
+| #'user/merge-sort      |
+| [-100 0 0.4 2 3 4 5 8] |
