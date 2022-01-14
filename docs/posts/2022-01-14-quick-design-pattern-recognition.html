@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Fanshi1028's Blog - Quick Design Pattern Recognition</title>
+        <link rel="stylesheet" href="../css/default.css" />
+        <link rel="stylesheet" href="../css/syntax.css" />
+    </head>
+    <body>
+        <header>
+            <div class="logo">
+                <a href="../index.html">Fanshi1028's Blog</a>
+            </div>
+            <nav>
+                <a href="../index.html">Home</a>
+                <a href="../about.html">About</a>
+                <a href="../contact.html">Contact</a>
+                <a href="../archive.html">Archive</a>
+            </nav>
+        </header>
+
+        <main role="main">
+            <h1>Quick Design Pattern Recognition</h1>
+            <article>
+    <section class="header">
+        Posted on January 14, 2022
+        
+    </section>
+    <section>
+        <h1 id="backgroundcontext">Background/Context</h1>
+<p>A few hours later, I gonna have an interview with an IT head of a start-up company.</p>
+<p>The problem is, it seems that they mainly use java, which have never tasted. And it shouldn’t be my cup of tea anyway.</p>
+<p><img src="../images/java.jpg" width="300" /></p>
+<p>I think they are well-acknowledged that I don’t know java(yet) in the previous round of interviews.</p>
+<p>Yet I decided to have a quick tasting of some of the most iconic java tea ingredients before the interview, to see if I can get drunk from it.</p>
+<p>Here I come, the almightea…</p>
+<p><code class="verbatim">Design Pattern</code></p>
+<h1 id="source">Source</h1>
+<dl>
+<dt>Link that I gonna use to speed-run</dt>
+<dd><a href="https://www.tutorialspoint.com/design_pattern/index.htm">https://www.tutorialspoint.com/design_pattern/index.htm</a>
+</dd>
+</dl>
+<h1 id="draining-tea">Draining Tea</h1>
+<dl>
+<dt>Disclaimer</dt>
+<dd><p>below are my quick grokk of <code class="verbatim">Design Pattern</code> in just a few hours, so probably very opininated, and potentially going very wrong, so just chill about it.</p>
+<p>In case, you have any strong opinion of my opinion after reading this post, I hereby have a great gif (also great film, go find it and watch it!) for you.</p>
+<p><img src="../images/it_is_just_your_opinion.gif" /></p>
+</dd>
+</dl>
+<p>Let’s start!</p>
+<h2 id="factory-pattern">Factory Pattern</h2>
+<dl>
+<dt>what</dt>
+<dd>create a Factory with dispatching method to create subclass
+</dd>
+<dt>why</dt>
+<dd>has a center place to refactor when adding or removing subclass
+</dd>
+</dl>
+<h2 id="abstract-factory-pattern">Abstract Factory Pattern</h2>
+<dl>
+<dt>what</dt>
+<dd>create a Factory of Factory
+</dd>
+<dt>why???</dt>
+<dd>probably over-engineered
+</dd>
+</dl>
+<h2 id="singlton-pattern">Singlton Pattern</h2>
+<dl>
+<dt>why</dt>
+<dd>ensure only one object created
+</dd>
+<dt>how</dt>
+<dd>Make constructor private, instantiated the only object internally in the class, and a method to get the object
+</dd>
+</dl>
+<h2 id="builder-pattern">Builder Pattern</h2>
+<dl>
+<dt>what</dt>
+<dd>build complex object from simple one
+</dd>
+<dt>when</dt>
+<dd>when object creation is complex/involve many smaller components
+</dd>
+</dl>
+<h2 id="prototype-pattern">Prototype Pattern</h2>
+<dl>
+<dt>what</dt>
+<dd>cache
+</dd>
+<dt>when</dt>
+<dd>when object creation are expensive
+</dd>
+</dl>
+<h2 id="adapter-pattern">Adapter Pattern</h2>
+<dl>
+<dt>what</dt>
+<dd>brige between two incompatible interface
+</dd>
+<dt>why</dt>
+<dd>price to pay for existing wrong abstraction.
+</dd>
+<dt>how</dt>
+<dd>use and hide object of another interface in an adapter interface
+</dd>
+</dl>
+<h2 id="bridge-pattern">Bridge Pattern</h2>
+<dl>
+<dt>what</dt>
+<dd>decouple abstraction from implementation
+</dd>
+<dt>how</dt>
+<dd>has an api class, pass it to constructor of the object class to pick implementation
+</dd>
+<dt>what really</dt>
+<dd>verbose manual typeclass
+</dd>
+</dl>
+<h2 id="filter-pattern">Filter Pattern</h2>
+<dl>
+<dt>what</dt>
+<dd>combine filter
+</dd>
+<dt>what really</dt>
+<dd>verbose Semigroup instance for filter
+</dd>
+</dl>
+<h2 id="composite-pattern">Composite Pattern</h2>
+<dl>
+<dt>what</dt>
+<dd>group of object as tree
+</dd>
+<dt>why</dt>
+<dd>representation hierarchy between object
+</dd>
+<dt>question</dt>
+<dd>java should have some <code>Tree&lt;A&gt;</code> type/interface to avoid manually write a Tree class every time?
+</dd>
+</dl>
+<h2 id="decorator-pattern">Decorator Pattern</h2>
+<dl>
+<dt>what</dt>
+<dd>decorator class wraping existing class to amend it behaviour
+</dd>
+</dl>
+<h2 id="facade-pattern">Facade Pattern</h2>
+<dl>
+<dt>what</dt>
+<dd>just a interface wraping existing system and group all its api, nothing special
+</dd>
+</dl>
+<h2 id="flyweight-pattern">Flyweight Pattern</h2>
+<dl>
+<dt>what</dt>
+<dd>kind of a mix of Prototype Pattern and Factory Pattern.
+</dd>
+<dt>how</dt>
+<dd>having cache in Factory
+</dd>
+<dt>why</dt>
+<dd>decrease memory footprint
+</dd>
+</dl>
+<h2 id="proxy-pattern">Proxy Pattern</h2>
+<dl>
+<dt>what</dt>
+<dd>class wrapping to do lazy loading of resource
+</dd>
+<dt>what really</dt>
+<dd>price paid for the crime that existing class should be lazy from the start
+</dd>
+</dl>
+<h2 id="chain-of-responsibility-pattern">Chain of Responsibility Pattern</h2>
+<dl>
+<dt>what</dt>
+<dd>abstraction for linked list of subclass running one by one
+</dd>
+</dl>
+<h2 id="command-pattern">Command Pattern</h2>
+<dl>
+<dt>what</dt>
+<dd>decouple command and execution, nothing special
+</dd>
+</dl>
+<h2 id="intepreter-pattern">Intepreter Pattern</h2>
+<dl>
+<dt>what</dt>
+<dd>very verbose and unflexible way to write interpreter
+</dd>
+</dl>
+<h2 id="iterator-pattern">Iterator Pattern</h2>
+<dl>
+<dt>what</dt>
+<dd>iterator interface for container
+</dd>
+</dl>
+<h2 id="mediator-pattern">Mediator Pattern</h2>
+<dl>
+<dt>what</dt>
+<dd>just object use method from an external class? nothing special?
+</dd>
+</dl>
+<h2 id="memento-pattern">Memento Pattern</h2>
+<dl>
+<dt>what</dt>
+<dd>interfaces for caching snapshot.
+</dd>
+</dl>
+<h2 id="observer-pattern">Observer Pattern</h2>
+<dl>
+<dt>what</dt>
+<dd>kind of like reactive programing
+</dd>
+<dt>how</dt>
+<dd>interfaces of observer that can be attach to object and subscribe to changes
+</dd>
+</dl>
+<h2 id="state-pattern">State Pattern</h2>
+<dl>
+<dt>what</dt>
+<dd>just verbose State Monad which store State which its each subclass are its possible state
+</dd>
+</dl>
+<h2 id="null-object-pattern">Null Object Pattern</h2>
+<dl>
+<dt>what</dt>
+<dd>provide subclass of “null case”
+</dd>
+</dl>
+<h2 id="strategy-pattern">Strategy Pattern <span class="tag" data-tag-name="TBE"><span class="smallcaps">TBE</span></span></h2>
+<h2 id="template-pattern">Template Pattern <span class="tag" data-tag-name="TBE"><span class="smallcaps">TBE</span></span></h2>
+<h2 id="visitor-pattern">Visitor Pattern <span class="tag" data-tag-name="TBE"><span class="smallcaps">TBE</span></span></h2>
+<h2 id="mvc-pattern">MVC Pattern <span class="tag" data-tag-name="TBE"><span class="smallcaps">TBE</span></span></h2>
+<h2 id="business-delegate-pattern">Business Delegate Pattern <span class="tag" data-tag-name="TBE"><span class="smallcaps">TBE</span></span></h2>
+<h2 id="composite-entity-pattern">Composite Entity Pattern <span class="tag" data-tag-name="TBE"><span class="smallcaps">TBE</span></span></h2>
+<h2 id="data-access-object-pattern">Data Access Object Pattern <span class="tag" data-tag-name="TBE"><span class="smallcaps">TBE</span></span></h2>
+<h2 id="front-controller-pattern">Front Controller Pattern <span class="tag" data-tag-name="TBE"><span class="smallcaps">TBE</span></span></h2>
+<h2 id="intercepting-filter-pattern">Intercepting Filter Pattern <span class="tag" data-tag-name="TBE"><span class="smallcaps">TBE</span></span></h2>
+<h2 id="service-locator-pattern">Service Locator Pattern <span class="tag" data-tag-name="TBE"><span class="smallcaps">TBE</span></span></h2>
+<h2 id="transfer-object-pattern">Transfer Object Pattern <span class="tag" data-tag-name="TBE"><span class="smallcaps">TBE</span></span></h2>
+    </section>
+</article>
+
+        </main>
+
+        <footer>
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </footer>
+    </body>
+</html>
