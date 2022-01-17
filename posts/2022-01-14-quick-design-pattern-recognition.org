@@ -114,22 +114,44 @@ Let's start!
 - Sorry for giving up.
 
 * In conclusion
+** OOP and Design pattern
 Many =design patterns= seems to capture some recurrent programing pattern , with one gotcha:
 
-=They are under the assumption that everything is an class/object.=
+#+begin_quote
+They are under the assumption that everything is an class/object.
+#+end_quote
 
 Some patterns become very unnatural and complex to compensate the wrong abstraction, some of patterns imo are better off just modeled by a simple function.
 
+#+begin_quote
 Everything is an object, in an OOP programmer's eyes.
+#+end_quote
 
 And you are what you see.
 
 Yup, I have just objectified every OOP programers in the world.
 
-In a parallel world, haskell is playing the same game too. Everything is a pure function, and to compensate the misfit, we have some beautiful and powerful abstractions: Monad, Algebraic Effect, etc.
+** In a parallel (functional) world
+Haskell is playing the same game too.
 
-When the problem is big and complex enough, there is no perfect match. The real world is undisputably ungly, but we see the beauty of it.
+Everything is a pure function, and to compensate the misfit, we have some beautiful and powerful (at the same time, difficult/complex to some people) abstractions: Monad, Algebraic Effect, etc.
 
-So which one is better? Depends on the problem you are solving! Are its pieces better modeled by object or function? How well do your team work in each style/paradigm?
+When the problem is big and complex enough, there is always mismatch between the paradigm model and the world.
 
-There is no one objectively correct answer, after all, paradigm lies in the eyes of the coder!
+#+begin_quote
+The real world is undisputably ungly, but we see the beauty of it.
+#+end_quote
+
+** So which one is better?
+
+Depends on the problem you are solving! There are consideration like:
+
+- are its pieces better modeled by object or function?
+- how well do your team work in each style/paradigm?
+- etc
+
+There is no one objectively correct answer, after all:
+
+#+begin_quote
+paradigm lies in the eyes of the coder!
+#+end_quote
