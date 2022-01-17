@@ -39,7 +39,7 @@ Let's start!
 - why??? :: probably over-engineered
 ** Singlton Pattern
 - why :: ensure only one object created
-- how :: Make constructor private, instantiated the only object internally in the class, and a method to get the object
+- how :: make constructor private, instantiated the only object internally in the class, and a method to get the object
 ** Builder Pattern
 - what :: build complex object from simple one
 - when :: when object creation is complex/involve many smaller components
@@ -126,7 +126,7 @@ And you are what you see.
 
 Yup, I have just objectified every OOP programers in the world.
 
-In the parallel world, haskell is playing the same game too. Everything is a pure function, and to compensate the misfit, we have some beautiful and powerful abstractions: Monad, Algebraic Effect, etc.
+In a parallel world, haskell is playing the same game too. Everything is a pure function, and to compensate the misfit, we have some beautiful and powerful abstractions: Monad, Algebraic Effect, etc.
 
 When the problem is big and complex enough, there is no perfect match. The real world is undisputably ungly, but we see the beauty of it.
 
