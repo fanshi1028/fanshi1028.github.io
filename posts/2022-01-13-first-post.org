@@ -29,13 +29,13 @@ which clj-kondo
 #+end_src
 
 #+RESULTS:
-| /nix/store/qxgp2m30ld2qacf0c646mih7r1cpak7l-typescript-4.4.4/bin/tsc                  |
-| /nix/store/wxhzlb69ngi6ma818q8f0v757wyz09p6-nodejs-14.18.1/bin/node                   |
-| /nix/store/x0fw0l4d6zwgfdwbpp23iwhm3c6a1hh3-python3-3.9.6/bin/python                  |
-| /nix/store/5q85iaargcvq8zdk1r48d18m5kfmq8hw-ghc-shell-for-blog-ghc-8.10.7-env/bin/ghc |
-| /nix/store/jd98jncylhsg4cj9ga9vi9zq0n3yx4z0-clojure-1.10.3.1029/bin/clojure           |
-| /nix/store/ibgkkwg83zv306zhwrgd6wk5pqnwma36-leiningen-2.9.7/bin/lein                  |
-| /nix/store/zi2hj1kfsgp580r139jwh5b4f0vrzcw3-clj-kondo-2021.12.01/bin/clj-kondo        |
+| /nix/store/qxgp2m30ld2qacf0c646mih7r1cpak7l-typescript-4.4.4/bin/tsc                      |
+| /nix/store/wxhzlb69ngi6ma818q8f0v757wyz09p6-nodejs-14.18.1/bin/node                       |
+| /nix/store/x0fw0l4d6zwgfdwbpp23iwhm3c6a1hh3-python3-3.9.6/bin/python                      |
+| /nix/store/2zn9xkgcm81wxca6axad04fzgxwl0z30-ghc-shell-for-packages-ghc-8.10.7-env/bin/ghc |
+| /nix/store/jd98jncylhsg4cj9ga9vi9zq0n3yx4z0-clojure-1.10.3.1029/bin/clojure               |
+| /nix/store/ibgkkwg83zv306zhwrgd6wk5pqnwma36-leiningen-2.9.7/bin/lein                      |
+| /nix/store/zi2hj1kfsgp580r139jwh5b4f0vrzcw3-clj-kondo-2021.12.01/bin/clj-kondo            |
 
 *** Typescript
 **** Quick Sort
@@ -102,41 +102,12 @@ function merge(arr1: number[], arr2: number[]) {
     return result.concat(idx1 < arr1.length ? arr1.slice(idx1) : arr2.slice(idx2))
 }
 
-type StartEnd = { start: number, end: number }
-type Results = Record<`${number},${number}`, number[]>
-
-function mergeSort(arr: number[]) {
-    const mid = Math.floor(arr.length/2)
-    const stacks: StartEnd[][] = [[{ start: 0, end: mid}, {start: mid, end: arr.length}]]
-    while (true) {
-        const steps = stacks[stacks.length - 1].reduce((acc: StartEnd[], {start, end}) => {
-            if (end - start > 1) {
-                const _mid = start + Math.floor((end - start)/2)
-                acc.push({start, end: _mid})
-                acc.push({start: _mid, end})
-            }
-            return acc
-        }, [])
-        if (steps.length === 0) break
-        else stacks.push(steps)
+function mergeSort(arr: number[]): number[]{
+    if (arr.length <= 1) return arr
+    else {
+        const mid = Math.floor(arr.length/2)
+        return merge(mergeSort(arr.slice(0,mid)), mergeSort(arr.slice(mid, arr.length)))
     }
-    let results: Results = {}
-    while (stacks.length > 0) {
-        const stack = stacks.pop()
-        if (stack == null) throw new Error("impossible")
-        const next_results: Results = {}
-        while (stack.length > 0) {
-            const a = stack.shift()
-            const b = stack.shift()
-            if (a == null || b == null) throw new Error("impossible")
-            next_results[`${a.start},${b.end}`] = merge(
-                results[`${a.start},${a.end}`] || arr.slice(a.start,a.end),
-                results[`${b.start},${b.end}`] || arr.slice(b.start,b.end)
-            )
-        }
-        results = next_results
-    }
-    return results[`${0},${arr.length}`]
 }
 
 console.log(mergeSort([0,2,4,-100,0.4,3,5,8]))
@@ -151,12 +122,13 @@ console.log(mergeSort([0,2,4,-100,0.4,3,5,8]))
 *** Python
 **** Quick Sort
 #+begin_src python :results output :exports both
-def swap(arr, i, j):
+def swap(arr: list, i: int, j: int) -> None:
     temp = arr[i]
     arr[i] = arr[j]
     arr[j] = temp
 
-def partition(arr, low, high):
+
+def partition(arr: list, low: int, high: int) -> int:
     i, j, pivot = low, low, arr[high]
     while j < high:
         if arr[j] <= pivot:
@@ -166,17 +138,19 @@ def partition(arr, low, high):
     swap(arr, i, high)
     return i
 
-def quick_sort(arr):
+
+def quick_sort(arr: list) -> list:
     stacks = [[0, len(arr) - 1]]
     while len(stacks) > 0:
         start, end = stacks.pop()
-        if (start < end):
+        if start < end:
             p = partition(arr, start, end)
             stacks.append([start, p - 1])
             stacks.append([p + 1, end])
     return arr
 
-print(quick_sort([0,2,4,-100,0.4,3,5,8]))
+
+print(quick_sort([0, 2, 4, -100, 0.4, 3, 5, 8]))
 #+end_src
 
 #+RESULTS:
@@ -186,7 +160,7 @@ print(quick_sort([0,2,4,-100,0.4,3,5,8]))
 #+begin_src python :results output :exports both
 import math
 
-def merge(arr1, arr2):
+def merge(arr1: list, arr2: list) -> list:
     result, idx1, idx2 = [], 0, 0
     while idx1 < len(arr1) and idx2 < len(arr2):
         if (arr1[idx1] <= arr2[idx2]):
@@ -201,42 +175,12 @@ def merge(arr1, arr2):
         result.extend(arr2[idx2:])
     return result
 
-def mergeSort(arr):
-    mid = math.floor(len(arr)/2)
-    stacks = [[{ "start": 0, "end": mid}, {"start": mid, "end": len(arr)}]]
-    while any(map(lambda d: d["end"] - d["start"] > 1, next_steps := stacks[ len(stacks) - 1 ])):
-        steps = []
-        for step in next_steps:
-            if step["end"] - step["start"] > 1:
-                _mid = step["start"] + math.floor((step["end"] - step["start"])/2)
-                steps.append({"start": step["start"], "end": _mid})
-                steps.append({"start": _mid, "end": step["end"]})
-        stacks.append(steps)
-    results = {}
-    while (len(stacks) > 0):
-        stack = stacks.pop()
-        next_results = {}
-        while (len(stack) > 0):
-            a = stack.pop(0)
-            b = stack.pop(0)
-            v = None
-            l = results.get("{},{}".format(a["start"],a["end"]))
-            r = results.get("{},{}".format(b["start"],b["end"]))
-
-            if l is not None:
-                if r is not None:
-                    v = merge(l, r)
-                else:
-                    v = merge(l, arr[b["start"]:b["end"]])
-            else:
-                if r is not None:
-                    v = merge(arr[a["start"]:a["end"]], r)
-                else:
-                    v = merge(arr[a["start"]:a["end"]], arr[b["start"]:b["end"]])
-
-            next_results["{},{}".format(a["start"], b["end"])] = v
-        results = next_results
-    return results["{},{}".format(0,len(arr))]
+def mergeSort(arr: list) -> list:
+    if (l := len(arr)) <= 1:
+        return arr
+    else:
+        mid = math.floor(l/2)
+        return merge(mergeSort(arr[0:mid]), mergeSort(arr[mid:l]))
 
 print(mergeSort([0,2,4,-100,0.4,3,5,8]))
 #+end_src
@@ -246,49 +190,110 @@ print(mergeSort([0,2,4,-100,0.4,3,5,8]))
 
 *** Haskell
 **** Quick Sort
-- beatiful but not practical as it is not in-place
-#+begin_src haskell :exports both :compile yes :results output
+- beatiful but not the same as original as it is not in-place
+#+begin_src haskell :exports both :compile yes :results output :flags -O2 -j4 +RTS -A64m -n2m -RTS -threaded
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
+
+import Control.DeepSeq (NFData)
+import Control.Monad.IO.Class (MonadIO)
+import Criterion.Main (bench, bgroup, defaultMain, nf)
+import Data.List (unfoldr)
+import System.Random (UniformRange, initStdGen, uniformR)
 
 newtype Sorted a = Sorted
   { getSorted :: [a]
   }
   deriving (Show)
-  deriving newtype (Semigroup, Monoid, Functor, Applicative)
+  deriving newtype (Semigroup, Monoid, Functor, Applicative, NFData)
 
 partition :: Ord a => a -> [a] -> ([a], [a])
 partition _ [] = ([], [])
-partition x [y] = if x < y then ([],[y]) else ([y],[])
-partition x (y:ys) =
+partition x [y] = if x < y then ([], [y]) else ([y], [])
+partition x (y : ys) =
   let (l, r) = partition x ys
-  in if x < y then (l, y:r) else (y:l, r)
+   in if x < y then (l, y : r) else (y : l, r)
 
 quickSort :: Ord a => [a] -> Sorted a
 quickSort [] = mempty
-quickSort (x:xs) =
+quickSort (x : xs) =
   let (l, r) = partition x xs
-  in quickSort l <> pure x <> quickSort r
+   in quickSort l <> pure x <> quickSort r
+
+genArr :: (UniformRange a, Num a, MonadIO f) => Int -> f [a]
+genArr n = take n . unfoldr (Just . uniformR (0, fromIntegral n)) <$> initStdGen
+
+genArr' :: (UniformRange a, Num a, MonadIO f) => Int -> f [a]
+genArr' deg = genArr $ 10 ^ deg
 
 main :: IO ()
-main = print $ quickSort [0,2,4,-100,0.4,3,5,8]
+main = do
+  print $ quickSort [0, 2, 4, -100, 0.4, 3, 5, 8]
+  arrs <- sequenceA $ genArr' @Double <$> [1 .. 5]
+  let bench' n arr = bench (show n) $ nf quickSort arr
+  defaultMain
+    [bgroup "quickSort" $ zipWith bench' [1 .. 5] arrs]
 #+end_src
 
 #+RESULTS:
-: Sorted {getSorted = [-100.0,0.0,0.4,2.0,3.0,4.0,5.0,8.0]}
+#+begin_example
+Sorted {getSorted = [-100.0,0.0,0.4,2.0,3.0,4.0,5.0,8.0]}
+benchmarking quickSort/1
+time                 725.0 ns   (709.5 ns .. 740.6 ns)
+                     0.997 R²   (0.997 R² .. 0.999 R²)
+mean                 726.4 ns   (715.7 ns .. 736.6 ns)
+std dev              36.97 ns   (31.82 ns .. 43.93 ns)
+variance introduced by outliers: 68% (severely inflated)
+
+benchmarking quickSort/2
+time                 26.62 μs   (26.45 μs .. 26.78 μs)
+                     1.000 R²   (0.999 R² .. 1.000 R²)
+mean                 26.44 μs   (26.26 μs .. 26.65 μs)
+std dev              647.6 ns   (514.5 ns .. 841.3 ns)
+variance introduced by outliers: 24% (moderately inflated)
+
+benchmarking quickSort/3
+time                 437.8 μs   (434.8 μs .. 441.9 μs)
+                     0.999 R²   (0.999 R² .. 1.000 R²)
+mean                 440.3 μs   (437.3 μs .. 445.4 μs)
+std dev              12.07 μs   (7.418 μs .. 19.13 μs)
+variance introduced by outliers: 20% (moderately inflated)
+
+benchmarking quickSort/4
+time                 12.15 ms   (11.86 ms .. 12.54 ms)
+                     0.997 R²   (0.995 R² .. 1.000 R²)
+mean                 12.04 ms   (11.95 ms .. 12.16 ms)
+std dev              282.3 μs   (202.8 μs .. 413.6 μs)
+
+benchmarking quickSort/5
+time                 188.9 ms   (185.2 ms .. 192.1 ms)
+                     1.000 R²   (0.999 R² .. 1.000 R²)
+mean                 191.6 ms   (189.9 ms .. 193.7 ms)
+std dev              2.713 ms   (1.737 ms .. 4.176 ms)
+variance introduced by outliers: 14% (moderately inflated)
+#+end_example
 
 **** Merge Sort
-#+begin_src haskell :exports both :compile yes :results output
+#+begin_src haskell :exports both :compile yes :results output :flags -O2 -j4 +RTS -A64m -n2m -RTS -threaded
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 
+import Control.DeepSeq (NFData)
+import Control.Monad.IO.Class (MonadIO)
+import Criterion.Main (bench, bgroup, defaultMain, nf)
 import Data.Function (on)
+import Data.List (unfoldr)
+import System.Random (UniformRange, initStdGen, uniformR)
 
 newtype Sorted a = Sorted
   { getSorted :: [a]
   }
   deriving (Show)
-  deriving newtype (Monoid, Functor, Applicative)
+  deriving newtype (Monoid, Functor, Applicative, NFData)
 
 merge :: Ord a => Sorted a -> Sorted a -> Sorted a
 merge (Sorted as) (Sorted bs) = Sorted $ go as bs
@@ -308,12 +313,56 @@ mergeSort = go
     go [a] = pure a
     go ls = let (xs, ys) = splitAt (length ls `div` 2) ls in ((<>) `on` go) xs ys
 
+genArr :: (UniformRange a, Num a, MonadIO f) => Int -> f [a]
+genArr n = take n . unfoldr (Just . uniformR (0, fromIntegral n)) <$> initStdGen
+
+genArr' :: (UniformRange a, Num a, MonadIO f) => Int -> f [a]
+genArr' deg = genArr $ 10 ^ deg
+
 main :: IO ()
-main = print $ mergeSort [0,2,4,-100,0.4,3,5,8]
+main = do
+  print $ mergeSort [0, 2, 4, -100, 0.4, 3, 5, 8]
+  arrs <- sequenceA $ genArr' @Double <$> [1 .. 5]
+  let bench' n arr = bench (show n) $ nf mergeSort arr
+  defaultMain
+    [bgroup "mergeSort" $ zipWith bench' [1 .. 5] arrs]
 #+end_src
 
 #+RESULTS:
-: Sorted {getSorted = [-100.0,0.0,0.4,2.0,3.0,4.0,5.0,8.0]}
+#+begin_example
+Sorted {getSorted = [-100.0,0.0,0.4,2.0,3.0,4.0,5.0,8.0]}
+benchmarking mergeSort/1
+time                 380.2 ns   (379.4 ns .. 381.1 ns)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 380.1 ns   (379.1 ns .. 383.1 ns)
+std dev              5.261 ns   (2.574 ns .. 9.746 ns)
+variance introduced by outliers: 14% (moderately inflated)
+
+benchmarking mergeSort/2
+time                 14.02 μs   (14.00 μs .. 14.05 μs)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 14.02 μs   (14.01 μs .. 14.04 μs)
+std dev              54.64 ns   (44.54 ns .. 72.24 ns)
+
+benchmarking mergeSort/3
+time                 305.8 μs   (305.3 μs .. 306.2 μs)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 305.1 μs   (304.8 μs .. 305.6 μs)
+std dev              1.217 μs   (969.6 ns .. 1.695 μs)
+
+benchmarking mergeSort/4
+time                 8.917 ms   (8.860 ms .. 9.007 ms)
+                     1.000 R²   (0.999 R² .. 1.000 R²)
+mean                 8.955 ms   (8.926 ms .. 8.989 ms)
+std dev              86.24 μs   (75.01 μs .. 105.3 μs)
+
+benchmarking mergeSort/5
+time                 167.7 ms   (165.8 ms .. 169.3 ms)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 167.0 ms   (166.1 ms .. 168.0 ms)
+std dev              1.363 ms   (996.1 μs .. 1.864 ms)
+variance introduced by outliers: 12% (moderately inflated)
+#+end_example
 
 *** Clojure
 **** Quick Sort
@@ -340,70 +389,63 @@ main = print $ mergeSort [0,2,4,-100,0.4,3,5,8]
                            (conj! {:start start :end (dec i)})
                            (conj! {:start (inc i) :end end}))))))))))
 
-(quick-sort [ 0 2 4 -100 0.4 3 5 8 ])
+(quick-sort [0 2 4 -100 0.4 3 5 8])
+
+(defn time-quick-sort
+  ([arr] (time-quick-sort arr ".tmp-print-output"))
+  ([arr fp] (binding [*out* (clojure.java.io/writer fp)]
+              (-> arr quick-sort time) (slurp fp))))
+
+(->> #(rand-int 1e3) repeatedly (take 1e3) (into []) time-quick-sort)
+
+;; Let's attack the quick sort
+(->> 1e3 range (into []) time-quick-sort)
 #+end_src
 
 #+RESULTS:
-| #'user/my-swap!        |
-| #'user/my-partition!   |
-| #'user/quick-sort      |
-| [-100 0 0.4 2 3 4 5 8] |
+| #'user/my-swap!                        |
+| #'user/my-partition!                   |
+| #'user/quick-sort                      |
+| [-100 0 0.4 2 3 4 5 8]                 |
+| #'user/time-quick-sort                 |
+| "\"Elapsed time: 6.960381 msecs\"\n"   |
+| "\"Elapsed time: 107.994205 msecs\"\n" |
 
 **** Merge Sort
 #+begin_src clojure :results value :exports both
-(defn my-merge [as bs]
-  (loop [xs as
-         ys bs
-         r (transient [])]
-    (cond
-      (empty? xs) (-> r persistent! (into ys))
-      (empty? ys) (-> r persistent! (into xs))
-      :else (let [[x & xx] xs
-                  [y & yy] ys]
-              (if (< x y)
-                (recur xx ys (conj! r x))
-                (recur xs yy (conj! r y)))))))
-
-(defn to-mid [start end] (-> end (- start) (quot 2) (+ start)))
-
-(defn make-next-stack [ acc {:keys [start end] :as r} ]
-  (let [mid (to-mid start end)]
-    (if (-> end (- start) (<= 1)) acc
-        (-> acc (conj! (assoc r :end mid))
-                (conj! (assoc r :start mid))))))
-
-(defn make-next-cache [arr cache acc {:keys [start end]}]
-  (assoc! acc (str start "," end)
-         (if (-> end (- start) (<= 1))
-           [(get arr start)]
-           (let [mid (to-mid start end)]
-             (my-merge
-              (get cache (str start "," mid))
-              (get cache (str mid "," end)))))))
+(defn my-merge
+  ([xs ys] (my-merge xs ys (transient [])))
+  ([xs ys r]
+   (cond (empty? xs) (-> r persistent! (into ys))
+         (empty? ys) (-> r persistent! (into xs))
+         :else (let [[x & xx] xs
+                     [y & yy] ys]
+                 (if (< x y)
+                   (recur xx ys (conj! r x))
+                   (recur xs yy (conj! r y)))))))
 
 (defn merge-sort [arr]
   (let [l (count arr)]
     (if (<= l 1) arr
-        (loop
-          [stacks (transient [[{:start 0 :end l}]])]
-          (let [peek! #(nth % (-> % count dec)) ;; https://clojure.atlassian.net/browse/CLJ-2464
-                new_stack (persistent! (reduce make-next-stack (transient []) (peek! stacks)))]
-            (if (seq new_stack) (recur (conj! stacks new_stack))
-              (loop [cache {}]
-                (if (-> stacks count (= 0)) (get cache (str 0 "," l))
-                (let [stack (peek! stacks)]
-                  (recur (do (pop! stacks)
-                             (persistent!
-                              (reduce (partial make-next-cache arr cache)
-                                      (transient {}) stack)))))))))))))
+        (let [[l r] (->> arr (split-at (quot l 2)))]
+          (my-merge (merge-sort l) (merge-sort r))))))
 
 (merge-sort [0 2 4 -100 0.4 3 5 8])
+
+(defn time-merge-sort
+  ([arr] (time-merge-sort arr ".tmp-print-output"))
+  ([arr fp] (binding [*out* (clojure.java.io/writer fp)]
+              (-> arr merge-sort time) (slurp fp))))
+
+(->> #(rand-int 1e3) repeatedly (take 1e3) (into []) time-merge-sort)
+
+(->> 1e3 range (into []) time-merge-sort)
 #+end_src
 
 #+RESULTS:
-| #'user/my-merge        |
-| #'user/to-mid          |
-| #'user/make-next-stack |
-| #'user/make-next-cache |
-| #'user/merge-sort      |
-| [-100 0 0.4 2 3 4 5 8] |
+| #'user/my-merge                      |
+| #'user/merge-sort                    |
+| [-100 0 0.4 2 3 4 5 8]               |
+| #'user/time-merge-sort               |
+| "\"Elapsed time: 14.03002 msecs\"\n" |
+| "\"Elapsed time: 5.991597 msecs\"\n" |
