@@ -26,3 +26,7 @@ cabal.project.local~
 /.envrc
 /posts/.nrepl-port
 /.ghcid
+/posts/.tmp-print-output
+/posts/.log/
+/posts/.envrc
+/posts/.direnv/

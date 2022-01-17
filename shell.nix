@@ -4,14 +4,21 @@
 else if nixpkgsPin == "unstable" then
   "921"
 else
-  null, checkMaterialization ? false }:
+  null, checkMaterialization ? false, checkProjectMaterialization ? false
+, buildInputs ? [ ], modules ? [ ], pkg-def-extras ? [ ], additional ? (hs: [ ])
+, index-state ? "2021-12-31T00:00:00Z"
+, plan-sha256 ? "1q9d9q9i241j66xrcplbzc378msgrklv0vl5wxl60lzzxbi2vsng"
+, materialized ? ./materialized/haskell-nix }:
 assert ghcVersion != null;
 let
-  project = import ./default.nix { inherit nixpkgsPin ghcVersion; };
-  # inherit (project) index-state;
-  index-state = project.index-state;
+  project = import ./default.nix {
+    inherit nixpkgsPin ghcVersion modules index-state plan-sha256 materialized
+      pkg-def-extras;
+    checkMaterialization = checkProjectMaterialization;
+  };
   materializedDir = ./materialized;
 in project.shellFor {
+  inherit additional;
   # ALL of these arguments are optional.
 
   # List of packages from the project you want to work on in
@@ -43,13 +50,18 @@ in project.shellFor {
       materialized = materializedDir + /haskell-language-server;
     };
     # error: builder for '/nix/store/9w46v4709ddiycqg6zdrssfwsjlz64nq-ormolu-lib-ormolu-0.4.0.0.drv' failed with exit code 1
-    # https://github.com/input-output-hk/haskell.nix/issues/1337
-    # ormolu = {
-    #   inherit index-state checkMaterialization;
-    #   version = "0.4.0.0";
-    #   plan-sha256 = "1g1g88bi46lx7kf2zc7lq7bgcqvcs5h7d53v5zclhgihfww1w5hl";
-    #   materialized = materializedDir + /ormolu;
-    # };
+    ormolu = {
+      inherit index-state checkMaterialization;
+      version = "0.4.0.0";
+      plan-sha256 = "1g1g88bi46lx7kf2zc7lq7bgcqvcs5h7d53v5zclhgihfww1w5hl";
+      materialized = materializedDir + /ormolu;
+      # TEMP FIXME NOTE: https://github.com/input-output-hk/haskell.nix/issues/1337
+      modules = [
+        ({ lib, ... }: {
+          options.nonReinstallablePkgs = lib.mkOption { apply = lib.remove "Cabal"; };
+        })
+      ];
+    };
     ghcid = {
       inherit index-state checkMaterialization;
       version = "0.8.7";
@@ -71,30 +83,24 @@ in project.shellFor {
       plan-sha256 = "1b5ckkajsf87jczavx18glwfa06zcvi7w1dp45xbpiyjqf7wmpi2";
       materialized = materializedDir + /stan;
     };
-    # hoogle = {
-    #   inherit index-state checkMaterialization;
-    #   version = "5.0.17.15";
-    #   plan-sha256 = "Z+9k15uSfml5rO/Badx0Ud+TSI/Wu92gPPTWqHBiaM4=";
-    #   materialized = materializedDir + /hoogle;
-    # };
+    hoogle = {
+      inherit index-state checkMaterialization;
+      version = "5.0.18.3";
+      plan-sha256 = "0knhl9icjpmbqz18vw4pxs6n5m6m32b1jyss6cmlz86s6df7pwik";
+      materialized = materializedDir + /hoogle;
+    };
     hakyll = {
       inherit index-state checkMaterialization;
       version = "4.15.1.0";
-      # plan-sha256 = "1zs7b8wdlf3sv7lqhkjgpjbzynhxs8c7yxksibnjspl0796b4akk";
-      # materialized = materializedDir + /hakyll;
+      plan-sha256 = "1zs7b8wdlf3sv7lqhkjgpjbzynhxs8c7yxksibnjspl0796b4akk";
+      materialized = materializedDir + /hakyll;
     };
   };
   # See overlays/tools.nix for more details
 
   # Some you may need to get some other way.
-  buildInputs = with import ./nix/pkgs.nix { inherit nixpkgsPin; }; [
-    nodePackages.typescript
-    nodejs
-    python3
-    clojure
-    leiningen
-    clj-kondo
-  ];
+  buildInputs = with import ./nix/pkgs.nix { inherit nixpkgsPin; };
+    [ ] ++ buildInputs;
 
   # Sellect cross compilers to include.
   crossPlatforms = ps:

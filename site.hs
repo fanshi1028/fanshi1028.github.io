@@ -5,6 +5,7 @@ import Hakyll
     Options (Options),
     applyAsTemplate,
     compile,
+    complement,
     compressCss,
     compressCssCompiler,
     constField,
@@ -28,6 +29,7 @@ import Hakyll
     route,
     setExtension,
     templateBodyCompiler,
+    (.&&.),
   )
 import Text.Pandoc.Highlighting (pygments, styleToCss)
 
@@ -57,7 +59,7 @@ main = hakyllWithArgs
           >>= loadAndApplyTemplate "templates/default.html" defaultContext
           >>= relativizeUrls
 
-    match "posts/*" $ do
+    match ("posts/*" .&&. complement "posts/shell.nix") $ do
       route $ setExtension "html"
       compile $
         pandocCompiler
