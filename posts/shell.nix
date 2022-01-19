@@ -24,8 +24,8 @@ let
     python3
     pyright
     # clojure
+    # leiningen
     clojure
-    leiningen
     clj-kondo
   ];
   nodePackagesDevEnv = with pkgs.nodePackages; [

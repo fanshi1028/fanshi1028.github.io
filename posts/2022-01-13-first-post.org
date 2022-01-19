@@ -24,96 +24,94 @@ which node
 which python
 which ghc
 which clojure
-which lein
 which clj-kondo
 #+end_src
 
 #+RESULTS:
-| /nix/store/qxgp2m30ld2qacf0c646mih7r1cpak7l-typescript-4.4.4/bin/tsc                      |
-| /nix/store/wxhzlb69ngi6ma818q8f0v757wyz09p6-nodejs-14.18.1/bin/node                       |
-| /nix/store/x0fw0l4d6zwgfdwbpp23iwhm3c6a1hh3-python3-3.9.6/bin/python                      |
-| /nix/store/2zn9xkgcm81wxca6axad04fzgxwl0z30-ghc-shell-for-packages-ghc-8.10.7-env/bin/ghc |
-| /nix/store/jd98jncylhsg4cj9ga9vi9zq0n3yx4z0-clojure-1.10.3.1029/bin/clojure               |
-| /nix/store/ibgkkwg83zv306zhwrgd6wk5pqnwma36-leiningen-2.9.7/bin/lein                      |
-| /nix/store/zi2hj1kfsgp580r139jwh5b4f0vrzcw3-clj-kondo-2021.12.01/bin/clj-kondo            |
+| /nix/store/qxgp2m30ld2qacf0c646mih7r1cpak7l-typescript-4.4.4/bin/tsc                  |
+| /nix/store/wxhzlb69ngi6ma818q8f0v757wyz09p6-nodejs-14.18.1/bin/node                   |
+| /nix/store/x0fw0l4d6zwgfdwbpp23iwhm3c6a1hh3-python3-3.9.6/bin/python                  |
+| /nix/store/iszi73bcni4pdqgm0ar1wnxgjnv461yl-ghc-shell-for-blog-ghc-8.10.7-env/bin/ghc |
+| /nix/store/jd98jncylhsg4cj9ga9vi9zq0n3yx4z0-clojure-1.10.3.1029/bin/clojure           |
+| /nix/store/zi2hj1kfsgp580r139jwh5b4f0vrzcw3-clj-kondo-2021.12.01/bin/clj-kondo        |
 
 *** Typescript
 **** Quick Sort
-#+begin_src typescript :exports both :results output :strict
+#+begin_src typescript :exports both :results output :strict :cache yes
 function swap(arr: number[], i: number, j: number) {
-  const temp = arr[i]
-  arr[i] = arr[j]
-  arr[j] = temp
+    const temp = arr[i]
+    arr[i] = arr[j]
+    arr[j] = temp
 }
 
 function partition(arr: number[], low: number, high: number) {
-  const pivot = arr[high]
-  let i = low, j = low
-  while (j <= high - 1) {
-    if (arr[j] < pivot) {
-      swap(arr, i, j)
-      i++
+    const pivot = arr[high]
+    let i = low, j = low
+    while (j <= high - 1) {
+        if (arr[j] < pivot) {
+            swap(arr, i, j)
+            i++
+        }
+        j++
     }
-    j++
-  }
-  swap(arr, i, high)
-  return i
+    swap(arr, i, high)
+    return i
 }
 
 function quick_sort(arr: number[]) {
-  const stacks = [[0, arr.length - 1]]
-  while (stacks.length > 0) {
-      const stack = stacks.pop()
-      if (!stack) throw new Error("impossible")
-      const [start, end] = stack
-      if (start < end) {
-          const p = partition(arr, start, end)
-          stacks.push([start, p - 1])
-          stacks.push([p + 1, end])
-      }
-  }
-  return arr
+    const stacks = [[0, arr.length - 1]]
+    while (stacks.length > 0) {
+        const stack = stacks.pop()
+        if (!stack) throw new Error("impossible")
+        const [start, end] = stack
+        if (start < end) {
+            const p = partition(arr, start, end)
+            stacks.push([start, p - 1])
+            stacks.push([p + 1, end])
+        }
+    }
+    return arr
 }
 
-console.log(quick_sort([0,2,4,-100,0.4,3,5,8]))
+console.log(quick_sort([0, 2, 4, -100, 0.4, 3, 5, 8]))
 #+end_src
 
-#+RESULTS:
+#+RESULTS[cb42af9468319aa0c3d74d7f2d449be31478cf67]:
 : [
 :   -100, 0, 0.4, 2,
 :      3, 4,   5, 8
 : ]
 
 **** Merge Sort
-#+begin_src typescript :exports both :results output :strict
+#+begin_src typescript :exports both :results output :strict :cache yes
 function merge(arr1: number[], arr2: number[]) {
     const result: number[] = []
     let idx1 = 0
     let idx2 = 0
     while (idx1 < arr1.length && idx2 < arr2.length) {
         if (arr1[idx1] <= arr2[idx2]) {
-           result.push(arr1[idx1])
-           idx1++
+            result.push(arr1[idx1])
+            idx1++
         } else {
-           result.push(arr2[idx2])
-           idx2++
+            result.push(arr2[idx2])
+            idx2++
         }
     }
     return result.concat(idx1 < arr1.length ? arr1.slice(idx1) : arr2.slice(idx2))
 }
 
-function mergeSort(arr: number[]): number[]{
+function mergeSort(arr: number[]): number[] {
     if (arr.length <= 1) return arr
     else {
-        const mid = Math.floor(arr.length/2)
-        return merge(mergeSort(arr.slice(0,mid)), mergeSort(arr.slice(mid, arr.length)))
+        const mid = Math.floor(arr.length / 2)
+        return merge(mergeSort(arr.slice(0, mid)), mergeSort(arr.slice(mid, arr.length)))
     }
 }
 
-console.log(mergeSort([0,2,4,-100,0.4,3,5,8]))
+console.log(mergeSort([0, 2, 4, -100, 0.4, 3, 5, 8]))
 #+end_src
 
-#+RESULTS:
+#+RESULTS[4923d2eae88fe80796739cc9758f141645b95e3a]:
 : [
 :   -100, 0, 0.4, 2,
 :      3, 4,   5, 8
@@ -121,7 +119,7 @@ console.log(mergeSort([0,2,4,-100,0.4,3,5,8]))
 
 *** Python
 **** Quick Sort
-#+begin_src python :results output :exports both
+#+begin_src python :results output :exports both :cache yes
 def swap(arr: list, i: int, j: int) -> None:
     temp = arr[i]
     arr[i] = arr[j]
@@ -153,45 +151,48 @@ def quick_sort(arr: list) -> list:
 print(quick_sort([0, 2, 4, -100, 0.4, 3, 5, 8]))
 #+end_src
 
-#+RESULTS:
+#+RESULTS[72a530eb803038c132103615c86a91f94ee62a8e]:
 : [-100, 0, 0.4, 2, 3, 4, 5, 8]
 
 **** Merge Sort
-#+begin_src python :results output :exports both
+#+begin_src python :results output :exports both :cache yes
 import math
+
 
 def merge(arr1: list, arr2: list) -> list:
     result, idx1, idx2 = [], 0, 0
     while idx1 < len(arr1) and idx2 < len(arr2):
-        if (arr1[idx1] <= arr2[idx2]):
-           result.append(arr1[idx1])
-           idx1 += 1
+        if arr1[idx1] <= arr2[idx2]:
+            result.append(arr1[idx1])
+            idx1 += 1
         else:
-           result.append(arr2[idx2])
-           idx2 +=  1
+            result.append(arr2[idx2])
+            idx2 += 1
     if idx1 < len(arr1):
         result.extend(arr1[idx1:])
     else:
         result.extend(arr2[idx2:])
     return result
 
+
 def mergeSort(arr: list) -> list:
     if (l := len(arr)) <= 1:
         return arr
     else:
-        mid = math.floor(l/2)
+        mid = math.floor(l / 2)
         return merge(mergeSort(arr[0:mid]), mergeSort(arr[mid:l]))
 
-print(mergeSort([0,2,4,-100,0.4,3,5,8]))
+
+print(mergeSort([0, 2, 4, -100, 0.4, 3, 5, 8]))
 #+end_src
 
-#+RESULTS:
+#+RESULTS[ad309179543265e2a65a43b3bea74ab4441d05d5]:
 : [-100, 0, 0.4, 2, 3, 4, 5, 8]
 
 *** Haskell
 **** Quick Sort
 - beatiful but not the same as original as it is not in-place
-#+begin_src haskell :exports both :compile yes :results output :flags -O2 -j4 +RTS -A64m -n2m -RTS -threaded
+#+begin_src haskell :exports both :compile yes :results output :flags -O2 -j4 +RTS -A64m -n2m -RTS -threaded :cache yes
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -237,46 +238,44 @@ main = do
     [bgroup "quickSort" $ zipWith bench' [1 .. 5] arrs]
 #+end_src
 
-#+RESULTS:
+#+RESULTS[4754ce714e68b667b99889bd32f77eececc67bba]:
 #+begin_example
 Sorted {getSorted = [-100.0,0.0,0.4,2.0,3.0,4.0,5.0,8.0]}
 benchmarking quickSort/1
-time                 725.0 ns   (709.5 ns .. 740.6 ns)
-                     0.997 R²   (0.997 R² .. 0.999 R²)
-mean                 726.4 ns   (715.7 ns .. 736.6 ns)
-std dev              36.97 ns   (31.82 ns .. 43.93 ns)
-variance introduced by outliers: 68% (severely inflated)
+time                 459.1 ns   (458.3 ns .. 460.3 ns)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 462.3 ns   (460.2 ns .. 467.3 ns)
+std dev              9.637 ns   (4.018 ns .. 15.81 ns)
+variance introduced by outliers: 27% (moderately inflated)
 
 benchmarking quickSort/2
-time                 26.62 μs   (26.45 μs .. 26.78 μs)
-                     1.000 R²   (0.999 R² .. 1.000 R²)
-mean                 26.44 μs   (26.26 μs .. 26.65 μs)
-std dev              647.6 ns   (514.5 ns .. 841.3 ns)
-variance introduced by outliers: 24% (moderately inflated)
+time                 17.61 μs   (17.54 μs .. 17.71 μs)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 17.58 μs   (17.55 μs .. 17.62 μs)
+std dev              100.4 ns   (64.32 ns .. 163.1 ns)
 
 benchmarking quickSort/3
-time                 437.8 μs   (434.8 μs .. 441.9 μs)
-                     0.999 R²   (0.999 R² .. 1.000 R²)
-mean                 440.3 μs   (437.3 μs .. 445.4 μs)
-std dev              12.07 μs   (7.418 μs .. 19.13 μs)
-variance introduced by outliers: 20% (moderately inflated)
+time                 545.6 μs   (543.8 μs .. 547.4 μs)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 550.1 μs   (548.6 μs .. 554.3 μs)
+std dev              7.809 μs   (3.911 μs .. 14.97 μs)
 
 benchmarking quickSort/4
-time                 12.15 ms   (11.86 ms .. 12.54 ms)
-                     0.997 R²   (0.995 R² .. 1.000 R²)
-mean                 12.04 ms   (11.95 ms .. 12.16 ms)
-std dev              282.3 μs   (202.8 μs .. 413.6 μs)
+time                 9.773 ms   (9.649 ms .. 9.934 ms)
+                     0.999 R²   (0.999 R² .. 1.000 R²)
+mean                 9.678 ms   (9.652 ms .. 9.738 ms)
+std dev              100.8 μs   (61.34 μs .. 176.3 μs)
 
 benchmarking quickSort/5
-time                 188.9 ms   (185.2 ms .. 192.1 ms)
-                     1.000 R²   (0.999 R² .. 1.000 R²)
-mean                 191.6 ms   (189.9 ms .. 193.7 ms)
-std dev              2.713 ms   (1.737 ms .. 4.176 ms)
-variance introduced by outliers: 14% (moderately inflated)
+time                 168.0 ms   (165.2 ms .. 173.4 ms)
+                     0.999 R²   (0.997 R² .. 1.000 R²)
+mean                 168.9 ms   (167.3 ms .. 170.4 ms)
+std dev              2.432 ms   (1.655 ms .. 3.404 ms)
+variance introduced by outliers: 12% (moderately inflated)
 #+end_example
 
 **** Merge Sort
-#+begin_src haskell :exports both :compile yes :results output :flags -O2 -j4 +RTS -A64m -n2m -RTS -threaded
+#+begin_src haskell :exports both :compile yes :results output :flags -O2 -j4 +RTS -A64m -n2m -RTS -threaded :cache yes
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -328,45 +327,62 @@ main = do
     [bgroup "mergeSort" $ zipWith bench' [1 .. 5] arrs]
 #+end_src
 
-#+RESULTS:
+#+RESULTS[884056a6ebbecd4579daafe4d79d9c338779380a]:
 #+begin_example
 Sorted {getSorted = [-100.0,0.0,0.4,2.0,3.0,4.0,5.0,8.0]}
 benchmarking mergeSort/1
-time                 380.2 ns   (379.4 ns .. 381.1 ns)
-                     1.000 R²   (1.000 R² .. 1.000 R²)
-mean                 380.1 ns   (379.1 ns .. 383.1 ns)
-std dev              5.261 ns   (2.574 ns .. 9.746 ns)
-variance introduced by outliers: 14% (moderately inflated)
+time                 352.0 ns   (351.1 ns .. 353.6 ns)
+                     1.000 R²   (0.999 R² .. 1.000 R²)
+mean                 353.1 ns   (351.6 ns .. 357.2 ns)
+std dev              7.385 ns   (2.313 ns .. 14.15 ns)
+variance introduced by outliers: 27% (moderately inflated)
 
 benchmarking mergeSort/2
-time                 14.02 μs   (14.00 μs .. 14.05 μs)
+time                 13.86 μs   (13.84 μs .. 13.87 μs)
                      1.000 R²   (1.000 R² .. 1.000 R²)
-mean                 14.02 μs   (14.01 μs .. 14.04 μs)
-std dev              54.64 ns   (44.54 ns .. 72.24 ns)
+mean                 13.84 μs   (13.83 μs .. 13.85 μs)
+std dev              40.58 ns   (32.69 ns .. 53.35 ns)
 
 benchmarking mergeSort/3
-time                 305.8 μs   (305.3 μs .. 306.2 μs)
+time                 306.2 μs   (305.9 μs .. 306.6 μs)
                      1.000 R²   (1.000 R² .. 1.000 R²)
-mean                 305.1 μs   (304.8 μs .. 305.6 μs)
-std dev              1.217 μs   (969.6 ns .. 1.695 μs)
+mean                 306.0 μs   (305.9 μs .. 306.3 μs)
+std dev              719.9 ns   (578.3 ns .. 942.9 ns)
 
 benchmarking mergeSort/4
-time                 8.917 ms   (8.860 ms .. 9.007 ms)
-                     1.000 R²   (0.999 R² .. 1.000 R²)
-mean                 8.955 ms   (8.926 ms .. 8.989 ms)
-std dev              86.24 μs   (75.01 μs .. 105.3 μs)
+time                 8.860 ms   (8.837 ms .. 8.884 ms)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 8.829 ms   (8.817 ms .. 8.841 ms)
+std dev              33.52 μs   (26.64 μs .. 44.85 μs)
 
 benchmarking mergeSort/5
-time                 167.7 ms   (165.8 ms .. 169.3 ms)
+time                 168.0 ms   (166.1 ms .. 169.4 ms)
                      1.000 R²   (1.000 R² .. 1.000 R²)
-mean                 167.0 ms   (166.1 ms .. 168.0 ms)
-std dev              1.363 ms   (996.1 μs .. 1.864 ms)
+mean                 166.9 ms   (166.4 ms .. 167.5 ms)
+std dev              800.9 μs   (638.7 μs .. 1.053 ms)
 variance introduced by outliers: 12% (moderately inflated)
 #+end_example
 
 *** Clojure
+**** Setup
+#+begin_src emacs-lisp
+(setq-local cider-jack-in-dependencies (cons '("criterium/criterium" "0.4.6") cider-jack-in-dependencies))
+#+end_src
+
+#+RESULTS:
+| criterium/criterium | 0.4.6 |
+| nrepl/nrepl         | 0.9.0 |
+
+#+begin_src emacs-lisp
+(setq nrepl-sync-request-timeout nil)
+#+end_src
+
+#+RESULTS:
+
 **** Quick Sort
-#+begin_src clojure :results value :exports both
+#+begin_src clojure :results pp :exports both :cache yes
+(require 'criterium.core)
+
 (defn my-swap! [arr i j]
   (let [temp (nth arr i)]
     (-> arr (assoc! i (nth arr j) j temp))))
@@ -389,30 +405,77 @@ variance introduced by outliers: 12% (moderately inflated)
                            (conj! {:start start :end (dec i)})
                            (conj! {:start (inc i) :end end}))))))))))
 
-(quick-sort [0 2 4 -100 0.4 3 5 8])
+(println (quick-sort [0 2 4 -100 0.4 3 5 8]))
 
-(defn time-quick-sort
-  ([arr] (time-quick-sort arr ".tmp-print-output"))
-  ([arr fp] (binding [*out* (clojure.java.io/writer fp)]
-              (-> arr quick-sort time) (slurp fp))))
+(defn bench-quick-sort [arr] (-> arr quick-sort criterium.core/quick-bench))
 
-(->> #(rand-int 1e3) repeatedly (take 1e3) (into []) time-quick-sort)
+(defn exp
+  ([x n] (exp x n 1))
+  ([x n r] (if (= n 0) r (recur x (dec n) (* x r)))))
 
-;; Let's attack the quick sort
-(->> 1e3 range (into []) time-quick-sort)
+(defn rand-bench [deg] (let* [n (exp 10 deg)
+                              arr (doall (->> #(rand-int n) repeatedly (take n) (into [])))]
+                         (println (str "quick sort/" deg))
+                         (bench-quick-sort arr)) )
+
+(dotimes [n 5] (rand-bench (inc n)))
 #+end_src
 
-#+RESULTS:
-| #'user/my-swap!                        |
-| #'user/my-partition!                   |
-| #'user/quick-sort                      |
-| [-100 0 0.4 2 3 4 5 8]                 |
-| #'user/time-quick-sort                 |
-| "\"Elapsed time: 6.960381 msecs\"\n"   |
-| "\"Elapsed time: 107.994205 msecs\"\n" |
+#+RESULTS[4be84d5ef93ab62bd791fedc0c5e72548a10c507]:
+#+begin_example
+[-100 0 0.4 2 3 4 5 8]
+quick sort/1
+Evaluation count : 137424 in 6 samples of 22904 calls.
+             Execution time mean : 4.391998 µs
+    Execution time std-deviation : 12.880416 ns
+   Execution time lower quantile : 4.376642 µs ( 2.5%)
+   Execution time upper quantile : 4.408274 µs (97.5%)
+                   Overhead used : 7.295288 ns
+
+Found 1 outliers in 6 samples (16.6667 %)
+	low-severe	 1 (16.6667 %)
+ Variance from outliers : 13.8889 % Variance is moderately inflated by outliers
+quick sort/2
+Evaluation count : 7386 in 6 samples of 1231 calls.
+             Execution time mean : 81.940196 µs
+    Execution time std-deviation : 611.533537 ns
+   Execution time lower quantile : 81.341517 µs ( 2.5%)
+   Execution time upper quantile : 82.960145 µs (97.5%)
+                   Overhead used : 7.295288 ns
+
+Found 2 outliers in 6 samples (33.3333 %)
+	low-severe	 1 (16.6667 %)
+	low-mild	 1 (16.6667 %)
+ Variance from outliers : 13.8889 % Variance is moderately inflated by outliers
+quick sort/3
+Evaluation count : 564 in 6 samples of 94 calls.
+             Execution time mean : 1.070179 ms
+    Execution time std-deviation : 3.360550 µs
+   Execution time lower quantile : 1.066653 ms ( 2.5%)
+   Execution time upper quantile : 1.074192 ms (97.5%)
+                   Overhead used : 7.295288 ns
+quick sort/4
+Evaluation count : 36 in 6 samples of 6 calls.
+             Execution time mean : 18.359175 ms
+    Execution time std-deviation : 3.140538 ms
+   Execution time lower quantile : 16.731165 ms ( 2.5%)
+   Execution time upper quantile : 22.379171 ms (97.5%)
+                   Overhead used : 7.295288 ns
+quick sort/5
+Evaluation count : 6 in 6 samples of 1 calls.
+             Execution time mean : 244.125166 ms
+    Execution time std-deviation : 8.571292 ms
+   Execution time lower quantile : 234.307506 ms ( 2.5%)
+   Execution time upper quantile : 255.741520 ms (97.5%)
+                   Overhead used : 7.295288 ns
+
+
+#+end_example
 
 **** Merge Sort
-#+begin_src clojure :results value :exports both
+#+begin_src clojure :results pp :exports both :cache yes
+(require 'criterium.core)
+
 (defn my-merge
   ([xs ys] (my-merge xs ys (transient [])))
   ([xs ys r]
@@ -430,22 +493,68 @@ variance introduced by outliers: 12% (moderately inflated)
         (let [[l r] (->> arr (split-at (quot l 2)))]
           (my-merge (merge-sort l) (merge-sort r))))))
 
-(merge-sort [0 2 4 -100 0.4 3 5 8])
+(println (merge-sort [0 2 4 -100 0.4 3 5 8]))
 
-(defn time-merge-sort
-  ([arr] (time-merge-sort arr ".tmp-print-output"))
-  ([arr fp] (binding [*out* (clojure.java.io/writer fp)]
-              (-> arr merge-sort time) (slurp fp))))
+(defn bench-merge-sort [arr] (-> arr merge-sort criterium.core/quick-bench))
 
-(->> #(rand-int 1e3) repeatedly (take 1e3) (into []) time-merge-sort)
+(defn exp
+  ([x n] (exp x n 1))
+  ([x n r] (if (= n 0) r (recur x (dec n) (* x r)))))
 
-(->> 1e3 range (into []) time-merge-sort)
+(defn rand-bench [deg] (let* [n (exp 10 deg)
+                              arr (doall (->> #(rand-int n) repeatedly (take n) (into [])))]
+                         (println (str "merge sort/" deg))
+                         (bench-merge-sort arr)) )
+
+(dotimes [n 5] (rand-bench (inc n)))
 #+end_src
 
-#+RESULTS:
-| #'user/my-merge                      |
-| #'user/merge-sort                    |
-| [-100 0 0.4 2 3 4 5 8]               |
-| #'user/time-merge-sort               |
-| "\"Elapsed time: 14.03002 msecs\"\n" |
-| "\"Elapsed time: 5.991597 msecs\"\n" |
+#+RESULTS[ccdb652e1214d4a26b5b1b3262098d03bd286286]:
+#+begin_example
+[-100 0 0.4 2 3 4 5 8]
+merge sort/1
+Evaluation count : 53100 in 6 samples of 8850 calls.
+             Execution time mean : 11.331173 µs
+    Execution time std-deviation : 101.175196 ns
+   Execution time lower quantile : 11.234555 µs ( 2.5%)
+   Execution time upper quantile : 11.486153 µs (97.5%)
+                   Overhead used : 7.295288 ns
+
+Found 1 outliers in 6 samples (16.6667 %)
+	low-severe	 1 (16.6667 %)
+ Variance from outliers : 13.8889 % Variance is moderately inflated by outliers
+merge sort/2
+Evaluation count : 3582 in 6 samples of 597 calls.
+             Execution time mean : 168.056424 µs
+    Execution time std-deviation : 465.283318 ns
+   Execution time lower quantile : 167.533350 µs ( 2.5%)
+   Execution time upper quantile : 168.560340 µs (97.5%)
+                   Overhead used : 7.295288 ns
+merge sort/3
+Evaluation count : 276 in 6 samples of 46 calls.
+             Execution time mean : 2.214446 ms
+    Execution time std-deviation : 12.593438 µs
+   Execution time lower quantile : 2.199415 ms ( 2.5%)
+   Execution time upper quantile : 2.227201 ms (97.5%)
+                   Overhead used : 7.295288 ns
+merge sort/4
+Evaluation count : 24 in 6 samples of 4 calls.
+             Execution time mean : 27.875211 ms
+    Execution time std-deviation : 1.364618 ms
+   Execution time lower quantile : 27.244682 ms ( 2.5%)
+   Execution time upper quantile : 30.242050 ms (97.5%)
+                   Overhead used : 7.295288 ns
+
+Found 1 outliers in 6 samples (16.6667 %)
+	low-severe	 1 (16.6667 %)
+ Variance from outliers : 13.8889 % Variance is moderately inflated by outliers
+merge sort/5
+Evaluation count : 6 in 6 samples of 1 calls.
+             Execution time mean : 348.711303 ms
+    Execution time std-deviation : 11.674130 ms
+   Execution time lower quantile : 334.144709 ms ( 2.5%)
+   Execution time upper quantile : 362.009588 ms (97.5%)
+                   Overhead used : 7.295288 ns
+
+
+#+end_example

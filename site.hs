@@ -59,7 +59,7 @@ main = hakyllWithArgs
           >>= loadAndApplyTemplate "templates/default.html" defaultContext
           >>= relativizeUrls
 
-    match ("posts/*" .&&. complement "posts/shell.nix") $ do
+    match ("posts/*" .&&. complement "posts/*.nix") $ do
       route $ setExtension "html"
       compile $
         pandocCompiler
