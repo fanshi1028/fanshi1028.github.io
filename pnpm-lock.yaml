@@ -5,9 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 devDependencies:
-  '@sveltejs/adapter-auto':
+  '@sveltejs/adapter-static':
     specifier: ^2.0.0
-    version: 2.1.0(@sveltejs/kit@1.22.3)
+    version: 2.0.3(@sveltejs/kit@1.22.3)
   '@sveltejs/kit':
     specifier: ^1.20.4
     version: 1.22.3(svelte@4.1.1)(vite@4.4.7)
@@ -294,13 +294,12 @@ packages:
     resolution: {integrity: sha512-a5Sab1C4/icpTZVzZc5Ghpz88yQtGOyNqYXcZgOssB2uuAr+wF/MvN6bgtW32q7HHrvBki+BsZ0OuNv6EV3K9g==}
     dev: true
 
-  /@sveltejs/adapter-auto@2.1.0(@sveltejs/kit@1.22.3):
-    resolution: {integrity: sha512-o2pZCfATFtA/Gw/BB0Xm7k4EYaekXxaPGER3xGSY3FvzFJGTlJlZjBseaXwYSM94lZ0HniOjTokN3cWaLX6fow==}
+  /@sveltejs/adapter-static@2.0.3(@sveltejs/kit@1.22.3):
+    resolution: {integrity: sha512-VUqTfXsxYGugCpMqQv1U0LIdbR3S5nBkMMDmpjGVJyM6Q2jHVMFtdWJCkeHMySc6mZxJ+0eZK3T7IgmUCDrcUQ==}
     peerDependencies:
-      '@sveltejs/kit': ^1.0.0
+      '@sveltejs/kit': ^1.5.0
     dependencies:
       '@sveltejs/kit': 1.22.3(svelte@4.1.1)(vite@4.4.7)
-      import-meta-resolve: 3.0.0
     dev: true
 
   /@sveltejs/kit@1.22.3(svelte@4.1.1)(vite@4.4.7):
@@ -624,10 +623,6 @@ packages:
     dependencies:
       parent-module: 1.0.1
       resolve-from: 4.0.0
-    dev: true
-
-  /import-meta-resolve@3.0.0:
-    resolution: {integrity: sha512-4IwhLhNNA8yy445rPjD/lWh++7hMDOml2eHtd58eG7h+qK3EryMuuRbsHGPikCoAgIkkDnckKfWSk2iDla/ejg==}
     dev: true
 
   /inflight@1.0.6:
