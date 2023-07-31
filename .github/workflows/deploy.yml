@@ -22,13 +22,16 @@ jobs:
       #   with:
       #     node-version: 18
       #     cache: npm
-
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm i
+
+      # NOTE: https://github.com/sveltejs/kit/issues/7028#issuecomment-1257553541
+      - name: prebuild
+        run: pnpm check
 
       - name: build
-        env:
-          BASE_PATH: "/your-repo-name"
+        # env:
+        #   BASE_PATH: "/your-repo-name"
         run: |
           pnpm build
           touch build/.nojekyll
