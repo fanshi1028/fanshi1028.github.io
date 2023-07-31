@@ -6,7 +6,7 @@
         "ghc-boot-th".revision = (((hackage."ghc-boot-th")."8.10.7").revisions).default;
         "ghc-prim".revision = (((hackage."ghc-prim")."0.6.1").revisions).default;
         "pretty".revision = (((hackage."pretty")."1.1.3.6").revisions).default;
-        "text-short".revision = (((hackage."text-short")."0.1.4").revisions).default;
+        "text-short".revision = (((hackage."text-short")."0.1.5").revisions).default;
         "text-short".flags.asserts = false;
         "extensions".revision = (((hackage."extensions")."0.0.0.1").revisions).default;
         "integer-logarithms".revision = (((hackage."integer-logarithms")."1.0.3.1").revisions).default;
@@ -42,8 +42,7 @@
         "hpc".revision = (((hackage."hpc")."0.6.1.0").revisions).default;
         "directory".revision = (((hackage."directory")."1.3.6.0").revisions).default;
         "optparse-applicative".revision = (((hackage."optparse-applicative")."0.15.1.0").revisions).default;
-        "alex".revision = (((hackage."alex")."3.2.6").revisions).default;
-        "alex".flags.small_base = true;
+        "alex".revision = (((hackage."alex")."3.2.7.1").revisions).default;
         "mtl".revision = (((hackage."mtl")."2.2.2").revisions).default;
         "transformers".revision = (((hackage."transformers")."0.5.6.2").revisions).default;
         "rts".revision = (((hackage."rts")."1.0.1").revisions).default;

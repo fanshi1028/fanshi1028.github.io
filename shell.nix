@@ -1,13 +1,9 @@
 # shell.nix
-{ nixpkgsPin ? "2111", ghcVersion ? if nixpkgsPin == "2111" then
-  "8107"
-else if nixpkgsPin == "unstable" then
-  "921"
-else
-  null, checkMaterialization ? false, checkProjectMaterialization ? false
-, buildInputs ? [ ], modules ? [ ], pkg-def-extras ? [ ], additional ? (hs: [ ])
-, index-state ? "2021-12-31T00:00:00Z"
-, plan-sha256 ? "1q9d9q9i241j66xrcplbzc378msgrklv0vl5wxl60lzzxbi2vsng"
+{ nixpkgsPin ? "unstable", ghcVersion ? "8107", checkMaterialization ? false
+, checkProjectMaterialization ? false, buildInputs ? [ ], modules ? [ ]
+, pkg-def-extras ? [ ], additional ? (hs: [ ])
+, index-state ? "2022-02-01T00:00:00Z"
+, plan-sha256 ? "1n13di297jzn2ywdjcmdzxzfwx4rz1axfyawz3ibpn3h48jl995h"
 , materialized ? ./materialized/haskell-nix }:
 assert ghcVersion != null;
 let
@@ -34,38 +30,39 @@ in project.shellFor {
     cabal = {
       inherit index-state checkMaterialization;
       version = "3.6.2.0";
-      plan-sha256 = "03i9rdvnpkr96x3ng5zfvfd9h49qsyzmxlckh2i1yr4xn991yid3";
+      plan-sha256 = "1ccslngsyc42bxbcx4hj20vx70ivvgp0rhd0kf8r5b85dxn3z7rb";
       materialized = materializedDir + /cabal;
     };
     hlint = {
       inherit index-state checkMaterialization;
       version = "3.3.6";
-      plan-sha256 = "17km3wxl79sl6vcgjl3yadqm41lb503hd8vsr9rc0z95yg20n91j";
+      plan-sha256 = "0qzcqh2g02kjdzkkhcm0qyjfsdvwk614fdpn8ql8syng1calhcy7";
       materialized = materializedDir + /hlint;
     };
     haskell-language-server = {
       inherit index-state checkMaterialization;
-      version = "1.5.1.0";
-      plan-sha256 = "0vhq2gvbwssgbh54ciwg2jcjsqsbrc9ml54yqnvv758ykga6xrsk";
+      version = "1.6.1.0";
+      plan-sha256 = "03n82xn92flbi5nnnba6z73ar1qn4qnkfwk1amcxnn0x8bqy7xpg";
       materialized = materializedDir + /haskell-language-server;
     };
     # error: builder for '/nix/store/9w46v4709ddiycqg6zdrssfwsjlz64nq-ormolu-lib-ormolu-0.4.0.0.drv' failed with exit code 1
     ormolu = {
       inherit index-state checkMaterialization;
       version = "0.4.0.0";
-      plan-sha256 = "1g1g88bi46lx7kf2zc7lq7bgcqvcs5h7d53v5zclhgihfww1w5hl";
+      plan-sha256 = "0fp9hzdx9187i3nd4k0xkp0ynzsqxr2nff5g027mgr03n4vdqhld";
       materialized = materializedDir + /ormolu;
       # TEMP FIXME NOTE: https://github.com/input-output-hk/haskell.nix/issues/1337
       modules = [
         ({ lib, ... }: {
-          options.nonReinstallablePkgs = lib.mkOption { apply = lib.remove "Cabal"; };
+          options.nonReinstallablePkgs =
+            lib.mkOption { apply = lib.remove "Cabal"; };
         })
       ];
     };
     ghcid = {
       inherit index-state checkMaterialization;
       version = "0.8.7";
-      plan-sha256 = "0z35zpx7x0qncqiddnq4acdq3cgqlalwc2kb28dv8lk1rvn377ri";
+      plan-sha256 = "1s21mdfqpc397wslqkmbazfvgcwwlnq4gfjd841v2q62nkbjdkps";
       materialized = materializedDir + /ghcid;
     };
     # use cabal-docspec instead of doctest(which I failed to set it up right), yet it seesm that cabal-docspec is not on hackage yet
@@ -80,19 +77,19 @@ in project.shellFor {
     stan = {
       inherit index-state checkMaterialization;
       version = "0.0.1.0";
-      plan-sha256 = "1b5ckkajsf87jczavx18glwfa06zcvi7w1dp45xbpiyjqf7wmpi2";
+      plan-sha256 = "06sim1kdr4qrricazds4ig7h5l8d9v0q0iivdbf2p8f3dqn3bh36";
       materialized = materializedDir + /stan;
     };
     hoogle = {
       inherit index-state checkMaterialization;
       version = "5.0.18.3";
-      plan-sha256 = "0knhl9icjpmbqz18vw4pxs6n5m6m32b1jyss6cmlz86s6df7pwik";
+      plan-sha256 = "16xvyynw5dmqlw1c02z2ym53izalfnciyjjac10k2ifdjqf9smma";
       materialized = materializedDir + /hoogle;
     };
     hakyll = {
       inherit index-state checkMaterialization;
       version = "4.15.1.0";
-      plan-sha256 = "1zs7b8wdlf3sv7lqhkjgpjbzynhxs8c7yxksibnjspl0796b4akk";
+      plan-sha256 = "1wkfdidhdf3ng7qzcsf0z21403a6gqfbhw74kpdz71yvbyjqls79";
       materialized = materializedDir + /hakyll;
     };
   };

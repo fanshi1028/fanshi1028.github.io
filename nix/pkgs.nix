@@ -15,5 +15,6 @@ in import haskellNix.sources."nixpkgs-${nixpkgsPin}" (haskellNix.nixpkgsArgs
           };
         };
       })
-    ];
+    ] ++ [ (import sources.rust-overlay) ]
+      ++ [ (self: super: { clj2nix = import sources.clj2nix; }) ];
   })

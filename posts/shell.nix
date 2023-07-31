@@ -1,10 +1,5 @@
 # shell.nix
-{ nixpkgsPin ? "2111", ghcVersion ? if nixpkgsPin == "2111" then
-  "8107"
-else if nixpkgsPin == "unstable" then
-  "921"
-else
-  null }:
+{ nixpkgsPin ? "unstable", ghcVersion ? "8107"}:
 assert ghcVersion != null;
 let
   project = import ../default.nix { inherit nixpkgsPin ghcVersion; };
@@ -27,6 +22,16 @@ let
     # leiningen
     clojure
     clj-kondo
+    # clj2nix
+    # scala
+    ammonite
+    # rust
+    cargo
+    # https://github.com/oxalica/rust-overlay/issues/20#issuecomment-1013433604
+    (rust-bin.stable.latest.default.override {
+      extensions = [ "rust-src" "rustfmt" ];
+    })
+    rust-analyzer
   ];
   nodePackagesDevEnv = with pkgs.nodePackages; [
     prettier

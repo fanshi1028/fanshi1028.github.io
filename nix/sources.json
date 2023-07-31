@@ -1,14 +1,26 @@
 {
+    "clj2nix": {
+        "branch": "master",
+        "description": "Convert deps.edn to a nix expression",
+        "homepage": null,
+        "owner": "hlolli",
+        "repo": "clj2nix",
+        "rev": "3d0a38c954c8e0926f57de1d80d357df05fc2f94",
+        "sha256": "0y77b988qdgsrp4w72v1f5rrh33awbps2qdgp2wr2nmmi44541w5",
+        "type": "tarball",
+        "url": "https://github.com/hlolli/clj2nix/archive/3d0a38c954c8e0926f57de1d80d357df05fc2f94.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
     "haskellNix": {
         "branch": "master",
         "description": "Alternative Haskell Infrastructure for Nixpkgs",
         "homepage": "https://input-output-hk.github.io/haskell.nix",
         "owner": "input-output-hk",
         "repo": "haskell.nix",
-        "rev": "4e1d9f229c360c0ca79a303a812c1ba9a9354606",
-        "sha256": "1qk1r8jxkzx5hna20dwh7p15v3y9jg807sni95q7vjg62z01ypwm",
+        "rev": "1c23c7e3cb2c719ae212a7bc72a403ae5dae79eb",
+        "sha256": "0rwcwlpjqyrlz45l2s9blprs889c6zlb9k18zwwj038mvc6r6nw2",
         "type": "tarball",
-        "url": "https://github.com/input-output-hk/haskell.nix/archive/4e1d9f229c360c0ca79a303a812c1ba9a9354606.tar.gz",
+        "url": "https://github.com/input-output-hk/haskell.nix/archive/1c23c7e3cb2c719ae212a7bc72a403ae5dae79eb.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "niv": {
@@ -33,6 +45,18 @@
         "sha256": "1q7n9rk4i8ky2xxiymm72cfq1xra3ss3vkhbwf60rhiblslldgqg",
         "type": "tarball",
         "url": "https://github.com/NixOS/nixpkgs/archive/b165ce0c4efbb74246714b5c66b6bcdce8cde175.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "rust-overlay": {
+        "branch": "master",
+        "description": "Pure and reproducible nix overlay of binary distributed rust toolchains",
+        "homepage": "",
+        "owner": "oxalica",
+        "repo": "rust-overlay",
+        "rev": "712446b06015f7f51e60a440949357c6f18ea25f",
+        "sha256": "1maimhs7v6ax2gksskzm5wnqdka30smdy3sj7gb7vg6679m8rpi1",
+        "type": "tarball",
+        "url": "https://github.com/oxalica/rust-overlay/archive/712446b06015f7f51e60a440949357c6f18ea25f.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     }
 }

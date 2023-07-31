@@ -14,7 +14,7 @@
         "pretty".revision = (((hackage."pretty")."1.1.3.6").revisions).default;
         "polyparse".revision = (((hackage."polyparse")."1.13").revisions).default;
         "indexed-traversable".revision = (((hackage."indexed-traversable")."0.1.2").revisions).default;
-        "text-short".revision = (((hackage."text-short")."0.1.4").revisions).default;
+        "text-short".revision = (((hackage."text-short")."0.1.5").revisions).default;
         "text-short".flags.asserts = false;
         "integer-logarithms".revision = (((hackage."integer-logarithms")."1.0.3.1").revisions).default;
         "integer-logarithms".flags.check-bounds = false;
@@ -34,7 +34,7 @@
         "ghc-lib-parser".revision = (((hackage."ghc-lib-parser")."9.0.2.20211226").revisions).default;
         "utf8-string".revision = (((hackage."utf8-string")."1.0.2").revisions).default;
         "process".revision = (((hackage."process")."1.6.13.2").revisions).default;
-        "semigroupoids".revision = (((hackage."semigroupoids")."5.3.6").revisions).default;
+        "semigroupoids".revision = (((hackage."semigroupoids")."5.3.7").revisions).default;
         "semigroupoids".flags.distributive = true;
         "semigroupoids".flags.tagged = true;
         "semigroupoids".flags.containers = true;
@@ -88,8 +88,7 @@
         "ghc-lib-parser-ex".revision = (((hackage."ghc-lib-parser-ex")."9.0.0.6").revisions).default;
         "ghc-lib-parser-ex".flags.auto = true;
         "ghc-lib-parser-ex".flags.no-ghc-lib = false;
-        "alex".revision = (((hackage."alex")."3.2.6").revisions).default;
-        "alex".flags.small_base = true;
+        "alex".revision = (((hackage."alex")."3.2.7.1").revisions).default;
         "old-locale".revision = (((hackage."old-locale")."1.0.0.7").revisions).default;
         "mtl".revision = (((hackage."mtl")."2.2.2").revisions).default;
         "transformers".revision = (((hackage."transformers")."0.5.6.2").revisions).default;
@@ -100,9 +99,8 @@
         "parsec".revision = (((hackage."parsec")."3.1.14.0").revisions).default;
         "template-haskell".revision = (((hackage."template-haskell")."2.16.0.0").revisions).default;
         "bytestring".revision = (((hackage."bytestring")."0.10.12.0").revisions).default;
-        "aeson".revision = (((hackage."aeson")."2.0.2.0").revisions).default;
+        "aeson".revision = (((hackage."aeson")."2.0.3.0").revisions).default;
         "aeson".flags.cffi = false;
-        "aeson".flags.bytestring-builder = false;
         "aeson".flags.ordered-keymap = true;
         "mono-traversable".revision = (((hackage."mono-traversable")."1.0.15.3").revisions).default;
         "witherable".revision = (((hackage."witherable")."0.4.2").revisions).default;
@@ -118,7 +116,7 @@
         "splitmix".revision = (((hackage."splitmix")."0.1.0.4").revisions).default;
         "splitmix".flags.optimised-mixer = false;
         "unix".revision = (((hackage."unix")."2.7.2.2").revisions).default;
-        "attoparsec".revision = (((hackage."attoparsec")."0.14.3").revisions).default;
+        "attoparsec".revision = (((hackage."attoparsec")."0.14.4").revisions).default;
         "attoparsec".flags.developer = false;
         "uniplate".revision = (((hackage."uniplate")."1.6.13").revisions).default;
         "filepath".revision = (((hackage."filepath")."1.4.2.1").revisions).default;
@@ -133,7 +131,7 @@
         "cmdargs".flags.quotation = true;
         "cmdargs".flags.testprog = false;
         "integer-gmp".revision = (((hackage."integer-gmp")."1.0.3.0").revisions).default;
-        "hashable".revision = (((hackage."hashable")."1.4.0.1").revisions).default;
+        "hashable".revision = (((hackage."hashable")."1.4.0.2").revisions).default;
         "hashable".flags.integer-gmp = true;
         "hashable".flags.containers = true;
         "hashable".flags.random-initial-seed = false;
@@ -153,6 +151,9 @@
         "refact".revision = (((hackage."refact")."0.3.0.2").revisions).default;
         "resourcet".revision = (((hackage."resourcet")."1.2.4.3").revisions).default;
         "binary".revision = (((hackage."binary")."0.8.8.0").revisions).default;
+        "QuickCheck".revision = (((hackage."QuickCheck")."2.14.2").revisions).default;
+        "QuickCheck".flags.old-random = false;
+        "QuickCheck".flags.templatehaskell = true;
         "uuid-types".revision = (((hackage."uuid-types")."1.0.5").revisions).default;
         "containers".revision = (((hackage."containers")."0.6.5.1").revisions).default;
         "data-default".revision = (((hackage."data-default")."0.7.1.1").revisions).default;
@@ -252,6 +253,7 @@
           "scientific".components.library.planned = lib.mkOverride 900 true;
           "semigroupoids".components.library.planned = lib.mkOverride 900 true;
           "binary".components.library.planned = lib.mkOverride 900 true;
+          "QuickCheck".components.library.planned = lib.mkOverride 900 true;
           "filepattern".components.library.planned = lib.mkOverride 900 true;
           "refact".components.library.planned = lib.mkOverride 900 true;
           "ghc-boot-th".components.library.planned = lib.mkOverride 900 true;
@@ -270,6 +272,7 @@
           "th-abstraction".components.library.planned = lib.mkOverride 900 true;
           "hscolour".components.library.planned = lib.mkOverride 900 true;
           "vector".components.library.planned = lib.mkOverride 900 true;
+          "attoparsec".components.sublibs."attoparsec-internal".planned = lib.mkOverride 900 true;
           "hlint".components.exes."hlint".planned = lib.mkOverride 900 true;
           "transformers".components.library.planned = lib.mkOverride 900 true;
           "parsec".components.library.planned = lib.mkOverride 900 true;

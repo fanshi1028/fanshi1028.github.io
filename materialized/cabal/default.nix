@@ -20,7 +20,8 @@
         "base".revision = (((hackage."base")."4.14.3.0").revisions).default;
         "time".revision = (((hackage."time")."1.9.3").revisions).default;
         "random".revision = (((hackage."random")."1.2.1").revisions).default;
-        "hackage-security".revision = (((hackage."hackage-security")."0.6.0.1").revisions).default;
+        "hackage-security".revision = (((hackage."hackage-security")."0.6.2.0").revisions).default;
+        "hackage-security".flags.cabal-syntax = false;
         "hackage-security".flags.use-network-uri = true;
         "hackage-security".flags.base48 = true;
         "hackage-security".flags.old-directory = false;
@@ -37,10 +38,11 @@
         "resolv".revision = (((hackage."resolv")."0.1.2.0").revisions).default;
         "base16-bytestring".revision = (((hackage."base16-bytestring")."1.0.2.0").revisions).default;
         "regex-base".revision = (((hackage."regex-base")."0.94.0.2").revisions).default;
-        "network".revision = (((hackage."network")."3.1.2.5").revisions).default;
+        "network".revision = (((hackage."network")."3.1.2.7").revisions).default;
         "network".flags.devel = false;
         "hsc2hs".revision = (((hackage."hsc2hs")."0.68.8").revisions).default;
         "hsc2hs".flags.in-ghc-tree = false;
+        "Cabal-syntax".revision = (((hackage."Cabal-syntax")."3.6.0.0").revisions).default;
         "echo".revision = (((hackage."echo")."0.1.4").revisions).default;
         "echo".flags.example = false;
         "Cabal".revision = (((hackage."Cabal")."3.6.2.0").revisions).default;
@@ -130,6 +132,7 @@
         packages = {
           "base16-bytestring".components.library.planned = lib.mkOverride 900 true;
           "echo".components.library.planned = lib.mkOverride 900 true;
+          "Cabal-syntax".components.library.planned = lib.mkOverride 900 true;
           "network-uri".components.library.planned = lib.mkOverride 900 true;
           "regex-posix".components.library.planned = lib.mkOverride 900 true;
           "filepath".components.library.planned = lib.mkOverride 900 true;

@@ -1,16 +1,12 @@
-{ nixpkgsPin ? "2111", ghcVersion ? if nixpkgsPin == "2111" then
-  "8107"
-else if nixpkgsPin == "unstable" then
-  "921"
-else
-  null, checkMaterialization ? false, modules ? [ ], pkg-def-extras ? [ ]
-, index-state ? "2021-12-31T00:00:00Z"
-, plan-sha256 ? "1q9d9q9i241j66xrcplbzc378msgrklv0vl5wxl60lzzxbi2vsng"
+{ nixpkgsPin ? "unstable", ghcVersion ? "8107", checkMaterialization ? true
+, modules ? [ ], pkg-def-extras ? [ ], index-state ? "2022-02-01T00:00:00Z"
+, plan-sha256 ? "1n13di297jzn2ywdjcmdzxzfwx4rz1axfyawz3ibpn3h48jl995h"
 , materialized ? ./materialized/haskell-nix }:
 assert ghcVersion != null;
 with import ./nix/pkgs.nix { inherit nixpkgsPin; };
 haskell-nix.project {
-  inherit checkMaterialization index-state plan-sha256 materialized modules pkg-def-extras;
+  inherit checkMaterialization index-state plan-sha256 materialized modules
+    pkg-def-extras;
 
   # 'cleanGit' cleans a source directory based on the files known by git
   src = haskell-nix.haskellLib.cleanGit {

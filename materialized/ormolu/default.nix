@@ -13,7 +13,7 @@
         "dlist".revision = (((hackage."dlist")."1.0").revisions).default;
         "dlist".flags.werror = false;
         "array".revision = (((hackage."array")."0.5.4.0").revisions).default;
-        "ghc-lib-parser".revision = (((hackage."ghc-lib-parser")."9.2.1.20211101").revisions).default;
+        "ghc-lib-parser".revision = (((hackage."ghc-lib-parser")."9.2.1.20220109").revisions).default;
         "process".revision = (((hackage."process")."1.6.13.2").revisions).default;
         "base-compat".revision = (((hackage."base-compat")."0.12.1").revisions).default;
         "exceptions".revision = (((hackage."exceptions")."0.10.4").revisions).default;
@@ -22,8 +22,7 @@
         "directory".revision = (((hackage."directory")."1.3.6.0").revisions).default;
         "optparse-applicative".revision = (((hackage."optparse-applicative")."0.16.1.0").revisions).default;
         "optparse-applicative".flags.process = true;
-        "alex".revision = (((hackage."alex")."3.2.6").revisions).default;
-        "alex".flags.small_base = true;
+        "alex".revision = (((hackage."alex")."3.2.7.1").revisions).default;
         "mtl".revision = (((hackage."mtl")."2.2.2").revisions).default;
         "transformers".revision = (((hackage."transformers")."0.5.6.2").revisions).default;
         "rts".revision = (((hackage."rts")."1.0.1").revisions).default;
