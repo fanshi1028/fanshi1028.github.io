@@ -21,12 +21,11 @@ export const load: PageServerLoad = async ({ params, depends }) => {
   const slug = params.slug.toLowerCase()
   depends(`org_post_update:${slug}`)
   const path = resolve(`src/routes/posts/${slug}.org`)
-  console.log(path)
   if (existsSync(path)) {
     return {
       slug,
       html: export_org_as_html(path)
     }
   }
-  else throw error(404)
+  else throw error(404, path)
 }
