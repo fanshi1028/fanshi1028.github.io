@@ -9,7 +9,7 @@
     } as const;
 
     let current_theme: keyof typeof org_css | "default-minimal" =
-        "default-minimal";
+        "solarized-dark";
     let post_width: number, screen_width: number, theme_chooser_width: number;
     let theme_chooser_on_the_right_side: boolean = true;
     $: side_bar_width = (screen_width - post_width) / 2;
@@ -42,7 +42,7 @@
             ? "column"
             : "row"}
     >
-        {#each ["default-minimal", ...Object.keys(org_css)] as theme}
+        {#each [...Object.keys(org_css), "default-minimal"] as theme}
             <div class="radio">
                 <input
                     type="radio"
