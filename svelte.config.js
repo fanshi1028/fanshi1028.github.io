@@ -1,13 +1,12 @@
 import adapter from '@sveltejs/adapter-static';
 import { vitePreprocess } from '@sveltejs/kit/vite';
 import { readdirSync } from 'fs';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { resolve } from 'path';
 
-const append_org_post_routes = posts => readdirSync(`${dirname(fileURLToPath(import.meta.url))}/src/routes/posts`).
+const append_org_post_routes = posts => readdirSync(resolve(`src/routes/posts`)).
 	reduce((acc, path) => {
 		const slug = path.match(/^(?<slug>.+).org$/i)?.groups?.slug.toLowerCase()
-		return [...acc, `/posts/${slug}`]
+		return slug ? [...acc, `/posts/${slug}`] : acc
 	}, posts)
 
 /** @type {import('@sveltejs/kit').Config} */

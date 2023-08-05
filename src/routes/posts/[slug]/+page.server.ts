@@ -1,8 +1,7 @@
 import { error } from "@sveltejs/kit"
 import type { PageServerLoad } from "./$types"
 import { existsSync } from "node:fs"
-import { fileURLToPath } from "node:url"
-import { dirname } from "node:path"
+import { resolve } from "node:path"
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 
@@ -18,12 +17,10 @@ const export_org_as_html = async (org_path: string, emacs_exe_path = "emacs") =>
   return stdout
 })
 
-const ORG_POSTS_DIR = dirname(dirname(fileURLToPath(import.meta.url)))
-
 export const load: PageServerLoad = async ({ params, depends }) => {
   const slug = params.slug.toLowerCase()
   depends(`org_post_update:${slug}`)
-  const path = `${ORG_POSTS_DIR}/${slug}.org`
+  const path = resolve(`src/routes/posts/${slug}.org`)
   if (existsSync(path)) {
     return {
       slug,
