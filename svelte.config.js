@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 const append_org_post_routes = posts => readdirSync(`${dirname(fileURLToPath(import.meta.url))}/src/routes/posts`).
 	reduce((acc, path) => {
 		const slug = path.match(/^(?<slug>.+).org$/i)?.groups?.slug.toLowerCase()
-		return [...acc, `/posts/${slug}/org-draft`, `/posts/${slug}`]
+		return [...acc, `/posts/${slug}`]
 	}, posts)
 
 /** @type {import('@sveltejs/kit').Config} */
