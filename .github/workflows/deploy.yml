@@ -13,8 +13,7 @@ jobs:
 
       - name: debug
         run: |
-          pwd
-          ls
+          ls /home/runner/work/fanshi1028.github.io/fanshi1028.github.io/src/routes/posts/
 
       # If you're using pnpm, add this step then change the commands and cache key below to use `pnpm`
       - name: Install pnpm
