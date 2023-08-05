@@ -1,6 +1,6 @@
 <script lang="ts">
     const org_css = {
-        sandyuraz: "https://sandyuraz.com/styles/org.css",
+        // sandyuraz: "https://sandyuraz.com/styles/org.css",
         "solarized-light":
             "https://thomasf.github.io/solarized-css/solarized-light.min.css",
         "solarized-dark":
