@@ -1,0 +1,59 @@
+#+title: What Is The Purpose Of This Website
+
+* Preface
+ Everything should have a purpose otherwise it is a meaningless existence (actually, it is no big deal, we can recontextualize to give it purpose later). Anyway, let's try to solve the existential crisis of the website now.
+* Three dimensions of purposes
+** Content-wise: as a BLOG
+:PROPERTIES:
+:ID:       520ea862-cd9c-4aa1-b3aa-5fa6cae7b9ee
+:END:
+To broadcast when I have something valuable to say.
+*** But valuable to whom?
+- To myself :: Of course!
+- To my audiences (nonexistent) :: Maybe not.
+- Actually :: it maybe not even valuable to myself, they could be just mindless rants. But then by ranting mindlessly, we identify the problems.
+*** Here is the problem: Why should you listen to me?
+- if what I am saying is not important to my potential audiences, why should they spend time to come here? :: they will always be nonexistent, even if I break the fourth wall here, there is no one at the other side of the wall.
+- You may ask what is the problem to make a blog that no one read? :: Actually most of the blogs on the internet are just pools of dead water.
+- But if we are expectation no visitors, we should just take it offline :: because it doesn't serve any purpose except polluting the unlimited space of internet.
+*** So we should ask: Who are you? And therefore what you are looking for here, and what values am I providing?
+- We will answer that in the [[id:b33818f8-3b60-4ce3-9d65-dda6aa9d0894][Business-wise]]
+** Technically: as a PLAYGROUND
+As a full-stack web developer, it is a personal playground to experiment, also as some simple showcases of how I turn idea into a beloved (by me) website.
+- limitation as a GitHub page :: only static pages, no server.
+But I think we can really go a long way with only HTML, CSS and JS.
+** Business-wise: It is always a BUSINESS
+:PROPERTIES:
+:ID:       b33818f8-3b60-4ce3-9d65-dda6aa9d0894
+:END:
+*** Business is a repeating process
+- which create values,
+- while reaching people who wanted that value
+- who then willing to pay
+- to get us to deliver the promised value,
+- so that it generate enough profit for the process to keep repeating.
+Paraphrased from [[https://personalmba.com/][Personal MBA]]
+*** This blog is a business, just like everything else. VALUES!
+So what is the value of [[id:520ea862-cd9c-4aa1-b3aa-5fa6cae7b9ee][this blog]] ? Value is in the eyes of beholders. We need to identify our who we are talking to. Let's brainstorm some.
+**** Business owner like to hire a professional developer (me) who really understand business needs to make a shining website for their business.
+Not all great developers know business. A great website, is not necessarily a great website for you business.
+# FIXME:  "call to action"
+**** Fellow developers who want some extra inspirations.
+If you are still reading, I believe there is a spark between us, and between the lines, that could ignite some electric signals in your brain.
+**** Strangers who want to hear another stranger ranting.
+Here you are. Is that really want you want? Don't regret.
+**** Wanderer who got lost.
+I don't know how you ended up here. But a wandering mind is an unhappy mind.
+# FIXME: reference.
+**** My girlfriend who want to check what her boyfriend is up to.
+- She probably need "technically smart" enough to find this website.
+- If one day this website suddenly got taken down, probably my above statement is wrong, and she is mad at me saying that.
+**** Myself
+- Look at what I have written, listen to the past, reflect at the very moment, change the future (for the better).
+- Establish habit of writing and improve upon it.
+* TODO My VISION
+- I have a vision :: I don't think this website should be a traditional "static" experience for you. It should provide you with what you want. All walk of lives, from all sorts of backgrounds, should not walk away with empty hands. You should be able to harvest you ideal fruits from this js-malleable tree of HTML
+** A little bit more concretely.
+- It should has a more "interactive ux" than ordinary static website :: to deliver "value" according to "who you are" and "what you want"
+- Develop features focusing on values :: wonderful features that don't align with the wanted values is a negative assets.
+- And it will be an organic mess :: that keep evolving to survive the market.
