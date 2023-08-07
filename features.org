@@ -1,3 +1,5 @@
+#+title: Features
+
 * Features
 ** TODO Show posts edit hitory/build versons of page using info from git
 :LOGBOOK:

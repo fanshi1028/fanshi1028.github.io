@@ -3,7 +3,7 @@
     import type { PageServerData } from "./$types";
     export let data: PageServerData;
 
-    import.meta.hot?.on("org_posts_update", (slug) => invalidate(`org_post_update:${slug}`));
+    import.meta.hot?.on("org_post_update", invalidate);
 </script>
 
 {@html data.html}

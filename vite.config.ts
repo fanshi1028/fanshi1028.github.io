@@ -1,23 +1,29 @@
 import { sveltekit } from '@sveltejs/kit/vite';
-import { basename, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { basename, dirname, resolve } from 'path';
 import { defineConfig, type PluginOption } from 'vite';
 
 const orgHmr: PluginOption = {
 	name: 'org-hmr',
 	enforce: 'post',
 	handleHotUpdate({ file, server }) {
-		const org_posts_dir = `${dirname(fileURLToPath(import.meta.url))}/src/routes/posts`
-		const slug =
-			basename(file).match(/^(?<slug>.+)\.org$/i)?.
-				groups?.slug.toLowerCase()
-		if (slug && org_posts_dir == dirname(file)) {
-			console.log(`reloading org file: ${file}`);
+		if (file == resolve("features.org")) {
+			console.log(`reloading features.org: ${file}`);
 			server.ws.send({
 				type: 'custom',
-				event: 'org_posts_update',
-				data: slug
+				event: 'features_org_update'
 			});
+		} else {
+			const slug =
+				basename(file).match(/^(?<slug>.+)\.org$/i)?.
+					groups?.slug.toLowerCase()
+			if (slug && dirname(file) == resolve("posts")) {
+				console.log(`reloading org file: ${file}`);
+				server.ws.send({
+					type: 'custom',
+					event: 'org_post_update',
+					data: slug
+				});
+			}
 		}
 	},
 }
