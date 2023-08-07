@@ -1,4 +1,5 @@
 #+title: Features
+#+TODO: TODO(t!) HOLD(h@) | DONE(d!) KILLED(k@)
 
 * Features
 ** TODO Show posts edit hitory/build versons of page using info from git
