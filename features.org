@@ -1,0 +1,76 @@
+* Features
+** TODO Show posts edit hitory/build versons of page using info from git
+:LOGBOOK:
+- State "TODO"       from              [2023-08-07 Mon 10:47]
+:END:
+- ref :: https://grtcdr.tn/posts/2022-10-08.html
+- value :: people will not get lost if they linked my post even I need to edit my written post.
+** TODO SEO
+:LOGBOOK:
+- State "TODO"       from              [2023-08-07 Mon 10:47]
+:END:
+- value :: reaching more people
+** HOLD Comments
+:LOGBOOK:
+- State "HOLD"       from "TODO"       [2023-08-07 Mon 11:41] \\
+  seems like a useless feature for now
+- State "TODO"       from              [2023-08-07 Mon 10:53]
+:END:
+- ref :: https://utteranc.es/
+** TODO Page to show planning feature/road map
+:LOGBOOK:
+- State "TODO"       from              [2023-08-07 Mon 11:07]
+:END:
+- value :: people can enticipate where is website is going, learn about what values this website could provide for them in the future
+- value :: showcasing how to manage idea, and sometimes, turn them into reality by look at those DONE features.
+** TODO Localizatons
+:LOGBOOK:
+- State "TODO"       from              [2023-08-07 Mon 11:39]
+:END:
+Translate my blog post to language that I know/(am learning)
+- value :: Reaching more audience around the world.
+- value for myself :: Improve my langauge skill.
+** TODO Show Title and date of blog post
+:LOGBOOK:
+- State "TODO"       from              [2023-08-07 Mon 11:44]
+:END:
+- value :: provide a more legitimate "blog-like" experience. especially the date give reader expectation of how "outdate" this could be.
+** TODO Commit graph for feature
+:LOGBOOK:
+- State "TODO"       from              [2023-08-07 Mon 11:55]
+:END:
+- value for myself :: remind myself to keep up with the freature implementation frequency
+** TODO Commit graph for posts
+:LOGBOOK:
+- State "TODO"       from              [2023-08-07 Mon 11:55]
+:END:
+- value for myself :: remind myself to keep up with the content creation frequency
+** TODO Wordcount/"how long to read" for posts
+:LOGBOOK:
+- State "TODO"       from              [2023-08-07 Mon 11:55]
+:END:
+- value :: People has better expectation how long a post will take them to read.
+** TODO HashTag for posts
+:LOGBOOK:
+- State "TODO"       from              [2023-08-07 Mon 11:58]
+:END:
+- value :: Help people to find what they want.
+** TODO Changelog for post changes.
+:LOGBOOK:
+- State "TODO"       from              [2023-08-07 Mon 12:02]
+:END:
+
+* Technologies
+** TODO Use TailwindCSS
+:LOGBOOK:
+- State "TODO"       from              [2023-08-07 Mon 10:48]
+:END:
+- practice and showcase.
+** HOLD Custom org backend
+:LOGBOOK:
+- State "HOLD"       from "TODO"       [2023-08-07 Mon 10:51] \\
+  Don't see the need yet. Overengineering.
+- State "TODO"       from              [2023-08-07 Mon 10:48]
+:END:
+Maybe a custom org backend could improve the org to blog post generation.
+- ref :: https://www.reddit.com/r/emacs/comments/swvbmm/you_want_to_write_a_custom_org_backend_lets_write/
