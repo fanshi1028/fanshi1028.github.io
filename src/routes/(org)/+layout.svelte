@@ -1,4 +1,6 @@
 <script lang="ts">
+    import type { LayoutServerData } from "./$types";
+
     const org_css = {
         // sandyuraz: "https://sandyuraz.com/styles/org.css",
         "solarized-light":
@@ -12,6 +14,8 @@
         "solarized-dark";
     let post_width: number, screen_width: number, theme_chooser_width: number;
     let theme_chooser_on_the_right_side: boolean = true;
+
+    export let data: LayoutServerData;
     $: side_bar_width = (screen_width - post_width) / 2;
     $: theme_chooser_on_the_right_side =
         side_bar_width > theme_chooser_width * 1.4;
@@ -21,6 +25,8 @@
 <svelte:head>
     {#if current_theme != "default-minimal"}
         <link rel="stylesheet" type="text/css" href={org_css[current_theme]} />
+    {:else}
+        {@html data.defaultCSS}
     {/if}
 </svelte:head>
 

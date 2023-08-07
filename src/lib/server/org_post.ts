@@ -1,5 +1,13 @@
-import { exec } from 'node:child_process';
+import cp from 'node:child_process';
 import { promisify } from 'node:util';
+
+
+const exec = async (
+  command: string,
+) => promisify(cp.exec)(command).then(({ stderr, stdout }) => {
+  if (stderr != "") console.log(stderr)
+  return stdout
+})
 
 const setq = (options: Record<string, any>) =>
   Object.entries(options).reduce<string>(
@@ -17,15 +25,17 @@ export const export_org_as_html = async (
     "org-html-head-include-default-style": null
   },
   emacs_exe_path = "emacs"
-) => promisify(exec)(`
-  ${emacs_exe_path} \
+) => exec(`
+${emacs_exe_path} \
 -batch ${org_path} \
 -l ox \
 ${setq(opts)} \
 --eval="(princ (org-export-as 'html))"
-  `).then(({ stderr, stdout }) => {
-  if (stderr != "") {
-    console.log(stderr)
-  }
-  return stdout
-})
+`)
+
+export const get_org_html_style_default = (emacs_exe_path = "emacs") => exec(`
+${emacs_exe_path} \
+ -batch \
+-l ox-html \
+--eval="(princ org-html-style-default)"
+`)
