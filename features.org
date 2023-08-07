@@ -59,6 +59,14 @@ Translate my blog post to language that I know/(am learning)
 :LOGBOOK:
 - State "TODO"       from              [2023-08-07 Mon 12:02]
 :END:
+** TODO Page showing all posts
+:LOGBOOK:
+- State "TODO"       from              [2023-08-07 Mon 12:04]
+:END:
+** TODO RSS feed
+:LOGBOOK:
+- State "TODO"       from              [2023-08-07 Mon 12:04]
+:END:
 
 * Technologies
 ** TODO Use TailwindCSS
