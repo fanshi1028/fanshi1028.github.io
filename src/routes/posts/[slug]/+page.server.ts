@@ -5,6 +5,8 @@ import { resolve } from "node:path"
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 
+const ORG_POSTS_DIR = "posts"
+
 const export_org_as_html = async (org_path: string, emacs_exe_path = "emacs") => promisify(exec)(`
   ${emacs_exe_path} \
   -batch ${org_path} \
@@ -18,7 +20,6 @@ const export_org_as_html = async (org_path: string, emacs_exe_path = "emacs") =>
 })
 
 export const load: PageServerLoad = ({ params, depends }) => {
-  const ORG_POSTS_DIR = "src/routes/posts"
   const path = readdirSync(ORG_POSTS_DIR).reduce<string | null>(
     (acc, path) =>
       acc || (path.toLowerCase() == `${params.slug}.org`.toLowerCase() && path) || null
