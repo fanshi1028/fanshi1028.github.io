@@ -19,8 +19,9 @@
 - State "TODO"       from              [2023-08-07 Mon 10:53]
 :END:
 - ref :: https://utteranc.es/
-** TODO Page to show planning feature/road map
+** DONE Page to show planning feature
 :LOGBOOK:
+- State "DONE"       from "TODO"       [2023-08-07 Mon 12:50]
 - State "TODO"       from              [2023-08-07 Mon 11:07]
 :END:
 - value :: people can enticipate where is website is going, learn about what values this website could provide for them in the future
