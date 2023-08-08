@@ -1,6 +1,8 @@
 <script lang="ts">
     import type { LayoutServerData } from "./$types";
 
+    export let data: LayoutServerData;
+
     const org_css = {
         // sandyuraz: "https://sandyuraz.com/styles/org.css",
         "solarized-light":
@@ -12,11 +14,11 @@
 
     let current_theme: keyof typeof org_css | "default-minimal" =
         "solarized-dark";
-    let post_width: number, screen_width: number, theme_chooser_width: number;
-    let theme_chooser_on_the_right_side: boolean = true;
 
-    export let data: LayoutServerData;
+    let post_width: number, screen_width: number;
     $: side_bar_width = (screen_width - post_width) / 2;
+
+    let theme_chooser_width: number;
     $: theme_chooser_on_the_right_side =
         side_bar_width > theme_chooser_width * 1.4;
 </script>
