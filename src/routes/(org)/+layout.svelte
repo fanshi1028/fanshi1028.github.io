@@ -13,7 +13,7 @@
 
     let theme_chooser_min_width: number;
     $: theme_chooser_on_the_right_side =
-        side_bar_width > theme_chooser_min_width * 1.4;
+        side_bar_width > theme_chooser_min_width * 1.2;
 </script>
 
 <svelte:window bind:innerWidth={screen_width} />
