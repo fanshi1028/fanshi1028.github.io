@@ -3,24 +3,17 @@
 
     export let data: LayoutServerData;
 
-    const org_css = {
-        // sandyuraz: "https://sandyuraz.com/styles/org.css",
-        "solarized-light":
-            "https://thomasf.github.io/solarized-css/solarized-light.min.css",
-        "solarized-dark":
-            "https://thomasf.github.io/solarized-css/solarized-dark.min.css",
-        orgcss: "https://gongzhitaao.org/orgcss/org.css",
-    } as const;
+    import OrgThemeChooser from "./orgThemeChooser.svelte";
+    import { org_css, type OrgTheme } from "./orgThemes";
 
-    let current_theme: keyof typeof org_css | "default-minimal" =
-        "solarized-dark";
+    let current_theme: OrgTheme = "solarized-dark";
 
     let post_width: number, screen_width: number;
     $: side_bar_width = (screen_width - post_width) / 2;
 
-    let theme_chooser_width: number;
+    let theme_chooser_min_width: number;
     $: theme_chooser_on_the_right_side =
-        side_bar_width > theme_chooser_width * 1.4;
+        side_bar_width > theme_chooser_min_width * 1.4;
 </script>
 
 <svelte:window bind:innerWidth={screen_width} />
@@ -34,53 +27,24 @@
 
 <div
     class:theme_chooser_on_the_right_side
-    style:right={theme_chooser_on_the_right_side
-        ? `${(side_bar_width - theme_chooser_width) / 2}px`
+    style:--right={theme_chooser_on_the_right_side
+        ? `${(side_bar_width - theme_chooser_min_width) / 3}px`
         : null}
 >
-    <div style:display="flex" style:flex-direction="row">
-        <h4 bind:clientWidth={theme_chooser_width} style:padding-right="0">
-            Choose your eye candy
-        </h4>
-        <p />
-    </div>
-    <div
-        class="theme_chooser"
-        style:flex-direction={theme_chooser_on_the_right_side
-            ? "column"
-            : "row"}
-    >
-        {#each [...Object.keys(org_css), "default-minimal"] as theme}
-            <div class="radio">
-                <input
-                    type="radio"
-                    name={theme}
-                    bind:group={current_theme}
-                    value={theme}
-                />
-                <label for={theme}>
-                    {theme}
-                </label>
-            </div>
-        {/each}
-    </div>
+    <OrgThemeChooser
+        bind:current_theme
+        flexDirection={theme_chooser_on_the_right_side ? "column" : "row"}
+        on:theme_chooser_init|once={({ detail: { min_width } }) =>
+            (theme_chooser_min_width = min_width)}
+    />
 </div>
-<div bind:clientWidth={post_width}>
-    <slot />
-</div>
+<div bind:clientWidth={post_width}><slot /></div>
 
 <style>
     .theme_chooser_on_the_right_side {
         position: fixed;
-        right: 2em;
+        right: var(--right);
         top: 2em;
         z-index: 1;
-    }
-    .theme_chooser {
-        display: flex;
-        flex-wrap: wrap;
-    }
-    .radio {
-        padding: 0.5em;
     }
 </style>
