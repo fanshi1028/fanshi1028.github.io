@@ -1,10 +1,11 @@
 <script lang="ts">
+    import { slide } from "svelte/transition";
+    import { flip } from "svelte/animate";
+    import { org_css, type OrgTheme } from "./orgThemes";
+    import OrgThemeChooser from "./orgThemeChooser.svelte";
     import type { LayoutServerData } from "./$types";
 
     export let data: LayoutServerData;
-
-    import OrgThemeChooser from "./orgThemeChooser.svelte";
-    import { org_css, type OrgTheme } from "./orgThemes";
 
     let current_theme: OrgTheme = "solarized-dark";
 
@@ -25,20 +26,27 @@
     {/if}
 </svelte:head>
 
-<div
-    class:theme_chooser_on_the_right_side
-    style:--right={theme_chooser_on_the_right_side
-        ? `${(side_bar_width - theme_chooser_min_width) / 3}px`
-        : null}
->
-    <OrgThemeChooser
-        bind:current_theme
-        flexDirection={theme_chooser_on_the_right_side ? "column" : "row"}
-        on:theme_chooser_init|once={({ detail: { min_width } }) =>
-            (theme_chooser_min_width = min_width)}
-    />
-</div>
-<div bind:clientWidth={post_width}><slot /></div>
+{#key theme_chooser_on_the_right_side}
+    <div
+        class:theme_chooser_on_the_right_side
+        style:--right={theme_chooser_on_the_right_side
+            ? `${(side_bar_width - theme_chooser_min_width) / 3}px`
+            : null}
+        transition:slide
+    >
+        <OrgThemeChooser
+            bind:current_theme
+            flexDirection={theme_chooser_on_the_right_side ? "column" : "row"}
+            on:theme_chooser_init|once={({ detail: { min_width } }) =>
+                (theme_chooser_min_width = min_width)}
+        />
+    </div>
+{/key}
+{#each [1] as _ (1)}
+    <div bind:clientWidth={post_width} animate:flip>
+        <slot />
+    </div>
+{/each}
 
 <style>
     .theme_chooser_on_the_right_side {
