@@ -1,14 +1,9 @@
 <script lang="ts" context="module">
     const min_width = writable<number>(NaN);
-    const current_theme = writable<OrgTheme>("solarized-dark");
+    const current_theme = writable<OrgTheme>("solarizedDark");
 
-    export const readable_min_width = {
-        subscribe: min_width.subscribe,
-    };
-
-    export const readable_current_theme = {
-        subscribe: current_theme.subscribe,
-    };
+    export const readable_min_width = {subscribe: min_width.subscribe};
+    export const readable_current_theme = {subscribe: current_theme.subscribe};
 </script>
 
 <script lang="ts">
@@ -24,7 +19,7 @@
 </h4>
 
 <div class="theme_chooser" style:--flexDirection={flexDirection}>
-    {#each [...Object.keys(org_css), "default-minimal"] as theme, idx (idx)}
+    {#each [...Object.keys(org_css), "defaultMinimal"] as theme, idx (idx)}
         <div
             style="padding-left: 1em; padding-bottom: 0.5em; display: flex"
             transition:slide|global={{
@@ -40,7 +35,7 @@
                 value={theme}
             />
             <label for={theme} style="margin-left: 0.5em; white-space:nowrap;">
-                {theme}
+                {theme.replace(/([A-Z])/g, (match) => ` ${match.toLowerCase()}`)}
             </label>
         </div>
     {/each}

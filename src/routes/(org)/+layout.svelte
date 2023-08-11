@@ -1,7 +1,6 @@
 <script lang="ts">
     import { slide } from "svelte/transition";
     import { flip } from "svelte/animate";
-    import { org_css } from "./orgThemes";
     import OrgThemeChooser, {
         readable_current_theme,
         readable_min_width,
@@ -18,18 +17,8 @@
 </script>
 
 <svelte:window bind:innerWidth={screen_width} />
-<svelte:head>
-    {#if $readable_current_theme != "default-minimal"}
-        <link
-            rel="stylesheet"
-            type="text/css"
-            href={org_css[$readable_current_theme]}
-        />
-    {:else}
-        {@html data.defaultCSS}
-    {/if}
-</svelte:head>
 
+{@html data[$readable_current_theme] ?? ""}
 {#key theme_chooser_on_the_right_side}
     <div
         class:theme_chooser_on_the_right_side
