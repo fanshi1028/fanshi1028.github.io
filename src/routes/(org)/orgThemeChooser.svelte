@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { createEventDispatcher, onMount } from "svelte";
     import { org_css, type OrgTheme } from "./orgThemes";
     import { slide } from "svelte/transition";
 
@@ -7,16 +6,13 @@
 
     export let flexDirection: "row" | "column";
 
-    const dispatch = createEventDispatcher<{
-        theme_chooser_init: { min_width: number };
-    }>();
-
-    let min_width: number;
-
-    onMount(() => dispatch("theme_chooser_init", { min_width }));
+    export let read_only_min_width: number;
 </script>
 
-<h4 bind:clientWidth={min_width} style="width: fit-content; padding: 0 0.5em;">
+<h4
+    bind:clientWidth={read_only_min_width}
+    style="width: fit-content; padding: 0 0.5em;"
+>
     Choose your eye candy!
 </h4>
 

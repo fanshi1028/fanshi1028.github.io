@@ -36,9 +36,8 @@
     >
         <OrgThemeChooser
             bind:current_theme
+            bind:read_only_min_width={theme_chooser_min_width}
             flexDirection={theme_chooser_on_the_right_side ? "column" : "row"}
-            on:theme_chooser_init|once={({ detail: { min_width } }) =>
-                (theme_chooser_min_width = min_width)}
         />
     </div>
 {/key}
