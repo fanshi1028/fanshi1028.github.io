@@ -1,26 +1,30 @@
 <script lang="ts">
     import { slide } from "svelte/transition";
     import { flip } from "svelte/animate";
-    import { org_css, type OrgTheme } from "./orgThemes";
-    import OrgThemeChooser from "./orgThemeChooser.svelte";
+    import { org_css } from "./orgThemes";
+    import OrgThemeChooser, {
+        readable_current_theme,
+        readable_min_width,
+    } from "./orgThemeChooser.svelte";
     import type { LayoutServerData } from "./$types";
 
     export let data: LayoutServerData;
 
-    let current_theme: OrgTheme = "solarized-dark";
-
     let post_width: number, screen_width: number;
     $: side_bar_width = (screen_width - post_width) / 2;
 
-    let theme_chooser_min_width: number;
     $: theme_chooser_on_the_right_side =
-        side_bar_width > theme_chooser_min_width * 1.2;
+        side_bar_width > $readable_min_width * 1.2;
 </script>
 
 <svelte:window bind:innerWidth={screen_width} />
 <svelte:head>
-    {#if current_theme != "default-minimal"}
-        <link rel="stylesheet" type="text/css" href={org_css[current_theme]} />
+    {#if $readable_current_theme != "default-minimal"}
+        <link
+            rel="stylesheet"
+            type="text/css"
+            href={org_css[$readable_current_theme]}
+        />
     {:else}
         {@html data.defaultCSS}
     {/if}
@@ -30,13 +34,11 @@
     <div
         class:theme_chooser_on_the_right_side
         style:--right={theme_chooser_on_the_right_side
-            ? `${(side_bar_width - theme_chooser_min_width) / 3}px`
+            ? `${(side_bar_width - $readable_min_width) / 3}px`
             : null}
         transition:slide
     >
         <OrgThemeChooser
-            bind:current_theme
-            bind:read_only_min_width={theme_chooser_min_width}
             flexDirection={theme_chooser_on_the_right_side ? "column" : "row"}
         />
     </div>

@@ -1,18 +1,25 @@
+<script lang="ts" context="module">
+    const min_width = writable<number>(NaN);
+    const current_theme = writable<OrgTheme>("solarized-dark");
+
+    export const readable_min_width = {
+        subscribe: min_width.subscribe,
+    };
+
+    export const readable_current_theme = {
+        subscribe: current_theme.subscribe,
+    };
+</script>
+
 <script lang="ts">
+    import { writable } from "svelte/store";
     import { org_css, type OrgTheme } from "./orgThemes";
     import { slide } from "svelte/transition";
 
-    export let current_theme: OrgTheme;
-
     export let flexDirection: "row" | "column";
-
-    export let read_only_min_width: number;
 </script>
 
-<h4
-    bind:clientWidth={read_only_min_width}
-    style="width: fit-content; padding: 0 0.5em;"
->
+<h4 bind:clientWidth={$min_width} style="width: fit-content; padding: 0 0.5em;">
     Choose your eye candy!
 </h4>
 
@@ -29,7 +36,7 @@
             <input
                 type="radio"
                 name={theme}
-                bind:group={current_theme}
+                bind:group={$current_theme}
                 value={theme}
             />
             <label for={theme} style="margin-left: 0.5em; white-space:nowrap;">
