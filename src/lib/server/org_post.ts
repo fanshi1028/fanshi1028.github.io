@@ -22,7 +22,8 @@ const setq = (options: Record<string, any>) =>
 export const export_org_as_html = async (
   org_path: string,
   opts: Record<string, any> = {
-    "org-html-head-include-default-style": null
+    "org-html-head-include-default-style": null,
+    "org-export-with-toc": null
   },
   emacs_exe_path = "emacs"
 ) => exec(`
