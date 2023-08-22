@@ -22,7 +22,7 @@
     {#each [...Object.keys(org_css), "defaultMinimal"] as theme, idx (idx)}
         <div
             style="padding-left: 1em; padding-bottom: 0.5em; display: flex"
-            transition:slide|global={{
+            in:slide|global={{
                 duration: 700,
                 delay: idx * 200,
                 axis: flexDirection == "row" ? "x" : "y",

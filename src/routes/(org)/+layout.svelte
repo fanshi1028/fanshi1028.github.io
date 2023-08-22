@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { slide } from "svelte/transition";
     import { flip } from "svelte/animate";
     import OrgThemeChooser, {
         readable_current_theme,
@@ -9,40 +8,39 @@
 
     export let data: LayoutServerData;
 
-    let post_width: number, screen_width: number;
-    $: side_bar_width = (screen_width - post_width) / 2;
+    let screen_width: number;
 
-    $: theme_chooser_on_the_right_side =
-        side_bar_width > $readable_min_width * 1.2;
+    $: theme_chooser_on_the_right_side = screen_width / 6 > $readable_min_width;
 </script>
 
 <svelte:window bind:innerWidth={screen_width} />
 
 {@html data[$readable_current_theme] ?? ""}
-{#key theme_chooser_on_the_right_side}
-    <div
-        class:theme_chooser_on_the_right_side
-        style:--right={theme_chooser_on_the_right_side
-            ? `${(side_bar_width - $readable_min_width) / 3}px`
-            : null}
-        transition:slide
-    >
-        <OrgThemeChooser
-            flexDirection={theme_chooser_on_the_right_side ? "column" : "row"}
-        />
-    </div>
-{/key}
-{#each [1] as _ (1)}
-    <div bind:clientWidth={post_width} animate:flip>
-        <slot />
-    </div>
-{/each}
+<div style="display: grid; grid: auto auto /1fr 4fr 1fr; gap: 10px 10px">
+    {#each [1] as _ (1)}
+        <div
+            animate:flip
+            style:grid-area={theme_chooser_on_the_right_side
+                ? "1/2/3/3"
+                : "2/1/3/4"}
+        >
+            <slot />
+        </div>
+    {/each}
+    {#each [0] as _ (theme_chooser_on_the_right_side)}
+        <div
+            style:grid-area={theme_chooser_on_the_right_side
+                ? "1/3/2/4"
+                : "1/1/2/4"}
+        >
+            <OrgThemeChooser
+                flexDirection={theme_chooser_on_the_right_side
+                    ? "column"
+                    : "row"}
+            />
+        </div>
+    {/each}
+</div>
 
 <style>
-    .theme_chooser_on_the_right_side {
-        position: fixed;
-        right: var(--right);
-        top: 2em;
-        z-index: 1;
-    }
 </style>

@@ -19,10 +19,4 @@
     import.meta.hot?.on("org_post_update", invalidate);
 </script>
 
-{#if content}
-    <div style="display: grid; grid-template-columns: 1fr 4fr 1fr;">
-        <div style="grid-column: 2;">
-            <Section ele={content} level={1} />
-        </div>
-    </div>
-{/if}
+{#if content} <Section ele={content} level={1} /> {/if}
