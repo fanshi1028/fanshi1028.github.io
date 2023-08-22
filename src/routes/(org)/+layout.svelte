@@ -2,42 +2,49 @@
     import { flip } from "svelte/animate";
     import OrgThemeChooser, {
         readable_current_theme,
-        readable_min_width,
     } from "./orgThemeChooser.svelte";
     import type { LayoutServerData } from "./$types";
-
+    import "../../app.css";
+    import resolveConfig from "tailwindcss/resolveConfig";
+    import tailwindConfig from "../../../tailwind.config";
+    const { theme } = resolveConfig(tailwindConfig);
+    // NOTE: https://stackoverflow.com/questions/70983798/how-to-use-tailwindcsss-resolve-config-with-typescript
+    // NOTE: https://github.com/tailwindlabs/tailwindcss/issues/9929
+    // NOTE: https://github.com/tailwindlabs/tailwindcss/pull/9972#issuecomment-1644475526
+    // NOTE: seems still not fixed
+    import { screens } from "tailwindcss/defaultTheme";
+    const lg = +Object.entries(theme?.screens ?? {})
+        .reduce<string>((acc, [k, v]) => {
+            if (k == "lg") {
+                if (typeof v == "string") return v;
+                else throw "unexpected: lg is not string";
+            } else return acc;
+        }, screens.lg)
+        .slice(0, -2);
     export let data: LayoutServerData;
-
-    let screen_width: number;
-
-    $: theme_chooser_on_the_right_side = screen_width / 6 > $readable_min_width;
+    let innerWidth: number;
+    $: reach_lg = innerWidth > lg;
 </script>
 
-<svelte:window bind:innerWidth={screen_width} />
+<svelte:window bind:innerWidth />
 
 {@html data[$readable_current_theme] ?? ""}
-<div style="display: grid; grid: auto auto /1fr 4fr 1fr; gap: 10px 10px">
+<div style="display:grid; grid: auto auto /1fr 4fr 1fr; gap: 1px">
     {#each [1] as _ (1)}
         <div
             animate:flip
-            style:grid-area={theme_chooser_on_the_right_side
-                ? "1/2/3/3"
-                : "2/1/3/4"}
+            class="row-start-2 row-span-1 col-span-full \
+                   lg:row-span-full lg:col-start-2 lg:col-span-1"
         >
             <slot />
         </div>
     {/each}
-    {#each [0] as _ (theme_chooser_on_the_right_side)}
+    {#each [0] as _ (reach_lg)}
         <div
-            style:grid-area={theme_chooser_on_the_right_side
-                ? "1/3/2/4"
-                : "1/1/2/4"}
+            class="row-start-1 row-span-1 col-span-full \
+                   lg:col-start-3"
         >
-            <OrgThemeChooser
-                flexDirection={theme_chooser_on_the_right_side
-                    ? "column"
-                    : "row"}
-            />
+            <OrgThemeChooser slideDirection={reach_lg ? "y" : "x"} />
         </div>
     {/each}
 </div>

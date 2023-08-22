@@ -29,5 +29,10 @@ const orgHmr: PluginOption = {
 }
 
 export default defineConfig({
-	plugins: [sveltekit(), orgHmr]
+	plugins: [sveltekit(), orgHmr],
+	server: {
+		fs: {
+			allow: ['./tailwind.config.js']
+		}
+	}
 });

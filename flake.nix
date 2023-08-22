@@ -9,6 +9,7 @@
               svelte-check
               svelte-language-server
               prettier
+              nodejs
             ]);
         };
       });
