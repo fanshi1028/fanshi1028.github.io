@@ -20,3 +20,4 @@
 </script>
 
 {#if content} <Section ele={content} level={1} /> {/if}
+{@html data.html}

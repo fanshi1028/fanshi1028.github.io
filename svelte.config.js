@@ -31,6 +31,10 @@ const config = {
 				"/features",
 				...[append_org_post_routes].reduce((posts, f) => f(posts), ["*"])
 			]
+		},
+		alias: {
+			"app-css": "src/app.css",
+			"tailwind-config": "tailwind.config.js"
 		}
 	},
 };

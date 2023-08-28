@@ -1,48 +1,77 @@
 <script lang="ts">
-    import type { findOne } from "domutils";
     import TextContent from "./textContent.svelte";
-    import DescriptionList from "./descriptionList.svelte";
-    import UnorderedList from "./unorderedList.svelte";
-    import OrderedList from "./orderedList.svelte";
+    import { isDarkAcademia, isSolarized } from "../../orgThemeChooser.svelte";
 
     export let displaylevels = [1, 2, 3, 4, 5];
     export let level: number;
-    export let ele: NonNullable<ReturnType<typeof findOne>>;
+    export let ele: DomElement;
+
+    import "app-css";
+    import type { DomElement } from "./types";
+    import SectionText from "./sectionText.svelte";
 </script>
 
 {#if displaylevels.indexOf(level) != -1}
-    {#each ele.children as child}
-        {#if child.type == "tag"}
-            {#if child.name == `h${level}`}
-                <svelte:element this={`h${level}`} class={child.attribs.class}>
-                    <TextContent textEle={child} />
-                </svelte:element>
-            {:else if child.attribs.class == `outline-text-${level}`}
-                {#each child.children as grandChild}
-                    {#if grandChild.type == "tag"}
-                        {#if grandChild.name == "p"}
-                            <p class={grandChild.attribs.class}>
-                                <TextContent textEle={grandChild} />
-                            </p>
-                        {:else if grandChild.name == "dl"}
-                            <DescriptionList listEle={grandChild} />
-                        {:else if grandChild.name == "ul"}
-                            <UnorderedList listEle={grandChild} />
-                        {:else if grandChild.attribs.class == "org-src-container"}
-                            {#each grandChild.children as srcChild}
-                                {#if srcChild?.type == "tag" && srcChild.name == "pre"}
-                                    <!-- prettier-ignore -->
-                                    <pre class={srcChild.attribs.class}><TextContent textEle={srcChild}/></pre>
-                                {/if}
-                            {/each}
-                        {/if}
-                    {/if}
-                {/each}
-            {:else if child.attribs.class == `outline-${level + 1}`}
-                <svelte:self {displaylevels} level={level + 1} ele={child} />
-            {:else if child.name == "ol"}
-                <OrderedList listEle={child} />
+    <div class="grid row-auto gap-3">
+        {#each ele.children as child}
+            {#if child.type == "tag"}
+                {#if child.name == `h1`}
+                    <h1
+                        class="text-5xl font-extrabold font-sans text-center py-4"
+                        class:text-solarized-magenta={$isSolarized}
+                        class:text-dark-academia-gray-olive={$isDarkAcademia}
+                    >
+                        {#each child.children as grandChild}
+                            <TextContent textEle={grandChild} />
+                        {/each}
+                    </h1>
+                {:else if child.name == `h${level}`}
+                    <svelte:element
+                        this={`h${level}`}
+                        class:text-solarized-green={$isSolarized}
+                        class:text-dark-academia-rosy-brown={$isDarkAcademia}
+                        class:pt-5={level == 2}
+                    >
+                        {#each child.children as grandChild}
+                            <TextContent textEle={grandChild} />
+                        {/each}
+                    </svelte:element>
+                {:else if child.attribs.class == `outline-text-${level}`}
+                    <SectionText ele={child} />
+                {:else if child.attribs.class == `outline-${level + 1}`}
+                    <!-- prettier-ignore -->
+                    <div
+                        class="px-7 pb-5"
+                        class:rounded-xl={level == 1}
+                        class:bg-dark-academia-charcoal-gray={level == 1 && $isDarkAcademia}
+                        class:dark:bg-dark-academia-grayish-blue={level == 1 && $isDarkAcademia}
+                        class:bg-solarized-background-highlight={level == 1 && $isSolarized}
+                        class:dark:bg-solarized-dark-background-highlight={level == 1 && $isSolarized}
+                        class:text-solarized-green={level >= 2 && isSolarized}
+                    >
+                        <svelte:self
+                            {displaylevels}
+                            level={level + 1}
+                            ele={child}
+                        />
+                    </div>
+                {/if}
             {/if}
-        {/if}
-    {/each}
+        {/each}
+    </div>
 {/if}
+
+<style lang="postcss">
+    h2 {
+        @apply text-4xl font-bold;
+    }
+    h3 {
+        @apply text-3xl font-semibold;
+    }
+    h4 {
+        @apply text-2xl font-normal;
+    }
+    h5 {
+        @apply text-xl;
+    }
+</style>

@@ -32,7 +32,7 @@ export default defineConfig({
 	plugins: [sveltekit(), orgHmr],
 	server: {
 		fs: {
-			allow: ['./tailwind.config.js']
+			allow: ['./tailwind.config.ts']
 		}
 	}
 });
