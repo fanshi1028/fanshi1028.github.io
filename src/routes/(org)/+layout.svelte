@@ -1,9 +1,6 @@
 <script lang="ts">
     import { flip } from "svelte/animate";
-    import OrgThemeChooser, {
-        isDarkAcademia,
-        isSolarized,
-    } from "./orgThemeChooser.svelte";
+    import OrgThemeChooser, { current_theme } from "./orgThemeChooser.svelte";
     // import type { LayoutServerData } from "./$types";
     import "app-css";
     import resolveConfig from "tailwindcss/resolveConfig";
@@ -30,11 +27,9 @@
 <svelte:window bind:innerWidth />
 
 <div
-    style="display:grid; grid: auto auto /1fr 4fr 1fr; gap: 1px"
-    class:bg-dark-academia-grayish-blue={$isDarkAcademia}
-    class:dark:bg-dark-academia-charcoal-gray={$isDarkAcademia}
-    class:dark:bg-solarized-dark-background={$isSolarized}
-    class:bg-solarized-background={$isSolarized}
+    class="bg-background dark:bg-dark-background {$current_theme}
+           grid gap-1"
+    style="grid: auto auto /1fr 4fr 1fr;"
 >
     {#each [1] as _ (1)}
         <div
@@ -48,12 +43,44 @@
         </div>
     {/each}
     {#each [0] as _ (reach_lg)}
-        <div
+        <aside
             class="px-5 py-3
                    row-start-1 row-span-1 col-span-full
                    lg:col-start-3"
         >
             <OrgThemeChooser slideDirection={reach_lg ? "y" : "x"} />
-        </div>
+        </aside>
     {/each}
 </div>
+
+<style lang="postcss">
+    .solarized {
+        --background-highlight: theme(colors.solarized.base2);
+        --background: theme(colors.solarized.base3);
+        --content-emphasized: theme(colors.solarized.base01);
+        --content: theme(colors.solarized.base00);
+        --content-secondary: theme(colors.solarized.base1);
+        --dark-background-highlight: theme(colors.solarized.base02);
+        --dark-background: theme(colors.solarized.base03);
+        --dark-content-emphasized: theme(colors.solarized.base1);
+        ---dark-content: theme(colors.solarized.base0);
+        --dark-content-secondary: theme(colors.solarized.base01);
+        --section-title: theme(colors.solarized.green);
+    }
+    .dark-academia {
+        --background-highlight: theme(
+            colors.dark-academia.charcoal-gray.DEFAULT
+        );
+        --background: theme(colors.dark-academia.grayish-blue.DEFAULT);
+        --content-emphasized: theme(colors.solarized.base01);
+        --content: theme(colors.dark-academia.charcoal-gray.DEFAULT);
+        --content-secondary: theme(colors.solarized.base1);
+        --dark-background-highlight: theme(
+            colors.dark-academia.grayish-blue.DEFAULT
+        );
+        --dark-background: theme(colors.dark-academia.charcoal-gray.DEFAULT);
+        --dark-content-emphasized: theme(colors.solarized.base1);
+        ---dark-content: theme(colors.dark-academia.grayish-blue.DEFAULT);
+        --dark-content-secondary: theme(colors.solarized.base01);
+    }
+</style>

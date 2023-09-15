@@ -1,5 +1,7 @@
 #+title: What Is The Purpose Of This Website
 
+oifejoefjowef
+
 * Preface
  Everything should have a purpose otherwise it is a meaningless existence (actually, it is no big deal, we can recontextualize to give it purpose later). Anyway, let's try to solve the existential crisis of the website now.
 * Three dimensions of purposes
@@ -22,7 +24,7 @@ To broadcast when I have something valuable to say.
 As a full-stack web developer, it is a personal playground to experiment, also as some simple showcases of how I turn idea into a beloved (by me) website.
 - limitation as a GitHub page :: only static pages, no server.
 But I think we can really go a long way with only HTML, CSS and JS.
-** Business-wise: It is always a BUSINESS
+** DONE Business-wise: It is always a BUSINESS
 :PROPERTIES:
 :ID:       b33818f8-3b60-4ce3-9d65-dda6aa9d0894
 :END:

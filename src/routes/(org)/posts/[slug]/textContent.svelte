@@ -1,55 +1,53 @@
 <script lang="ts">
     import { slide } from "svelte/transition";
     import { isDarkAcademia, isSolarized } from "../../orgThemeChooser.svelte";
-    import type { ChildNode } from "./types";
+    import type { DomElement } from "./types";
 
-    export let textEle: ChildNode;
+    export let textEle: DomElement;
 </script>
 
-{#if textEle.type == "text"}
-    {textEle.data}
-{:else if textEle.type == "tag"}
-    {#if textEle.name == "a"}
-        <a
-            href={textEle.attribs.href}
-            class:dark:text-dark-academia-olive-drab={$isDarkAcademia}
-            class:text-solarized-yellow={$isSolarized}
-            transition:slide|global
-        >
-            {#each textEle.children as child}
+{#each textEle.children as child}
+    {#if child.type == "text"}
+        {child.data}
+    {:else if child.type == "tag"}
+        {#if child.name == "br"}
+            <br />
+        {:else if child.name == "a"}
+            <a
+                href={child.attribs.href}
+                class:dark:text-dark-academia-olive-drab={$isDarkAcademia}
+                class:text-solarized-yellow={$isSolarized}
+                transition:slide|global
+            >
                 <svelte:self textEle={child} />
-            {/each}
-        </a>
-    {:else if textEle.name == "span"}
-        {@const isTODO = /TODO/.test(textEle.attribs.class)}
-        {@const isDONE = /DONE/.test(textEle.attribs.class)}
-        {@const isSecNum = /section-number-[\d]+/.test(textEle.attribs.class)}
-        <span
-            class:dark:text-solarized-dark-content-secondary={$isSolarized &&
-                (isSecNum || isDONE)}
-            class:text-solarized-content-secondary={$isSolarized &&
-                (isSecNum || isDONE)}
-            class:bg-solarized-cyan={isDONE && $isSolarized}
-            class:bg-solarized-orange={isTODO && $isSolarized}
-            class:text-solarized-content-emphasized={isTODO && $isSolarized}
-            class:dark:text-solarized-dark-content-emphasized={isTODO &&
-                $isSolarized}
-            class="py-0.5 px-1.5 rounded-xl"
-        >
-            {#each textEle.children as child}
+            </a>
+        {:else if child.name == "span"}
+            {@const isTODO = /TODO/.test(child.attribs.class)}
+            {@const isDONE = /DONE/.test(child.attribs.class)}
+            {@const isSecNum = /section-number-[\d]+/.test(child.attribs.class)}
+            <span
+                class:dark:text-dark-content-secondary={isSecNum || isDONE}
+                class:text-content-secondary={isSecNum || isDONE}
+                class:bg-solarized-cyan={isDONE && $isSolarized}
+                class:bg-solarized-orange={isTODO && $isSolarized}
+                class:text-content-emphasized={isTODO}
+                class:dark:text-dark-content-emphasized={isTODO}
+            >
                 <svelte:self textEle={child} />
-            {/each}
-        </span>
-    {:else}
-        <svelte:element
-            this={textEle.name}
-            class:text-dark-academia-charcoal-gray={$isDarkAcademia}
-            class:dark:text-solarized-dark-content={$isSolarized}
-            class:text-solarized-content={$isSolarized}
-        >
-            {#each textEle.children as child}
+            </span>
+        {:else}
+            <svelte:element
+                this={child.name}
+                class="text-content dark:text-dark-content"
+            >
                 <svelte:self textEle={child} />
-            {/each}
-        </svelte:element>
+            </svelte:element>
+        {/if}
     {/if}
-{/if}
+{/each}
+
+<style lang="postcss">
+    span {
+        @apply py-0.5 px-1.5 rounded-xl;
+    }
+</style>

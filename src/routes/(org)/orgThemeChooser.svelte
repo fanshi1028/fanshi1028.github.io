@@ -1,12 +1,9 @@
 <script lang="ts" context="module">
-    import tailwindConfig from "tailwind-config";
-    const {
-        theme: { colors },
-    } = tailwindConfig;
-
-    type ColorSchemes = keyof typeof colors;
-
-    const colorSchemes = Object.keys(colors) as ColorSchemes[]; // HACK
+    import tailwindConfig, {
+        colorSchemes,
+        type ColorSchemes,
+    } from "tailwind-config";
+    import resolveConfig from "tailwindcss/resolveConfig";
 
     const _current_theme = writable<ColorSchemes>("solarized");
 
@@ -22,6 +19,10 @@
         current_theme,
         ($t) => $t == "solarized"
     );
+
+    export const {
+        theme: { colors: theme_colors },
+    } = resolveConfig(tailwindConfig);
 </script>
 
 <script lang="ts">

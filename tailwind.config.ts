@@ -67,42 +67,40 @@ const solarized = {
 } as const
 
 const colors = {
+  transparent: 'transparent',
+  background: {
+    highlight: 'var(--background-highlight)',
+    DEFAULT: 'var(--background)',
+  },
+  content: {
+    emphasized: 'var(--content-emphasized)',
+    DEFAULT: 'var(--content)',
+    secondary: 'var(--content-secondary)'
+  },
+  // NOTE: dark mode
+  dark: {
+    background: {
+      highlight: 'var(--dark-background-highlight)',
+      DEFAULT: 'var(--dark-background)',
+    },
+    content: {
+      emphasized: 'var(--dark-content-emphasized, --content-emphasized)',
+      DEFAULT: 'var(---dark-content, --content)',
+      secondary: 'var(--dark-content-secondary, --content-secondary)'
+    }
+  },
   // NOTE: https://colorpalettes.io/dark-academia-color-palette/
   "dark-academia": darkAcademia,
   // NOTE: https://ethanschoonover.com/solarized/#the-values
-  solarized: {
-    yellow: solarized.yellow,
-    orange: solarized.orange,
-    red: solarized.red,
-    magenta: solarized.magenta,
-    violet: solarized.violet,
-    blue: solarized.blue,
-    cyan: solarized.cyan,
-    green: solarized.green,
-    // NOTE: ligth mode
-    background: {
-      highlight: solarized.base2,
-      DEFAULT: solarized.base3,
-    },
-    content: {
-      emphasized: solarized.base01,
-      DEFAULT: solarized.base00,
-      secondary: solarized.base1
-    },
-    // NOTE: dark mode
-    dark: {
-      background: {
-        highlight: solarized.base02,
-        DEFAULT: solarized.base03,
-      },
-      content: {
-        emphasized: solarized.base1,
-        DEFAULT: solarized.base0,
-        secondary: solarized.base01
-      }
-    },
-  }
+  solarized
 } as const
+
+
+const notColorSchemes = ["background", "content", "dark", "transparent"] as const
+
+export type ColorSchemes = Exclude<keyof typeof colors, typeof notColorSchemes[number]>;
+
+export const colorSchemes = Object.keys(colors).filter(key => !(notColorSchemes as readonly string[]).includes(key)) as ColorSchemes[]; // HACK
 
 export default {
   content: ["./src/**/*.{html,svelte,ts}"],
