@@ -1,7 +1,10 @@
 
-.PHONY= update build optim
+.PHONY= tailwind update build optim
 
-all: update build optim
+all: tailwind update build optim
+
+tailwind:
+    tailwindcss -i static/input.css -o static/output.css
 
 update:
 	wasm32-wasi-cabal update
