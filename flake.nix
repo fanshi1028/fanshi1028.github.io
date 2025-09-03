@@ -58,10 +58,14 @@
           };
           wasm = pkgs.mkShell {
             name = "The miso ${system} GHC WASM ${ghcVersion} shell";
-            packages = [
-              ghc-wasm.packages.${system}.all_9_12
-              pkgs.http-server
-            ];
+            packages =
+              [
+                ghc-wasm.packages.${system}.all_9_12
+              ]
+              ++ (with pkgs; [
+                http-server
+                tailwindcss
+              ]);
           };
         }
       );
