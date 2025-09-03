@@ -26,10 +26,13 @@ common wasm
 executable app
   import:
     wasm, warnings
+  other-modules:
+    Clock
+    Pomodoro
   main-is:
     Main.hs
   build-depends:
-    base < 5, miso
+    base < 5, file-embed, miso, text, time
   hs-source-dirs:
     app
   default-language:
