@@ -36,7 +36,7 @@ data Action = Tick Double | Start | Stop
 
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
-  Tick t ->
+  Tick t -> do
     use active >>= \case
       False -> pure ()
       True -> do
@@ -48,7 +48,7 @@ updateModel = \case
                 diff = picosecondsToDiffTime . fromIntegral . double2Int . milliToPico $ t - lt
             timeLeft %= max 0 . subtract diff
             io_ $ consoleLog $ "tick: " <> ms t <> ", " <> ms (show diff)
-        lastTick .= Just t
+    lastTick .= Just t
   Start -> active .= True
   Stop -> active .= False
 
