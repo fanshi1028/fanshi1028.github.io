@@ -4,7 +4,7 @@
 all: tailwind update build optim
 
 tailwind:
-	tailwindcss -i static/input.css -o static/output.css
+	tailwindcss -m -i static/input.css -o static/output.css
 
 update:
 	wasm32-wasi-cabal --project-file=wasm.cabal.project update
