@@ -1,7 +1,7 @@
 
 .PHONY= tailwind update build optim
 
-all: tailwind build optim
+all: tailwind update build optim
 
 tailwind:
 	tailwindcss -m -i static/input.css -o static/output.css
