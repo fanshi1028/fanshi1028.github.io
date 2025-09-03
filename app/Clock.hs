@@ -47,7 +47,7 @@ updateModel = \case
             let milliToPico = (* fromIntegral (resolution (Proxy @E12) `div` resolution (Proxy @E3)))
                 diff = picosecondsToDiffTime . fromIntegral . double2Int . milliToPico $ t - lt
             timeLeft %= max 0 . subtract diff
-            io_ $ consoleLog $ "tick: " <> ms t <> ", " <> ms (show diff)
+            io_ $ consoleLog $ "tick: " <> ms t <> ", " <> ms (t - lt) <> ", " <> ms (show diff)
     lastTick .= Just t
   Start -> active .= True
   Stop -> active .= False
