@@ -2,6 +2,8 @@
 packages:
   .
 
+optimization: True
+
 with-compiler:
   wasm32-wasi-ghc
 
