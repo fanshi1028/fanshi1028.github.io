@@ -81,7 +81,7 @@ stopWatch initTime =
   (component (Model False initTime Nothing) updateModel viewModel)
     { subs =
         [ \sink -> forever $ do
-            liftIO . threadDelay . double2Int $ 0.1 * fromIntegral (resolution (Proxy @E6))
+            liftIO $ threadDelay 100000
             now >>= sink . Tick
         ]
     }
