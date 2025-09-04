@@ -11,6 +11,7 @@ import Data.Fixed
 import Data.Proxy
 import Data.Time
 import GHC.Float
+import GHC.Float.RealFracMethods
 import Miso
 import Miso.Html
 import Miso.Html.Property
@@ -50,8 +51,10 @@ updateModel = \case
                 millDiff = t - lt
                 picoDiff = milliToPico millDiff
                 intDiff = double2Int picoDiff
-                picoDiff' = fromIntegral intDiff
+                picoDiff'' = fromIntegral intDiff
+                (picoDiff', leftover) = properFractionDoubleInteger picoDiff
                 diff = picosecondsToDiffTime picoDiff'
+                _ = picosecondsToDiffTime picoDiff''
             timeLeft %= max 0 . subtract diff
             io_ $ do
               -- consoleLog $ "tick: " <> ms t <> ", " <> ms (t - lt) <> ", " <> ms (show diff)
@@ -62,7 +65,9 @@ updateModel = \case
                     "millDiff " <> ms millDiff,
                     "picoDiff " <> ms picoDiff,
                     "intDiff " <> ms intDiff,
-                    "picoDiff' " <> ms (show picoDiff'),
+                    "picoDiff''" <> ms (show picoDiff''),
+                    "picoDiff'" <> ms (show picoDiff'),
+                    "leftover" <> ms leftover,
                     "diff " <> ms (show diff)
                   ]
     lastTick .= Just t
