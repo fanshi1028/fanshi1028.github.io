@@ -3,6 +3,8 @@
 
 module Main where
 
+import qualified Clock
+import Data.Aeson
 import Data.FileEmbed (embedFileRelative)
 import Miso
 import qualified Pomodoro
@@ -23,13 +25,14 @@ app =
       ( Pomodoro.Model
           (Pomodoro.PomodoroSettings Pomodoro.defaultPomodoro Pomodoro.defaultShortBreak Pomodoro.defaultLongBreak)
           Pomodoro.defaultPomodoroQueue
-          Pomodoro.defaultPomodoro
+          (Clock.Model False (realToFrac Pomodoro.defaultPomodoro) Nothing)
       )
       Pomodoro.updateModel
       Pomodoro.viewModel
   )
     { events = defaultEvents,
-      styles =
-        [ Style $ ms $(embedFileRelative "static/output.css")
-        ]
+      styles = [Style $ ms $(embedFileRelative "static/output.css")],
+      mailbox = \v -> case fromJSON v of
+        Error _ -> Nothing
+        Success action -> Just action
     }

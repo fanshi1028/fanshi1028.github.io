@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -7,9 +9,11 @@
 module Pomodoro where
 
 import qualified Clock
+import Data.Aeson hiding ((.=))
 import Data.List.NonEmpty
 import Data.Maybe
 import Data.Time
+import GHC.Generics
 import Miso
 import Miso.Html
 import Miso.Html.Property
@@ -39,12 +43,12 @@ data PomodoroSettings = PomodoroSettings
 data Model = Model
   { _settings :: PomodoroSettings,
     _pomodoroQueue :: PomodoroQueue,
-    _timeLeft :: DiffTime
+    _currentClock :: Clock.Model
   }
   deriving (Eq)
 
-timeLeft :: Lens Model DiffTime
-timeLeft = lens _timeLeft $ \record x -> record {_timeLeft = x}
+currentClock :: Lens Model Clock.Model
+currentClock = lens _currentClock $ \record x -> record {_currentClock = x}
 
 settings :: Lens Model PomodoroSettings
 settings = lens _settings $ \record x -> record {_settings = x}
@@ -69,21 +73,27 @@ data Action
   = SetPomodoro
   | SetShortBreak
   | SetLongBreak
-  | FastForwardToTheNextStage
+  | Next
+  deriving (Eq, Generic, ToJSON, FromJSON)
 
 updateModel :: Action -> Transition Model Action
 updateModel = \case
-  FastForwardToTheNextStage -> do
+  Next ->
     use pomodoroQueue >>= \case
       PomodoroQueueDone _ -> pure ()
       PomodoroQueue past (current :| future) -> case future of
         [] -> pomodoroQueue .= PomodoroQueueDone (current :| past)
         current' : future' -> do
           pomodoroQueue .= PomodoroQueue (current : past) (current' :| future')
-          timeLeft .= case current' of
-            Pomodoro t -> t
-            ShortBreak t -> t
-            LongBreak t -> t
+          currentClock
+            .= Clock.Model
+              True
+              ( case current' of
+                  Pomodoro t -> t
+                  ShortBreak t -> t
+                  LongBreak t -> t
+              )
+              Nothing
   _ -> error "TEMP FIXME: SetPomodoro | SetShortBreak | SetLongBreak not implemented."
 
 viewModel :: Model -> View Model Action
@@ -92,10 +102,7 @@ viewModel m =
     [class_ "flex flex-col h-screen container mx-auto"]
     [ h1_ [class_ "sr-only"] [text "Pomodoro"],
       div_ [class_ "flex flex-row items-center justify-center gap-8 py-10 border rounded-lg my-auto"] $
-        [ div_ [class_ "flex flex-col gap-6"] [settingsView, currentPomodoroView],
-          pomodoroQueueView,
-          button_ [onClick FastForwardToTheNextStage] ["TEMP forward testing button FIXME"]
-        ]
+        [div_ [class_ "flex flex-col gap-6"] [settingsView, currentPomodoroView], pomodoroQueueView]
     ]
   where
     pomodoroView mCls pomodoro =
@@ -124,38 +131,37 @@ viewModel m =
             ]
         ]
 
-    currentPomodoroView =
-      div_ [id_ "stopwatch", class_ "bg-neutral-600 p-4 rounded-lg"]
-        +> ( ( component
-                 (Clock.Model False (realToFrac m._timeLeft) Nothing)
-                 Clock.updateModel
-                 Clock.viewModel
+    currentPomodoroView = case m._pomodoroQueue of
+      PomodoroQueueDone _ -> div_ [] ["TEMP FIXME POMODORO DONE"]
+      PomodoroQueue _ (_ :| _) ->
+        div_ [id_ "stopwatch", class_ "bg-neutral-600 p-4 rounded-lg"]
+          +> ( ( component
+                   m._currentClock
+                   (Clock.updateModel Next)
+                   Clock.viewModel
+               )
+                 { bindings = [currentClock --> _id]
+                 }
              )
-               { bindings = [timeLeft <--> Clock.timeLeft]
-               }
-           )
 
     pomodoroQueueView =
       div_ [] $
         [ h2_ [class_ "sr-only"] [text "Pomodoro Queue"],
-          ul_
-            [class_ "flex flex-col gap-3"]
-            $ let q = m._pomodoroQueue
-                  current :| rest = q._pomodoroRestQueue
-                  currentView =
-                    li_
-                      [class_ "border-2 border-neutral-400 p-4 uppercase tracking-tight rounded text-center text-neutral-500 font-bold text-lg my-3"]
-                      [ case current of
-                          Pomodoro _ -> "Pomodoro"
-                          ShortBreak _ -> "Short Break"
-                          LongBreak _ -> "Long Break"
-                          -- (Just "text-center text-neutral-500 font-bold text-lg")
-                      ]
-                  futureView = (li_ [class_ "px-2"] . (: []) . pomodoroView (Just "text-neutral-600")) <$> rest
-               in foldl'
-                    (\acc i -> li_ [class_ "px-2"] [pomodoroView (Just "text-neutral-400") i] : acc)
-                    (currentView : futureView)
-                    q._pomodoroPastQueue
+          ul_ [class_ "flex flex-col gap-3"] $
+            let pastItemView i = li_ [class_ "px-2"] [pomodoroView (Just "text-neutral-400") i]
+                futureItemView i = li_ [class_ "px-2"] [pomodoroView (Just "text-neutral-600") i]
+             in case m._pomodoroQueue of
+                  PomodoroQueueDone (toList -> pastQueue) -> pastItemView <$> pastQueue
+                  PomodoroQueue pastQueue (current :| rest) ->
+                    let currentView =
+                          li_
+                            [class_ "border-2 border-neutral-400 p-4 uppercase tracking-tight rounded text-center text-neutral-500 font-bold text-lg my-3"]
+                            [ case current of
+                                Pomodoro _ -> "Pomodoro"
+                                ShortBreak _ -> "Short Break"
+                                LongBreak _ -> "Long Break"
+                            ]
+                     in foldl' (\acc i -> pastItemView i : acc) (currentView : (futureItemView <$> rest)) pastQueue
         ]
 
 defaultPomodoro, defaultShortBreak, defaultLongBreak :: DiffTime
