@@ -43,14 +43,13 @@ instance ToMisoString StopWatchSub where
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
   Tick t -> do
-    use lastTick >>= \case
+    lastTick <<.= Just t >>= \case
       Nothing -> pure ()
       Just lt -> do
         -- NOTE: https://developer.mozilla.org/en-US/docs/Web/API/Performance/now
         let milliToPico = (* fromIntegral (resolution (Proxy @E12) `div` resolution (Proxy @E3)))
             diff = picosecondsToDiffTime . truncateDoubleInteger . milliToPico $ t - lt
         timeLeft %= max 0 . subtract diff
-    lastTick .= Just t
   Start -> do
     active .= True
     startSub StopWatchSub $ \sink -> forever $ do
