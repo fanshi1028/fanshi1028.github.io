@@ -16,7 +16,6 @@ import Miso
 import Miso.Html
 import Miso.Html.Property
 import Miso.Lens
-import Miso.String
 
 data Model = Model
   { _active :: Bool,
@@ -47,29 +46,8 @@ updateModel = \case
           Just lt -> do
             -- NOTE: https://developer.mozilla.org/en-US/docs/Web/API/Performance/now
             let milliToPico = (* fromIntegral (resolution (Proxy @E12) `div` resolution (Proxy @E3)))
-                -- diff = picosecondsToDiffTime . fromIntegral . double2Int . milliToPico $ t - lt
-                millDiff = t - lt
-                picoDiff = milliToPico millDiff
-                intDiff = double2Int picoDiff
-                picoDiff'' = fromIntegral intDiff
-                (picoDiff', leftover) = properFractionDoubleInteger picoDiff
-                diff = picosecondsToDiffTime picoDiff'
-                _ = picosecondsToDiffTime picoDiff''
+                diff = picosecondsToDiffTime . truncateDoubleInteger . milliToPico $ t - lt
             timeLeft %= max 0 . subtract diff
-            io_ $ do
-              -- consoleLog $ "tick: " <> ms t <> ", " <> ms (t - lt) <> ", " <> ms (show diff)
-              consoleLog $
-                intercalate
-                  ", "
-                  [ "tick: " <> ms t,
-                    "millDiff " <> ms millDiff,
-                    "picoDiff " <> ms picoDiff,
-                    "intDiff " <> ms intDiff,
-                    "picoDiff''" <> ms (show picoDiff''),
-                    "picoDiff'" <> ms (show picoDiff'),
-                    "leftover" <> ms leftover,
-                    "diff " <> ms (show diff)
-                  ]
     lastTick .= Just t
   Start -> active .= True
   Stop -> active .= False
