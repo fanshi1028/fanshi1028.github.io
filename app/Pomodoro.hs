@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -9,10 +7,8 @@
 module Pomodoro where
 
 import qualified Clock
-import Data.Aeson hiding ((.=))
 import Data.Maybe
 import Data.Time
-import GHC.Generics
 import Miso
 import Miso.Html
 import Miso.Html.Property
@@ -76,7 +72,7 @@ data Action
   | SetShortBreak
   | SetLongBreak
   | Next
-  deriving (Eq, Generic, ToJSON, FromJSON)
+  deriving (Eq)
 
 updateModel :: Action -> Transition Model Action
 updateModel = \case
@@ -133,7 +129,7 @@ viewModel m =
       div_ [id_ "stopwatch", class_ "bg-neutral-600 p-4 rounded-lg"]
         +> ( ( component
                  (Clock.Model False (pomodoroToDiffTime m._currentPomodoro) Nothing)
-                 (Clock.updateModel Next)
+                 Clock.updateModel
                  Clock.viewModel
              )
                { bindings = [ParentToChild (pomodoroToDiffTime . _currentPomodoro) (_set Clock.timeLeft)],
