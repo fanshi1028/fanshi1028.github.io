@@ -10,12 +10,12 @@ import Control.Monad.IO.Class (liftIO)
 import Data.Fixed
 import Data.Proxy
 import Data.Time
-import GHC.Float
 import GHC.Float.RealFracMethods
 import Miso
 import Miso.Html
 import Miso.Html.Property
 import Miso.Lens
+import Miso.String
 
 data Model = Model
   { _active :: Bool,
@@ -35,22 +35,31 @@ timeLeft = lens _timeLeft $ \record x -> record {_timeLeft = x}
 
 data Action = Tick Double | Start | Stop
 
+data StopWatchSub = StopWatchSub
+
+instance ToMisoString StopWatchSub where
+  toMisoString _ = "StopWatchSub"
+
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
   Tick t -> do
-    use active >>= \case
-      False -> pure ()
-      True -> do
-        use lastTick >>= \case
-          Nothing -> pure ()
-          Just lt -> do
-            -- NOTE: https://developer.mozilla.org/en-US/docs/Web/API/Performance/now
-            let milliToPico = (* fromIntegral (resolution (Proxy @E12) `div` resolution (Proxy @E3)))
-                diff = picosecondsToDiffTime . truncateDoubleInteger . milliToPico $ t - lt
-            timeLeft %= max 0 . subtract diff
+    use lastTick >>= \case
+      Nothing -> pure ()
+      Just lt -> do
+        -- NOTE: https://developer.mozilla.org/en-US/docs/Web/API/Performance/now
+        let milliToPico = (* fromIntegral (resolution (Proxy @E12) `div` resolution (Proxy @E3)))
+            diff = picosecondsToDiffTime . truncateDoubleInteger . milliToPico $ t - lt
+        timeLeft %= max 0 . subtract diff
     lastTick .= Just t
-  Start -> active .= True
-  Stop -> active .= False
+  Start -> do
+    active .= True
+    startSub StopWatchSub $ \sink -> forever $ do
+      liftIO $ threadDelay 100000
+      now >>= sink . Tick
+  Stop -> do
+    active .= False
+    lastTick .= Nothing
+    stopSub StopWatchSub
 
 viewModel :: Model -> View Model Action
 viewModel m =
@@ -75,13 +84,3 @@ viewModel m =
                   -- button_ [onClick Start, class_ "text-neutral-200 text-4xl"] ["Start"]
                   button_ [onClick Start, class_ "bg-neutral-200 text-neutral-600 text-4xl rounded px-4 py-2 self-bew"] ["Start"]
                 ]
-
-stopWatch :: DiffTime -> Component parent Model Action
-stopWatch initTime =
-  (component (Model False initTime Nothing) updateModel viewModel)
-    { subs =
-        [ \sink -> forever $ do
-            liftIO $ threadDelay 100000
-            now >>= sink . Tick
-        ]
-    }
