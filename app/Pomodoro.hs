@@ -126,7 +126,14 @@ viewModel m =
 
     currentPomodoroView =
       div_ [id_ "stopwatch", class_ "bg-neutral-600 p-4 rounded-lg"]
-        +> ((Clock.stopWatch $ realToFrac m._timeLeft) {bindings = [timeLeft <--> Clock.timeLeft]})
+        +> ( ( component
+                 (Clock.Model False (realToFrac m._timeLeft) Nothing)
+                 Clock.updateModel
+                 Clock.viewModel
+             )
+               { bindings = [timeLeft <--> Clock.timeLeft]
+               }
+           )
 
     pomodoroQueueView =
       div_ [] $
