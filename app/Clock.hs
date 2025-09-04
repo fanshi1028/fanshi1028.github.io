@@ -35,10 +35,10 @@ timeLeft = lens _timeLeft $ \record x -> record {_timeLeft = x}
 
 data Action = Tick Double | Start | Stop
 
-data StopWatchSub = StopWatchSub
+data StopWatchTickSub = StopWatchTickSub
 
-instance ToMisoString StopWatchSub where
-  toMisoString _ = "StopWatchSub"
+instance ToMisoString StopWatchTickSub where
+  toMisoString _ = "StopWatchTickSub"
 
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
@@ -52,13 +52,13 @@ updateModel = \case
         timeLeft %= max 0 . subtract diff
   Start -> do
     active .= True
-    startSub StopWatchSub $ \sink -> forever $ do
+    startSub StopWatchTickSub $ \sink -> forever $ do
       liftIO $ threadDelay 100000
       now >>= sink . Tick
   Stop -> do
     active .= False
     lastTick .= Nothing
-    stopSub StopWatchSub
+    stopSub StopWatchTickSub
 
 viewModel :: Model -> View Model Action
 viewModel m =
