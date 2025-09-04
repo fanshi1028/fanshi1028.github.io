@@ -35,5 +35,5 @@ app =
       styles = [Style $ ms $(embedFileRelative "static/output.css")],
       mailbox = \v -> case fromJSON v of
         Error _ -> Nothing
-        Success action -> Just action
+        Success Clock.ClockDoneMessage -> Just Pomodoro.Next
     }

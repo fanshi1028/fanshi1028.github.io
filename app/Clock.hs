@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeApplications #-}
@@ -12,6 +14,7 @@ import Data.Fixed
 import Data.Proxy
 import Data.Time
 import GHC.Float.RealFracMethods
+import GHC.Generics
 import Miso
 import Miso.Html
 import Miso.Html.Property
@@ -42,9 +45,11 @@ data StopWatchTickSub = StopWatchTickSub
 instance ToMisoString StopWatchTickSub where
   toMisoString _ = "StopWatchTickSub"
 
-updateModel :: (ToJSON message) => message -> Action -> Effect parent Model Action
-updateModel endMessageToParent = \case
-  End -> mailParent endMessageToParent
+data ClockDoneMessage = ClockDoneMessage deriving (Eq, Generic, ToJSON, FromJSON)
+
+updateModel :: Action -> Effect parent Model Action
+updateModel = \case
+  End -> mailParent ClockDoneMessage
   Tick t ->
     use timeLeft >>= \case
       0 -> issue End
