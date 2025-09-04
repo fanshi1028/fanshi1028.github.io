@@ -24,8 +24,9 @@ app =
   ( component
       ( Pomodoro.Model
           (Pomodoro.PomodoroSettings Pomodoro.defaultPomodoro Pomodoro.defaultShortBreak Pomodoro.defaultLongBreak)
-          Pomodoro.defaultPomodoroQueue
-          (Clock.Model False (realToFrac Pomodoro.defaultPomodoro) Nothing)
+          []
+          Pomodoro.defaultCurrentPomodoro
+          Pomodoro.defaultPomodoroFutureQueue
       )
       Pomodoro.updateModel
       Pomodoro.viewModel
