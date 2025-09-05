@@ -130,7 +130,7 @@ viewModel m =
   div_
     [class_ "flex flex-col h-screen container mx-auto"]
     [ h1_ [class_ "sr-only"] [text "Pomodoro"],
-      div_ [class_ "flex flex-row items-center justify-center gap-8 py-10 border rounded-lg my-auto"] $
+      div_ [class_ "flex flex-row items-center justify-center gap-8 py-10 border rounded-lg my-auto bg-neutral-200"] $
         [div_ [class_ "flex flex-col gap-6"] [settingsView, currentPomodoroView], pomodoroQueueView]
     ]
   where
@@ -150,7 +150,8 @@ viewModel m =
               div_
                 [class_ "flex flex-col"]
                 [ input_
-                    [ type_ "number",
+                    [ class_ "bg-transparent",
+                      type_ "number",
                       max_ "90",
                       min_ "5",
                       step_ "5",
@@ -173,7 +174,7 @@ viewModel m =
         ]
 
     currentPomodoroView =
-      div_ [id_ "stopwatch", class_ "bg-neutral-600 p-4 rounded-lg"]
+      div_ [id_ "stopwatch", class_ "bg-neutral-600 p-4 rounded-lg shadow-lg shadow-neutral-600"]
         +> ( ( component
                  (Clock.Model False (m._currentPomodoro._pomodoroTime) Nothing)
                  Clock.updateModel
@@ -188,11 +189,11 @@ viewModel m =
       div_ [] $
         [ h2_ [class_ "sr-only"] [text "Pomodoro Queue"],
           ul_ [class_ "flex flex-col gap-3"] $
-            let pastItemView i = li_ [class_ "px-2"] [pomodoroView (Just "text-neutral-400") i]
-                futureItemView i = li_ [class_ "px-2"] [pomodoroView (Just "text-neutral-600") i]
+            let pastItemView i = li_ [class_ "px-2"] [pomodoroView (Just "text-neutral-400 font-semibold") i]
+                futureItemView i = li_ [class_ "px-2"] [pomodoroView (Just "text-neutral-500 font-semibold") i]
              in let currentView =
                       li_
-                        [class_ "border-2 border-neutral-400 p-4 uppercase tracking-tight rounded text-center text-neutral-500 font-bold text-lg my-3"]
+                        [class_ "border-2 border-neutral-500/80 p-6 uppercase tracking-tight rounded text-center text-neutral-500 font-bold text-xl my-3"]
                         [text $ stageToMisoString m._currentPomodoro._pomodoroStage]
                  in foldl' (\acc i -> pastItemView i : acc) (currentView : (futureItemView <$> m._pomodoroFutureQueue)) m._pomodoroPastQueue
         ]

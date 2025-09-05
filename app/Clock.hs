@@ -77,12 +77,13 @@ viewModel :: Model -> View Model Action
 viewModel m =
   div_ [class_ "flex flex-col items-center gap-4 p-6"] $
     let timeDisplay = text $ ms (formatTime defaultTimeLocale "%M:%00ES" $ m ^. timeLeft)
+        buttonCls = "bg-neutral-200 text-neutral-600 text-4xl rounded px-4 py-2 shadow-inner shadow-neutral-800"
      in if m ^. active
           then
             [ p_ [class_ "text-neutral-200 text-9xl"] [timeDisplay],
               div_
                 [class_ "flex flex-row justify-around w-full items-center"]
-                [ button_ [onClick Stop, class_ "bg-neutral-200 text-neutral-600 text-4xl rounded px-4 py-2"] ["Stop"],
+                [ button_ [onClick Stop, class_ buttonCls] ["Stop"],
                   button_
                     [onClick End, class_ "text-neutral-200 text-4xl rounded px-4 py-2"]
                     [ svg_
@@ -93,5 +94,5 @@ viewModel m =
             ]
           else
             [ p_ [class_ "text-neutral-200 text-9xl"] [timeDisplay],
-              button_ [onClick Start, class_ "bg-neutral-200 text-neutral-600 text-4xl rounded px-4 py-2"] ["Start"]
+              button_ [onClick Start, class_ buttonCls] ["Start"]
             ]
