@@ -167,7 +167,7 @@ viewModel m =
             ]
 
     settingsView =
-      div_ [class_ "flex flex-col gap-6"] $
+      div_ [] $
         [ h2_ [class_ "sr-only"] ["Settings"],
           div_ [class_ "flex flex-row gap-8"] $ settingView <$> [minBound .. maxBound]
         ]
