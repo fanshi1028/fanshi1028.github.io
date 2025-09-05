@@ -93,5 +93,5 @@ viewModel m =
             ]
           else
             [ p_ [class_ "text-neutral-200 text-9xl"] [timeDisplay],
-              button_ [onClick Start, class_ "bg-neutral-200 text-neutral-600 text-4xl rounded px-4 py-2 self-bew"] ["Start"]
+              button_ [onClick Start, class_ "bg-neutral-200 text-neutral-600 text-4xl rounded px-4 py-2"] ["Start"]
             ]
