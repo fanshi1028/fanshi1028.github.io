@@ -69,6 +69,7 @@ stageToSettingLens = \case
 
 data Model = Model
   { _settings :: PomodoroSettings,
+    _settingsOpen :: Bool,
     _pomodoroPastQueue :: [Pomodoro],
     _currentPomodoro :: Pomodoro,
     _pomodoroFutureQueue :: [Pomodoro]
@@ -77,6 +78,9 @@ data Model = Model
 
 settings :: Lens Model PomodoroSettings
 settings = lens _settings $ \record x -> record {_settings = x}
+
+settingsOpen :: Lens Model Bool
+settingsOpen = lens _settingsOpen $ \record x -> record {_settingsOpen = x}
 
 pomodoroPastQueue :: Lens Model [Pomodoro]
 pomodoroPastQueue = lens _pomodoroPastQueue $ \record x -> record {_pomodoroPastQueue = x}
@@ -104,10 +108,11 @@ defaultPomodoroFutureQueue =
     MkPomodoro LongBreak $ naturalAsMinutesToDiffTime defaultLongBreak
   ]
 
-data Action = Set PomodoroStage MisoString | Next deriving (Eq)
+data Action = ToggleSettingsOpen | Set PomodoroStage MisoString | Next deriving (Eq)
 
 updateModel :: Action -> Transition Model Action
 updateModel = \case
+  ToggleSettingsOpen -> settingsOpen %= not
   Next -> do
     current <- use currentPomodoro
     pomodoroPastQueue %= (current :)
@@ -170,7 +175,17 @@ viewModel m =
     settingsView =
       div_ [] $
         [ h2_ [class_ "sr-only"] ["Settings"],
-          div_ [class_ "flex flex-row gap-8"] $ settingView <$> [minBound .. maxBound]
+          if m ^. settingsOpen
+            then
+              div_
+                [class_ "flex flex-col gap-4"]
+                [ div_ [class_ "flex flex-row gap-8"] $ settingView <$> [minBound .. maxBound],
+                  div_ [class_ "flex flex-row gap-2 justify-around"] $
+                    [ button_ [] ["Apply"],
+                      button_ [onClick ToggleSettingsOpen] ["Close"]
+                    ]
+                ]
+            else button_ [onClick ToggleSettingsOpen] ["Open Settings"]
         ]
 
     currentPomodoroView =

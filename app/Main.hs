@@ -28,6 +28,7 @@ app =
               (Pomodoro.ValueWithValidation (ms $ show Pomodoro.defaultShortBreak) $ pure Pomodoro.defaultShortBreak)
               (Pomodoro.ValueWithValidation (ms $ show Pomodoro.defaultLongBreak) $ pure Pomodoro.defaultLongBreak)
           )
+          False
           []
           Pomodoro.defaultCurrentPomodoro
           Pomodoro.defaultPomodoroFutureQueue
