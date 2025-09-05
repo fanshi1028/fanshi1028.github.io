@@ -32,7 +32,7 @@ executable app
   main-is:
     Main.hs
   build-depends:
-    aeson, base < 5, file-embed, miso, text, time
+    aeson, base < 5, file-embed, miso, text, time, validation-selective
   hs-source-dirs:
     app
   default-language:

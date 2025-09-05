@@ -23,7 +23,11 @@ app :: App Pomodoro.Model Pomodoro.Action
 app =
   ( component
       ( Pomodoro.Model
-          (Pomodoro.PomodoroSettings Pomodoro.defaultPomodoro Pomodoro.defaultShortBreak Pomodoro.defaultLongBreak)
+          ( Pomodoro.PomodoroSettings
+              (Pomodoro.ValueWithValidation (ms $ show Pomodoro.defaultPomodoro) $ pure Pomodoro.defaultPomodoro)
+              (Pomodoro.ValueWithValidation (ms $ show Pomodoro.defaultShortBreak) $ pure Pomodoro.defaultShortBreak)
+              (Pomodoro.ValueWithValidation (ms $ show Pomodoro.defaultLongBreak) $ pure Pomodoro.defaultLongBreak)
+          )
           []
           Pomodoro.defaultCurrentPomodoro
           Pomodoro.defaultPomodoroFutureQueue
