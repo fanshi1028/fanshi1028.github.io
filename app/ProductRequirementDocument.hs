@@ -5,6 +5,7 @@ module ProductRequirementDocument where
 
 import Data.Text
 import Data.Time
+import Network.URI
 
 data ProductRequirementDocument = ProductRequirementDocument
   { -- NOTE: clearly articulates the key problem we want to solve
@@ -18,12 +19,18 @@ data ProductRequirementDocument = ProductRequirementDocument
 data SolutionAlignment = SolutionAlignment
   { _userFlows :: Text,
     _features :: [Text],
-    _openIssues :: [OpenIssues]
+    _openIssues :: [OpenIssues],
+    _references :: [Reference]
   }
 
 data OpenIssues = OpenIssues
   { _openIssuesDescription :: Text,
     _keyDecisions :: [Text]
+  }
+
+data Reference = Reference
+  { _referencelink :: URI,
+    _referenceComments :: [Text]
   }
 
 -- NOTE: Describe the problem (or opportunity) you’re trying to solve.
