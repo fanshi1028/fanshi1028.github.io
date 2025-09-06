@@ -29,6 +29,7 @@ executable app
   other-modules:
     Clock
     Pomodoro
+    ProductRequirementDocument
   main-is:
     Main.hs
   build-depends:
