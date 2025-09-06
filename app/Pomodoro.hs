@@ -10,6 +10,7 @@ module Pomodoro where
 import qualified Clock
 import Control.Applicative
 import Control.Category
+import Data.Aeson as Aeson hiding ((.=))
 import Data.List.NonEmpty
 import Data.Maybe
 import Data.Time
@@ -21,7 +22,7 @@ import Miso.Lens
 import Network.URI.Static
 import ProductRequirementDocument
 import Text.Read
-import Validation hiding (validation)
+import Validation as Validation hiding (validation)
 import Prelude hiding ((.))
 
 data PomodoroStage = Pomodoro | ShortBreak | LongBreak deriving (Eq, Enum, Bounded)
@@ -113,7 +114,7 @@ defaultPomodoroFutureQueue =
 
 data Action = ToggleSettingsOpen | Set PomodoroStage MisoString | Next deriving (Eq)
 
-updateModel :: Action -> Transition Model Action
+updateModel :: Action -> Effect parent Model Action
 updateModel = \case
   ToggleSettingsOpen -> settingsOpen %= not
   Next -> do
@@ -168,7 +169,7 @@ viewModel m =
                     ],
                   -- p_ [] [text . ms $ formatTime defaultTimeLocale "%M:%00ES" m._settings._shortBreak]
                   case v._validation of
-                    Success _ -> div_ [] []
+                    Validation.Success _ -> div_ [] []
                     Failure (toList -> errs) ->
                       div_ [class_ "flex flex-col"] $
                         p_ [] . (: []) . text . unPomodoroMinuteSettingValidationError <$> errs
@@ -220,6 +221,28 @@ defaultPomodoro, defaultShortBreak, defaultLongBreak :: Natural
 defaultLongBreak = 15
 defaultShortBreak = 5
 defaultPomodoro = 25
+
+pomodoroComponent :: Component parent Model Action
+pomodoroComponent =
+  ( component
+      ( Pomodoro.Model
+          ( Pomodoro.PomodoroSettings
+              (Pomodoro.ValueWithValidation (ms $ show Pomodoro.defaultPomodoro) $ pure Pomodoro.defaultPomodoro)
+              (Pomodoro.ValueWithValidation (ms $ show Pomodoro.defaultShortBreak) $ pure Pomodoro.defaultShortBreak)
+              (Pomodoro.ValueWithValidation (ms $ show Pomodoro.defaultLongBreak) $ pure Pomodoro.defaultLongBreak)
+          )
+          False
+          []
+          Pomodoro.defaultCurrentPomodoro
+          Pomodoro.defaultPomodoroFutureQueue
+      )
+      Pomodoro.updateModel
+      Pomodoro.viewModel
+  )
+    { mailbox = \v -> case fromJSON v of
+        Error _ -> Nothing
+        Aeson.Success Clock.ClockDoneMessage -> Just Pomodoro.Next
+    }
 
 prd :: ProductRequirementDocument
 prd =
