@@ -244,8 +244,8 @@ pomodoroComponent =
         Aeson.Success Clock.ClockDoneMessage -> Just Pomodoro.Next
     }
 
-prd :: ProductRequirementDocument
-prd =
+pomodoroPRD :: ProductRequirementDocument
+pomodoroPRD =
   ProductRequirementDocument
     ( ProblemAlignment
         [ Problem
@@ -260,7 +260,7 @@ prd =
         ["A functional pomodoro timer", "UI/UX should be simple and modern"]
     )
     ( SolutionAlignment
-        "Settings"
+        "Settings -> Timer"
         [ "Users can set their desired time for pomodoro and breaks",
           "Users can start and stop the timer",
           "Users can fastforward to skip to the next stage"
