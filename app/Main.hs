@@ -6,6 +6,7 @@
 module Main where
 
 import Data.FileEmbed (embedFileRelative)
+import Data.List.NonEmpty
 import Miso
 import Miso.Html.Element
 import Miso.Html.Property
