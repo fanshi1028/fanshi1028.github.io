@@ -3,6 +3,7 @@
 
 module ProductRequirementDocument where
 
+import Data.List.NonEmpty
 import Data.Text
 import Data.Time
 import Network.URI
@@ -48,7 +49,7 @@ data Problem = Problem
   }
 
 data ProblemAlignment = ProblemAlignment
-  { _problems :: [Problem],
+  { _problems :: NonEmpty Problem,
     -- NOTE: Optimize for eliciting a meaningful reaction.
     -- Describe briefly the approach you’re taking to solve this problem.
     -- This should be enough for the reader to imagine possible solution directions and get a very rough sense of the scope of this project.

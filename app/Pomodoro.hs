@@ -248,14 +248,15 @@ pomodoroPRD :: ProductRequirementDocument
 pomodoroPRD =
   ProductRequirementDocument
     ( ProblemAlignment
-        [ Problem
+        ( Problem
             "To build a simple Pomodoro app"
             "I need some quick and simple on my site as a MVP to showcase my programming skills"
             "So that my site is not empty and it will be a tool that I could use"
             "Bonus It is a tool that people could use and potentially bring traffic"
             ""
             ""
-        ]
+            :| []
+        )
         "Starting from feature, evolving into a nice UI, don't overengineering it."
         ["A functional pomodoro timer", "UI/UX should be simple and modern"]
     )
