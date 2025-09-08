@@ -266,14 +266,14 @@ pomodoroPRD =
           "Users can start and stop the timer",
           "Users can fastforward to skip to the next stage"
         ]
-        [ OpenIssues "Tech Stack" ["Use Miso and Tailwind, as the whole site is powered by it"],
+        [ OpenIssues "Tech Stack" $ "Use Miso and Tailwind, as the whole site is powered by it" :| [],
           OpenIssues
             "Timer Settings Reasonable Values"
-            [ "5 mins as the unit, I don't see we need more flexibility here, make it simple",
-              "More than 5 mins, It is too fragment to do reasonable work or have a reasonable rest if the time is too short",
-              "Less than 120 mins, I don't think and human could sustain a undistrubed focus for that long while being poductive",
-              "Following the tried and true 4 short break then a long break, I don't see the value of extra flexibilify as we offer to tweak the time for each stage already"
-            ]
+            $ "5 mins as the unit, I don't see we need more flexibility here, make it simple"
+              :| [ "More than 5 mins, It is too fragment to do reasonable work or have a reasonable rest if the time is too short",
+                   "Less than 120 mins, I don't think and human could sustain a undistrubed focus for that long while being poductive",
+                   "Following the tried and true 4 short break then a long break, I don't see the value of extra flexibilify as we offer to tweak the time for each stage already"
+                 ]
         ]
         [Reference [uri|https://pomofocus.io/|] ["I don't need those complex features like it does but I like the simple and clean ui"]]
     )

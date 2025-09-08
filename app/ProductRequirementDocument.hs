@@ -26,7 +26,7 @@ data SolutionAlignment = SolutionAlignment
 
 data OpenIssues = OpenIssues
   { _openIssuesDescription :: Text,
-    _keyDecisions :: [Text]
+    _keyDecisions :: NonEmpty Text
   }
 
 data Reference = Reference
