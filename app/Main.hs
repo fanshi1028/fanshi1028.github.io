@@ -48,8 +48,10 @@ sitePRD =
             "A playground to play with idea that interested me"
             :| []
         )
-        "The site will be built from features, one by one, and UI will come naturally. Features will be organised by tags, let's say our entry point will be a word cloud of tag? A collection of tools, blogpost, organised by tags, visitors guided by the flexible UI"
-        ["Host tools that I or visitors coudld use", "UI should guide visitors what interested them smoothly", "UI should be simple, modern and not over engineered", "The site will be a testimonial of my skills and also my product sense and development philosophy"]
+        "The site will be built from features, one by one, and UI will come naturally. Features will be organised by tags, let's say our entry point will be a word cloud of tag? A collection of tools, blogpost, organised by tags, visitors guided by the flexible UI."
+        ( "Host tools that I or visitors coudld use"
+            :| ["UI should guide visitors what interested them smoothly", "UI should be simple, modern and not over engineered", "The site will be a testimonial of my skills and also my product sense and development philosophy"]
+        )
     )
     ( SolutionAlignment
         "WorldCloudOfTag -> Features/Tools/BlogPost"
