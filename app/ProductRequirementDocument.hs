@@ -56,7 +56,7 @@ data ProblemAlignment = ProblemAlignment
     --  (e.g., if “The Problem” was engagement in the design process from non-designers, “The Approach” might be a feed which surfaces work that's relevant to them.)
     _highLevelApproach :: Text,
     -- NOTE: State all your goals, even those immeasurable.
-    _goalsAndSuccess :: [Text]
+    _goalsAndSuccess :: NonEmpty Text
   }
 
 data KeyMilestone = KeyMilestone

@@ -258,7 +258,7 @@ pomodoroPRD =
             :| []
         )
         "Starting from feature, evolving into a nice UI, don't overengineering it."
-        ["A functional pomodoro timer", "UI/UX should be simple and modern"]
+        ("A functional pomodoro timer" :| ["UI/UX should be simple and modern"])
     )
     ( SolutionAlignment
         "Settings -> Timer"
