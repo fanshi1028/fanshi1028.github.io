@@ -59,13 +59,12 @@ sitePRD =
           "Modular design, enable me to increasementally add new features with ease",
           "Every new feature will be started with a PRD(Product Requirement Document), and the PRDs will be avaliable to users, users could see the PRD of a feature on this site if they want and switch back to the feature as they wish"
         ]
-        [ OpenIssues
-            "Tech Stack"
-            [ "Use Miso and Tailwind, as I want to explore Miso, which makes powered by Web-Assembly(compiled from Haskell of course), later may turn it into apps via miso-lynx. tailwind is no brainer",
-              "The other choice could be a haskell backend + htmx, but github page is static and no backend",
-              "Also Hyperbole(haskell lib) is also interesting, but it is not stable and again need a backend, not suitable for the use case here"
-            ],
-          OpenIssues "Edge Computing, Worker" ["Will expand into this territory and a necessary features of this site demands a backend, but not for now"]
+        [ OpenIssues "Tech Stack" $
+            "Use Miso and Tailwind, as I want to explore Miso, which makes powered by Web-Assembly(compiled from Haskell of course), later may turn it into apps via miso-lynx. tailwind is no brainer"
+              :| [ "The other choice could be a haskell backend + htmx, but github page is static and no backend",
+                   "Also Hyperbole(haskell lib) is also interesting, but it is not stable and again need a backend, not suitable for the use case here"
+                 ],
+          OpenIssues "Edge Computing, Worker" $ "Will expand into this territory and a necessary features of this site demands a backend, but not for now" :| []
         ]
         [ Reference [uri|https://www.refactoringui.com/|] ["Following the ui philosophy in this book. feature first, then build the ui to suit the feature"],
           Reference [uri|https://coda.io/@yuhki/figmas-approach-to-product-requirement-docs|] ["I like this approach to writie product requirement docs"]
