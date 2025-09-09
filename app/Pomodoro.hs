@@ -20,7 +20,7 @@ import Miso.Html
 import Miso.Html.Property
 import Miso.Lens
 import Network.URI.Static
-import ProductRequirementDocument
+import ProductRequirementDocument hiding (Action, Model)
 import Text.Read
 import Validation as Validation hiding (validation)
 import Prelude hiding ((.))

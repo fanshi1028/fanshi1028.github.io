@@ -12,7 +12,7 @@ import Miso.Html.Element
 import Miso.Html.Property
 import Network.URI.Static
 import qualified Pomodoro
-import ProductRequirementDocument
+import ProductRequirementDocument as PRD
 import Prelude hiding (rem, unlines)
 
 -----------------------------------------------------------------------------
@@ -24,16 +24,16 @@ foreign export javascript "hs_start" main :: IO ()
 main :: IO ()
 main = run $ startApp app
 
-app :: App () action
-app = component () noop $ \() ->
-  div_
-    []
-    [ div_ [id_ "pomodoro"]
-        +> Pomodoro.pomodoroComponent
-          { events = defaultEvents,
-            styles = [Style $ ms $(embedFileRelative "static/output.css")]
-          }
-    ]
+app :: App PRD.Model PRD.Action
+app =
+  ( component
+      (PRD.Model True sitePRD)
+      PRD.updateModel
+      PRD.viewModel
+  )
+    { styles = [Style $ ms $(embedFileRelative "static/output.css")]
+    }
+
 
 sitePRD :: ProductRequirementDocument
 sitePRD =
@@ -46,7 +46,14 @@ sitePRD =
             "Also the blog itself is showcasing all my programming skills from Frontend to Backend even other skills like Product Design, etc"
             "It will host some tools that I will use, other could use, which potentially draw traffic."
             "A playground to play with idea that interested me"
-            :| []
+            :| [ Problem
+                   "I need a personal site"
+                   "As a programmer, I need a stronger online presence, to host my blog if I have anything to say, to host my profolio, etc"
+                   "As an introvert, I am no good at marketing, this site and the online presence it built will stay and evolve and open door for opportunity that I may not forseen"
+                   "Also the blog itself is showcasing all my programming skills from Frontend to Backend even other skills like Product Design, etc"
+                   "It will host some tools that I will use, other could use, which potentially draw traffic."
+                   "A playground to play with idea that interested me"
+               ]
         )
         "The site will be built from features, one by one, and UI will come naturally. Features will be organised by tags, let's say our entry point will be a word cloud of tag? A collection of tools, blogpost, organised by tags, visitors guided by the flexible UI."
         ( "Host tools that I or visitors could use"
