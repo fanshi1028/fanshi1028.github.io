@@ -104,7 +104,7 @@ viewModel (Model True prd) =
       launchReadinessView
     ]
   where
-    h3Cls = "font-bold text-lg text-neutral-400 font-serif"
+    h3Cls = "font-bold text-lg sm:text-xl text-neutral-400 font-serif"
     sectionView title inner =
       div_ [class_ "flex flex-col gap-8"] $
         [ h2_ [class_ "font-bold text-2xl text-neutral-400 font-serif"] [title],
@@ -119,7 +119,7 @@ viewModel (Model True prd) =
                   _ -> (li_, "Problems")
                 problemView problem' =
                   problemHtmlTag [] $
-                    [h4_ [class_ "font-bold text-2xl text-neutral-600"] [text $ ms $ (problem' :: Problem)._problemStatement]]
+                    [h4_ [class_ "font-bold text-2xl sm:text-4xl text-neutral-600"] [text $ ms $ (problem' :: Problem)._problemStatement]]
              in [ h3_ [class_ "sr-only"] [title],
                   case restProblems of
                     [] -> problemView problem
@@ -162,9 +162,9 @@ viewModel (Model True prd) =
                   ol_ [class_ "flex flex-col gap-3 list-decimal list-inside"] $
                     let issueView (OpenIssues issueDescription (decision :| restDecisions)) =
                           li_ [class_ "marker:text-neutral-600 marker:font-semibold"] $
-                            [ h4_ [class_ "inline font-bold text-neutral-600"] [text $ ms issueDescription],
+                            [ h4_ [class_ "inline font-bold text-neutral-600 sm:text-lg"] [text $ ms issueDescription],
                               div_ [class_ "px-2 flex flex-col sm:flex-row gap-2 mt-2"] $
-                                [ h4_ [class_ "text-neutral-300 font-bold sm:text-lg sm:[writing-mode:vertical-lr]"] ["Key Decisions"],
+                                [ h4_ [class_ "text-neutral-300 font-bold sm:text-lg sm:mt-2 sm:-ml-4 sm:[writing-mode:vertical-lr]"] ["Key Decisions"],
                                   ul_ [class_ "list-disc list-inside flex flex-col gap-2"] $
                                     let decisionView decision' = li_ [class_ "prose text-neutral-800"] [text $ ms decision']
                                      in decisionView decision : (decisionView <$> restDecisions)
@@ -179,7 +179,7 @@ viewModel (Model True prd) =
                 references ->
                   let referenceView (Reference mName (ms . Prelude.show -> uri) (comment :| restComments)) =
                         li_ [class_ "marker:text-neutral-600 marker:font-semibold"] $
-                          [ a_ [href_ uri, class_ "text-neutral-600 font-bold inline"] [text $ fromMaybe uri (ms <$> mName)],
+                          [ a_ [href_ uri, class_ "text-neutral-600 font-bold inline sm:text-lg"] [text $ fromMaybe uri (ms <$> mName)],
                             case restComments of
                               [] -> p_ [class_ "prose text-neutral-800"] [text $ ms comment]
                               _ ->
