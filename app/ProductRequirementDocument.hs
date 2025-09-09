@@ -97,18 +97,18 @@ updateModel = noop -- TEMP FIXME
 viewModel :: Model -> View Model Action
 viewModel (Model False _) = div_ [] ["TEMP FIXME no PRD"]
 viewModel (Model True prd) =
-  div_ [class_ "flex flex-col gap-12 container mx-auto p-6 sm:p-12 bg-neutral-100"] $
+  div_ [class_ "flex flex-col gap-12 md:gap-20 container mx-auto p-6 sm:p-12 md:p-16 bg-neutral-100"] $
     [ div_
-        [class_ "flex flex-col gap-12"]
+        [class_ "flex flex-col gap-12 md:gap-20"]
         [problemAlignmentView, solutionAlignmentView],
       launchReadinessView
     ]
   where
-    h3Cls = "font-bold text-lg sm:text-xl text-neutral-400 font-serif"
+    h3Cls = "font-bold text-lg sm:text-xl md:text-2xl text-neutral-400 font-serif"
     sectionView title inner =
-      div_ [class_ "flex flex-col gap-8"] $
-        [ h2_ [class_ "font-bold text-2xl text-neutral-400 font-serif"] [title],
-          div_ [class_ "flex flex-col gap-8"] inner
+      div_ [class_ "flex flex-col gap-8 md:gap-10"] $
+        [ h2_ [class_ "font-bold text-2xl md:text-3xl text-neutral-400 font-serif"] [title],
+          div_ [class_ "flex flex-col gap-8 md:gap-10"] inner
         ]
     problemAlignmentView =
       sectionView "Problem Aligment" $
@@ -119,7 +119,7 @@ viewModel (Model True prd) =
                   _ -> (li_, "Problems")
                 problemView problem' =
                   problemHtmlTag [] $
-                    [h4_ [class_ "font-bold text-2xl sm:text-4xl text-neutral-600"] [text $ ms $ (problem' :: Problem)._problemStatement]]
+                    [h4_ [class_ "font-bold text-2xl sm:text-4xl md:text-5xl text-neutral-600"] [text $ ms $ (problem' :: Problem)._problemStatement]]
              in [ h3_ [class_ "sr-only"] [title],
                   case restProblems of
                     [] -> problemView problem
@@ -154,18 +154,18 @@ viewModel (Model True prd) =
                     let featureView feature = li_ [class_ "prose text-neutral-800"] [text $ ms feature]
                      in featureView <$> features
             ],
-          div_ [class_ "flex flex-col gap-3"] $
+          div_ [class_ "flex flex-col gap-3 sm:gap-6"] $
             [ h3_ [class_ h3Cls] ["Open Issues"],
               case prd._solutionAlignment._openIssues of
                 [] -> p_ [class_ "prose text-neutral-800"] ["Here is a somewhat great news, we have no open issues, but on the other hand, it could also be a indication that the PRD writer didn't think it through though"]
                 openIssues ->
-                  ol_ [class_ "flex flex-col gap-3 list-decimal list-inside"] $
+                  ol_ [class_ "flex flex-col gap-3 sm:gap-6 list-decimal list-inside"] $
                     let issueView (OpenIssues issueDescription (decision :| restDecisions)) =
-                          li_ [class_ "marker:text-neutral-600 marker:font-semibold"] $
-                            [ h4_ [class_ "inline font-bold text-neutral-600 sm:text-lg"] [text $ ms issueDescription],
-                              div_ [class_ "px-2 flex flex-col sm:flex-row gap-2 mt-2"] $
-                                [ h4_ [class_ "text-neutral-300 font-bold sm:text-lg sm:mt-2 sm:-ml-4 sm:[writing-mode:vertical-lr]"] ["Key Decisions"],
-                                  ul_ [class_ "list-disc list-inside flex flex-col gap-2"] $
+                          li_ [class_ "marker:text-neutral-600 marker:font-semibold sm:text-lg md:text-xl"] $
+                            [ h4_ [class_ "inline font-bold text-neutral-600 text-lg sm:text-xl md:text-xl"] [text $ ms issueDescription],
+                              div_ [class_ "px-2 flex flex-col sm:flex-row gap-2 sm:gap-4 mt-2 sm:mt-4"] $
+                                [ h4_ [class_ "text-neutral-300 font-bold sm:text-2xl sm:mt-2 sm:-ml-4 sm:[writing-mode:vertical-lr]"] ["Key Decisions"],
+                                  ul_ [class_ "list-disc list-inside flex flex-col gap-2 sm:gap-4"] $
                                     let decisionView decision' = li_ [class_ "prose text-neutral-800"] [text $ ms decision']
                                      in decisionView decision : (decisionView <$> restDecisions)
                                 ]
@@ -178,8 +178,8 @@ viewModel (Model True prd) =
                 [] -> "No Reference is needed"
                 references ->
                   let referenceView (Reference mName (ms . Prelude.show -> uri) (comment :| restComments)) =
-                        li_ [class_ "marker:text-neutral-600 marker:font-semibold"] $
-                          [ a_ [href_ uri, class_ "text-neutral-600 font-bold inline sm:text-lg"] [text $ fromMaybe uri (ms <$> mName)],
+                        li_ [class_ "marker:text-neutral-600 marker:font-semibold sm:text-lg md:text-xl"] $
+                          [ a_ [href_ uri, class_ "text-neutral-600 font-bold inline sm:text-lg md:text-xl"] [text $ fromMaybe uri (ms <$> mName)],
                             case restComments of
                               [] -> p_ [class_ "prose text-neutral-800"] [text $ ms comment]
                               _ ->
