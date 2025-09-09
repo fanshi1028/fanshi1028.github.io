@@ -30,7 +30,8 @@ data OpenIssues = OpenIssues
   }
 
 data Reference = Reference
-  { _referencelink :: URI,
+  { _referenceName :: Maybe Text,
+    _referencelink :: URI,
     _referenceComments :: [Text]
   }
 

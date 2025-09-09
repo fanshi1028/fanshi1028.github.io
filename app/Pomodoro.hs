@@ -275,6 +275,6 @@ pomodoroPRD =
                    "Following the tried and true 4 short break then a long break, I don't see the value of extra flexibilify as we offer to tweak the time for each stage already"
                  ]
         ]
-        [Reference [uri|https://pomofocus.io/|] ["I don't need those complex features like it does but I like the simple and clean ui"]]
+        [Reference (Just "Pomofocus") [uri|https://pomofocus.io/|] ["I don't need those complex features like it does but I like the simple and clean ui"]]
     )
     []
