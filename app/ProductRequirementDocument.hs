@@ -97,7 +97,7 @@ updateModel = noop -- TEMP FIXME
 viewModel :: Model -> View Model Action
 viewModel (Model False _) = div_ [] ["TEMP FIXME no PRD"]
 viewModel (Model True prd) =
-  div_ [class_ "flex flex-col gap-12 container mx-auto p-6 bg-neutral-100"] $
+  div_ [class_ "flex flex-col gap-12 container mx-auto p-6 sm:p-12 bg-neutral-100"] $
     [ div_
         [class_ "flex flex-col gap-12"]
         [problemAlignmentView, solutionAlignmentView],
