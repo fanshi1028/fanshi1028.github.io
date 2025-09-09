@@ -66,8 +66,8 @@ sitePRD =
                  ],
           OpenIssues "Edge Computing, Worker" $ "Will expand into this territory and a necessary features of this site demands a backend, but not for now" :| []
         ]
-        [ Reference (Just "Refactoring UI") [uri|https://www.refactoringui.com/|] ["Following the ui philosophy in this book. feature first, then build the ui to suit the feature"],
-          Reference (Just "Figma PRD") [uri|https://coda.io/@yuhki/figmas-approach-to-product-requirement-docs|] ["I like this approach to writie product requirement docs"]
+        [ Reference (Just "Refactoring UI") [uri|https://www.refactoringui.com/|] $ "Following the ui philosophy in this book. feature first, then build the ui to suit the feature" :| [],
+          Reference (Just "Figma PRD") [uri|https://coda.io/@yuhki/figmas-approach-to-product-requirement-docs|] $ "I like this approach to writie product requirement docs" :| []
         ]
     )
     []

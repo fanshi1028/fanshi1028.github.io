@@ -32,7 +32,7 @@ data OpenIssues = OpenIssues
 data Reference = Reference
   { _referenceName :: Maybe Text,
     _referencelink :: URI,
-    _referenceComments :: [Text]
+    _referenceComments :: NonEmpty Text
   }
 
 -- NOTE: Describe the problem (or opportunity) you’re trying to solve.
