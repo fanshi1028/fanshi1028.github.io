@@ -46,14 +46,7 @@ sitePRD =
             "Also the blog itself is showcasing all my programming skills from Frontend to Backend even other skills like Product Design, etc"
             "It will host some tools that I will use, other could use, which potentially draw traffic."
             "A playground to play with idea that interested me"
-            :| [ Problem
-                   "I need a personal site"
-                   "As a programmer, I need a stronger online presence, to host my blog if I have anything to say, to host my profolio, etc"
-                   "As an introvert, I am no good at marketing, this site and the online presence it built will stay and evolve and open door for opportunity that I may not forseen"
-                   "Also the blog itself is showcasing all my programming skills from Frontend to Backend even other skills like Product Design, etc"
-                   "It will host some tools that I will use, other could use, which potentially draw traffic."
-                   "A playground to play with idea that interested me"
-               ]
+            :| []
         )
         "The site will be built from features, one by one, and UI will come naturally. Features will be organised by tags, let's say our entry point will be a word cloud of tag? A collection of tools, blogpost, organised by tags, visitors guided by the flexible UI."
         ( "Host tools that I or visitors could use"
