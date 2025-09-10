@@ -138,7 +138,7 @@ viewModel (Model True prd) =
     solutionAlignmentView =
       sectionView "Solution Aligment" "xl:flex-row xl:gap-16" $
         [ div_
-            [class_ "contents xl:flex xl:flex-col xl:justify-between xl:gap-12"]
+            [class_ "contents xl:flex xl:flex-col xl:gap-12"]
             [ div_ [class_ "flex flex-col gap-2 lg:gap-4 xl:gap-6"] $
                 [ h3_ [class_ h3Cls] ["User Flows"],
                   p_ [class_ "text-neutral-800 prose 2xl:prose-lg"] [text $ ms prd._solutionAlignment._userFlows]
@@ -195,7 +195,7 @@ viewModel (Model True prd) =
     launchReadinessView =
       sectionView "Launch Readiness" "" $
         case prd._launchReadiness of
-          [] -> [p_ [class_ "prose text-neutral-800"] ["No dependencies for launch"]]
+          [] -> [p_ [class_ "prose 2xl:prose-lg text-neutral-800"] ["No dependencies for launch"]]
           _ ->
             let keyMilestoneView (KeyMilestone name checkList deadline) =
                   li_
