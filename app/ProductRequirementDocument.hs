@@ -97,21 +97,17 @@ updateModel = noop -- TEMP FIXME
 viewModel :: Model -> View Model Action
 viewModel (Model False _) = div_ [] ["TEMP FIXME no PRD"]
 viewModel (Model True prd) =
-  div_ [class_ "flex flex-col gap-12 md:gap-20 lg:gap-24 container mx-auto p-6 sm:p-12 md:p-16 lg:p-20 bg-neutral-100"] $
-    [ div_
-        [class_ "flex flex-col gap-12 md:gap-20 lg:gap-24"]
-        [problemAlignmentView, solutionAlignmentView],
-      launchReadinessView
-    ]
+  div_ [class_ "flex flex-col gap-12 md:gap-20 lg:gap-24 container mx-auto p-6 sm:p-12 md:p-16 lg:p-20 xl:p-24 bg-neutral-100"] $
+    [problemAlignmentView, solutionAlignmentView, launchReadinessView]
   where
-    h3Cls = "font-bold text-lg sm:text-xl md:text-2xl lg:text-3xl text-neutral-400 font-serif"
-    sectionView title inner =
+    h3Cls = "font-bold text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl text-neutral-400 font-serif"
+    sectionView title extraCls inner =
       div_ [class_ "flex flex-col gap-8 md:gap-10"] $
-        [ h2_ [class_ "font-bold text-2xl md:text-3xl lg:text-4xl text-neutral-400 font-serif"] [title],
-          div_ [class_ "flex flex-col gap-8 md:gap-10 lg:gap-12"] inner
+        [ h2_ [class_ "font-bold text-2xl md:text-3xl lg:text-4xl xl:text-5xl text-neutral-400 font-serif"] [title],
+          div_ [class_ $ "flex flex-col gap-8 md:gap-10 lg:gap-12 " <> extraCls] inner
         ]
     problemAlignmentView =
-      sectionView "Problem Aligment" $
+      sectionView "Problem Aligment" "" $
         [ div_ [] $
             let problem :| restProblems = prd._problemAlignment._problems
                 (problemHtmlTag, title) = case restProblems of
@@ -119,17 +115,17 @@ viewModel (Model True prd) =
                   _ -> (li_, "Problems")
                 problemView problem' =
                   problemHtmlTag [] $
-                    [h4_ [class_ "font-bold text-2xl sm:text-4xl md:text-5xl lg:text-6xl text-neutral-600"] [text $ ms $ (problem' :: Problem)._problemStatement]]
+                    [h4_ [class_ "font-bold text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl text-neutral-600"] [text $ ms $ (problem' :: Problem)._problemStatement]]
              in [ h3_ [class_ "sr-only"] [title],
                   case restProblems of
                     [] -> problemView problem
                     _ -> ol_ [class_ "flex flex-col gap-3"] $ problemView problem : (problemView <$> restProblems)
                 ],
-          div_ [class_ "flex flex-col gap-2"] $
+          div_ [class_ "flex flex-col xl:flex-row xl:items-center xl:justify-around gap-2 xl:gap-16"] $
             [ h3_ [class_ h3Cls] ["High Level Approach"],
               p_ [class_ "text-neutral-800 prose"] [text $ ms prd._problemAlignment._highLevelApproach]
             ],
-          div_ [class_ "flex flex-col gap-2"] $
+          div_ [class_ "flex flex-col xl:flex-row-reverse xl:items-center xl:justify-around gap-2 xl:gap-16"] $
             [ h3_ [class_ h3Cls] ["Goal and Success"],
               let goal :| restGoals = prd._problemAlignment._goalsAndSuccess
                in case restGoals of
@@ -140,19 +136,42 @@ viewModel (Model True prd) =
             ]
         ]
     solutionAlignmentView =
-      sectionView "Solution Aligment" $
-        [ div_ [class_ "flex flex-col gap-2"] $
-            [ h3_ [class_ h3Cls] ["User Flows"],
-              p_ [class_ "text-neutral-800 prose"] [text $ ms prd._solutionAlignment._userFlows]
-            ],
-          div_ [class_ "flex flex-col gap-2"] $
-            [ h3_ [class_ h3Cls] ["Features"],
-              case prd._solutionAlignment._features of
-                [] -> p_ [] ["I am sorry, but for some reasons, this product has 0 feature surprisingly"]
-                features ->
-                  ul_ [class_ "list-inside list-disc flex flex-col gap-2"] $
-                    let featureView feature = li_ [class_ "prose text-neutral-800"] [text $ ms feature]
-                     in featureView <$> features
+      sectionView "Solution Aligment" "xl:flex-row xl:gap-16" $
+        [ div_
+            [class_ "contents xl:flex xl:flex-col xl:gap-12"]
+            [ div_ [class_ "flex flex-col gap-2"] $
+                [ h3_ [class_ h3Cls] ["User Flows"],
+                  p_ [class_ "text-neutral-800 prose"] [text $ ms prd._solutionAlignment._userFlows]
+                ],
+              div_ [class_ "flex flex-col gap-2"] $
+                [ h3_ [class_ h3Cls] ["Features"],
+                  case prd._solutionAlignment._features of
+                    [] -> p_ [] ["I am sorry, but for some reasons, this product has 0 feature surprisingly"]
+                    features ->
+                      ul_ [class_ "list-inside list-disc flex flex-col gap-2"] $
+                        let featureView feature = li_ [class_ "prose text-neutral-800"] [text $ ms feature]
+                         in featureView <$> features
+                ],
+              div_ [class_ "flex flex-col gap-3 order-4"] $
+                [ h3_ [class_ h3Cls] ["Reference"],
+                  case prd._solutionAlignment._references of
+                    [] -> "No Reference is needed"
+                    references ->
+                      let referenceView (Reference mName (ms . Prelude.show -> uri) (comment :| restComments)) =
+                            li_ [class_ "marker:text-neutral-600 marker:font-semibold sm:text-lg md:text-xl lg:text-2xl"] $
+                              [ div_
+                                  [class_ "contents lg:inline-flex lg:flex-row xl:contents lg:gap-4"]
+                                  [ a_ [href_ uri, class_ "text-neutral-600 font-bold inline sm:text-lg md:text-xl"] [text $ fromMaybe uri (ms <$> mName)],
+                                    case restComments of
+                                      [] -> p_ [class_ "prose text-neutral-800"] [text $ ms comment]
+                                      _ ->
+                                        ul_ [class_ "flex flex-col list-disc list-inside"] $
+                                          let commentView comment' = li_ [class_ "prose text-neutral-800"] [text $ ms comment']
+                                           in commentView comment : (commentView <$> restComments)
+                                  ]
+                              ]
+                       in ol_ [class_ "flex flex-col gap-3 list-decimal list-inside"] $ referenceView <$> references
+                ]
             ],
           div_ [class_ "flex flex-col gap-3 sm:gap-6"] $
             [ h3_ [class_ h3Cls] ["Open Issues"],
@@ -163,38 +182,18 @@ viewModel (Model True prd) =
                     let issueView (OpenIssues issueDescription (decision :| restDecisions)) =
                           li_ [class_ "marker:text-neutral-600 marker:font-semibold sm:text-lg md:text-xl lg:text-2xl"] $
                             [ h4_ [class_ "inline font-bold text-neutral-600 text-lg sm:text-xl md:text-xl lg:text-2xl"] [text $ ms issueDescription],
-                              div_ [class_ "px-2 flex flex-col sm:flex-row gap-2 sm:gap-4 mt-2 sm:mt-4"] $
-                                [ h4_ [class_ "text-neutral-300 font-bold sm:text-2xl md:text-3xl lg:text-4xl sm:mt-2 sm:-ml-4 sm:[writing-mode:vertical-lr]"] ["Key Decisions"],
+                              div_ [class_ "px-2 flex flex-col sm:flex-row xl:flex-row-reverse gap-2 sm:gap-4 mt-2 sm:mt-4"] $
+                                [ h4_ [class_ "text-neutral-300 font-bold sm:text-2xl md:text-3xl lg:text-4xl sm:mt-2 sm:-ml-4 xl:ml-0 sm:[writing-mode:vertical-lr]"] ["Key Decisions"],
                                   ul_ [class_ "list-disc list-inside flex flex-col gap-2 sm:gap-4"] $
                                     let decisionView decision' = li_ [class_ "prose text-neutral-800"] [text $ ms decision']
                                      in decisionView decision : (decisionView <$> restDecisions)
                                 ]
                             ]
                      in issueView <$> openIssues
-            ],
-          div_ [class_ "flex flex-col gap-3"] $
-            [ h3_ [class_ h3Cls] ["Reference"],
-              case prd._solutionAlignment._references of
-                [] -> "No Reference is needed"
-                references ->
-                  let referenceView (Reference mName (ms . Prelude.show -> uri) (comment :| restComments)) =
-                        li_ [class_ "marker:text-neutral-600 marker:font-semibold sm:text-lg md:text-xl lg:text-2xl"] $
-                          [ div_
-                              [class_ "contents lg:inline-flex lg:flex-row lg:gap-4"]
-                              [ a_ [href_ uri, class_ "text-neutral-600 font-bold inline sm:text-lg md:text-xl"] [text $ fromMaybe uri (ms <$> mName)],
-                                case restComments of
-                                  [] -> p_ [class_ "prose text-neutral-800"] [text $ ms comment]
-                                  _ ->
-                                    ul_ [class_ "flex flex-col list-disc list-inside"] $
-                                      let commentView comment' = li_ [class_ "prose text-neutral-800"] [text $ ms comment']
-                                       in commentView comment : (commentView <$> restComments)
-                              ]
-                          ]
-                   in ol_ [class_ "flex flex-col gap-3 list-decimal list-inside"] $ referenceView <$> references
             ]
         ]
     launchReadinessView =
-      sectionView "Launch Readiness" $
+      sectionView "Launch Readiness" "" $
         case prd._launchReadiness of
           [] -> [p_ [class_ "prose text-neutral-800"] ["No dependencies for launch"]]
           _ ->
