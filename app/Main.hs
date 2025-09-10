@@ -24,16 +24,21 @@ foreign export javascript "hs_start" main :: IO ()
 main :: IO ()
 main = run $ startApp app
 
-app :: App PRD.Model PRD.Action
+app :: App () action
 app =
-  ( component
-      (PRD.Model True sitePRD)
-      PRD.updateModel
-      PRD.viewModel
+  ( component () noop $ \() ->
+      div_ [] $
+        [ div_ [id_ "prd"]
+            +> component
+              (PRD.Model True sitePRD)
+              PRD.updateModel
+              PRD.viewModel,
+          div_ [id_ "pomodoro"] +> Pomodoro.pomodoroComponent
+        ]
   )
-    { styles = [Style $ ms $(embedFileRelative "static/output.css")]
+    { events = defaultEvents,
+      styles = [Style $ ms $(embedFileRelative "static/output.css")]
     }
-
 
 sitePRD :: ProductRequirementDocument
 sitePRD =
