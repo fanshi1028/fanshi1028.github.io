@@ -97,18 +97,18 @@ updateModel = noop -- TEMP FIXME
 viewModel :: Model -> View Model Action
 viewModel (Model False _) = div_ [] ["TEMP FIXME no PRD"]
 viewModel (Model True prd) =
-  div_ [class_ "flex flex-col gap-12 md:gap-20 container mx-auto p-6 sm:p-12 md:p-16 bg-neutral-100"] $
+  div_ [class_ "flex flex-col gap-12 md:gap-20 lg:gap-24 container mx-auto p-6 sm:p-12 md:p-16 lg:p-20 bg-neutral-100"] $
     [ div_
-        [class_ "flex flex-col gap-12 md:gap-20"]
+        [class_ "flex flex-col gap-12 md:gap-20 lg:gap-24"]
         [problemAlignmentView, solutionAlignmentView],
       launchReadinessView
     ]
   where
-    h3Cls = "font-bold text-lg sm:text-xl md:text-2xl text-neutral-400 font-serif"
+    h3Cls = "font-bold text-lg sm:text-xl md:text-2xl lg:text-3xl text-neutral-400 font-serif"
     sectionView title inner =
       div_ [class_ "flex flex-col gap-8 md:gap-10"] $
-        [ h2_ [class_ "font-bold text-2xl md:text-3xl text-neutral-400 font-serif"] [title],
-          div_ [class_ "flex flex-col gap-8 md:gap-10"] inner
+        [ h2_ [class_ "font-bold text-2xl md:text-3xl lg:text-4xl text-neutral-400 font-serif"] [title],
+          div_ [class_ "flex flex-col gap-8 md:gap-10 lg:gap-12"] inner
         ]
     problemAlignmentView =
       sectionView "Problem Aligment" $
@@ -119,7 +119,7 @@ viewModel (Model True prd) =
                   _ -> (li_, "Problems")
                 problemView problem' =
                   problemHtmlTag [] $
-                    [h4_ [class_ "font-bold text-2xl sm:text-4xl md:text-5xl text-neutral-600"] [text $ ms $ (problem' :: Problem)._problemStatement]]
+                    [h4_ [class_ "font-bold text-2xl sm:text-4xl md:text-5xl lg:7xl text-neutral-600"] [text $ ms $ (problem' :: Problem)._problemStatement]]
              in [ h3_ [class_ "sr-only"] [title],
                   case restProblems of
                     [] -> problemView problem
@@ -161,10 +161,10 @@ viewModel (Model True prd) =
                 openIssues ->
                   ol_ [class_ "flex flex-col gap-3 sm:gap-6 list-decimal list-inside"] $
                     let issueView (OpenIssues issueDescription (decision :| restDecisions)) =
-                          li_ [class_ "marker:text-neutral-600 marker:font-semibold sm:text-lg md:text-xl"] $
-                            [ h4_ [class_ "inline font-bold text-neutral-600 text-lg sm:text-xl md:text-xl"] [text $ ms issueDescription],
+                          li_ [class_ "marker:text-neutral-600 marker:font-semibold sm:text-lg md:text-xl lg:text-2xl"] $
+                            [ h4_ [class_ "inline font-bold text-neutral-600 text-lg sm:text-xl md:text-xl lg:text-2xl"] [text $ ms issueDescription],
                               div_ [class_ "px-2 flex flex-col sm:flex-row gap-2 sm:gap-4 mt-2 sm:mt-4"] $
-                                [ h4_ [class_ "text-neutral-300 font-bold sm:text-2xl sm:mt-2 sm:-ml-4 sm:[writing-mode:vertical-lr]"] ["Key Decisions"],
+                                [ h4_ [class_ "text-neutral-300 font-bold sm:text-2xl md:text-3xl lg:text-4xl sm:mt-2 sm:-ml-4 sm:[writing-mode:vertical-lr]"] ["Key Decisions"],
                                   ul_ [class_ "list-disc list-inside flex flex-col gap-2 sm:gap-4"] $
                                     let decisionView decision' = li_ [class_ "prose text-neutral-800"] [text $ ms decision']
                                      in decisionView decision : (decisionView <$> restDecisions)
@@ -178,14 +178,17 @@ viewModel (Model True prd) =
                 [] -> "No Reference is needed"
                 references ->
                   let referenceView (Reference mName (ms . Prelude.show -> uri) (comment :| restComments)) =
-                        li_ [class_ "marker:text-neutral-600 marker:font-semibold sm:text-lg md:text-xl"] $
-                          [ a_ [href_ uri, class_ "text-neutral-600 font-bold inline sm:text-lg md:text-xl"] [text $ fromMaybe uri (ms <$> mName)],
-                            case restComments of
-                              [] -> p_ [class_ "prose text-neutral-800"] [text $ ms comment]
-                              _ ->
-                                ul_ [class_ "flex flex-col list-disc list-inside"] $
-                                  let commentView comment' = li_ [class_ "prose text-neutral-800"] [text $ ms comment']
-                                   in commentView comment : (commentView <$> restComments)
+                        li_ [class_ "marker:text-neutral-600 marker:font-semibold sm:text-lg md:text-xl lg:text-2xl"] $
+                          [ div_
+                              [class_ "contents lg:inline-flex lg:flex-row lg:gap-4"]
+                              [ a_ [href_ uri, class_ "text-neutral-600 font-bold inline sm:text-lg md:text-xl"] [text $ fromMaybe uri (ms <$> mName)],
+                                case restComments of
+                                  [] -> p_ [class_ "prose text-neutral-800"] [text $ ms comment]
+                                  _ ->
+                                    ul_ [class_ "flex flex-col list-disc list-inside"] $
+                                      let commentView comment' = li_ [class_ "prose text-neutral-800"] [text $ ms comment']
+                                       in commentView comment : (commentView <$> restComments)
+                              ]
                           ]
                    in ol_ [class_ "flex flex-col gap-3 list-decimal list-inside"] $ referenceView <$> references
             ]
