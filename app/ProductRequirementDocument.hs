@@ -119,7 +119,7 @@ viewModel (Model True prd) =
                   _ -> (li_, "Problems")
                 problemView problem' =
                   problemHtmlTag [] $
-                    [h4_ [class_ "font-bold text-2xl sm:text-4xl md:text-5xl lg:7xl text-neutral-600"] [text $ ms $ (problem' :: Problem)._problemStatement]]
+                    [h4_ [class_ "font-bold text-2xl sm:text-4xl md:text-5xl lg:text-6xl text-neutral-600"] [text $ ms $ (problem' :: Problem)._problemStatement]]
              in [ h3_ [class_ "sr-only"] [title],
                   case restProblems of
                     [] -> problemView problem
