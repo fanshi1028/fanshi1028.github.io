@@ -2,6 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeApplications #-}
 
 module Main where
 
@@ -9,7 +10,6 @@ import Data.FileEmbed (embedFileRelative)
 import Data.List.NonEmpty
 import Miso
 import Miso.Html.Element
-import Miso.Html.Property
 import Network.URI.Static
 import qualified Pomodoro
 import ProductRequirementDocument as PRD
@@ -28,12 +28,12 @@ app :: App () action
 app =
   ( component () noop $ \() ->
       div_ [] $
-        [ div_ [id_ "prd"]
+        [ div_ [key_ @MisoString "prd"]
             +> component
               (PRD.Model True sitePRD)
               PRD.updateModel
               PRD.viewModel,
-          div_ [id_ "pomodoro"] +> Pomodoro.pomodoroComponent
+          div_ [key_ @MisoString "pomodoro"] +> Pomodoro.pomodoroComponent
         ]
   )
     { events = defaultEvents,

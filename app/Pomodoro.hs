@@ -193,7 +193,7 @@ viewModel m =
         ]
 
     currentPomodoroView =
-      div_ [id_ "stopwatch", class_ "bg-neutral-600 p-4 rounded-lg shadow-lg shadow-neutral-600"]
+      div_ [key_ @MisoString "stopwatch", class_ "bg-neutral-600 p-4 rounded-lg shadow-lg shadow-neutral-600"]
         +> ( ( component
                  (Clock.Model False (m._currentPomodoro._pomodoroTime) Nothing)
                  Clock.updateModel
