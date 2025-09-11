@@ -249,7 +249,7 @@ pomodoroPRD =
   ProductRequirementDocument
     ( ProblemAlignment
         ( Problem
-            "To build a simple Pomodoro app"
+            "A simple Pomodoro app"
             "I need some quick and simple on my site as a MVP to showcase my programming skills"
             "So that my site is not empty and it will be a tool that I could use"
             "Bonus It is a tool that people could use and potentially bring traffic"
@@ -257,7 +257,7 @@ pomodoroPRD =
             ""
             :| []
         )
-        "Starting from feature, evolving into a nice UI, don't overengineering it."
+        "Starting from features, evolving into a nice UI, don't overengineering it."
         ("A functional pomodoro timer" :| ["UI/UX should be simple and modern"])
     )
     ( SolutionAlignment
@@ -266,8 +266,7 @@ pomodoroPRD =
           "Users can start and stop the timer",
           "Users can fastforward to skip to the next stage"
         ]
-        [ OpenIssues "Tech Stack" $ "Use Miso and Tailwind, as the whole site is powered by it" :| [],
-          OpenIssues
+        [ OpenIssues
             "Timer Settings Reasonable Values"
             $ "5 mins as the unit, I don't see we need more flexibility here, make it simple"
               :| [ "More than 5 mins, It is too fragment to do reasonable work or have a reasonable rest if the time is too short",
