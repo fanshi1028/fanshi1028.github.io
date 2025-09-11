@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -8,10 +10,12 @@
 
 module ProductRequirementDocument where
 
+import Data.Aeson
 import Data.List.NonEmpty
 import Data.Maybe (fromMaybe)
 import Data.Text
 import Data.Time
+import GHC.Generics
 import Miso hiding (URI)
 import Miso.Html.Element
 import Miso.Html.Event
@@ -28,7 +32,7 @@ data ProductRequirementDocument = ProductRequirementDocument
     -- NOTE: outlines dependencies for launch
     _launchReadiness :: [KeyMilestone]
   }
-  deriving (Eq)
+  deriving (Eq, Generic, FromJSON, ToJSON)
 
 data SolutionAlignment = SolutionAlignment
   { _userFlows :: Text,
@@ -36,20 +40,20 @@ data SolutionAlignment = SolutionAlignment
     _openIssues :: [OpenIssues],
     _references :: [Reference]
   }
-  deriving (Eq)
+  deriving (Eq, Generic, FromJSON, ToJSON)
 
 data OpenIssues = OpenIssues
   { _openIssuesDescription :: Text,
     _keyDecisions :: NonEmpty Text
   }
-  deriving (Eq)
+  deriving (Eq, Generic, FromJSON, ToJSON)
 
 data Reference = Reference
   { _referenceName :: Maybe Text,
     _referencelink :: URI,
     _referenceComments :: NonEmpty Text
   }
-  deriving (Eq)
+  deriving (Eq, Generic, FromJSON, ToJSON)
 
 -- NOTE: Describe the problem (or opportunity) you’re trying to solve.
 -- Why is it important to our users and our business?
@@ -64,7 +68,7 @@ data Problem = Problem
     _why4 :: Text,
     _why5 :: Text
   }
-  deriving (Eq)
+  deriving (Eq, Generic, FromJSON, ToJSON)
 
 data ProblemAlignment = ProblemAlignment
   { _problems :: NonEmpty Problem,
@@ -76,7 +80,7 @@ data ProblemAlignment = ProblemAlignment
     -- NOTE: State all your goals, even those immeasurable.
     _goalsAndSuccess :: NonEmpty Text
   }
-  deriving (Eq)
+  deriving (Eq, Generic, FromJSON, ToJSON)
 
 data KeyMilestone = KeyMilestone
   { _milestoneName :: Text,
@@ -85,20 +89,22 @@ data KeyMilestone = KeyMilestone
     _launchChecklist :: [Text],
     _deadLine :: Maybe UTCTime
   }
-  deriving (Eq)
+  deriving (Eq, Generic, FromJSON, ToJSON)
 
 data Model = Model
   { _open :: Bool,
     _prd :: ProductRequirementDocument
   }
-  deriving (Eq)
+  deriving (Eq, Generic, FromJSON, ToJSON)
 
-data Action = Close | NoOp
+data Action = NoOp | Close | Subscribe | OpenPRD ProductRequirementDocument
 
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
   Close -> modify $ \(Model _ prd) -> (Model False prd)
   NoOp -> pure ()
+  Subscribe -> subscribe prdTopic OpenPRD (\_ -> NoOp) -- TEMP FIXME
+  OpenPRD prd -> modify $ \(Model _ _) -> (Model True prd)
 
 prdSwitchSVG :: View model action
 prdSwitchSVG =
@@ -239,3 +245,6 @@ viewModel (Model open prd) =
                       "TEMP FIXME: deadline"
                     ]
              in keyMilestoneView <$> prd._launchReadiness
+
+prdTopic :: Topic ProductRequirementDocument
+prdTopic = topic "prd"

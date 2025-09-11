@@ -112,10 +112,11 @@ defaultPomodoroFutureQueue =
     MkPomodoro LongBreak $ naturalAsMinutesToDiffTime defaultLongBreak
   ]
 
-data Action = ToggleSettingsOpen | Set PomodoroStage MisoString | Next deriving (Eq)
+data Action = SwitchToPRD | ToggleSettingsOpen | Set PomodoroStage MisoString | Next deriving (Eq)
 
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
+  SwitchToPRD -> publish prdTopic pomodoroPRD
   ToggleSettingsOpen -> settingsOpen %= not
   Next -> do
     current <- use currentPomodoro
@@ -140,7 +141,10 @@ viewModel m =
     [class_ "flex flex-col h-screen container mx-auto"]
     [ h1_ [class_ "sr-only"] [text "Pomodoro"],
       div_ [class_ "flex flex-row items-center justify-center gap-8 py-10 border rounded-lg my-auto bg-neutral-200"] $
-        [div_ [class_ "flex flex-col gap-6"] [settingsView, currentPomodoroView], pomodoroQueueView]
+        [ button_ [onClick SwitchToPRD] [prdSwitchSVG],
+          div_ [class_ "flex flex-col gap-6"] [settingsView, currentPomodoroView],
+          pomodoroQueueView
+        ]
     ]
   where
     pomodoroView mCls (MkPomodoro stage time) =
