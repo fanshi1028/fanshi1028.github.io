@@ -106,18 +106,18 @@ updateModel = \case
   Subscribe -> subscribe prdTopic OpenPRD (\_ -> NoOp) -- TEMP FIXME
   OpenPRD prd -> modify $ \(Model _ _) -> (Model True prd)
 
-prdSwitchSVG :: View model action
-prdSwitchSVG =
+prdSwitchSVG :: MisoString -> View model action
+prdSwitchSVG extraCls =
   svg_
-    [class_ "fill-none stroke-neutral-400 stroke-2 size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
+    [class_ $ "fill-none stroke-2 " <> extraCls, xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
     [path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"]]
 
 viewModel :: Model -> View Model Action
 viewModel (Model open prd) =
   div_
-    [onClick Close, class_ $ if open then "fixed left-0 top-0 h-full w-full overflow-auto" else "hidden"]
+    [onClick Close, class_ $ if open then "fixed left-0 top-0 h-full w-full overflow-auto z-50" else "hidden"]
     [ div_ [onClickWithOptions stopPropagation NoOp, class_ "flex flex-col gap-12 md:gap-20 lg:gap-24 xl:gap-28 container mx-auto p-6 sm:p-12 md:p-16 lg:p-20 xl:p-24 2xl:p-28 bg-neutral-100 relative"] $
-        [ button_ [onClick Close, class_ "absolute right-0 top-0 m-6 sm:m-12 md:m-16 lg:m-20 xl:m-24 2xl:m-28"] [prdSwitchSVG],
+        [ button_ [onClick Close, class_ "absolute right-0 top-0 m-6 sm:m-12 md:m-16 lg:m-20 xl:m-24 2xl:m-28"] [prdSwitchSVG "size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20 stroke-neutral-600"],
           problemAlignmentView,
           solutionAlignmentView,
           launchReadinessView
