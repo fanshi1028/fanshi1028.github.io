@@ -29,10 +29,13 @@ app =
   ( component () noop $ \() ->
       div_ [] $
         [ div_ [key_ @MisoString "prd"]
-            +> component
-              (PRD.Model True sitePRD)
-              PRD.updateModel
-              PRD.viewModel,
+            +> ( component
+                   (PRD.Model False sitePRD)
+                   PRD.updateModel
+                   PRD.viewModel
+               )
+              { initialAction = Just PRD.Subscribe
+              },
           div_ [key_ @MisoString "pomodoro"] +> Pomodoro.pomodoroComponent
         ]
   )
