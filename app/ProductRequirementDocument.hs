@@ -110,7 +110,7 @@ viewModel :: Model -> View Model Action
 viewModel (Model open prd) =
   div_
     [onClick Close, class_ $ if open then "fixed left-0 top-0 h-full w-full overflow-auto" else "hidden"]
-    [ div_ [onClickWithOptions stopPropagation NoOp, class_ "flex flex-col gap-12 md:gap-20 lg:gap-24 container mx-auto p-6 sm:p-12 md:p-16 lg:p-20 xl:p-24 2xl:p-28 bg-neutral-100 relative"] $
+    [ div_ [onClickWithOptions stopPropagation NoOp, class_ "flex flex-col gap-12 md:gap-20 lg:gap-24 xl:gap-28 container mx-auto p-6 sm:p-12 md:p-16 lg:p-20 xl:p-24 2xl:p-28 bg-neutral-100 relative"] $
         [ button_ [onClick Close, class_ "absolute right-0 top-0 m-6 sm:m-12 md:m-16 lg:m-20 xl:m-24 2xl:m-28"] [prdSwitchSVG],
           problemAlignmentView,
           solutionAlignmentView,
@@ -125,7 +125,7 @@ viewModel (Model open prd) =
           div_ [class_ $ "flex flex-col gap-8 md:gap-10 lg:gap-12 " <> extraCls] inner
         ]
     problemAlignmentView =
-      sectionView "Problem Aligment" "" $
+      sectionView "Problem Aligment" "xl:gap-20 2xl:gap-24" $
         [ div_ [] $
             let problem :| restProblems = prd._problemAlignment._problems
                 (problemHtmlTag, title) = case restProblems of
@@ -139,24 +139,38 @@ viewModel (Model open prd) =
                     [] -> problemView problem
                     _ -> ol_ [class_ "flex flex-col gap-3"] $ problemView problem : (problemView <$> restProblems)
                 ],
-          div_ [class_ "flex flex-col xl:flex-row xl:items-center xl:justify-around gap-2 lg:gap-4 xl:gap-16"] $
-            [ h3_ [class_ $ h3Cls <> "2xl:text-nowrap"] ["High Level Approach"],
-              p_ [class_ "text-neutral-800 prose 2xl:prose-lg"] [text $ ms prd._problemAlignment._highLevelApproach]
+          div_ [class_ "contents xl:block xl:relative xl:translate-y-1/2"] $
+            [ svg_
+                [class_ "fill-neutral-200 absolute -top-1/2 left-0 h-full hidden xl:block", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 256 256", transform_ "scale(1.5,1)"]
+                [ path_ [d_ "M132.93848,231.39062A8,8,0,0,1,128,224V184H48a16.01833,16.01833,0,0,1-16-16V88A16.01833,16.01833,0,0,1,48,72h80V32a8.00065,8.00065,0,0,1,13.65723-5.65723l96,96a8.003,8.003,0,0,1,0,11.31446l-96,96A8.002,8.002,0,0,1,132.93848,231.39062Z"]
+                ],
+              div_
+                [class_ "flex flex-col xl:flex-row xl:items-center xl:justify-between gap-2 lg:gap-4 xl:-translate-y-1/2 xl:min-h-48"]
+                [ h3_ [class_ $ h3Cls <> "2xl:text-nowrap"] ["High Level Approach"],
+                  p_ [class_ "text-neutral-800 prose 2xl:prose-lg"] [text $ ms prd._problemAlignment._highLevelApproach]
+                ]
             ],
-          div_ [class_ "flex flex-col xl:flex-row-reverse xl:items-center xl:justify-around gap-2 lg:gap-4 xl:gap-16"] $
-            [ h3_ [class_ h3Cls] ["Goal and Success"],
-              let goal :| restGoals = prd._problemAlignment._goalsAndSuccess
-               in case restGoals of
-                    [] -> p_ [class_ "text-neutral-800"] [text $ ms goal]
-                    _ ->
-                      let viewGoal goal' = li_ [class_ "text-neutral-800 prose 2xl:prose-lg"] [text $ ms goal']
-                       in ol_ [class_ "list-inside list-disc flex flex-col gap-2"] $ viewGoal goal : (viewGoal <$> restGoals)
+          div_ [class_ "contents xl:block xl:relative xl:translate-y-1/2"] $
+            [ svg_
+                [class_ "fill-neutral-200 absolute -top-1/2 right-0 size-48 h-full hidden xl:block", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 256 256", transform_ "rotate(180) scale(1.5,1)"]
+                [ path_ [d_ "M132.93848,231.39062A8,8,0,0,1,128,224V184H48a16.01833,16.01833,0,0,1-16-16V88A16.01833,16.01833,0,0,1,48,72h80V32a8.00065,8.00065,0,0,1,13.65723-5.65723l96,96a8.003,8.003,0,0,1,0,11.31446l-96,96A8.002,8.002,0,0,1,132.93848,231.39062Z"]
+                ],
+              div_
+                [class_ "flex flex-col xl:flex-row-reverse xl:items-center xl:justify-between gap-2 lg:gap-4 xl:-translate-y-1/2 xl:min-h-48"]
+                [ h3_ [class_ h3Cls] ["Goal and Success"],
+                  let goal :| restGoals = prd._problemAlignment._goalsAndSuccess
+                   in case restGoals of
+                        [] -> p_ [class_ "text-neutral-800"] [text $ ms goal]
+                        _ ->
+                          let viewGoal goal' = li_ [class_ "text-neutral-800 prose 2xl:prose-lg"] [text $ ms goal']
+                           in ol_ [class_ "list-inside list-disc flex flex-col gap-2"] $ viewGoal goal : (viewGoal <$> restGoals)
+                ]
             ]
         ]
     solutionAlignmentView =
-      sectionView "Solution Aligment" "xl:flex-row xl:gap-16" $
+      sectionView "Solution Aligment" "xl:flex-row xl:gap-16 xl:mt-8 2xl:mt-12" $
         [ div_
-            [class_ "contents xl:flex xl:flex-col xl:gap-12"]
+            [class_ "contents xl:flex xl:flex-col xl:gap-12 2xl:gap-16"]
             [ div_ [class_ "flex flex-col gap-2 lg:gap-4 xl:gap-6"] $
                 [ h3_ [class_ h3Cls] ["User Flows"],
                   p_ [class_ "text-neutral-800 prose 2xl:prose-lg"] [text $ ms prd._solutionAlignment._userFlows]
@@ -200,7 +214,7 @@ viewModel (Model open prd) =
                     let issueView (OpenIssues issueDescription (decision :| restDecisions)) =
                           li_ [class_ "marker:text-neutral-600 marker:font-semibold sm:text-lg md:text-xl lg:text-2xl xl:text-3xl 2xl:text-4xl"] $
                             [ h4_ [class_ "inline font-bold text-neutral-600 text-lg sm:text-xl md:text-xl lg:text-2xl xl:text-3xl 2xl:text-4xl"] [text $ ms issueDescription],
-                              div_ [class_ "px-2 flex flex-col sm:flex-row xl:flex-row-reverse gap-2 sm:gap-4 lg:gap-6 mt-2 sm:mt-4"] $
+                              div_ [class_ "px-2 flex flex-col sm:flex-row xl:flex-row-reverse xl:justify-between gap-2 sm:gap-4 lg:gap-6 mt-2 sm:mt-4"] $
                                 [ h4_ [class_ "text-neutral-300 font-bold sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl sm:mt-2 sm:-ml-4 xl:ml-0 sm:[writing-mode:vertical-lr]"] ["Key Decisions"],
                                   ul_ [class_ "list-disc list-inside flex flex-col gap-2 sm:gap-4"] $
                                     let decisionView decision' = li_ [class_ "prose 2xl:prose-lg text-neutral-800"] [text $ ms decision']
