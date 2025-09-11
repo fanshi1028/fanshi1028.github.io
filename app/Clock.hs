@@ -80,7 +80,7 @@ viewModel m =
         buttonCls = "bg-neutral-200 text-neutral-600 text-4xl rounded px-4 py-2 shadow-inner shadow-neutral-800"
      in if m ^. active
           then
-            [ p_ [class_ "text-neutral-200 text-9xl"] [timeDisplay],
+            [ p_ [class_ "text-neutral-200 text-7xl font-mono tracking-tighter"] [timeDisplay],
               div_
                 [class_ "flex flex-row justify-around w-full items-center"]
                 [ button_ [onClick Stop, class_ buttonCls] ["Stop"],
