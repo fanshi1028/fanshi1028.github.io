@@ -185,7 +185,7 @@ viewModel m =
     settingsView =
       div_
         [ class_ "absolute h-full w-full transition-transform duration-700",
-          styleInline_ $ "backface-visibility:hidden;" <> if m._settingsOpen then "transform:rotateY(180deg);" else ""
+          styleInline_ $ "backface-visibility:hidden;" <> if m._settingsOpen then "" else "transform:rotateY(180deg);"
         ]
         $ [ h2_ [class_ "sr-only"] ["Settings"],
             div_
@@ -213,7 +213,7 @@ viewModel m =
     currentPomodoroView =
       div_
         [ class_ "absolute h-full w-full transition-transform duration-700",
-          styleInline_ $ "backface-visibility:hidden;" <> if m._settingsOpen then "" else "transform:rotateY(180deg);"
+          styleInline_ $ "backface-visibility:hidden;" <> if m._settingsOpen then "transform:rotateY(180deg);" else ""
         ]
         [ button_
             [onClick ToggleSettingsOpen, class_ "absolute top-0 right-0"]
