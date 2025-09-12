@@ -67,7 +67,7 @@ jobs:
       - name: Nix Build browser_wasi_shim
         run: |
           nix build .#browser_wasi_shim
-          cp -r ./result/bin/* ./public/
+          cp -r ./result/lib/* ./public/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
