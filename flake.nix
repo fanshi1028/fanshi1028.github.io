@@ -28,6 +28,31 @@
       overlays = [ (import "${miso}/nix/overlay.nix") ];
     in
     {
+      packages = nixpkgs.lib.genAttrs systems (
+        system:
+        let
+          pkgs = import nixpkgs { inherit system overlays; };
+        in
+        {
+          browser_wasi_shim =
+            let
+              pname = "browser_wasi_shim";
+              version = "0.4.2";
+            in
+            with pkgs;
+            buildNpmPackage {
+              inherit pname version;
+              src = fetchFromGitHub {
+                owner = "bjorn3";
+                repo = pname;
+                tag = "v${version}";
+                hash = "sha256-okP2bT4rcqtwTk7eOdyC+DqoLACTS9srANgSEkjb06A=";
+              };
+
+              npmDepsHash = "sha256-5CUnps7UyX9U7ZRRaUy0t7lpXoOhFR8n7AEPTD0npF0=";
+            };
+        }
+      );
 
       devShells = nixpkgs.lib.genAttrs systems (
         system:

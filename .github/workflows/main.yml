@@ -64,6 +64,11 @@ jobs:
       - name: Build using Nix
         run: nix develop .#wasm --command bash -c "make"
 
+      - name: Nix Build browser_wasi_shim
+        run: |
+          nix build .#browser_wasi_shim
+          cp -r ./results/bin/* ./public/
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
