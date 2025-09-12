@@ -251,8 +251,7 @@ viewModel m =
                      Clock.updateModel
                      Clock.viewModel
                  )
-                   { bindings = [ParentToChild (_pomodoroTime . _currentPomodoro) (_set Clock.timeLeft)],
-                     initialAction = Just Clock.Start
+                   { initialAction = Just Clock.Start
                    }
                )
         ]
