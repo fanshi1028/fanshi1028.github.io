@@ -115,10 +115,29 @@ defaultPomodoroFutureQueue =
     MkPomodoro LongBreak $ naturalAsMinutesToDiffTime defaultLongBreak
   ]
 
-data Action = SwitchToPRD | ToggleSettingsOpen | Set PomodoroStage MisoString | Next deriving (Eq)
+data Action = SwitchToPRD | ToggleSettingsOpen | Set PomodoroStage MisoString | ApplyPomodoroSettings | Next deriving (Eq)
 
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
+  ApplyPomodoroSettings -> do
+    pomodoro' <- use $ pomodoro . settings
+    shortBreak' <- use $ shortBreak . settings
+    longBreak' <- use $ longBreak . settings
+    case (,,) <$> pomodoro'._validation <*> shortBreak'._validation <*> longBreak'._validation of
+      Failure _ -> pure () -- TEMP FIXME
+      Validation.Success
+        ( naturalAsMinutesToDiffTime -> pomodoro'',
+          naturalAsMinutesToDiffTime -> shortBreak'',
+          naturalAsMinutesToDiffTime -> longBreak''
+          ) -> do
+          pomodoroFutureQueue
+            %= fmap
+              ( \(MkPomodoro stage _) -> case stage of
+                  LongBreak -> MkPomodoro stage longBreak''
+                  ShortBreak -> MkPomodoro stage shortBreak''
+                  Pomodoro -> MkPomodoro stage pomodoro''
+              )
+          settingsOpen .= False
   SwitchToPRD -> publish prdTopic pomodoroPRD
   ToggleSettingsOpen -> settingsOpen %= not
   Next -> do
@@ -192,7 +211,7 @@ viewModel m =
               [ div_ [class_ "flex flex-col gap-8 items-center"] $ settingView <$> [minBound .. maxBound],
                 div_ [class_ "flex flex-row gap-2 justify-around"] $
                   [ button_
-                      []
+                      [onClick ApplyPomodoroSettings]
                       [ p_ [class_ "sr-only"] ["Apply"],
                         svg_
                           [class_ "fill-none stroke-2 stroke-neutral-200 size-6", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
