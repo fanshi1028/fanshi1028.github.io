@@ -1,3 +1,5 @@
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -20,6 +22,7 @@ import Miso.CSS hiding (ms, rem)
 import Miso.Html
 import Miso.Html.Property
 import Miso.Lens
+import Miso.String hiding (foldl')
 import Miso.Svg.Element
 import Miso.Svg.Property hiding (max_, min_, path_)
 import Network.URI.Static
@@ -42,7 +45,9 @@ data Pomodoro = MkPomodoro
   }
   deriving (Eq)
 
-newtype PomodoroMinuteSettingValidationError = PomodoroMinuteSettingValidationError {unPomodoroMinuteSettingValidationError :: MisoString} deriving (Eq)
+newtype PomodoroMinuteSettingValidationError = PomodoroMinuteSettingValidationError {unPomodoroMinuteSettingValidationError :: MisoString}
+  deriving stock (Eq)
+  deriving newtype (ToMisoString)
 
 data ValueWithValidation = ValueWithValidation
   { _value :: MisoString,
