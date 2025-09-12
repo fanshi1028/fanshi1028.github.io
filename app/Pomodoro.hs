@@ -143,10 +143,9 @@ viewModel m =
   div_
     [class_ "flex flex-col container mx-auto min-h-screen bg-neutral-200"]
     [ h1_ [class_ "sr-only"] [text "Pomodoro"],
-      button_ [onClick SwitchToPRD, class_ "sticky top-0 self-end"] [prdSwitchSVG "stroke-neutral-600 size-6"],
+      button_ [onClick SwitchToPRD, class_ "sticky top-2 self-end mr-2"] [prdSwitchSVG "stroke-neutral-600 size-6"],
       div_ [class_ "flex flex-col sm:flex-row items-center justify-center gap-8 p-10 border rounded-lg my-auto"] $
-        [ pomodoroQueueView $ div_ [class_ "block relative w-64 h-64 my-8"] [settingsView, currentPomodoroView]
-        ]
+        [pomodoroQueueView $ div_ [class_ "block relative w-64 h-64 my-8"] [settingsView, currentPomodoroView]]
     ]
   where
     pomodoroView mCls (MkPomodoro stage time) =
@@ -165,7 +164,7 @@ viewModel m =
               div_
                 [class_ "flex flex-col"]
                 [ input_
-                    [ class_ "bg-transparent",
+                    [ class_ "bg-transparent text-neutral-200",
                       type_ "number",
                       max_ "90",
                       min_ "5",
@@ -216,7 +215,7 @@ viewModel m =
           styleInline_ $ "backface-visibility:hidden;" <> if m._settingsOpen then "transform:rotateY(180deg);" else ""
         ]
         [ button_
-            [onClick ToggleSettingsOpen, class_ "absolute top-0 right-0"]
+            [onClick ToggleSettingsOpen, class_ "absolute top-2 right-2"]
             [ p_ [class_ "sr-only"] ["Open Settings"],
               svg_
                 [class_ "fill-none stroke-2 stroke-neutral-400 size-6", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
