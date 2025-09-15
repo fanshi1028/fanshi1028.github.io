@@ -166,10 +166,10 @@ updateModel = \case
 viewModel :: Model -> View Model Action
 viewModel m =
   div_
-    [class_ "flex flex-col container mx-auto pb-6 min-h-screen bg-neutral-200"]
+    [class_ "flex flex-col container mx-auto justify-center pb-6 min-h-screen bg-neutral-200"]
     [ h1_ [class_ "sr-only"] [text "Pomodoro"],
       button_ [onClick SwitchToPRD, class_ "sticky top-2 self-end mr-2"] [prdSwitchSVG "stroke-neutral-600 size-6"],
-      pomodoroQueueView $ div_ [class_ "block relative w-80 h-72 my-8"] [settingsView, currentPomodoroView]
+      pomodoroQueueView $ div_ [class_ "block relative w-80 sm:w-96 md:w-80 h-72 my-8"] [settingsView, currentPomodoroView]
     ]
   where
     pomodoroView mCls (MkPomodoro stage time) =
@@ -262,10 +262,13 @@ viewModel m =
       div_
         [class_ "contents"]
         [ h2_ [class_ "sr-only"] [text "Pomodoro Queue"],
-          ul_ [class_ "flex flex-col items-center gap-3"] $
+          ul_ [class_ "flex flex-col md:flex-row md:justify-around items-center gap-3"] $
             let pastItemView i = li_ [class_ "px-2"] [pomodoroView (Just "text-neutral-400 font-semibold") i]
                 futureItemView i = li_ [class_ "px-2"] [pomodoroView (Just "text-neutral-500 font-semibold text-lg") i]
-             in foldl' (\acc i -> pastItemView i : acc) (currentView : (futureItemView <$> m._pomodoroFutureQueue)) m._pomodoroPastQueue
+             in [ ul_ [class_ "contents md:flex md:flex-col md:items-center md:justify-start md:self-start md:basis-1/4"] (pastItemView <$> m._pomodoroPastQueue),
+                  currentView,
+                  ul_ [class_ "contents md:flex md:flex-col md:items-center md:justify-end md:self-end md:basis-1/4"] (futureItemView <$> m._pomodoroFutureQueue)
+                ]
         ]
 
 defaultPomodoro, defaultShortBreak, defaultLongBreak :: Natural
