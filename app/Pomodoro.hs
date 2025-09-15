@@ -155,13 +155,13 @@ updateModel = \case
         currentPomodoro .= current'
         pomodoroFutureQueue .= future
   Set (stageToSettingLens -> stageLens) str -> do
-    let validateMax120 n = failureIf (n > 120) (PomodoroMinuteSettingValidationError "must <= 120")
+    let validateMax45 n = failureIf (n >= 45) (PomodoroMinuteSettingValidationError "must <= 45")
         validateMin5 n = failureIf (n < 5) (PomodoroMinuteSettingValidationError "must >= 5")
         validateMultiple5 n = failureIf (n `rem` 5 /= 0) (PomodoroMinuteSettingValidationError "must be a multiple of 5")
     value . stageLens . settings .= str
     validation . stageLens . settings .= case readEither $ fromMisoString str of
       Left err -> failure (PomodoroMinuteSettingValidationError $ "must be in number format: " <> ms err)
-      Right n -> validateAll [validateMultiple5, validateMin5, validateMax120] n
+      Right n -> validateAll [validateMultiple5, validateMin5, validateMax45] n
 
 viewModel :: Model -> View Model Action
 viewModel m =
@@ -189,7 +189,7 @@ viewModel m =
               input_
                 [ class_ "bg-neutral-200 text-neutral-800 rounded focus:ring-0 focus:border-0 focus:outline-1 focus:outline-neutral-800 w-full shadow-inner shadow-neutral-800",
                   type_ "number",
-                  max_ "90",
+                  max_ "45",
                   min_ "5",
                   step_ "5",
                   value_ v._value,
@@ -321,7 +321,7 @@ pomodoroPRD =
             "Timer Settings Reasonable Values"
             $ "5 mins as the unit, I don't see we need more flexibility here, make it simple"
               :| [ "More than 5 mins, It is too fragment to do reasonable work or have a reasonable rest if the time is too short",
-                   "Less than 120 mins, I don't think and human could sustain a undistrubed focus for that long while being poductive",
+                   "Less than 45 mins, I don't think and human could sustain a undistrubed focus for that long while being productive",
                    "Following the tried and true 4 short break then a long break, I don't see the value of extra flexibilify as we offer to tweak the time for each stage already"
                  ]
         ]
