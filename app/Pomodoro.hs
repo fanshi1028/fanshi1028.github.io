@@ -19,8 +19,8 @@ import Data.Time
 import GHC.Natural
 import Miso
 import Miso.CSS hiding (ms, rem)
-import Miso.Html
-import Miso.Html.Property
+import Miso.Html as HTML
+import Miso.Html.Property as P
 import Miso.Lens
 import Miso.String hiding (foldl')
 import Miso.Svg.Element
@@ -129,7 +129,8 @@ updateModel = \case
     shortBreak' <- use $ shortBreak . settings
     longBreak' <- use $ longBreak . settings
     case (,,) <$> pomodoro'._validation <*> shortBreak'._validation <*> longBreak'._validation of
-      Failure _ -> pure () -- TEMP FIXME
+      Failure (err :| errs) -> do
+        io_ . consoleWarn $ foldl' (\acc err' -> acc <> ", " <> ms err') (ms err) errs -- NOTE: ApplyPomodoroSettings button should not be active when validation failed
       Validation.Success
         ( naturalAsMinutesToDiffTime -> pomodoro'',
           naturalAsMinutesToDiffTime -> shortBreak'',
@@ -154,12 +155,12 @@ updateModel = \case
         currentPomodoro .= current'
         pomodoroFutureQueue .= future
   Set (stageToSettingLens -> stageLens) str -> do
-    let validateMax120 n = failureIf (n > 120) (PomodoroMinuteSettingValidationError "input must <= 120")
-        validateMin5 n = failureIf (n < 5) (PomodoroMinuteSettingValidationError "input must >= 5")
-        validateMultiple5 n = failureIf (n `rem` 5 /= 0) (PomodoroMinuteSettingValidationError "input must be a multiple of 5")
+    let validateMax120 n = failureIf (n > 120) (PomodoroMinuteSettingValidationError "must <= 120")
+        validateMin5 n = failureIf (n < 5) (PomodoroMinuteSettingValidationError "must >= 5")
+        validateMultiple5 n = failureIf (n `rem` 5 /= 0) (PomodoroMinuteSettingValidationError "must be a multiple of 5")
     value . stageLens . settings .= str
     validation . stageLens . settings .= case readEither $ fromMisoString str of
-      Left err -> failure (PomodoroMinuteSettingValidationError $ "input must be in number format: " <> ms err)
+      Left err -> failure (PomodoroMinuteSettingValidationError $ "must be in number format: " <> ms err)
       Right n -> validateAll [validateMultiple5, validateMin5, validateMax120] n
 
 viewModel :: Model -> View Model Action
@@ -181,51 +182,54 @@ viewModel m =
 
     settingView stage =
       let v = m ^. (stageToSettingLens stage) . settings
-       in div_
-            [class_ "flex flex-row gap-4"]
-            [ p_ [class_ "text-neutral-200"] [text $ stageToMisoString stage],
-              div_
-                [class_ "flex flex-col"]
-                [ input_
-                    [ class_ "bg-transparent text-neutral-200",
-                      type_ "number",
-                      max_ "90",
-                      min_ "5",
-                      step_ "5",
-                      value_ v._value,
-                      onChange $ Set stage
-                    ],
-                  -- p_ [] [text . ms $ formatTime defaultTimeLocale "%M:%00ES" m._settings._shortBreak]
-                  case v._validation of
-                    Validation.Success _ -> div_ [] []
-                    Failure (toList -> errs) ->
-                      div_ [class_ "flex flex-col"] $
-                        p_ [] . (: []) . text . unPomodoroMinuteSettingValidationError <$> errs
-                ]
+          stageName = stageToMisoString stage <> " mins"
+       in div_ [class_ "w-full"] $
+            [ div_
+                [class_ "w-full flex flex-col gap-2"]
+                [ HTML.label_ [class_ "text-neutral-400 text font-semibold", for_ stageName] [text stageName],
+                  div_
+                    [class_ "flex flex-col items-center"]
+                    [ input_
+                        [ class_ "bg-neutral-200 text-neutral-800 rounded focus:ring-0 focus:border-0 focus:outline-1 focus:outline-neutral-800 w-full shadow-inner shadow-neutral-800",
+                          type_ "number",
+                          max_ "90",
+                          min_ "5",
+                          step_ "5",
+                          value_ v._value,
+                          onChange $ Set stage,
+                          P.id_ stageName
+                        ]
+                    ]
+                ],
+              case v._validation of
+                Validation.Success _ -> div_ [] []
+                Failure (toList -> errs) ->
+                  ul_ [class_ "list-disc list-inside"] $
+                    li_ [class_ "text-neutral-200 font-semibold leading-tight"] . (: []) . text . unPomodoroMinuteSettingValidationError <$> errs
             ]
 
     settingsView =
       div_
-        [ class_ "absolute h-full w-full transition-transform duration-700",
+        [ class_ "absolute h-fit w-full transition-transform duration-700",
           styleInline_ $ "backface-visibility:hidden;" <> if m._settingsOpen then "" else "transform:rotateY(180deg);"
         ]
         $ [ h2_ [class_ "sr-only"] ["Settings"],
             div_
               [class_ "flex flex-col w-full h-full bg-neutral-600 justify-around p-4 rounded-lg shadow-lg shadow-neutral-600"]
-              [ div_ [class_ "flex flex-col gap-8 items-center"] $ settingView <$> [minBound .. maxBound],
-                div_ [class_ "flex flex-row gap-2 justify-around"] $
+              [ div_ [class_ "flex flex-col gap-4 items-center"] $ settingView <$> [minBound .. maxBound],
+                div_ [class_ "absolute top-2 right-2 flex flex-row gap-2 justify-around"] $
                   [ button_
                       [onClick ApplyPomodoroSettings]
                       [ p_ [class_ "sr-only"] ["Apply"],
                         svg_
-                          [class_ "fill-none stroke-2 stroke-neutral-200 size-6", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
+                          [class_ "fill-none stroke-2 stroke-neutral-400 size-6", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
                           [path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "m4.5 12.75 6 6 9-13.5"]]
                       ],
                     button_
                       [onClick ToggleSettingsOpen]
                       [ p_ [class_ "sr-only"] ["Close"],
                         svg_
-                          [class_ "fill-none stroke-2 stroke-neutral-200 size-6", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
+                          [class_ "fill-none stroke-2 stroke-neutral-400 size-6", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
                           [path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "M6 18 18 6M6 6l12 12"]]
                       ]
                   ]
@@ -234,7 +238,7 @@ viewModel m =
 
     currentPomodoroView =
       div_
-        [ class_ "absolute h-full w-full transition-transform duration-700",
+        [ class_ "absolute h-fit w-full transition-transform duration-700",
           styleInline_ $ "backface-visibility:hidden;" <> if m._settingsOpen then "transform:rotateY(180deg);" else ""
         ]
         [ button_
@@ -261,17 +265,12 @@ viewModel m =
         ]
     pomodoroQueueView currentView =
       div_
-        []
+        [class_ "contents"]
         [ h2_ [class_ "sr-only"] [text "Pomodoro Queue"],
           ul_ [class_ "flex flex-col items-center gap-3"] $
             let pastItemView i = li_ [class_ "px-2"] [pomodoroView (Just "text-neutral-400 font-semibold") i]
-                futureItemView i = li_ [class_ "px-2"] [pomodoroView (Just "text-neutral-500 font-semibold") i]
-             in -- let currentView =
-                -- li_
-                --   [class_ "border-2 border-neutral-500/80 p-6 uppercase tracking-tight rounded text-center text-neutral-500 font-bold text-xl my-3"]
-                --   [text $ stageToMisoString m._currentPomodoro._pomodoroStage]
-                -- in
-                foldl' (\acc i -> pastItemView i : acc) (currentView : (futureItemView <$> m._pomodoroFutureQueue)) m._pomodoroPastQueue
+                futureItemView i = li_ [class_ "px-2"] [pomodoroView (Just "text-neutral-500 font-semibold text-lg") i]
+             in foldl' (\acc i -> pastItemView i : acc) (currentView : (futureItemView <$> m._pomodoroFutureQueue)) m._pomodoroPastQueue
         ]
 
 defaultPomodoro, defaultShortBreak, defaultLongBreak :: Natural
