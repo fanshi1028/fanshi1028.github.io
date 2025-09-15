@@ -183,23 +183,18 @@ viewModel m =
     settingView stage =
       let v = m ^. (stageToSettingLens stage) . settings
           stageName = stageToMisoString stage <> " mins"
-       in div_ [class_ "w-full"] $
-            [ div_
-                [class_ "w-full flex flex-col gap-2"]
-                [ HTML.label_ [class_ "text-neutral-400 text font-semibold", for_ stageName] [text stageName],
-                  div_
-                    [class_ "flex flex-col items-center"]
-                    [ input_
-                        [ class_ "bg-neutral-200 text-neutral-800 rounded focus:ring-0 focus:border-0 focus:outline-1 focus:outline-neutral-800 w-full shadow-inner shadow-neutral-800",
-                          type_ "number",
-                          max_ "90",
-                          min_ "5",
-                          step_ "5",
-                          value_ v._value,
-                          onChange $ Set stage,
-                          P.id_ stageName
-                        ]
-                    ]
+       in div_
+            [class_ "w-full flex flex-col gap-2"]
+            [ HTML.label_ [class_ "text-neutral-400 text font-semibold", for_ stageName] [text stageName],
+              input_
+                [ class_ "bg-neutral-200 text-neutral-800 rounded focus:ring-0 focus:border-0 focus:outline-1 focus:outline-neutral-800 w-full shadow-inner shadow-neutral-800",
+                  type_ "number",
+                  max_ "90",
+                  min_ "5",
+                  step_ "5",
+                  value_ v._value,
+                  onChange $ Set stage,
+                  P.id_ stageName
                 ],
               case v._validation of
                 Validation.Success _ -> div_ [] []
