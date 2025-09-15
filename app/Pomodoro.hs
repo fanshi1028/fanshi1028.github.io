@@ -166,10 +166,10 @@ updateModel = \case
 viewModel :: Model -> View Model Action
 viewModel m =
   div_
-    [class_ "flex flex-col container mx-auto min-h-screen bg-neutral-200"]
+    [class_ "flex flex-col container mx-auto pb-6 min-h-screen bg-neutral-200"]
     [ h1_ [class_ "sr-only"] [text "Pomodoro"],
       button_ [onClick SwitchToPRD, class_ "sticky top-2 self-end mr-2"] [prdSwitchSVG "stroke-neutral-600 size-6"],
-      pomodoroQueueView $ div_ [class_ "block relative w-64 h-64 my-8"] [settingsView, currentPomodoroView]
+      pomodoroQueueView $ div_ [class_ "block relative w-80 h-72 my-8"] [settingsView, currentPomodoroView]
     ]
   where
     pomodoroView mCls (MkPomodoro stage time) =

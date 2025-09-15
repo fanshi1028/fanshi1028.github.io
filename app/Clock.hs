@@ -78,7 +78,7 @@ viewModel m =
   div_ [class_ "flex flex-col items-center gap-4 p-6 h-full"] $
     let timeDisplay = text $ ms (formatTime defaultTimeLocale "%M:%00ES" $ m ^. timeLeft)
         buttonCls = "bg-neutral-200 text-neutral-600 text-4xl rounded px-4 py-2 shadow-inner shadow-neutral-800"
-     in [ p_ [class_ "text-neutral-200 text-7xl font-mono tracking-tighter"] [timeDisplay],
+     in [ p_ [class_ "text-neutral-200 text-8xl font-mono tracking-tighter"] [timeDisplay],
           div_ [class_ "flex flex-row justify-around w-full h-full items-center"] $
             if m ^. active
               then
