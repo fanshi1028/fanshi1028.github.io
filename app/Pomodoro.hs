@@ -213,32 +213,26 @@ viewModel m =
         $ [ h2_ [class_ "sr-only"] ["Settings"],
             div_
               [ class_
-                  -- "flex flex-row w-full h-full bg-neutral-600 justify-center gap-4 p-4 rounded-lg shadow-lg shadow-neutral-600"
                   "group grid grid-rows-2 grid-cols-2 sm:flex sm:flex-row w-full h-full bg-neutral-600 justify-center items-center gap-x-4 p-4 rounded-lg shadow-lg shadow-neutral-600"
               ]
               [ div_ [class_ "contents sm:flex sm:flex-col sm:gap-4 sm:grow"] $
                   settingView <$> [minBound .. maxBound],
-                div_
-                  [ class_
-                      -- "absolute top-2 right-2 flex flex-row gap-2 justify-around"
-                      -- "flex flex-col gap-2 justify-around"
-                      "flex flex-row sm:flex-col gap-2 justify-around"
+                div_ [class_ "flex flex-row sm:flex-col gap-2 justify-around"] $
+                  [ button_
+                      [onClick ApplyPomodoroSettings, class_ "group-[:has(:invalid)]:hidden"]
+                      [ p_ [class_ "sr-only"] ["Apply"],
+                        svg_
+                          [class_ "fill-none stroke-2 stroke-neutral-400 size-12", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
+                          [path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "m4.5 12.75 6 6 9-13.5"]]
+                      ],
+                    button_
+                      [onClick ToggleSettingsOpen, class_ "group-[:has(:invalid)]:absolute top-2 right-2"]
+                      [ p_ [class_ "sr-only"] ["Close"],
+                        svg_
+                          [class_ "fill-none stroke-2 stroke-neutral-400 size-12", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
+                          [path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "M6 18 18 6M6 6l12 12"]]
+                      ]
                   ]
-                  $ [ button_
-                        [onClick ApplyPomodoroSettings, class_ "group-[:has(:invalid)]:hidden"]
-                        [ p_ [class_ "sr-only"] ["Apply"],
-                          svg_
-                            [class_ "fill-none stroke-2 stroke-neutral-400 size-12", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
-                            [path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "m4.5 12.75 6 6 9-13.5"]]
-                        ],
-                      button_
-                        [onClick ToggleSettingsOpen, class_ "group-[:has(:invalid)]:absolute top-2 right-2"]
-                        [ p_ [class_ "sr-only"] ["Close"],
-                          svg_
-                            [class_ "fill-none stroke-2 stroke-neutral-400 size-12", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
-                            [path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "M6 18 18 6M6 6l12 12"]]
-                        ]
-                    ]
               ]
           ]
 
