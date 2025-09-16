@@ -183,20 +183,27 @@ viewModel m =
 
     settingView stage =
       let v = m ^. (stageToSettingLens stage) . settings
+          disableIfOtherInvalidated = case traverse (\stage' -> (m ^. (stageToSettingLens stage') . settings)._validation) [minBound .. maxBound] of
+            Validation.Success _ -> Prelude.id
+            Failure _ -> case v._validation of
+              Validation.Success _ -> (disabled_ :)
+              Failure _ -> Prelude.id
           stageNameInputId = stageToMisoString stage <> " mins"
        in div_
             [class_ "w-full flex flex-col-reverse gap-2 has-[:invalid]:grid has-[:invalid]:grid-rows-2 has-[:invalid]:grid-cols-12 has-[:invalid]:col-span-2 has-[:invalid]:row-start-1"]
             [ input_
-                [ class_ "peer bg-neutral-200 text-neutral-600 text-lg font-bold rounded focus:ring-0 focus:border-0 focus:outline-1 focus:outline-neutral-800 w-full shadow-inner shadow-neutral-800 invalid:col-span-7 invalid:col-start-3 invalid:text-xl group-[:has(:invalid)]:valid:text-neutral-500 group-[:has(:invalid)]:valid:bg-neutral-400",
-                  type_ "number",
-                  required_ True,
-                  max_ "45",
-                  min_ "5",
-                  step_ "5",
-                  value_ v._value,
-                  onInput $ Set stage,
-                  P.id_ stageNameInputId
-                ],
+                ( disableIfOtherInvalidated
+                    [ class_ "peer bg-neutral-200 text-neutral-600 text-lg font-bold rounded focus:ring-0 focus:border-0 focus:outline-1 focus:outline-neutral-800 w-full shadow-inner shadow-neutral-800 invalid:col-span-7 invalid:col-start-3 invalid:text-xl disabled:text-neutral-400 disabled:bg-neutral-300",
+                      type_ "number",
+                      required_ True,
+                      max_ "45",
+                      min_ "5",
+                      step_ "5",
+                      value_ v._value,
+                      onInput $ Set stage,
+                      P.id_ stageNameInputId
+                    ]
+                ),
               HTML.label_ [class_ "text-neutral-400 font-semibold peer-invalid:[writing-mode:sideways-lr] peer-invalid:col-span-2 peer-invalid:col-start-1 peer-invalid:row-start-1 peer-invalid:row-span-2 peer-invalid:text-lg peer-invalid:tracking-wide peer-invalid:text-center", for_ stageNameInputId] [text $ stageToMisoString stage],
               case v._validation of
                 Validation.Success _ -> div_ [] []
