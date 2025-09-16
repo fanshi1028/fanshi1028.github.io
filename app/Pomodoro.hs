@@ -155,12 +155,12 @@ updateModel = \case
         currentPomodoro .= current'
         pomodoroFutureQueue .= future
   Set (stageToSettingLens -> stageLens) str -> do
-    let validateMax45 n = failureIf (n >= 45) (PomodoroMinuteSettingValidationError "must <= 45")
+    let validateMax45 n = failureIf (n > 45) (PomodoroMinuteSettingValidationError "must <= 45")
         validateMin5 n = failureIf (n < 5) (PomodoroMinuteSettingValidationError "must >= 5")
         validateMultiple5 n = failureIf (n `rem` 5 /= 0) (PomodoroMinuteSettingValidationError "must be a multiple of 5")
     value . stageLens . settings .= str
     validation . stageLens . settings .= case readEither $ fromMisoString str of
-      Left err -> failure (PomodoroMinuteSettingValidationError $ "must be in number format: " <> ms err)
+      Left _ -> failure (PomodoroMinuteSettingValidationError $ "must be a number")
       Right n -> validateAll [validateMultiple5, validateMin5, validateMax45] n
 
 viewModel :: Model -> View Model Action
@@ -169,9 +169,10 @@ viewModel m =
     [class_ "flex flex-col container mx-auto justify-center pb-6 min-h-screen bg-neutral-200"]
     [ h1_ [class_ "sr-only"] [text "Pomodoro"],
       button_ [onClick SwitchToPRD, class_ "sticky top-2 self-end mr-2"] [prdSwitchSVG "stroke-neutral-600 size-6"],
-      pomodoroQueueView $ div_ [class_ "block relative w-80 sm:w-96 md:w-80 h-72 my-8"] [settingsView, currentPomodoroView]
+      pomodoroQueueView $ div_ [class_ $ "block relative my-6" <> sizeCls] [settingsView, currentPomodoroView]
     ]
   where
+    sizeCls = " w-80 sm:w-96 h-64 sm:h-80"
     pomodoroView mCls (MkPomodoro stage time) =
       div_ [class_ $ "flex flex-row gap-4 " <> fromMaybe "" mCls] $
         [ p_
@@ -182,79 +183,90 @@ viewModel m =
 
     settingView stage =
       let v = m ^. (stageToSettingLens stage) . settings
-          stageName = stageToMisoString stage <> " mins"
+          stageNameInputId = stageToMisoString stage <> " mins"
        in div_
-            [class_ "w-full flex flex-col gap-2"]
-            [ HTML.label_ [class_ "text-neutral-400 text font-semibold", for_ stageName] [text stageName],
-              input_
-                [ class_ "bg-neutral-200 text-neutral-800 rounded focus:ring-0 focus:border-0 focus:outline-1 focus:outline-neutral-800 w-full shadow-inner shadow-neutral-800",
+            [class_ "w-full flex flex-col-reverse gap-2 has-[:invalid]:grid has-[:invalid]:grid-rows-2 has-[:invalid]:grid-cols-12 has-[:invalid]:col-span-2 has-[:invalid]:row-start-1"]
+            [ input_
+                [ class_ "peer bg-neutral-200 text-neutral-600 text-lg font-bold rounded focus:ring-0 focus:border-0 focus:outline-1 focus:outline-neutral-800 w-full shadow-inner shadow-neutral-800 invalid:col-span-7 invalid:col-start-3 invalid:text-xl group-[:has(:invalid)]:valid:text-neutral-500 group-[:has(:invalid)]:valid:bg-neutral-400",
                   type_ "number",
+                  required_ True,
                   max_ "45",
                   min_ "5",
                   step_ "5",
                   value_ v._value,
-                  onChange $ Set stage,
-                  P.id_ stageName
+                  onInput $ Set stage,
+                  P.id_ stageNameInputId
                 ],
+              HTML.label_ [class_ "text-neutral-400 font-semibold peer-invalid:[writing-mode:sideways-lr] peer-invalid:col-span-2 peer-invalid:col-start-1 peer-invalid:row-start-1 peer-invalid:row-span-2 peer-invalid:text-lg peer-invalid:tracking-wide peer-invalid:text-center", for_ stageNameInputId] [text $ stageToMisoString stage],
               case v._validation of
                 Validation.Success _ -> div_ [] []
                 Failure (toList -> errs) ->
-                  ul_ [class_ "list-disc list-inside"] $
+                  ul_ [class_ "list-disc list-inside invisible peer-invalid:visible peer-invalid:col-span-9 peer-invalid:row-start-2 peer-invalid:col-start-3"] $
                     li_ [class_ "text-neutral-200 font-semibold leading-tight"] . (: []) . text . unPomodoroMinuteSettingValidationError <$> errs
             ]
 
     settingsView =
       div_
-        [ class_ "absolute h-fit w-full transition-transform duration-700",
+        [ class_ $ "absolute transition-transform duration-500" <> sizeCls,
           styleInline_ $ "backface-visibility:hidden;" <> if m._settingsOpen then "" else "transform:rotateY(180deg);"
         ]
         $ [ h2_ [class_ "sr-only"] ["Settings"],
             div_
-              [class_ "flex flex-col w-full h-full bg-neutral-600 justify-around p-4 rounded-lg shadow-lg shadow-neutral-600"]
-              [ div_ [class_ "flex flex-col gap-4 items-center"] $ settingView <$> [minBound .. maxBound],
-                div_ [class_ "absolute top-2 right-2 flex flex-row gap-2 justify-around"] $
-                  [ button_
-                      [onClick ApplyPomodoroSettings]
-                      [ p_ [class_ "sr-only"] ["Apply"],
-                        svg_
-                          [class_ "fill-none stroke-2 stroke-neutral-400 size-6", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
-                          [path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "m4.5 12.75 6 6 9-13.5"]]
-                      ],
-                    button_
-                      [onClick ToggleSettingsOpen]
-                      [ p_ [class_ "sr-only"] ["Close"],
-                        svg_
-                          [class_ "fill-none stroke-2 stroke-neutral-400 size-6", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
-                          [path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "M6 18 18 6M6 6l12 12"]]
-                      ]
+              [ class_
+                  -- "flex flex-row w-full h-full bg-neutral-600 justify-center gap-4 p-4 rounded-lg shadow-lg shadow-neutral-600"
+                  "group grid grid-rows-2 grid-cols-2 sm:flex sm:flex-row w-full h-full bg-neutral-600 justify-center items-center gap-x-4 p-4 rounded-lg shadow-lg shadow-neutral-600"
+              ]
+              [ div_ [class_ "contents sm:flex sm:flex-col sm:gap-4 sm:grow"] $
+                  settingView <$> [minBound .. maxBound],
+                div_
+                  [ class_
+                      -- "absolute top-2 right-2 flex flex-row gap-2 justify-around"
+                      -- "flex flex-col gap-2 justify-around"
+                      "flex flex-row sm:flex-col gap-2 justify-around"
                   ]
+                  $ [ button_
+                        [onClick ApplyPomodoroSettings, class_ "group-[:has(:invalid)]:hidden"]
+                        [ p_ [class_ "sr-only"] ["Apply"],
+                          svg_
+                            [class_ "fill-none stroke-2 stroke-neutral-400 size-12", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
+                            [path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "m4.5 12.75 6 6 9-13.5"]]
+                        ],
+                      button_
+                        [onClick ToggleSettingsOpen, class_ "group-[:has(:invalid)]:absolute top-2 right-2"]
+                        [ p_ [class_ "sr-only"] ["Close"],
+                          svg_
+                            [class_ "fill-none stroke-2 stroke-neutral-400 size-12", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
+                            [path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "M6 18 18 6M6 6l12 12"]]
+                        ]
+                    ]
               ]
           ]
 
     currentPomodoroView =
       div_
-        [ class_ "absolute h-fit w-full transition-transform duration-700",
+        [ class_ $ "absolute transition-transform duration-500" <> sizeCls,
           styleInline_ $ "backface-visibility:hidden;" <> if m._settingsOpen then "transform:rotateY(180deg);" else ""
         ]
         [ button_
-            [onClick ToggleSettingsOpen, class_ "absolute top-2 right-2"]
+            [onClick ToggleSettingsOpen, class_ "absolute top-4 right-4"]
             [ p_ [class_ "sr-only"] ["Open Settings"],
               svg_
-                [class_ "fill-none stroke-2 stroke-neutral-400 size-6", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
+                [class_ "fill-none stroke-2 stroke-neutral-400 size-8 sm:size-10", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
                 [ path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"],
                   path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"]
                 ]
             ],
           div_
             [ key_ @MisoString "stopwatch",
-              class_ "bg-neutral-600 p-4 rounded-lg shadow-lg shadow-neutral-600 h-full w-full"
+              class_ "bg-neutral-600 rounded-lg shadow-lg shadow-neutral-600 h-full w-full pt-6"
             ]
             +> ( ( component
                      (Clock.Model False (m._currentPomodoro._pomodoroTime) Nothing)
                      Clock.updateModel
                      Clock.viewModel
                  )
-                   { initialAction = Just Clock.Start
+                   { -- bindings = [ParentToChild (_pomodoroTime . _currentPomodoro) (_set Clock.timeLeft)],
+                     initialAction = Just Clock.Start
                    }
                )
         ]
