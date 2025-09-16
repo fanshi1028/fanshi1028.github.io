@@ -79,7 +79,7 @@ viewModel m =
     let timeDisplay = text $ ms (formatTime defaultTimeLocale "%M:%00ES" $ m ^. timeLeft)
         buttonCls = "bg-neutral-200 text-neutral-600 text-3xl sm:text-4xl rounded px-4 sm:px-6 py-2 sm:py-3 shadow-inner shadow-neutral-800"
      in [ p_ [class_ "text-neutral-200 text-7xl sm:text-8xl font-mono"] [timeDisplay],
-          div_ [class_ "flex flex-row justify-around w-full items-center"] $
+          div_ [class_ "flex flex-row justify-around w-full items-center h-16"] $
             if m ^. active
               then
                 [ button_ [onClick Stop, class_ buttonCls] ["Stop"],
