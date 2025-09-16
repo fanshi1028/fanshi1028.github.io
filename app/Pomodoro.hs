@@ -190,7 +190,7 @@ viewModel m =
               Failure _ -> Prelude.id
           stageNameInputId = stageToMisoString stage <> " mins"
        in div_
-            [class_ "w-full flex flex-col-reverse gap-2 has-[:invalid]:grid has-[:invalid]:grid-rows-2 has-[:invalid]:grid-cols-12 has-[:invalid]:col-span-2 has-[:invalid]:row-start-1"]
+            [class_ "w-4/5 has-[:invalid]:w-full flex flex-col-reverse has-[:invalid]:gap-2 has-[:invalid]:grid has-[:invalid]:grid-rows-2 has-[:invalid]:grid-cols-12 has-[:invalid]:col-span-2 has-[:invalid]:row-start-1 has-[:invalid]:mt-8"]
             [ input_
                 ( disableIfOtherInvalidated
                     [ class_ "peer bg-neutral-200 text-neutral-600 text-lg font-bold rounded focus:ring-0 focus:border-0 focus:outline-1 focus:outline-neutral-800 w-full shadow-inner shadow-neutral-800 invalid:col-span-7 invalid:col-start-3 invalid:text-xl disabled:text-neutral-400 disabled:bg-neutral-300",
@@ -204,7 +204,7 @@ viewModel m =
                       P.id_ stageNameInputId
                     ]
                 ),
-              HTML.label_ [class_ "text-neutral-400 font-semibold peer-invalid:[writing-mode:sideways-lr] peer-invalid:col-span-2 peer-invalid:col-start-1 peer-invalid:row-start-1 peer-invalid:row-span-2 peer-invalid:text-lg peer-invalid:tracking-wide peer-invalid:text-center", for_ stageNameInputId] [text $ stageToMisoString stage],
+              HTML.label_ [class_ "text-neutral-400 font-semibold peer-invalid:[writing-mode:sideways-lr] peer-invalid:col-span-2 peer-invalid:col-start-1 peer-invalid:row-start-1 peer-invalid:row-span-2 peer-invalid:text-lg peer-invalid:tracking-tight peer-invalid:text-right peer-invalid:ml-2", for_ stageNameInputId] [text $ stageToMisoString stage],
               case v._validation of
                 Validation.Success _ -> div_ [] []
                 Failure (toList -> errs) ->
@@ -220,7 +220,7 @@ viewModel m =
         $ [ h2_ [class_ "sr-only"] ["Settings"],
             div_
               [ class_
-                  "group grid grid-rows-2 grid-cols-2 sm:flex sm:flex-row w-full h-full bg-neutral-600 justify-center items-center gap-x-4 p-4 rounded-lg shadow-lg shadow-neutral-600"
+                  "group grid grid-rows-2 grid-cols-2 place-items-center sm:flex sm:flex-row w-full h-full bg-neutral-600 justify-center items-center p-4 rounded-lg shadow-lg shadow-neutral-600"
               ]
               [ div_ [class_ "contents sm:flex sm:flex-col sm:gap-4 sm:grow"] $
                   settingView <$> [minBound .. maxBound],
