@@ -1,4 +1,8 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
@@ -8,8 +12,10 @@ module Main where
 
 import Data.FileEmbed (embedFileRelative)
 import Data.List.NonEmpty
+import GHC.Generics
 import Miso
 import Miso.Html.Element
+import Miso.Router
 import Network.URI.Static
 import qualified Pomodoro
 import ProductRequirementDocument as PRD
@@ -22,7 +28,13 @@ foreign export javascript "hs_start" main :: IO ()
 -----------------------------------------------------------------------------
 
 main :: IO ()
-main = run $ startApp app
+main = run $ miso $ \case
+  URI "" "" _ -> app
+  _ -> component () noop $ \() -> p_ [] ["TEMP FIXME 404"]
+
+data Route = Index | Pomodoro
+  deriving stock (Generic)
+  deriving anyclass (Router)
 
 app :: App () action
 app =
