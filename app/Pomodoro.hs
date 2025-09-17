@@ -258,7 +258,7 @@ viewModel m =
                 ]
             ],
           div_
-            [ key_ @MisoString "stopwatch",
+            [ key_ @MisoString $ "stopwatch " <> ms (show m._currentPomodoro._pomodoroTime),
               class_ "bg-neutral-600 rounded-lg shadow-lg shadow-neutral-600 h-full w-full pt-6"
             ]
             +> ( ( component
