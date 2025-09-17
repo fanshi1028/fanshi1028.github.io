@@ -278,7 +278,7 @@ viewModel m =
           ul_ [class_ "flex flex-col md:flex-row md:justify-around items-center gap-3"] $
             let pastItemView i = li_ [class_ "px-2"] [pomodoroView (Just "text-neutral-400 font-semibold") i]
                 futureItemView i = li_ [class_ "px-2"] [pomodoroView (Just "text-neutral-500 font-semibold text-lg") i]
-             in [ ul_ [class_ "contents md:flex md:flex-col md:items-center md:justify-start md:self-start md:basis-1/4"] (pastItemView <$> m._pomodoroPastQueue),
+             in [ ul_ [class_ "contents md:flex md:flex-col md:items-center md:justify-start md:self-start md:basis-1/4"] (pastItemView <$> Prelude.reverse m._pomodoroPastQueue),
                   currentView,
                   ul_ [class_ "contents md:flex md:flex-col md:items-center md:justify-end md:self-end md:basis-1/4"] (futureItemView <$> m._pomodoroFutureQueue)
                 ]
