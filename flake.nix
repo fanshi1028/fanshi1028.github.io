@@ -90,8 +90,6 @@
               ++ (with pkgs; [
                 http-server
                 tailwindcss
-                zstd
-                brotli
               ]);
           };
         }
