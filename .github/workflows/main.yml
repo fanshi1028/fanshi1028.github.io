@@ -89,7 +89,7 @@ jobs:
         run: |
           echo ::group::Archive artifact
           tar \
-            --use-compress-program "zstd -T0 --ultra --22" \
+            --use-compress-program "zstd -T0 --ultra -22" \
             --dereference --hard-dereference \
             --directory ./public \
             -cvf "$RUNNER_TEMP/artifact.tar.zst" \
