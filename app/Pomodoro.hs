@@ -211,7 +211,7 @@ viewModel m =
   div_
     [class_ "flex flex-col container mx-auto justify-center pb-6 min-h-screen bg-neutral-200"]
     [ h1_ [class_ "sr-only"] [text "Pomodoro"],
-      button_ [onClick SwitchToPRD, class_ "sticky top-2 self-end mr-2 hover:animate-wiggle"] [prdSwitchSVG "stroke-neutral-600 size-6 hover:size-8"],
+      button_ [onClick SwitchToPRD, class_ "sticky top-2 self-end mr-2 hover:animate-wiggle hover:[animation-delay:0.25s]"] [prdSwitchSVG "stroke-neutral-600 size-6 hover:size-8"],
       pomodoroQueueView $ div_ [class_ $ "block relative my-6" <> sizeCls] [settingsView, currentPomodoroView]
     ]
   where
@@ -269,7 +269,7 @@ viewModel m =
                   settingView <$> [minBound .. maxBound],
                 div_ [class_ "flex flex-row sm:flex-col gap-2 justify-around"] $
                   [ button_
-                      [onClick ApplyPomodoroSettings, class_ "group-[:has(:invalid)]:hidden hover:animate-wiggle"]
+                      [onClick ApplyPomodoroSettings, class_ "group-[:has(:invalid)]:hidden hover:animate-wiggle hover:[animation-delay:0.25s]"]
                       [ p_ [class_ "sr-only"] ["Apply"],
                         svg_
                           [class_ "fill-none stroke-2 stroke-neutral-400 size-12 hover:size-16", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
