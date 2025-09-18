@@ -325,8 +325,8 @@ viewModel m =
                         "px-2 "
                           <> ( case Map.lookup (PastItemTransition idx) m._transitionMap of
                                  Nothing -> ""
-                                 Just False -> "transition-opacity opacity-0"
-                                 Just True -> "transition-opacity"
+                                 Just False -> "transition-[transform,opacity] opacity-0 translate-y-16"
+                                 Just True -> "transition-[transform,opacity]"
                              )
                     ]
                     [pomodoroView (Just "text-neutral-400 font-semibold") i]
