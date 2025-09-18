@@ -139,9 +139,9 @@ data Action
   | ToggleSettingsOpen
   | Set PomodoroStage MisoString
   | ApplyPomodoroSettings
-  | PreNext
+  | PreNextTransition
   | Next
-  | PostNext
+  | PostNextTransition
   deriving stock (Eq, Show)
 
 updateModel :: Action -> Effect parent Model Action
@@ -168,7 +168,7 @@ updateModel = \case
           settingsOpen .= False
   SwitchToPRD -> publish prdTopic pomodoroPRD
   ToggleSettingsOpen -> settingsOpen %= not
-  PreNext -> do
+  PreNextTransition -> do
     startSub (show Next) $ \sink -> do
       liftIO $ threadDelay 300000
       sink Next
@@ -178,7 +178,7 @@ updateModel = \case
   Next -> do
     startSub (show Next) $ \sink -> do
       liftIO $ threadDelay 300000
-      sink PostNext
+      sink PostNextTransition
     current@(_, idx) <- use currentPomodoro
     transitionMap %= Map.insert (PastItemTransition idx) False
     use pomodoroFutureQueue >>= \case
@@ -193,7 +193,7 @@ updateModel = \case
       (_, idx'') : _ -> do transitionMap %= Map.delete (PastItemTransition idx'')
 
     pomodoroPastQueue %= (current :)
-  PostNext ->
+  PostNextTransition ->
     use pomodoroPastQueue >>= \case
       [] -> pure () -- TEMP: should be impossible
       (_, idx) : _ -> transitionMap %= Map.insert (PastItemTransition idx) True
@@ -379,7 +379,7 @@ pomodoroComponent =
   )
     { mailbox = \v -> case fromJSON v of
         Error _ -> Nothing
-        Aeson.Success Clock.ClockDoneMessage -> Just Pomodoro.PreNext
+        Aeson.Success Clock.ClockDoneMessage -> Just Pomodoro.PreNextTransition
     }
 
 pomodoroPRD :: ProductRequirementDocument
