@@ -17,7 +17,7 @@ import Control.Monad.IO.Class
 import Data.Aeson as Aeson hiding ((.=))
 import Data.Bifunctor
 import Data.List.NonEmpty
-import Data.Map as Map hiding (foldl', toList)
+import Data.Map.Strict as Map hiding (foldl', toList)
 import Data.Maybe
 import Data.Time
 import GHC.Natural
