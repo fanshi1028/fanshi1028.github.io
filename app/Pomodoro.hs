@@ -169,7 +169,7 @@ updateModel = \case
   SwitchToPRD -> publish prdTopic pomodoroPRD
   ToggleSettingsOpen -> settingsOpen %= not
   PreNextTransition -> do
-    startSub (show Next) $ \sink -> do
+    startSub (show PreNextTransition) $ \sink -> do
       liftIO $ threadDelay 300000
       sink Next
     use pomodoroFutureQueue >>= \case
