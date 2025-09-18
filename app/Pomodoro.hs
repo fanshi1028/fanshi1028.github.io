@@ -172,11 +172,15 @@ updateModel = \case
   PreNextTransition ->
     use pomodoroFutureQueue >>= \case
       [] -> issue PomodoroEnd
-      nearFuture@(_, idx) : restFuture -> do
-        startSub (show PreNextTransition) $ \sink -> do
-          liftIO $ threadDelay 200000
-          sink $ Next nearFuture restFuture
-        transitionMap %= Map.insert (FutureItemTransition idx) False
+      nearFuture@(_, idx) : restFuture ->
+        use transitionMap >>= \m ->
+          case Map.lookup (FutureItemTransition idx) m of
+            Just _ -> io_ $ consoleWarn "User probably clicked '>>' too fast, drop extra event to avoid UI bug"
+            Nothing -> do
+              transitionMap %= Map.insert (FutureItemTransition idx) False
+              startSub (show PreNextTransition) $ \sink -> do
+                liftIO $ threadDelay 200000
+                sink $ Next nearFuture restFuture
   next@(Next nearFuture@(_, nearFutureIdx) restFuture) -> do
     current@(_, idx) <- use currentPomodoro
     pomodoroPastQueue <<%= (current :) >>= \case
