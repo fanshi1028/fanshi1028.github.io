@@ -136,7 +136,7 @@ defaultPomodoroFutureQueue =
 
 data Action
   = SwitchToPRD
-  | ToggleSettingsOpen
+  | SettingsOpen Bool
   | Set PomodoroStage MisoString
   | ApplyPomodoroSettings
   | PreNextTransition
@@ -168,7 +168,7 @@ updateModel = \case
               )
           settingsOpen .= False
   SwitchToPRD -> publish prdTopic pomodoroPRD
-  ToggleSettingsOpen -> settingsOpen %= not
+  SettingsOpen open -> settingsOpen .= open
   PreNextTransition ->
     use pomodoroFutureQueue >>= \case
       [] -> issue PomodoroEnd
@@ -276,7 +276,7 @@ viewModel m =
                           [path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "m4.5 12.75 6 6 9-13.5"]]
                       ],
                     button_
-                      [onClick ToggleSettingsOpen, class_ "group-[:has(:invalid)]:absolute top-2 right-2"]
+                      [onClick $ SettingsOpen False, class_ "group-[:has(:invalid)]:absolute top-2 right-2"]
                       [ p_ [class_ "sr-only"] ["Close"],
                         svg_
                           [class_ "fill-none stroke-2 stroke-neutral-400 size-12", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
@@ -292,7 +292,7 @@ viewModel m =
           styleInline_ $ "backface-visibility:hidden;" <> if m._settingsOpen then "transform:rotateY(180deg);" else ""
         ]
         [ button_
-            [onClick ToggleSettingsOpen, class_ "absolute top-4 right-4"]
+            [onClick $ SettingsOpen True, class_ "absolute top-4 right-4"]
             [ p_ [class_ "sr-only"] ["Open Settings"],
               svg_
                 [class_ "fill-none stroke-2 stroke-neutral-400 size-8 sm:size-10", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
