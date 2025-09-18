@@ -78,20 +78,19 @@ updateModel = \case
 viewModel :: Model -> View Model Action
 viewModel m =
   div_ [class_ "flex flex-col items-center justify-center gap-2 sm:gap-4 p-6 h-full"] $
-    let timeDisplay = text $ ms (formatTime defaultTimeLocale "%M:%00ES" $ m ^. timeLeft)
-        buttonCls = "bg-neutral-200 text-neutral-600 text-3xl sm:text-4xl rounded px-4 sm:px-6 py-2 sm:py-3 shadow-inner shadow-neutral-800 hover:animate-wiggle"
-     in [ p_ [class_ "text-neutral-200 text-7xl sm:text-8xl font-mono"] [timeDisplay],
-          div_ [class_ "flex flex-row justify-around w-full items-center h-16"] $
-            if m ^. active
-              then
-                [ button_ [onClick Stop, class_ buttonCls] ["Stop"],
-                  button_
-                    [onClick End, class_ "text-neutral-200 text-4xl rounded px-4 py-2 hover:animate-wiggle"]
-                    [ svg_
-                        [class_ "fill-current size-12 hover:size-16 sm:size-16", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
-                        [path_ [d_ "M5.055 7.06C3.805 6.347 2.25 7.25 2.25 8.69v8.122c0 1.44 1.555 2.343 2.805 1.628L12 14.471v2.34c0 1.44 1.555 2.343 2.805 1.628l7.108-4.061c1.26-.72 1.26-2.536 0-3.256l-7.108-4.061C13.555 6.346 12 7.249 12 8.689v2.34L5.055 7.061Z"]]
-                    ]
-                ]
-              else
-                [button_ [onClick Start, class_ buttonCls] ["Start"]]
+    [ p_ [class_ "text-neutral-200 text-7xl sm:text-8xl font-mono"] [text . ms . formatTime defaultTimeLocale "%M:%00ES" $ m ^. timeLeft],
+      div_ [class_ "flex flex-row justify-around w-full items-center h-16"] $
+        [ let (primaryAction, primarybuttonText) =
+                if m ^. active
+                  then (Stop, "Stop")
+                  else (Start, "Start")
+              buttonCls = "bg-neutral-200 text-neutral-600 text-3xl sm:text-4xl rounded px-4 sm:px-6 py-2 sm:py-3 shadow-inner shadow-neutral-800 hover:animate-wiggle"
+           in button_ [onClick primaryAction, class_ buttonCls] [primarybuttonText],
+          button_
+            [onClick End, class_ "text-neutral-200 text-4xl rounded px-4 py-2 hover:animate-wiggle"]
+            [ svg_
+                [class_ "fill-current size-12 hover:size-16 sm:size-16", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
+                [path_ [d_ "M5.055 7.06C3.805 6.347 2.25 7.25 2.25 8.69v8.122c0 1.44 1.555 2.343 2.805 1.628L12 14.471v2.34c0 1.44 1.555 2.343 2.805 1.628l7.108-4.061c1.26-.72 1.26-2.536 0-3.256l-7.108-4.061C13.555 6.346 12 7.249 12 8.689v2.34L5.055 7.061Z"]]
+            ]
         ]
+    ]
