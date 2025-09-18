@@ -117,7 +117,7 @@ viewModel (Model open prd) =
   div_
     [onClick Close, class_ $ if open then "fixed left-0 top-0 h-full w-full overflow-auto z-50" else "hidden"]
     [ div_ [onClickWithOptions stopPropagation NoOp, class_ "flex flex-col gap-12 md:gap-20 lg:gap-24 xl:gap-28 container mx-auto p-6 sm:p-12 md:p-16 lg:p-20 xl:p-24 2xl:p-28 bg-neutral-100 relative"] $
-        [ button_ [onClick Close, class_ "absolute right-0 top-0 m-6 sm:m-12 md:m-16 lg:m-20 xl:m-24 2xl:m-28"] [prdSwitchSVG "size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20 stroke-neutral-600"],
+        [ button_ [onClick Close, class_ "absolute right-0 top-0 m-6 sm:m-12 md:m-16 lg:m-20 xl:m-24 2xl:m-28 hover:animate-wiggle"] [prdSwitchSVG "size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20 stroke-neutral-600"],
           problemAlignmentView,
           solutionAlignmentView,
           launchReadinessView
