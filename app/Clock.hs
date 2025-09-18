@@ -51,7 +51,9 @@ data ClockDoneMessage = ClockDoneMessage deriving (Eq, Generic, ToJSON, FromJSON
 
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
-  End -> mailParent ClockDoneMessage
+  End -> do
+    stopSub StopWatchTickSub
+    mailParent ClockDoneMessage
   Tick t ->
     use timeLeft >>= \case
       0 -> issue End

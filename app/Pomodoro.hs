@@ -140,8 +140,9 @@ data Action
   | Set PomodoroStage MisoString
   | ApplyPomodoroSettings
   | PreNextTransition
-  | Next
-  | PostNextTransition
+  | Next (Pomodoro, PomodoroQueueIndex) [(Pomodoro, PomodoroQueueIndex)]
+  | PostNextTransition (Pomodoro, PomodoroQueueIndex)
+  | PomodoroEnd
   deriving stock (Eq, Show)
 
 updateModel :: Action -> Effect parent Model Action
@@ -168,35 +169,31 @@ updateModel = \case
           settingsOpen .= False
   SwitchToPRD -> publish prdTopic pomodoroPRD
   ToggleSettingsOpen -> settingsOpen %= not
-  PreNextTransition -> do
-    startSub (show PreNextTransition) $ \sink -> do
-      liftIO $ threadDelay 300000
-      sink Next
+  PreNextTransition ->
     use pomodoroFutureQueue >>= \case
-      [] -> pure () -- TEMP FIXME
-      (_, idx) : _ -> transitionMap %= Map.insert (FutureItemTransition idx) False
-  Next -> do
-    startSub (show Next) $ \sink -> do
-      liftIO $ threadDelay 300000
-      sink PostNextTransition
+      [] -> issue PomodoroEnd
+      nearFuture@(_, idx) : restFuture -> do
+        startSub (show PreNextTransition) $ \sink -> do
+          liftIO $ threadDelay 200000
+          sink $ Next nearFuture restFuture
+        transitionMap %= Map.insert (FutureItemTransition idx) False
+  next@(Next nearFuture@(_, nearFutureIdx) restFuture) -> do
     current@(_, idx) <- use currentPomodoro
+    pomodoroPastQueue <<%= (current :) >>= \case
+      [] -> pure ()
+      (_, lastPastIdx) : _ -> transitionMap %= Map.delete (PastItemTransition lastPastIdx) -- NOTE: cleanup old past item transitions
+    transitionMap %= Map.delete (FutureItemTransition idx) -- NOTE: cleanup old future item transitions
     transitionMap %= Map.insert (PastItemTransition idx) False
-    use pomodoroFutureQueue >>= \case
-      [] -> pure () -- TEMP FIXME
-      current'@(_, idx') : future -> do
-        currentPomodoro .= current'
-        pomodoroFutureQueue .= future
-        transitionMap %= Map.delete (FutureItemTransition idx')
 
-    use pomodoroFutureQueue >>= \case
-      [] -> pure () -- TEMP FIXME
-      (_, idx'') : _ -> do transitionMap %= Map.delete (PastItemTransition idx'')
+    transitionMap %= Map.insert (FutureItemTransition nearFutureIdx) True
+    currentPomodoro .= nearFuture
+    pomodoroFutureQueue .= restFuture
 
-    pomodoroPastQueue %= (current :)
-  PostNextTransition ->
-    use pomodoroPastQueue >>= \case
-      [] -> pure () -- TEMP: should be impossible
-      (_, idx) : _ -> transitionMap %= Map.insert (PastItemTransition idx) True
+    startSub (show next) $ \sink -> do
+      liftIO $ threadDelay 200000
+      sink $ PostNextTransition current
+  PostNextTransition (_, justPastIdx) -> transitionMap %= Map.insert (PastItemTransition justPastIdx) True
+  PomodoroEnd -> pure () -- TEMP FIXME
   Set (stageToSettingLens -> stageLens) str -> do
     let validateMax45 n = failureIf (n > 45) (PomodoroMinuteSettingValidationError "must <= 45")
         validateMin5 n = failureIf (n < 5) (PomodoroMinuteSettingValidationError "must >= 5")
