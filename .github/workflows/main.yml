@@ -70,19 +70,19 @@ jobs:
           cp -r ./result/lib/* ./public/
 
       - name: Archive artifact
-      shell: sh
-      run: |
-        echo ::group::Archive artifact
-        tar \
-          --dereference --hard-dereference \
-          --directory .public \
-          -cvf "$RUNNER_TEMP/artifact.tar" \
-          --exclude=.git \
-          --exclude=.github \
-          --exclude=".[^/]*" \
-          .
-        du -h $RUNNER_TEMP/artifact.tar
-        echo ::endgroup::
+        shell: sh
+        run: |
+          echo ::group::Archive artifact
+          tar \
+            --dereference --hard-dereference \
+            --directory .public \
+            -cvf "$RUNNER_TEMP/artifact.tar" \
+            --exclude=.git \
+            --exclude=.github \
+            --exclude=".[^/]*" \
+            .
+          du -h $RUNNER_TEMP/artifact.tar
+          echo ::endgroup::
 
       - name: Archive artifact zstd
         shell: sh
@@ -118,11 +118,11 @@ jobs:
           echo ::endgroup::
 
       - name: Upload artifact
-      id: upload-artifact
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-      with:
-        path: ${{ runner.temp }}/artifact.tar
-        if-no-files-found: error
+        id: upload-artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          path: ${{ runner.temp }}/artifact.tar
+          if-no-files-found: error
 
   deploy:
     if: github.ref == 'refs/heads/main'
