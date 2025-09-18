@@ -33,7 +33,7 @@ executable app
   main-is:
     Main.hs
   build-depends:
-    aeson, base < 5, file-embed, miso, network-uri, text, time, validation-selective
+    aeson, base < 5, containers, file-embed, jsaddle, miso, network-uri, text, time, validation-selective
   hs-source-dirs:
     app
   default-language:

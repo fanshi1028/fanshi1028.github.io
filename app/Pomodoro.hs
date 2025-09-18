@@ -12,12 +12,16 @@ module Pomodoro where
 import qualified Clock
 import Control.Applicative
 import Control.Category
+import Control.Concurrent
+import Control.Monad.IO.Class
 import Data.Aeson as Aeson hiding ((.=))
+import Data.Bifunctor
 import Data.List.NonEmpty
+import Data.Map as Map hiding (foldl', toList)
 import Data.Maybe
 import Data.Time
 import GHC.Natural
-import Miso
+import Miso hiding (Transition)
 import Miso.CSS hiding (ms, rem)
 import Miso.Html as HTML
 import Miso.Html.Property as P
@@ -26,12 +30,12 @@ import Miso.String hiding (foldl')
 import Miso.Svg.Element
 import Miso.Svg.Property hiding (max_, min_, path_)
 import Network.URI.Static
-import ProductRequirementDocument hiding (Action, Model)
+import ProductRequirementDocument hiding (Action, Model, NoOp)
 import Text.Read
 import Validation as Validation hiding (validation)
 import Prelude hiding ((.))
 
-data PomodoroStage = Pomodoro | ShortBreak | LongBreak deriving (Eq, Enum, Bounded)
+data PomodoroStage = Pomodoro | ShortBreak | LongBreak deriving (Eq, Show, Ord, Enum, Bounded)
 
 stageToMisoString :: PomodoroStage -> MisoString
 stageToMisoString = \case
@@ -43,7 +47,7 @@ data Pomodoro = MkPomodoro
   { _pomodoroStage :: PomodoroStage,
     _pomodoroTime :: DiffTime
   }
-  deriving (Eq)
+  deriving stock (Eq, Show, Ord)
 
 newtype PomodoroMinuteSettingValidationError = PomodoroMinuteSettingValidationError {unPomodoroMinuteSettingValidationError :: MisoString}
   deriving stock (Eq)
@@ -53,7 +57,7 @@ data ValueWithValidation = ValueWithValidation
   { _value :: MisoString,
     _validation :: Validation (NonEmpty PomodoroMinuteSettingValidationError) Natural
   }
-  deriving (Eq)
+  deriving stock (Eq)
 
 value :: Lens ValueWithValidation MisoString
 value = lens _value $ \record x -> record {_value = x}
@@ -79,14 +83,22 @@ stageToSettingLens = \case
   ShortBreak -> shortBreak
   LongBreak -> longBreak
 
+newtype PomodoroQueueIndex = PomodoroQueueIndex Int deriving stock (Eq, Show, Ord)
+
+data Transition = PastItemTransition PomodoroQueueIndex | FutureItemTransition PomodoroQueueIndex deriving stock (Eq, Show, Ord)
+
 data Model = Model
   { _settings :: PomodoroSettings,
     _settingsOpen :: Bool,
-    _pomodoroPastQueue :: [Pomodoro],
-    _currentPomodoro :: Pomodoro,
-    _pomodoroFutureQueue :: [Pomodoro]
+    _pomodoroPastQueue :: [(Pomodoro, PomodoroQueueIndex)],
+    _currentPomodoro :: (Pomodoro, PomodoroQueueIndex),
+    _pomodoroFutureQueue :: [(Pomodoro, PomodoroQueueIndex)],
+    _transitionMap :: Map Transition Bool
   }
   deriving (Eq)
+
+transitionMap :: Lens Model (Map Transition Bool)
+transitionMap = lens _transitionMap $ \record x -> record {_transitionMap = x}
 
 settings :: Lens Model PomodoroSettings
 settings = lens _settings $ \record x -> record {_settings = x}
@@ -94,13 +106,13 @@ settings = lens _settings $ \record x -> record {_settings = x}
 settingsOpen :: Lens Model Bool
 settingsOpen = lens _settingsOpen $ \record x -> record {_settingsOpen = x}
 
-pomodoroPastQueue :: Lens Model [Pomodoro]
+pomodoroPastQueue :: Lens Model [(Pomodoro, PomodoroQueueIndex)]
 pomodoroPastQueue = lens _pomodoroPastQueue $ \record x -> record {_pomodoroPastQueue = x}
 
-currentPomodoro :: Lens Model Pomodoro
+currentPomodoro :: Lens Model (Pomodoro, PomodoroQueueIndex)
 currentPomodoro = lens _currentPomodoro $ \record x -> record {_currentPomodoro = x}
 
-pomodoroFutureQueue :: Lens Model [Pomodoro]
+pomodoroFutureQueue :: Lens Model [(Pomodoro, PomodoroQueueIndex)]
 pomodoroFutureQueue = lens _pomodoroFutureQueue $ \record x -> record {_pomodoroFutureQueue = x}
 
 naturalAsMinutesToDiffTime :: Natural -> DiffTime
@@ -109,18 +121,28 @@ naturalAsMinutesToDiffTime n = secondsToDiffTime $ 60 * fromIntegral n
 defaultCurrentPomodoro :: Pomodoro
 defaultCurrentPomodoro = MkPomodoro Pomodoro $ naturalAsMinutesToDiffTime defaultPomodoro
 
-defaultPomodoroFutureQueue :: [Pomodoro]
+defaultPomodoroFutureQueue :: [(Pomodoro, PomodoroQueueIndex)]
 defaultPomodoroFutureQueue =
-  [ MkPomodoro ShortBreak $ naturalAsMinutesToDiffTime defaultShortBreak,
-    MkPomodoro Pomodoro $ naturalAsMinutesToDiffTime defaultPomodoro,
-    MkPomodoro ShortBreak $ naturalAsMinutesToDiffTime defaultShortBreak,
-    MkPomodoro Pomodoro $ naturalAsMinutesToDiffTime defaultPomodoro,
-    MkPomodoro ShortBreak $ naturalAsMinutesToDiffTime defaultShortBreak,
-    MkPomodoro Pomodoro $ naturalAsMinutesToDiffTime defaultPomodoro,
-    MkPomodoro LongBreak $ naturalAsMinutesToDiffTime defaultLongBreak
-  ]
+  Prelude.zip
+    [ MkPomodoro ShortBreak $ naturalAsMinutesToDiffTime defaultShortBreak,
+      MkPomodoro Pomodoro $ naturalAsMinutesToDiffTime defaultPomodoro,
+      MkPomodoro ShortBreak $ naturalAsMinutesToDiffTime defaultShortBreak,
+      MkPomodoro Pomodoro $ naturalAsMinutesToDiffTime defaultPomodoro,
+      MkPomodoro ShortBreak $ naturalAsMinutesToDiffTime defaultShortBreak,
+      MkPomodoro Pomodoro $ naturalAsMinutesToDiffTime defaultPomodoro,
+      MkPomodoro LongBreak $ naturalAsMinutesToDiffTime defaultLongBreak
+    ]
+    $ PomodoroQueueIndex <$> [1 ..]
 
-data Action = SwitchToPRD | ToggleSettingsOpen | Set PomodoroStage MisoString | ApplyPomodoroSettings | Next deriving (Eq)
+data Action
+  = SwitchToPRD
+  | ToggleSettingsOpen
+  | Set PomodoroStage MisoString
+  | ApplyPomodoroSettings
+  | PreNext
+  | Next
+  | PostNext
+  deriving stock (Eq, Show)
 
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
@@ -138,7 +160,7 @@ updateModel = \case
           ) -> do
           pomodoroFutureQueue
             %= fmap
-              ( \(MkPomodoro stage _) -> case stage of
+              ( first $ \(MkPomodoro stage _) -> case stage of
                   LongBreak -> MkPomodoro stage longBreak''
                   ShortBreak -> MkPomodoro stage shortBreak''
                   Pomodoro -> MkPomodoro stage pomodoro''
@@ -146,14 +168,35 @@ updateModel = \case
           settingsOpen .= False
   SwitchToPRD -> publish prdTopic pomodoroPRD
   ToggleSettingsOpen -> settingsOpen %= not
-  Next -> do
-    current <- use currentPomodoro
-    pomodoroPastQueue %= (current :)
+  PreNext -> do
+    startSub (show Next) $ \sink -> do
+      liftIO $ threadDelay 300000
+      sink Next
     use pomodoroFutureQueue >>= \case
-      [] -> pure ()
-      current' : future -> do
+      [] -> pure () -- TEMP FIXME
+      (_, idx) : _ -> transitionMap %= Map.insert (FutureItemTransition idx) False
+  Next -> do
+    startSub (show Next) $ \sink -> do
+      liftIO $ threadDelay 300000
+      sink PostNext
+    current@(_, idx) <- use currentPomodoro
+    transitionMap %= Map.insert (PastItemTransition idx) False
+    use pomodoroFutureQueue >>= \case
+      [] -> pure () -- TEMP FIXME
+      current'@(_, idx') : future -> do
         currentPomodoro .= current'
         pomodoroFutureQueue .= future
+        transitionMap %= Map.delete (FutureItemTransition idx')
+
+    use pomodoroFutureQueue >>= \case
+      [] -> pure () -- TEMP FIXME
+      (_, idx'') : _ -> do transitionMap %= Map.delete (PastItemTransition idx'')
+
+    pomodoroPastQueue %= (current :)
+  PostNext ->
+    use pomodoroPastQueue >>= \case
+      [] -> pure () -- TEMP: should be impossible
+      (_, idx) : _ -> transitionMap %= Map.insert (PastItemTransition idx) True
   Set (stageToSettingLens -> stageLens) str -> do
     let validateMax45 n = failureIf (n > 45) (PomodoroMinuteSettingValidationError "must <= 45")
         validateMin5 n = failureIf (n < 5) (PomodoroMinuteSettingValidationError "must >= 5")
@@ -258,11 +301,11 @@ viewModel m =
                 ]
             ],
           div_
-            [ key_ @MisoString $ "stopwatch " <> ms (show m._currentPomodoro._pomodoroTime),
+            [ key_ @MisoString $ "stopwatch " <> ms (show (fst m._currentPomodoro)._pomodoroTime),
               class_ "bg-neutral-600 rounded-lg shadow-lg shadow-neutral-600 h-full w-full pt-6"
             ]
             +> ( ( component
-                     (Clock.Model False (m._currentPomodoro._pomodoroTime) Nothing)
+                     (Clock.Model False ((fst m._currentPomodoro)._pomodoroTime) Nothing)
                      Clock.updateModel
                      Clock.viewModel
                  )
@@ -276,11 +319,38 @@ viewModel m =
         [class_ "contents"]
         [ h2_ [class_ "sr-only"] [text "Pomodoro Queue"],
           ul_ [class_ "flex flex-col md:flex-row md:justify-around items-center gap-3"] $
-            let pastItemView i = li_ [class_ "px-2"] [pomodoroView (Just "text-neutral-400 font-semibold") i]
-                futureItemView i = li_ [class_ "px-2"] [pomodoroView (Just "text-neutral-500 font-semibold text-lg") i]
-             in [ ul_ [class_ "contents md:flex md:flex-col md:items-center md:justify-start md:self-start md:basis-1/4"] (pastItemView <$> Prelude.reverse m._pomodoroPastQueue),
+            let pastItemView (i, idx) =
+                  li_
+                    [ class_ $
+                        "px-2 "
+                          <> ( case Map.lookup (PastItemTransition idx) m._transitionMap of
+                                 Nothing -> ""
+                                 Just False -> "transition-opacity opacity-0"
+                                 Just True -> "transition-opacity"
+                             )
+                    ]
+                    [pomodoroView (Just "text-neutral-400 font-semibold") i]
+                futureItemView (i, idx) =
+                  li_
+                    [ class_ $
+                        "px-2 "
+                          <> ( case Map.lookup (FutureItemTransition idx) m._transitionMap of
+                                 Nothing -> ""
+                                 Just False -> "transition-[transform,opacity] -translate-y-16 opacity-0"
+                                 Just True -> "transition-[transform,opacity]"
+                             )
+                    ]
+                    [pomodoroView (Just "text-neutral-500 font-semibold text-lg") i]
+             in [ case m._pomodoroPastQueue of
+                    [] -> div_ [] []
+                    justPast : rest -> ul_ [class_ "contents md:flex md:flex-col md:items-center md:justify-start md:self-start md:basis-1/4"] $ foldl' (\acc i -> pastItemView i : acc) [pastItemView justPast] rest,
                   currentView,
-                  ul_ [class_ "contents md:flex md:flex-col md:items-center md:justify-end md:self-end md:basis-1/4"] (futureItemView <$> m._pomodoroFutureQueue)
+                  case m._pomodoroFutureQueue of
+                    [] -> div_ [] []
+                    nearFuture : rest ->
+                      ul_
+                        [class_ "contents md:flex md:flex-col md:items-center md:justify-end md:self-end md:basis-1/4"]
+                        (futureItemView nearFuture : (futureItemView <$> rest))
                 ]
         ]
 
@@ -300,15 +370,16 @@ pomodoroComponent =
           )
           False
           []
-          Pomodoro.defaultCurrentPomodoro
+          (Pomodoro.defaultCurrentPomodoro, PomodoroQueueIndex 0)
           Pomodoro.defaultPomodoroFutureQueue
+          mempty
       )
       Pomodoro.updateModel
       Pomodoro.viewModel
   )
     { mailbox = \v -> case fromJSON v of
         Error _ -> Nothing
-        Aeson.Success Clock.ClockDoneMessage -> Just Pomodoro.Next
+        Aeson.Success Clock.ClockDoneMessage -> Just Pomodoro.PreNext
     }
 
 pomodoroPRD :: ProductRequirementDocument
