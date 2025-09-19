@@ -220,17 +220,17 @@ updateModel = \case
 
 viewModel :: Model -> View Model Action
 viewModel m =
-  div_ [class_ "flex flex-col container items-center mx-auto pb-6 sm:pb-8 min-h-dvh bg-neutral-200"] $
+  div_ [class_ "flex flex-col container items-center min-h-dvh bg-neutral-200 mx-auto gap-6 sm:gap-8 pb-6 sm:pb-8"] $
     [ button_ [onClick SwitchToPRD, class_ "sticky self-end top-2 mr-2 hover:animate-wiggle hover:[animation-delay:0.25s]"] [prdSwitchSVG "stroke-neutral-600 size-6 sm:size-8 hover:size-8 hover:sm:size-10"],
       div_ [class_ "contents"] $ case m._pomodoroQueue of
         [] ->
-          [ div_ [class_ "mt-6"] $ case m._pomodoroPastQueue of
+          [ div_ [] $ case m._pomodoroPastQueue of
               [] -> []
               _ ->
-                [ h1_ [class_ "text-center text-lg text-neutral-600 font-bold px-6"] [text "Pomodoro Ended!"],
-                  p_ [class_ "text-center text-neutral-600 px-4"] [text "Ready to start a new Pomodoro?"]
+                [ h1_ [class_ "text-center text-lg sm:text-xl text-neutral-600 font-bold"] [text "Pomodoro Ended!"],
+                  p_ [class_ "text-center sm:text-lg text-neutral-600"] [text "Ready to start a new Pomodoro?"]
                 ],
-            div_ [class_ $ "mx-auto mt-8" <> sizeCls] $ [settingsView True]
+            div_ [class_ sizeCls] $ [settingsView True]
           ]
         (_pomodoroTime -> currentPomodoroTime, _) : future ->
           [ h1_ [class_ "sr-only"] [text "Pomodoro"],
@@ -275,7 +275,7 @@ viewModel m =
                                            Just True -> "transition-[transform,opacity]"
                                        )
                               ]
-                              [pomodoroView (Just "text-neutral-400 font-semibold") i]
+                              [pomodoroView (Just "text-neutral-400 font-semibold sm:text-lg") i]
                           futureItemView (i, idx) =
                             li_
                               [ class_ $
@@ -286,7 +286,7 @@ viewModel m =
                                            Just True -> "transition-[transform,opacity]"
                                        )
                               ]
-                              [pomodoroView (Just "text-neutral-500 font-semibold text-lg") i]
+                              [pomodoroView (Just "text-neutral-500 font-semibold text-lg sm:text-xl") i]
                        in [ case m._pomodoroPastQueue of
                               [] -> div_ [] []
                               justPast : rest -> ul_ [class_ "contents md:flex md:flex-col md:items-center md:justify-start md:self-start md:basis-1/4"] $ foldl' (\acc i -> pastItemView i : acc) [pastItemView justPast] rest,
@@ -305,9 +305,7 @@ viewModel m =
     sizeCls = " w-80 sm:w-96 h-64 sm:h-80"
     pomodoroView mCls (MkPomodoro stage time) =
       div_ [class_ $ "flex flex-row gap-4 " <> fromMaybe "" mCls] $
-        [ p_
-            []
-            [text $ stageToMisoString stage <> ": "],
+        [ p_ [] [text $ stageToMisoString stage <> ": "],
           span_ [] [text . ms $ formatTime defaultTimeLocale "%M:%00ES" time]
         ]
 
@@ -320,7 +318,7 @@ viewModel m =
               Failure _ -> Prelude.id
           stageNameInputId = stageToMisoString stage <> " mins"
        in div_
-            [class_ "w-4/5 has-[:invalid]:w-full flex flex-col-reverse has-[:invalid]:gap-2 has-[:invalid]:grid has-[:invalid]:grid-rows-2 has-[:invalid]:grid-cols-12 has-[:invalid]:col-span-2 has-[:invalid]:row-start-1 has-[:invalid]:mt-8"]
+            [class_ "w-4/5 has-[:invalid]:w-full flex flex-col-reverse has-[:invalid]:gap-2 has-[:invalid]:grid has-[:invalid]:grid-rows-2 has-[:invalid]:grid-cols-12 has-[:invalid]:col-span-2 has-[:invalid]:row-start-1 has-[:invalid]:mt-8 sm:has-[:invalid]:mt-4"]
             [ input_
                 ( disableIfOtherInvalidated
                     [ class_ "peer bg-neutral-200 text-neutral-600 text-lg font-bold rounded focus:ring-0 focus:border-0 focus:outline-1 focus:outline-neutral-800 w-full shadow-inner shadow-neutral-800 invalid:col-span-7 invalid:col-start-3 invalid:text-xl disabled:text-neutral-400 disabled:bg-neutral-300",
@@ -350,11 +348,11 @@ viewModel m =
         $ [ h2_ [class_ "sr-only"] ["Settings"],
             div_
               [ class_
-                  "group grid grid-rows-2 grid-cols-2 place-items-center sm:flex sm:flex-row w-full h-full bg-neutral-600 justify-center items-center p-4 rounded-lg shadow-lg shadow-neutral-600"
+                  "group grid grid-rows-2 grid-cols-2 place-items-center sm:flex sm:flex-row w-full h-full bg-neutral-600 justify-center items-center p-4 sm:p-6 rounded-lg shadow-lg shadow-neutral-600"
               ]
-              [ div_ [class_ "contents sm:flex sm:flex-col sm:gap-4 sm:grow"] $
+              [ div_ [class_ "contents sm:flex sm:flex-col sm:items-center sm:gap-4 sm:basis-4/5 sm:group-[:has(:invalid)]:basis-full sm:-mt-4 sm:group-[:has(:invalid)]:-mt-2 sm:w-full"] $
                   settingView <$> [minBound .. maxBound],
-                div_ [class_ "flex flex-row sm:flex-col gap-2 justify-around"] $
+                div_ [class_ "flex flex-row sm:flex-col sm:basis-1/5 sm:group-[:has(:invalid)]:basis-0 gap-2 sm:gap-4 justify-around"] $
                   [ button_
                       [onClick ApplyPomodoroSettings, class_ "group-[:has(:invalid)]:hidden hover:animate-wiggle hover:[animation-delay:0.25s]"]
                       [ p_ [class_ "sr-only"] ["Apply"],
