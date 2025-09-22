@@ -278,13 +278,13 @@ viewModel m =
                               [pomodoroView (Just "text-neutral-400 font-semibold sm:text-lg") i]
                           futureItemView (i, idx) =
                             li_
-                              [ class_ $
-                                  "px-2 "
-                                    <> ( case Map.lookup (FutureItemTransition idx) m._transitionMap of
-                                           Nothing -> ""
-                                           Just False -> "transition-[transform,opacity] -translate-y-16 opacity-0"
-                                           Just True -> "transition-[transform,opacity]"
-                                       )
+                              [ classes_
+                                  [ "px-2 ",
+                                    case Map.lookup (FutureItemTransition idx) m._transitionMap of
+                                      Nothing -> ""
+                                      Just False -> "transition-[transform,opacity] -translate-y-16 opacity-0"
+                                      Just True -> "transition-[transform,opacity]"
+                                  ]
                               ]
                               [pomodoroView (Just "text-neutral-500 font-semibold text-lg sm:text-xl") i]
                        in [ case m._pomodoroPastQueue of
