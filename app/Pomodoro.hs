@@ -220,7 +220,7 @@ updateModel = \case
 
 viewModel :: Model -> View Model Action
 viewModel m =
-  div_ [class_ "flex flex-col container items-center min-h-dvh bg-neutral-200 mx-auto gap-6 sm:gap-8 pb-6 sm:pb-8"] $
+  div_ [class_ "flex flex-col container items-center lg:justify-center min-h-dvh bg-neutral-200 mx-auto gap-6 sm:gap-8 pb-6 sm:pb-8"] $
     [ button_ [onClick SwitchToPRD, class_ "sticky self-end top-2 mr-2 sm:top-4 sm:mr-4  hover:animate-wiggle hover:[animation-delay:0.25s]"] [prdSwitchSVG "stroke-neutral-600 size-6 sm:size-8 hover:size-8 sm:hover:size-10"],
       div_ [class_ "contents"] $ case m._pomodoroQueue of
         [] ->
@@ -264,7 +264,7 @@ viewModel m =
              in div_
                   [class_ "contents"]
                   [ h2_ [class_ "sr-only"] [text "Pomodoro Queue"],
-                    ul_ [class_ "flex flex-col md:flex-row md:justify-around items-center gap-3"] $
+                    ul_ [class_ "flex flex-col lg:flex-row lg:justify-around lg:w-full items-center gap-3"] $
                       let pastItemView (i, idx) =
                             li_
                               [ class_ $
@@ -275,7 +275,7 @@ viewModel m =
                                            Just True -> "transition-[transform,opacity]"
                                        )
                               ]
-                              [pomodoroView (Just "text-neutral-400 font-semibold sm:text-lg") i]
+                              [pomodoroView (Just "text-neutral-400 font-semibold sm:text-lg xl:text-xl") i]
                           futureItemView (i, idx) =
                             li_
                               [ classes_
@@ -286,16 +286,16 @@ viewModel m =
                                       Just True -> "transition-[transform,opacity]"
                                   ]
                               ]
-                              [pomodoroView (Just "text-neutral-500 font-semibold text-lg sm:text-xl") i]
+                              [pomodoroView (Just "text-neutral-500 font-semibold text-lg sm:text-xl xl:text-2xl") i]
                        in [ case m._pomodoroPastQueue of
-                              [] -> div_ [] []
-                              justPast : rest -> ul_ [class_ "contents md:flex md:flex-col md:items-center md:justify-start md:self-start md:basis-1/4"] $ foldl' (\acc i -> pastItemView i : acc) [pastItemView justPast] rest,
+                              [] -> div_ [class_ "lg:basis-1/4"] []
+                              justPast : rest -> ul_ [class_ "contents md:flex md:flex-col md:items-center md:justify-start md:self-start lg:basis-1/4 xl:gap-2"] $ foldl' (\acc i -> pastItemView i : acc) [pastItemView justPast] rest,
                             div_ [classes_ ["relative my-6", sizeCls]] [settingsView False, currentPomodoroView],
                             case future of
-                              [] -> div_ [] []
+                              [] -> div_ [class_ "lg:basis-1/4"] []
                               nearFuture : rest ->
                                 ul_
-                                  [class_ "contents md:flex md:flex-col md:items-center md:justify-end md:self-end md:basis-1/4"]
+                                  [class_ "contents md:flex md:flex-col md:items-center md:justify-end md:self-end lg:basis-1/4 gap-2 xl:gap-4"]
                                   (futureItemView nearFuture : (futureItemView <$> rest))
                           ]
                   ]
