@@ -15,10 +15,11 @@ import qualified Clock
 import Control.Applicative
 import Control.Category
 import Control.Concurrent
+import Control.Monad
 import Control.Monad.IO.Class
 import Data.Aeson as Aeson hiding ((.=))
 import Data.Bifunctor
-import Data.List.NonEmpty
+import Data.List.NonEmpty as NE
 import Data.Map.Strict as Map hiding (foldl', toList)
 import Data.Maybe
 import Data.Time
@@ -93,7 +94,7 @@ data Transition = PastItemTransition PomodoroQueueIndex | FutureItemTransition P
 data Model = Model
   { _settings :: PomodoroSettings,
     _settingsOpen :: Bool,
-    _pomodoroPastQueue :: [(Pomodoro, PomodoroQueueIndex)],
+    _pomodoroPastQueues :: NonEmpty [(Pomodoro, PomodoroQueueIndex)],
     _pomodoroQueue :: [(Pomodoro, PomodoroQueueIndex)],
     _transitionMap :: Map Transition Bool
   }
@@ -109,7 +110,10 @@ settingsOpen :: Lens Model Bool
 settingsOpen = lens _settingsOpen $ \record x -> record {_settingsOpen = x}
 
 pomodoroPastQueue :: Lens Model [(Pomodoro, PomodoroQueueIndex)]
-pomodoroPastQueue = lens _pomodoroPastQueue $ \record x -> record {_pomodoroPastQueue = x}
+pomodoroPastQueue = lens (NE.head . _pomodoroPastQueues) $ \record x -> record {_pomodoroPastQueues = x :| NE.tail record._pomodoroPastQueues}
+
+pomodoroAllPastQueues :: Lens Model (NonEmpty [(Pomodoro, PomodoroQueueIndex)])
+pomodoroAllPastQueues = lens _pomodoroPastQueues $ \record x -> record {_pomodoroPastQueues = x}
 
 pomodoroQueue :: Lens Model [(Pomodoro, PomodoroQueueIndex)]
 pomodoroQueue = lens _pomodoroQueue $ \record x -> record {_pomodoroQueue = x}
@@ -163,19 +167,21 @@ updateModel = \case
           naturalAsMinutesToDiffTime -> shortBreak'',
           naturalAsMinutesToDiffTime -> longBreak''
           ) -> do
-          pomodoroQueue
-            %= \case
-              [] -> mkDefaultPomodoroQueue pomodoro'' shortBreak'' longBreak''
-              current : future ->
-                current
-                  : ( first
-                        ( \(MkPomodoro stage _) -> case stage of
-                            LongBreak -> MkPomodoro stage longBreak''
-                            ShortBreak -> MkPomodoro stage shortBreak''
-                            Pomodoro -> MkPomodoro stage pomodoro''
-                        )
-                        <$> future
-                    )
+          ((== []) -> noFuture) <-
+            pomodoroQueue
+              <<%= \case
+                [] -> mkDefaultPomodoroQueue pomodoro'' shortBreak'' longBreak''
+                current : future ->
+                  current
+                    : ( first
+                          ( \(MkPomodoro stage _) -> case stage of
+                              LongBreak -> MkPomodoro stage longBreak''
+                              ShortBreak -> MkPomodoro stage shortBreak''
+                              Pomodoro -> MkPomodoro stage pomodoro''
+                          )
+                          <$> future
+                      )
+          when noFuture $ pomodoroAllPastQueues %= ([] <|)
           settingsOpen .= False
   SwitchToPRD -> publish prdTopic pomodoroPRD
   SettingsOpen open -> settingsOpen .= open
@@ -224,7 +230,7 @@ viewModel m =
     [ button_ [onClick SwitchToPRD, class_ "sticky self-end top-2 mr-2 sm:top-4 sm:mr-4  hover:animate-wiggle hover:[animation-delay:0.25s]"] [prdSwitchSVG "stroke-neutral-600 size-6 sm:size-8 hover:size-8 sm:hover:size-10"],
       div_ [class_ "contents"] $ case m._pomodoroQueue of
         [] ->
-          [ div_ [] $ case m._pomodoroPastQueue of
+          [ div_ [] $ case m ^. pomodoroPastQueue of
               [] -> []
               _ ->
                 [ h1_ [class_ "text-center text-lg sm:text-xl text-neutral-600 font-bold"] [text "Pomodoro Ended!"],
@@ -287,7 +293,7 @@ viewModel m =
                                   ]
                               ]
                               [pomodoroView (Just "text-neutral-500 font-semibold text-lg sm:text-xl xl:text-2xl") i]
-                       in [ case m._pomodoroPastQueue of
+                       in [ case m ^. pomodoroPastQueue of
                               [] -> div_ [class_ "lg:basis-1/4"] []
                               justPast : rest -> ul_ [class_ "contents md:flex md:flex-col md:items-center md:justify-start md:self-start lg:basis-1/4 xl:gap-2"] $ foldl' (\acc i -> pastItemView i : acc) [pastItemView justPast] rest,
                             div_ [classes_ ["relative my-6", sizeCls]] [settingsView False, currentPomodoroView],
@@ -387,7 +393,7 @@ pomodoroComponent =
               (Pomodoro.ValueWithValidation (ms $ show Pomodoro.defaultLongBreak) $ pure Pomodoro.defaultLongBreak)
           )
           True
-          []
+          ([] :| [])
           []
           mempty
       )
