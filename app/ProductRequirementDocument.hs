@@ -109,7 +109,7 @@ updateModel = \case
 prdSwitchSVG :: MisoString -> View model action
 prdSwitchSVG extraCls =
   svg_
-    [class_ $ "fill-none stroke-2 " <> extraCls, xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
+    [classes_ ["fill-none stroke-2", extraCls], xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
     [path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"]]
 
 viewModel :: Model -> View Model Action
@@ -128,7 +128,7 @@ viewModel (Model open prd) =
     sectionView title extraCls inner =
       div_ [class_ "flex flex-col gap-8 md:gap-10"] $
         [ h2_ [class_ "font-bold text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl text-neutral-400 font-serif"] [title],
-          div_ [class_ $ "flex flex-col gap-8 md:gap-10 lg:gap-12 " <> extraCls] inner
+          div_ [classes_ ["flex flex-col gap-8 md:gap-10 lg:gap-12", extraCls]] inner
         ]
     problemAlignmentView =
       sectionView "Problem Aligment" "xl:gap-20 2xl:gap-24" $
