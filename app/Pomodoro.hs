@@ -268,7 +268,7 @@ viewModel m =
                       let pastItemView (i, idx) =
                             li_
                               [ class_ $
-                                  "px-2 "
+                                  "px-2"
                                     <> ( case Map.lookup (PastItemTransition idx) m._transitionMap of
                                            Nothing -> ""
                                            Just False -> "transition-[transform,opacity] opacity-0 translate-y-16"
