@@ -236,7 +236,7 @@ viewModel m =
           [ h1_ [class_ "sr-only"] [text "Pomodoro"],
             let currentPomodoroView =
                   div_
-                    [ class_ $ "absolute transition-transform duration-500 bg-neutral-600 rounded-lg shadow-lg shadow-neutral-600" <> sizeCls,
+                    [ classes_ ["absolute transition-transform duration-500 bg-neutral-600 rounded-lg shadow-lg shadow-neutral-600", sizeCls],
                       styleInline_ $ "backface-visibility:hidden;" <> if m._settingsOpen then "transform:rotateY(180deg);" else ""
                     ]
                     [ button_
@@ -290,7 +290,7 @@ viewModel m =
                        in [ case m._pomodoroPastQueue of
                               [] -> div_ [] []
                               justPast : rest -> ul_ [class_ "contents md:flex md:flex-col md:items-center md:justify-start md:self-start md:basis-1/4"] $ foldl' (\acc i -> pastItemView i : acc) [pastItemView justPast] rest,
-                            div_ [class_ $ "relative my-6" <> sizeCls] [settingsView False, currentPomodoroView],
+                            div_ [classes_ ["relative my-6", sizeCls]] [settingsView False, currentPomodoroView],
                             case future of
                               [] -> div_ [] []
                               nearFuture : rest ->
@@ -302,9 +302,9 @@ viewModel m =
           ]
     ]
   where
-    sizeCls = " w-80 sm:w-96 h-64 sm:h-80"
+    sizeCls = "w-80 sm:w-96 h-64 sm:h-80"
     pomodoroView mCls (MkPomodoro stage time) =
-      div_ [class_ $ "flex flex-row gap-4 " <> fromMaybe "" mCls] $
+      div_ [classes_ ["flex flex-row gap-4", fromMaybe "" mCls]] $
         [ p_ [] [text $ stageToMisoString stage <> ": "],
           span_ [] [text . ms $ formatTime defaultTimeLocale "%M:%00ES" time]
         ]
@@ -342,7 +342,7 @@ viewModel m =
 
     settingsView init' =
       div_
-        [ class_ $ "absolute transition-transform duration-500 rounded-lg shadow-lg bg-neutral-600 shadow-neutral-600 pb-4 has-[:invalid]:pb-0" <> sizeCls,
+        [ classes_ ["absolute transition-transform duration-500 rounded-lg shadow-lg bg-neutral-600 shadow-neutral-600 pb-4 has-[:invalid]:pb-0", sizeCls],
           styleInline_ $ "backface-visibility:hidden;" <> if m._settingsOpen then "" else "transform:rotateY(180deg);"
         ]
         $ [ h2_ [class_ "sr-only"] ["Settings"],
