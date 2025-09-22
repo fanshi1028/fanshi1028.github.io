@@ -273,19 +273,19 @@ viewModel m =
                     ul_ [class_ "flex flex-col lg:flex-row lg:justify-around lg:w-full items-center gap-3"] $
                       let pastItemView (i, idx) =
                             li_
-                              [ class_ $
-                                  "px-2"
-                                    <> ( case Map.lookup (PastItemTransition idx) m._transitionMap of
-                                           Nothing -> ""
-                                           Just False -> "transition-[transform,opacity] opacity-0 translate-y-16"
-                                           Just True -> "transition-[transform,opacity]"
-                                       )
+                              [ classes_
+                                  [ "px-2",
+                                    case Map.lookup (PastItemTransition idx) m._transitionMap of
+                                      Nothing -> ""
+                                      Just False -> "transition-[transform,opacity] opacity-0 translate-y-16"
+                                      Just True -> "transition-[transform,opacity]"
+                                  ]
                               ]
                               [pomodoroView (Just "text-neutral-400 font-semibold sm:text-lg xl:text-xl") i]
                           futureItemView (i, idx) =
                             li_
                               [ classes_
-                                  [ "px-2 ",
+                                  [ "px-2",
                                     case Map.lookup (FutureItemTransition idx) m._transitionMap of
                                       Nothing -> ""
                                       Just False -> "transition-[transform,opacity] -translate-y-16 opacity-0"
