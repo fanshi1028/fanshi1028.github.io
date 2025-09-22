@@ -221,7 +221,7 @@ updateModel = \case
 viewModel :: Model -> View Model Action
 viewModel m =
   div_ [class_ "flex flex-col container items-center min-h-dvh bg-neutral-200 mx-auto gap-6 sm:gap-8 pb-6 sm:pb-8"] $
-    [ button_ [onClick SwitchToPRD, class_ "sticky self-end top-2 mr-2 hover:animate-wiggle hover:[animation-delay:0.25s]"] [prdSwitchSVG "stroke-neutral-600 size-6 sm:size-8 hover:size-8 hover:sm:size-10"],
+    [ button_ [onClick SwitchToPRD, class_ "sticky self-end top-2 mr-2 sm:top-4 sm:mr-4  hover:animate-wiggle hover:[animation-delay:0.25s]"] [prdSwitchSVG "stroke-neutral-600 size-6 sm:size-8 hover:size-8 sm:hover:size-10"],
       div_ [class_ "contents"] $ case m._pomodoroQueue of
         [] ->
           [ div_ [] $ case m._pomodoroPastQueue of
@@ -236,21 +236,21 @@ viewModel m =
           [ h1_ [class_ "sr-only"] [text "Pomodoro"],
             let currentPomodoroView =
                   div_
-                    [ class_ $ "absolute transition-transform duration-500" <> sizeCls,
+                    [ class_ $ "absolute transition-transform duration-500 bg-neutral-600 rounded-lg shadow-lg shadow-neutral-600" <> sizeCls,
                       styleInline_ $ "backface-visibility:hidden;" <> if m._settingsOpen then "transform:rotateY(180deg);" else ""
                     ]
                     [ button_
-                        [onClick $ SettingsOpen True, class_ "absolute top-4 right-4 hover:animate-wiggle"]
+                        [onClick $ SettingsOpen True, class_ "absolute top-4 sm:top-4 right-4 sm:right-4 hover:animate-wiggle"]
                         [ p_ [class_ "sr-only"] ["Open Settings"],
                           svg_
-                            [class_ "fill-none stroke-2 stroke-neutral-400 size-8 sm:size-10 hover:size-10", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
+                            [class_ "fill-none stroke-2 stroke-neutral-400 size-8 sm:size-10 hover:size-10 sm:hover:size-12", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
                             [ path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"],
                               path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"]
                             ]
                         ],
                       div_
                         [ key_ @MisoString $ "stopwatch " <> ms (show currentPomodoroTime),
-                          class_ "bg-neutral-600 rounded-lg shadow-lg shadow-neutral-600 h-full w-full pt-6"
+                          class_ "h-full w-full pt-6"
                         ]
                         +> ( ( component
                                  (Clock.Model False currentPomodoroTime Nothing)
@@ -318,10 +318,10 @@ viewModel m =
               Failure _ -> Prelude.id
           stageNameInputId = stageToMisoString stage <> " mins"
        in div_
-            [class_ "w-4/5 has-[:invalid]:w-full flex flex-col-reverse has-[:invalid]:gap-2 has-[:invalid]:grid has-[:invalid]:grid-rows-2 has-[:invalid]:grid-cols-12 has-[:invalid]:col-span-2 has-[:invalid]:row-start-1 has-[:invalid]:mt-8 sm:has-[:invalid]:mt-4"]
+            [class_ "w-4/5 has-[:invalid]:w-full flex flex-col-reverse gap-2 has-[:invalid]:grid has-[:invalid]:grid-rows-2 has-[:invalid]:grid-cols-12 has-[:invalid]:col-span-2 has-[:invalid]:row-start-1 has-[:invalid]:mt-6 sm:has-[:invalid]:mt-12"]
             [ input_
                 ( disableIfOtherInvalidated
-                    [ class_ "peer bg-neutral-200 text-neutral-600 text-lg font-bold rounded focus:ring-0 focus:border-0 focus:outline-1 focus:outline-neutral-800 w-full shadow-inner shadow-neutral-800 invalid:col-span-7 invalid:col-start-3 invalid:text-xl disabled:text-neutral-400 disabled:bg-neutral-300",
+                    [ class_ "peer bg-neutral-300 text-neutral-600 text-lg font-bold rounded focus:ring-0 focus:border-0 focus:outline-1 focus:outline-neutral-800 w-full shadow-inner shadow-neutral-800 invalid:col-span-7 invalid:col-start-3 invalid:text-xl disabled:text-neutral-400",
                       type_ "number",
                       required_ True,
                       max_ "45",
@@ -332,7 +332,7 @@ viewModel m =
                       P.id_ stageNameInputId
                     ]
                 ),
-              HTML.label_ [class_ "text-neutral-400 font-semibold peer-invalid:[writing-mode:sideways-lr] peer-invalid:col-span-2 peer-invalid:col-start-1 peer-invalid:row-start-1 peer-invalid:row-span-2 peer-invalid:text-lg peer-invalid:tracking-tight peer-invalid:text-right peer-invalid:ml-2", for_ stageNameInputId] [text $ stageToMisoString stage],
+              HTML.label_ [class_ "text-neutral-400 font-semibold sm:text-lg peer-invalid:[writing-mode:sideways-lr] peer-invalid:col-span-2 peer-invalid:col-start-1 peer-invalid:row-start-1 peer-invalid:row-span-2 peer-invalid:text-lg sm:peer-invalid:text-xl peer-invalid:tracking-tight peer-invalid:text-right peer-invalid:ml-2 sm;peer-invalid:ml-4", for_ stageNameInputId] [text $ stageToMisoString stage],
               case v._validation of
                 Validation.Success _ -> div_ [] []
                 Failure (toList -> errs) ->
@@ -342,22 +342,19 @@ viewModel m =
 
     settingsView init' =
       div_
-        [ class_ $ "absolute transition-transform duration-500" <> sizeCls,
+        [ class_ $ "absolute transition-transform duration-500 rounded-lg shadow-lg bg-neutral-600 shadow-neutral-600 pb-4 has-[:invalid]:pb-0" <> sizeCls,
           styleInline_ $ "backface-visibility:hidden;" <> if m._settingsOpen then "" else "transform:rotateY(180deg);"
         ]
         $ [ h2_ [class_ "sr-only"] ["Settings"],
             div_
-              [ class_
-                  "group grid grid-rows-2 grid-cols-2 place-items-center sm:flex sm:flex-row w-full h-full bg-neutral-600 justify-center items-center p-4 sm:p-6 rounded-lg shadow-lg shadow-neutral-600"
-              ]
-              [ div_ [class_ "contents sm:flex sm:flex-col sm:items-center sm:gap-4 sm:basis-4/5 sm:group-[:has(:invalid)]:basis-full sm:-mt-4 sm:group-[:has(:invalid)]:-mt-2 sm:w-full"] $
-                  settingView <$> [minBound .. maxBound],
-                div_ [class_ "flex flex-row sm:flex-col sm:basis-1/5 sm:group-[:has(:invalid)]:basis-0 gap-2 sm:gap-4 justify-around"] $
+              [class_ "group grid grid-rows-2 grid-cols-2 place-items-center w-full h-full p-4"]
+              [ div_ [class_ "contents"] $ settingView <$> [minBound .. maxBound],
+                div_ [class_ "flex flex-row justify-around"] $
                   [ button_
                       [onClick ApplyPomodoroSettings, class_ "group-[:has(:invalid)]:hidden hover:animate-wiggle hover:[animation-delay:0.25s]"]
                       [ p_ [class_ "sr-only"] ["Apply"],
                         svg_
-                          [class_ "fill-none stroke-2 stroke-neutral-400 size-12 hover:size-16", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
+                          [class_ "fill-none stroke-2 stroke-neutral-400 size-12 sm:size-14 hover:size-14 sm:hover:size-16", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
                           [path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "m4.5 12.75 6 6 9-13.5"]]
                       ],
                     if init'
@@ -365,10 +362,10 @@ viewModel m =
                         div_ [] []
                       else
                         button_
-                          [onClick $ SettingsOpen False, class_ "group-[:has(:invalid)]:absolute top-2 right-2 hover:animate-wiggle"]
+                          [onClick $ SettingsOpen False, class_ "group-[:has(:invalid)]:absolute top-2 sm:top-4 right-2 sm:right-4 hover:animate-wiggle"]
                           [ p_ [class_ "sr-only"] ["Close"],
                             svg_
-                              [class_ "fill-none stroke-2 stroke-neutral-400 size-12 hover:size-16", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
+                              [class_ "fill-none stroke-2 stroke-neutral-400 size-12 sm:size-14 hover:size-14 sm:hover:size-16", xmlns_ "http://www.w3.org/2000/svg", viewBox_ "0 0 24 24"]
                               [path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "M6 18 18 6M6 6l12 12"]]
                           ]
                   ]
