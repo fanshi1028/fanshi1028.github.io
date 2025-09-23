@@ -26,6 +26,14 @@
       ];
       ghcVersion = "9122";
       overlays = [ (import "${miso}/nix/overlay.nix") ];
+      mkDefaultPackage =
+        pkgs: args:
+        pkgs.haskell.packages."ghc${ghcVersion}".developPackage (
+          {
+            root = ./.;
+          }
+          // args
+        );
     in
     {
       packages = nixpkgs.lib.genAttrs systems (
@@ -34,6 +42,17 @@
           pkgs = import nixpkgs { inherit system overlays; };
         in
         {
+          prerender = mkDefaultPackage pkgs {
+            modifier =
+              drv:
+              pkgs.lib.pipe drv [
+                (pkgs.haskell.lib.compose.setBuildTargets [ "prerender" ])
+                (pkgs.haskell.lib.compose.overrideCabal (_: {
+                  pname = "prerender";
+                }))
+              ];
+            # pkgs.haskell.lib.setBuildTargets drv [ "prerender" ];
+          };
           browser_wasi_shim =
             let
               pname = "browser_wasi_shim";
@@ -60,26 +79,24 @@
           pkgs = import nixpkgs { inherit system overlays; };
         in
         {
-          default = pkgs.haskell.packages."ghc${ghcVersion}".developPackage {
-            root = ./.;
+          default = mkDefaultPackage pkgs {
             modifier =
               drv:
               pkgs.haskell.lib.addBuildTools drv (
                 with pkgs;
                 [
-                  ghciwatch
                   cabal-install
+                  tailwindcss
+                  ghciwatch
                   # (haskell-language-server.override { supportedGhcVersions = [ ghcVersion ]; })
                   haskell.packages."ghc${ghcVersion}".haskell-language-server
                   # NOTE: tailwindcss_4 when trying to run
                   # dyld: Symbol not found: _ubrk_clone
                   #   Referenced from: /nix/store/2dxgd64421azhmwp63h9h3hzczgvh9w7-tailwindcss_4-4.1.7/bin/.tailwindcss-wrapped (which was built for Mac OS X 13.0)
                   #   Expected in: /usr/lib/libicucore.A.dylib
-                  tailwindcss
-                  bun
+
                 ]
               );
-            returnShellEnv = true;
           };
           wasm = pkgs.mkShell {
             name = "The miso ${system} GHC WASM ${ghcVersion} shell";

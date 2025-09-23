@@ -383,20 +383,23 @@ defaultLongBreak = 15
 defaultShortBreak = 5
 defaultPomodoro = 25
 
+defaultModel :: Model
+defaultModel =
+  Pomodoro.Model
+    ( Pomodoro.PomodoroSettings
+        (Pomodoro.ValueWithValidation (ms $ show Pomodoro.defaultPomodoro) $ pure Pomodoro.defaultPomodoro)
+        (Pomodoro.ValueWithValidation (ms $ show Pomodoro.defaultShortBreak) $ pure Pomodoro.defaultShortBreak)
+        (Pomodoro.ValueWithValidation (ms $ show Pomodoro.defaultLongBreak) $ pure Pomodoro.defaultLongBreak)
+    )
+    True
+    ([] :| [])
+    []
+    mempty
+
 pomodoroComponent :: Component parent Model Action
 pomodoroComponent =
   ( component
-      ( Pomodoro.Model
-          ( Pomodoro.PomodoroSettings
-              (Pomodoro.ValueWithValidation (ms $ show Pomodoro.defaultPomodoro) $ pure Pomodoro.defaultPomodoro)
-              (Pomodoro.ValueWithValidation (ms $ show Pomodoro.defaultShortBreak) $ pure Pomodoro.defaultShortBreak)
-              (Pomodoro.ValueWithValidation (ms $ show Pomodoro.defaultLongBreak) $ pure Pomodoro.defaultLongBreak)
-          )
-          True
-          ([] :| [])
-          []
-          mempty
-      )
+      defaultModel
       Pomodoro.updateModel
       Pomodoro.viewModel
   )
