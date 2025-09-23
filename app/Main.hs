@@ -10,7 +10,9 @@
 
 module Main where
 
+#ifndef WASM
 import Data.FileEmbed
+#endif
 import Data.List.NonEmpty
 import GHC.Generics
 import Miso
@@ -51,10 +53,10 @@ app =
           div_ [key_ @MisoString "pomodoro"] +> Pomodoro.pomodoroComponent
         ]
   )
-    { events = defaultEvents
-#ifdef WASM
-#else
-      ,styles = [Style $ ms $(embedFileRelative "static/output.css")]
+    {
+      events = defaultEvents
+#ifndef WASM
+    , styles = [Style $ ms $(embedFileRelative "static/output.css")]
 #endif
     }
 
