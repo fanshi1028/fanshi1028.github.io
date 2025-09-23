@@ -58,6 +58,7 @@ app =
 #ifndef WASM
     , styles = [Style $ ms $(embedFileRelative "static/output.css")]
 #endif
+    , logLevel = DebugAll
     }
 
 sitePRD :: ProductRequirementDocument
