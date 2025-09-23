@@ -1,7 +1,7 @@
 import type { Config } from 'tailwindcss'
 
 export default {
-  content: ['./app/*.hs'],
+  content: ['./app/*.hs', './src/**/*.hs'],
   theme: {
     extend: {
       keyframes: {
