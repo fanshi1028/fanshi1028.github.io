@@ -10,7 +10,7 @@ update:
 	wasm32-wasi-cabal --project-file=wasm.cabal.project update
 
 build:
-	wasm32-wasi-cabal --project-file=wasm.cabal.project build
+	wasm32-wasi-cabal --project-file=wasm.cabal.project build fanshi1028-site:exe:fanshi1028-site
 	rm -rf public
 	cp -r static public
 	$(eval my_wasm=$(shell wasm32-wasi-cabal --project-file=wasm.cabal.project list-bin app | tail -n 1))
