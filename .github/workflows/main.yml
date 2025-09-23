@@ -57,8 +57,6 @@ jobs:
           path: |
             ~/.ghc-wasm/.cabal/packages
             ~/.ghc-wasm/.cabal/store
-            ~/.cabal/packages
-            ~/.cabal/store
             dist-newstyle
           key: cabal-${{ runner.os }}-${{ hashFiles('**/*.nix', '**/flake.lock', '**/*.cabal', '**/wasm.cabal.project') }}
           restore-keys: cabal-${{ runner.os }}-
