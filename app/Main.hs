@@ -10,12 +10,12 @@
 
 module Main where
 
-import Data.FileEmbed (embedFileRelative)
+import Data.FileEmbed
 import Data.List.NonEmpty
 import GHC.Generics
 import Miso
-import Miso.Html.Element
-import Miso.Router
+import Miso.Html
+import Miso.Router as Router
 import Network.URI.Static
 import qualified Pomodoro
 import ProductRequirementDocument as PRD
@@ -42,7 +42,7 @@ app =
       div_ [] $
         [ div_ [key_ @MisoString "prd"]
             +> ( component
-                   (PRD.Model False sitePRD)
+                   (PRD.Model False Pomodoro.pomodoroPRD)
                    PRD.updateModel
                    PRD.viewModel
                )
@@ -51,8 +51,11 @@ app =
           div_ [key_ @MisoString "pomodoro"] +> Pomodoro.pomodoroComponent
         ]
   )
-    { events = defaultEvents,
-      styles = [Style $ ms $(embedFileRelative "static/output.css")]
+    { events = defaultEvents
+#ifdef WASM
+#else
+      ,styles = [Style $ ms $(embedFileRelative "static/output.css")]
+#endif
     }
 
 sitePRD :: ProductRequirementDocument
