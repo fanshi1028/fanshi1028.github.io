@@ -16,7 +16,7 @@ import System.OsPath
 main :: IO ()
 main =
   IO.writeFile [osp|index.html|] . toHtml $
-    wrapHtml
+    wrapHtml . div_ [] $
       [ div_ [key_ @MisoString "prd"]
           +> ( component
                  (PRD.Model False Pomodoro.pomodoroPRD)
@@ -28,8 +28,8 @@ main =
         div_ [key_ @MisoString "pomodoro"] +> Pomodoro.pomodoroComponent
       ]
 
-wrapHtml :: [View model action] -> [View model action]
-wrapHtml innerViews =
+wrapHtml :: View model action -> [View model action]
+wrapHtml innerView =
   [ doctype_,
     html_
       []
@@ -41,7 +41,8 @@ wrapHtml innerViews =
             link_ [href_ "output.css", rel_ "stylesheet", type_ "text/css"]
           ],
         body_ [] $
-          script_ [src_ "index.js", type_ "module"] ""
-            : innerViews
+          [ script_ [src_ "index.js", type_ "module"] "",
+            innerView
+          ]
       ]
   ]
