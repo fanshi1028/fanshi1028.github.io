@@ -38,7 +38,7 @@ wrapHtml innerViews =
           [ meta_ [charset_ "utf-8"],
             meta_ [name_ "viewport", content_ "width=device-width, initial-scale=1"],
             Html.title_ [] ["Fanshi1028's personal site"],
-            link_ [href_ "/output.css", rel_ "stylesheet"]
+            link_ [href_ "output.css", rel_ "stylesheet"]
           ],
         body_ [] $
           script_ [src_ "index.js", type_ "module"] ""
