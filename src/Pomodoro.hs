@@ -434,3 +434,10 @@ pomodoroPRD =
         [Reference (Just "Pomofocus") [uri|https://pomofocus.io/|] $ "I don't need those complex features like it does but I like the simple and clean ui" :| []]
     )
     []
+
+pomodoroApp :: App () action
+pomodoroApp = component () noop $ \() ->
+  div_ [] $
+    [ div_ [key_ @MisoString "prd"] +> prdComponent False pomodoroPRD,
+      div_ [key_ @MisoString "pomodoro"] +> pomodoroComponent
+    ]

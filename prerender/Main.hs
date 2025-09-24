@@ -10,12 +10,14 @@ import Miso
 import Miso.Html.Element as Html
 import Miso.Html.Property
 import Miso.Html.Render
+import Pomodoro
 import System.File.OsPath as IO
 import System.OsPath
 
 main :: IO ()
-main =
+main = do
   IO.writeFile [osp|index.html|] . toHtml $ wrapHtml home
+  IO.writeFile [osp|pomodoro.html|] . toHtml $ wrapHtml pomodoroApp
 
 wrapHtml :: App model action -> [View model action]
 wrapHtml app =
