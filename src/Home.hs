@@ -2,24 +2,28 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TypeApplications #-}
 
-module Home where
+module Home (home) where
 
 import Data.List.NonEmpty
 import Miso
 import Miso.Html.Element
+import Miso.Html.Event
 import Network.URI.Static
 import ProductRequirementDocument
+import Route
 
-home :: App () action
-home = component () noop $ \() ->
+home :: View model Action
+home =
   div_ [] $
     [ div_ [key_ @MisoString "prd"] +> (prdComponent False sitePRD),
       div_
         []
-        [ h1_ [] [text "TEMP FIXME: This is home page "]
+        [ h1_ [] [text "Tools"],
+          ul_
+            []
+            [ button_ [onClick $ PushURI Pomodoro] ["Pomodoro"]
+            ]
         ]
-        -- div_ [key_ @MisoString "pomodoro"] +> Pomodoro.pomodoroComponent
-        -- button_ [Router.href_ Pomodoro] ["Pomodoro"]
     ]
 
 sitePRD :: ProductRequirementDocument

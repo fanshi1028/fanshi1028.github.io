@@ -1,22 +1,21 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeApplications #-}
 
 module Main where
 
 #ifndef WASM
 import Data.FileEmbed
 #endif
-import GHC.Generics
+import Data.Bifunctor
 import Home
 import Miso
 import Miso.Html
 import Miso.Router as Router
 import Pomodoro
+import Route
 import Prelude hiding (rem, unlines)
 
 -----------------------------------------------------------------------------
@@ -26,16 +25,22 @@ foreign export javascript "hs_start" main :: IO ()
 -----------------------------------------------------------------------------
 
 main :: IO ()
-main = run $ miso $ \url ->
-  let app = case url of
-        URI "" "" _ -> home
-        URI "pomodoro" "" _ -> pomodoroApp
-        _ -> component () noop $ \() -> p_ [] ["TEMP FIXME 404"]
-   in app
+main = run $ miso $ \uri ->
+  (component (first (ms . show) $ route @Route uri) updateModel viewModel)
+    { subs =
+        [ routerSub $ \case
+            Left err -> ServerError . ms $ show err
+            Right uri' -> SetURI uri'
+        ]
 #ifndef WASM
-       { styles = [Style $ ms $(embedFileRelative "static/output.css")] }
+     , styles = [Style $ ms $(embedFileRelative "static/output.css")]
+     , logLevel = DebugAll
 #endif
+    }
 
-data Route = Index | Pomodoro
-  deriving stock (Generic)
-  deriving anyclass (Router)
+viewModel :: Model -> View Model Action
+viewModel = \case
+  Right Index -> home
+  Right Pomodoro -> div_ [key_ @MisoString "pomodoro-app"] +> pomodoroApp
+  Left err' -> view500 err'
+
