@@ -9,7 +9,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module Pomodoro where
+module Pomodoro (pomodoroApp) where
 
 import Clock
 import Control.Applicative
