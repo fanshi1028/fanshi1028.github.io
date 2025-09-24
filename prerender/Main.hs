@@ -20,7 +20,6 @@ main =
   traverse_
     ( \route -> do
         file <- (<.>) <$> encodeUtf (show route) <*> encodeUtf ".html"
-        print file
         IO.writeFile file . toHtml . routeToView $ Right route
     )
     $ boundedEnumFrom minBound
