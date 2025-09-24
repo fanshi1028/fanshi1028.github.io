@@ -435,7 +435,7 @@ pomodoroPRD =
     )
     []
 
-pomodoroApp :: App () action
+pomodoroApp :: Component parent () action
 pomodoroApp = component () noop $ \() ->
   div_ [] $
     [ div_ [key_ @MisoString "prd"] +> prdComponent False pomodoroPRD,

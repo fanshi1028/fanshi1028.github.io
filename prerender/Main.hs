@@ -17,10 +17,10 @@ import System.OsPath
 main :: IO ()
 main = do
   IO.writeFile [osp|index.html|] . toHtml $ wrapHtml home
-  IO.writeFile [osp|pomodoro.html|] . toHtml $ wrapHtml pomodoroApp
+  IO.writeFile [osp|pomodoro.html|] . toHtml . wrapHtml $ div_ [key_ @MisoString "pomodoro-app"] +> pomodoroApp
 
-wrapHtml :: App model action -> [View model action]
-wrapHtml app =
+wrapHtml :: View model action -> [View model action]
+wrapHtml vw =
   [ doctype_,
     html_
       []
@@ -33,7 +33,7 @@ wrapHtml app =
           ],
         body_ [] $
           [ script_ [src_ "index.js", type_ "module"] "",
-            app.view app.model
+            vw
           ]
       ]
   ]
