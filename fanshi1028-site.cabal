@@ -41,6 +41,7 @@ common lib
         Pomodoro
         ProductRequirementDocument
         Route
+        Route.Types
 
 library
   import: lib
@@ -50,6 +51,7 @@ library
     Pomodoro
     ProductRequirementDocument
     Route
+    Route.Types
   default-language:
     Haskell2010
   if flag(local-dev)

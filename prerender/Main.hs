@@ -5,19 +5,24 @@
 
 module Main where
 
-import Home
+import Data.Foldable
+import GHC.Enum
 import Miso
 import Miso.Html.Element as Html
 import Miso.Html.Property
 import Miso.Html.Render
-import Pomodoro
+import Route
 import System.File.OsPath as IO
 import System.OsPath
 
 main :: IO ()
-main = do
-  IO.writeFile [osp|index.html|] . toHtml $ wrapHtml home
-  IO.writeFile [osp|pomodoro.html|] . toHtml . wrapHtml $ div_ [key_ @MisoString "pomodoro-app"] +> pomodoroApp
+main =
+  traverse_
+    ( \route -> do
+        file <- (<.>) <$> encodeUtf (show route) <*> encodeUtf ".html"
+        IO.writeFile file . toHtml . routeToView $ Right route
+    )
+    $ boundedEnumFrom minBound
 
 wrapHtml :: View model action -> [View model action]
 wrapHtml vw =
