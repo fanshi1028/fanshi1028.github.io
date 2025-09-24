@@ -97,6 +97,7 @@
 
                 ]
               );
+            returnShellEnv = true;
           };
           wasm = pkgs.mkShell {
             name = "The miso ${system} GHC WASM ${ghcVersion} shell";
