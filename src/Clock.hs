@@ -4,7 +4,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeApplications #-}
 
-module Clock where
+module Clock (ClockDoneMessage (ClockDoneMessage), clockComponent) where
 
 import Control.Concurrent (threadDelay)
 import Control.Monad (forever)
@@ -94,3 +94,7 @@ viewModel m =
             ]
         ]
     ]
+
+clockComponent :: Bool -> DiffTime -> Component parent Model Action
+clockComponent active' currentPomodoroTime =
+  (component (Model active' currentPomodoroTime Nothing) updateModel viewModel) {initialAction = Just Clock.Start}
