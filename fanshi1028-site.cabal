@@ -37,6 +37,7 @@ common lib
   if flag(local-dev)
       other-modules:
         Clock
+        Home
         Pomodoro
         ProductRequirementDocument
 
@@ -44,6 +45,7 @@ library
   import: lib
   exposed-modules:
     Clock
+    Home
     Pomodoro
     ProductRequirementDocument
   default-language:
@@ -63,7 +65,7 @@ executable fanshi1028-site
   main-is:
     Main.hs
   build-depends:
-    base < 5, file-embed, miso, network-uri
+    base < 5, file-embed, miso
   hs-source-dirs:
     app
   default-language:
