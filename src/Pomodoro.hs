@@ -11,7 +11,7 @@
 
 module Pomodoro where
 
-import qualified Clock
+import Clock
 import Control.Applicative
 import Control.Category
 import Control.Concurrent
@@ -258,14 +258,7 @@ viewModel m =
                         [ key_ @MisoString $ "stopwatch " <> ms (show currentPomodoroTime),
                           class_ "h-full w-full pt-6"
                         ]
-                        +> ( ( component
-                                 (Clock.Model False currentPomodoroTime Nothing)
-                                 Clock.updateModel
-                                 Clock.viewModel
-                             )
-                               { initialAction = Just Clock.Start
-                               }
-                           )
+                        +> (clockComponent False currentPomodoroTime)
                     ]
              in div_
                   [class_ "contents"]
