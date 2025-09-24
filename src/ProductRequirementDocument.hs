@@ -8,7 +8,20 @@
 -- NOTE: reference - https://coda.io/@yuhki/figmas-approach-to-product-requirement-docs
 -- NOTE: reference - https://www.cycle.app/blog/how-figma-writes-product-requirements-document-prd
 
-module ProductRequirementDocument where
+module ProductRequirementDocument
+  ( -- NOTE: Types
+    ProductRequirementDocument (ProductRequirementDocument),
+    ProblemAlignment (ProblemAlignment),
+    Problem (Problem),
+    SolutionAlignment (SolutionAlignment),
+    OpenIssues (OpenIssues),
+    Reference (Reference),
+    -- NOTE: Others
+    prdTopic,
+    prdComponent,
+    prdSwitchSVG,
+  )
+where
 
 import Data.Aeson
 import Data.List.NonEmpty
@@ -248,3 +261,7 @@ viewModel (Model open prd) =
 
 prdTopic :: Topic ProductRequirementDocument
 prdTopic = topic "prd"
+
+prdComponent :: Bool -> ProductRequirementDocument -> Component parent Model Action
+prdComponent open prd =
+  (component (Model open prd) updateModel viewModel) {initialAction = Just Subscribe}
