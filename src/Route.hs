@@ -1,32 +1,20 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeApplications #-}
 
 module Route where
 
-import Data.Aeson hiding ((.=))
-import GHC.Generics
+import Home
 import Miso
 import Miso.Html.Element
 import Miso.Lens
 import Miso.Router
-
-data Route = Index | Pomodoro
-  deriving stock (Eq, Generic)
-  deriving anyclass (Router, ToJSON, FromJSON)
+import Pomodoro
+import Route.Types
 
 -- routingTopic :: Topic Route
 -- routingTopic = topic "routing"
-
-data Action
-  = ServerError MisoString
-  | PushURI Route
-  | SetURI Route
-
-type Model = Either MisoString Route
 
 -- | NotFound URI
 updateModel :: Action -> Effect parent Model Action
@@ -56,3 +44,19 @@ view500 err =
       br_ [],
       text err
     ]
+
+routeToView :: Model -> View Model Action
+routeToView = \case
+  Right Index -> home
+  Right Pomodoro -> div_ [key_ @MisoString "pomodoro-app"] +> pomodoroApp
+  Left err' -> view500 err'
+
+routerComponent :: Model -> Component parent Model Action
+routerComponent uri =
+  (component uri updateModel routeToView)
+    { subs =
+        [ routerSub $ \case
+            Left err -> ServerError . ms $ show err
+            Right uri' -> SetURI uri'
+        ]
+    }

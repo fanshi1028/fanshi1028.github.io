@@ -10,7 +10,7 @@ import Miso.Html.Element
 import Miso.Html.Event
 import Network.URI.Static
 import ProductRequirementDocument
-import Route
+import Route.Types
 
 home :: View model Action
 home =
