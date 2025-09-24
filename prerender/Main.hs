@@ -5,6 +5,7 @@
 
 module Main where
 
+import Data.ByteString.Lazy as BS
 import Data.Char
 import Data.Foldable
 import GHC.Enum
@@ -15,13 +16,16 @@ import Miso.Html.Render
 import Route
 import System.File.OsPath as IO
 import System.OsPath
+import UnliftIO
 
 main :: IO ()
 main =
   traverse_
     ( \route -> do
         file <- (<.>) <$> encodeUtf (toLower <$> show route) <*> encodeUtf ".html"
-        IO.writeFile file . toHtml . wrapHtml . routeToView $ Right route
+        withRunInIO $ \runInIO -> do
+          IO.withFile file ReadMode $ \h ->
+            runInIO . BS.hPutStr h . toHtml . wrapHtml . routeToView $ Right route
     )
     $ boundedEnumFrom minBound
 
