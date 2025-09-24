@@ -5,6 +5,7 @@
 
 module Main where
 
+import Data.Char
 import Data.Foldable
 import GHC.Enum
 import Miso
@@ -19,7 +20,7 @@ main :: IO ()
 main =
   traverse_
     ( \route -> do
-        file <- (<.>) <$> encodeUtf (show route) <*> encodeUtf ".html"
+        file <- (<.>) <$> encodeUtf (toLower <$> show route) <*> encodeUtf ".html"
         IO.writeFile file . toHtml . routeToView $ Right route
     )
     $ boundedEnumFrom minBound
