@@ -12,6 +12,12 @@ category:           Web
 build-type:         Simple
 extra-doc-files:    CHANGELOG.md
 
+-- NOTE: https://mercurytechnologies.github.io/ghciwatch/integration/multiple-components.html
+flag local-dev
+     description: enable local dev (for using ghciwatch)
+     default: False
+     manual: True
+
 common warnings
   ghc-options:
     -funbox-strict-fields -O2 -ferror-spans -fspecialise-aggressively -Wall
@@ -23,26 +29,41 @@ common wasm
     cpp-options:
       -DWASM
 
+common lib
+  build-depends:
+      aeson, base < 5, containers, file-embed, jsaddle, miso, network-uri, text, time, validation-selective
+  hs-source-dirs:
+      src
+  if flag(local-dev)
+      other-modules:
+        Clock
+        Pomodoro
+        ProductRequirementDocument
+
 library
+  import: lib
   exposed-modules:
     Clock
     Pomodoro
     ProductRequirementDocument
-  hs-source-dirs:
-    src
-  build-depends:
-    aeson, base < 5, containers, file-embed, jsaddle, miso, network-uri, text, time, validation-selective
   default-language:
     Haskell2010
+  if flag(local-dev)
+    buildable: False
 
 executable fanshi1028-site
   import:
     wasm, warnings
+  if flag(local-dev)
+    import: lib
+  else
+    build-depends:
+      fanshi1028-site
   other-modules:
   main-is:
     Main.hs
   build-depends:
-    fanshi1028-site, base < 5, file-embed, miso, network-uri
+    base < 5, file-embed, miso, network-uri
   hs-source-dirs:
     app
   default-language:
@@ -50,10 +71,15 @@ executable fanshi1028-site
 
 executable prerender
   import: warnings
+  if flag(local-dev)
+    import: lib
+  else
+    build-depends:
+      fanshi1028-site
   main-is:
     Main.hs
   build-depends:
-    fanshi1028-site,  base < 5, miso, file-io, filepath
+    base < 5, miso, file-io, filepath
   hs-source-dirs:
     prerender
   default-language:
