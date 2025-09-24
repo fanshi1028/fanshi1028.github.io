@@ -12,11 +12,12 @@ module Main where
 import Data.FileEmbed
 #endif
 import GHC.Generics
+import Home
 import Miso
 import Miso.Html
 import Miso.Router as Router
+import Pomodoro
 import Prelude hiding (rem, unlines)
-import Home
 
 -----------------------------------------------------------------------------
 #ifdef WASM
@@ -25,14 +26,15 @@ foreign export javascript "hs_start" main :: IO ()
 -----------------------------------------------------------------------------
 
 main :: IO ()
-main = run $ miso $ \case
-  URI "" "" _ -> home {
-      events = defaultEvents
+main = run $ miso $ \url ->
+  let app = case url of
+        URI "" "" _ -> home
+        URI "pomodoro" "" _ -> pomodoroApp
+        _ -> component () noop $ \() -> p_ [] ["TEMP FIXME 404"]
+   in app
 #ifndef WASM
-    , styles = [Style $ ms $(embedFileRelative "static/output.css")]
+       { styles = [Style $ ms $(embedFileRelative "static/output.css")] }
 #endif
-    }
-  _ -> component () noop $ \() -> p_ [] ["TEMP FIXME 404"]
 
 data Route = Index | Pomodoro
   deriving stock (Generic)
