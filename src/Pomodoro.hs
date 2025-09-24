@@ -258,7 +258,7 @@ viewModel m =
                         [ key_ @MisoString $ "stopwatch " <> ms (show currentPomodoroTime),
                           class_ "h-full w-full pt-6"
                         ]
-                        +> (clockComponent False currentPomodoroTime)
+                        +> clockComponent False currentPomodoroTime
                     ]
              in div_
                   [class_ "contents"]
