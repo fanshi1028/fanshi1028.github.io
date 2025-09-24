@@ -85,7 +85,7 @@ executable prerender
   main-is:
     Main.hs
   build-depends:
-    base < 5, miso, file-io, filepath
+    base < 5, bytestring, file-io, filepath, miso, unliftio
   hs-source-dirs:
     prerender
   default-language:
