@@ -34,7 +34,7 @@ import Miso.String hiding (foldl')
 import Miso.Svg.Element
 import Miso.Svg.Property hiding (max_, min_, path_)
 import Network.URI.Static
-import ProductRequirementDocument hiding (Action, Model, NoOp)
+import ProductRequirementDocument
 import Text.Read
 import Validation as Validation hiding (validation)
 import Prelude hiding ((.))

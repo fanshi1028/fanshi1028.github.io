@@ -8,19 +8,12 @@ import Data.List.NonEmpty
 import Miso
 import Miso.Html.Element
 import Network.URI.Static
-import ProductRequirementDocument as PRD
+import ProductRequirementDocument
 
 home :: App () action
 home = component () noop $ \() ->
   div_ [] $
-    [ div_ [key_ @MisoString "prd"]
-        +> ( component
-               (PRD.Model False sitePRD)
-               PRD.updateModel
-               PRD.viewModel
-           )
-          { initialAction = Just PRD.Subscribe
-          },
+    [ div_ [key_ @MisoString "prd"] +> (prdComponent False sitePRD),
       div_
         []
         [ h1_ [] [text "TEMP FIXME: This is home page "]
