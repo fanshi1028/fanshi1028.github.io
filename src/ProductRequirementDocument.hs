@@ -165,7 +165,7 @@ viewModel (Model open prd) =
                 ],
               div_
                 [class_ "flex flex-col xl:flex-row xl:items-center xl:justify-between gap-2 lg:gap-4 xl:-translate-y-1/2 xl:min-h-48"]
-                [ h3_ [class_ $ h3Cls <> "2xl:text-nowrap"] ["High Level Approach"],
+                [ h3_ [classes_ [h3Cls, "2xl:text-nowrap"]] ["High Level Approach"],
                   p_ [class_ "text-neutral-800 prose 2xl:prose-lg"] [text $ ms prd._problemAlignment._highLevelApproach]
                 ]
             ],
