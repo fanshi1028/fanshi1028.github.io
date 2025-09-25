@@ -53,6 +53,7 @@
               ];
             # pkgs.haskell.lib.setBuildTargets drv [ "prerender" ];
           };
+          fanshi1028-site-js = mkDefaultPackage pkgs.pkgsCross.ghcjs { };
           browser_wasi_shim =
             let
               pname = "browser_wasi_shim";
