@@ -23,7 +23,7 @@ foreign export javascript "hs_start" main :: IO ()
 
 main :: IO ()
 main = run $ miso $ \(first (ms . show) . route @Route -> uri) ->
-  (routerComponent routerView uri)
+  (routerComponent routerView routeToPRD uri)
 #ifndef WASM
     {
       styles = [Style $ ms $(embedFileRelative "static/output.css")]
