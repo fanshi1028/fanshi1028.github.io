@@ -12,7 +12,7 @@ import Data.Bifunctor
 import Miso
 import Miso.Router as Router
 import Route
-import Route.Types
+import Route.View
 import Prelude hiding (rem, unlines)
 
 -----------------------------------------------------------------------------
@@ -23,7 +23,7 @@ foreign export javascript "hs_start" main :: IO ()
 
 main :: IO ()
 main = run $ miso $ \(first (ms . show) . route @Route -> uri) ->
-  (routerComponent uri)
+  (routerComponent routeToView uri)
 #ifndef WASM
     {
       styles = [Style $ ms $(embedFileRelative "static/output.css")]

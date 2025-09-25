@@ -12,7 +12,7 @@ import Miso
 import Miso.Html.Element as Html
 import Miso.Html.Property
 import Miso.Html.Render
-import Route
+import Route.View
 import System.File.OsPath as IO
 import System.OsPath
 import UnliftIO
