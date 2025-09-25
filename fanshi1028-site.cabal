@@ -36,6 +36,8 @@ common lib
         Home
         Pomodoro
         ProductRequirementDocument
+        ProductRequirementDocument.Home
+        ProductRequirementDocument.Pomodoro
         Route
         Route.View
 
@@ -46,6 +48,8 @@ library
     Home
     Pomodoro
     ProductRequirementDocument
+    ProductRequirementDocument.Home
+    ProductRequirementDocument.Pomodoro
     Route
     Route.View
   default-language:

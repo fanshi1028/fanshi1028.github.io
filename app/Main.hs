@@ -25,7 +25,6 @@ main :: IO ()
 main = run $ miso $ \(first (ms . show) . route @Route -> uri) ->
   ( routerComponent
       navView
-      routeToPRD
       ( case uri of
           Left err -> RoutingError err
           Right uri' -> Model uri' False

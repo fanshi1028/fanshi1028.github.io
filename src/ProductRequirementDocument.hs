@@ -27,7 +27,6 @@ import Data.Time
 import GHC.Generics
 import Miso hiding (URI)
 import Miso.Html.Element
-import Miso.Html.Event
 import Miso.Html.Property
 import Miso.Svg.Element
 import Miso.Svg.Property hiding (path_)

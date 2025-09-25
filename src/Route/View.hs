@@ -1,11 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Route.View (navView, routeToPRD) where
+module Route.View (navView) where
 
 import Home
 import Miso
 import Miso.Html
-import Miso.Html.Element
 import Miso.Html.Property
 import Miso.Router qualified as Router
 import Miso.Svg.Element
@@ -23,16 +22,12 @@ view500 err =
       text err
     ]
 
-routeToPRD :: Route -> ProductRequirementDocument
-routeToPRD = \case
-  Index -> homePRD
-  Pomodoro -> pomodoroPRD
-
 routeToView :: Route -> View model Action
 routeToView = \case
   Index -> home
   Pomodoro -> div_ [key_ @MisoString "pomodoro"] +> pomodoroComponent
 
+homeButton :: Route -> View model Action
 homeButton Index = div_ [] []
 homeButton _ =
   a_
