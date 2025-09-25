@@ -11,7 +11,7 @@ import Miso.Router
 
 data Route = Index | Pomodoro
   deriving stock (Eq, Show, Enum, Bounded, Generic)
-  deriving anyclass (Router, ToJSON, FromJSON)
+  deriving anyclass (Router)
 
 data Action
   = ServerError MisoString
