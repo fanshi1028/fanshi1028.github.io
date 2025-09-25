@@ -1,13 +1,15 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
 
-module Route (Route (..), Action (GotoRoute, SetPRDOpen), Model (..), routerComponent) where
+module Route (Route (..), Action (GotoRoute, SetPRDOpen), Model (..), routerComponent, routeToPRD) where
 
 import GHC.Generics
 import Miso
 import Miso.Lens
 import Miso.Router
 import ProductRequirementDocument
+import ProductRequirementDocument.Home
+import ProductRequirementDocument.Pomodoro
 
 data Route = Index | Pomodoro
   deriving stock (Eq, Show, Enum, Bounded, Generic)
@@ -27,8 +29,13 @@ data Model
       }
   deriving (Eq)
 
-updateModel :: (Route -> ProductRequirementDocument) -> Action -> Effect parent Model Action
-updateModel routeToPRD = \case
+routeToPRD :: Route -> ProductRequirementDocument
+routeToPRD = \case
+  Index -> homePRD
+  Pomodoro -> pomodoroPRD
+
+updateModel :: Action -> Effect parent Model Action
+updateModel = \case
   ServerError err -> this .= RoutingError err
   GotoRoute uri -> do
     io_ . pushURI $ toURI uri
@@ -43,9 +50,9 @@ updateModel routeToPRD = \case
       err@(RoutingError _) -> err
       Model uri _ -> Model uri open
 
-routerComponent :: (Model -> View Model Action) -> (Route -> ProductRequirementDocument) -> Model -> Component parent Model Action
-routerComponent routerView routeToPRD uri =
-  (component uri (updateModel routeToPRD) routerView)
+routerComponent :: (Model -> View Model Action) -> Model -> Component parent Model Action
+routerComponent routerView uri =
+  (component uri updateModel routerView)
     { subs =
         [ routerSub $ \case
             Left err -> ServerError . ms $ show err
