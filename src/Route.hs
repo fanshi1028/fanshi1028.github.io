@@ -33,6 +33,7 @@ updateModel routeToPRD = \case
   GotoRoute uri -> do
     io_ . pushURI $ toURI uri
     issue $ SetURI uri
+  SetURI Index -> this .= Model Index False
   SetURI uri -> do
     open <-
       use this <&> \case
