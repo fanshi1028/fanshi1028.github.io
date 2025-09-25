@@ -104,17 +104,29 @@ prdView :: Bool -> ProductRequirementDocument -> View model action
 prdView open prd =
   div_
     [class_ $ if open then "absolute left-0 top-0 h-full w-full overflow-auto z-40" else "hidden"]
-    [ div_ [class_ "flex flex-col gap-12 md:gap-20 lg:gap-24 xl:gap-28 container mx-auto p-6 sm:p-12 md:p-16 lg:p-20 xl:p-24 2xl:p-28 bg-neutral-100 relative"] $
-        [ problemAlignmentView,
-          solutionAlignmentView,
-          launchReadinessView
+    [ div_
+        [ classes_
+            [ "flex flex-col container mx-auto bg-neutral-100 relative",
+              "gap-12 md:gap-20 lg:gap-24 xl:gap-28",
+              "p-6 sm:p-12 md:p-16 lg:p-20 xl:p-24 2xl:p-28"
+            ]
         ]
+        $ [ problemAlignmentView,
+            solutionAlignmentView,
+            launchReadinessView
+          ]
     ]
   where
     h3Cls = "font-bold text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl 2xl:text-5xl text-neutral-400 font-serif"
     sectionView title extraCls inner =
       div_ [class_ "flex flex-col gap-8 md:gap-10"] $
-        [ h2_ [class_ "font-bold text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl text-neutral-400 font-serif"] [title],
+        [ h2_
+            [ classes_
+                [ "font-bold text-neutral-400 font-serif",
+                  "text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl"
+                ]
+            ]
+            [title],
           div_ [classes_ ["flex flex-col gap-8 md:gap-10 lg:gap-12", extraCls]] inner
         ]
     problemAlignmentView =
