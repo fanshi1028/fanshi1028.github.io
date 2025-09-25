@@ -1,55 +1,35 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 
-module Route where
+module Route (Route (..), Action (GotoRoute), routerComponent) where
 
-import Home
+import Data.Aeson hiding ((.=))
+import GHC.Generics
 import Miso
-import Miso.Html.Element
 import Miso.Lens
 import Miso.Router
-import Pomodoro
-import Route.Types
 
--- routingTopic :: Topic Route
--- routingTopic = topic "routing"
+data Route = Index | Pomodoro
+  deriving stock (Eq, Show, Enum, Bounded, Generic)
+  deriving anyclass (Router, ToJSON, FromJSON)
 
--- | NotFound URI
+data Action
+  = ServerError MisoString
+  | GotoRoute Route
+  | SetURI Route
+
+type Model = Either MisoString Route
+
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
-  -- subscribe routingTopic PushURI ServerError
-  -- NotFound uri -> this .= Left (prettyURI uri)
   ServerError err -> this .= Left err
-  PushURI uri -> do
+  GotoRoute uri -> do
     io_ . pushURI $ toURI uri
     issue $ SetURI uri
   SetURI uri -> this .= Right uri
 
--- view404 :: URI -> View model action
--- view404 uri =
---   div_
---     []
---     [ text "TEMP FIXME: Not found 404",
---       br_ [],
---       text $ prettyURI uri
---     ]
-
-view500 :: MisoString -> View model action
-view500 err =
-  div_
-    []
-    [ text "TEMP FIXME: Internal Server Error 500",
-      br_ [],
-      text err
-    ]
-
-routeToView :: Model -> View Model Action
-routeToView = \case
-  Right Index -> home
-  Right Pomodoro -> div_ [key_ @MisoString "pomodoro-app"] +> pomodoroApp
-  Left err' -> view500 err'
-
-routerComponent :: Model -> Component parent Model Action
-routerComponent uri =
+routerComponent :: (Model -> View Model Action) -> Model -> Component parent Model Action
+routerComponent routeToView uri =
   (component uri updateModel routeToView)
     { subs =
         [ routerSub $ \case

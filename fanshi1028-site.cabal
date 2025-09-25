@@ -37,7 +37,7 @@ common lib
         Pomodoro
         ProductRequirementDocument
         Route
-        Route.Types
+        Route.View
 
 library
   import: lib
@@ -47,7 +47,7 @@ library
     Pomodoro
     ProductRequirementDocument
     Route
-    Route.Types
+    Route.View
   default-language:
     GHC2024
   if flag(local-dev)

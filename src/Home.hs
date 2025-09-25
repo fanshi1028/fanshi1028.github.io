@@ -7,9 +7,10 @@ import Data.List.NonEmpty
 import Miso
 import Miso.Html.Element
 import Miso.Html.Event
+import Miso.Html.Property
 import Network.URI.Static
 import ProductRequirementDocument
-import Route.Types
+import Route
 
 home :: View model Action
 home =
@@ -20,7 +21,7 @@ home =
         [ h1_ [] [text "Tools"],
           ul_
             []
-            [ button_ [onClick $ PushURI Pomodoro] ["Pomodoro"]
+            [ button_ [onClick $ GotoRoute Pomodoro] ["Pomodoro"]
             ]
         ]
     ]
