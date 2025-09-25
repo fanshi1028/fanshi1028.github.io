@@ -14,9 +14,8 @@ module ProductRequirementDocument
     SolutionAlignment (SolutionAlignment),
     OpenIssues (OpenIssues),
     Reference (Reference),
-    -- NOTE: Others
-    prdTopic,
-    prdComponent,
+    -- NOTE: View
+    prdView,
   )
 where
 
@@ -101,58 +100,15 @@ data KeyMilestone = KeyMilestone
   }
   deriving (Eq, Generic, FromJSON, ToJSON)
 
-data Model = Model
-  { _open :: Bool,
-    _prd :: ProductRequirementDocument
-  }
-  deriving (Eq, Generic, FromJSON, ToJSON)
-
-data Action = NoOp | SetPRDOpen Bool | Subscribe | SetPRD ProductRequirementDocument
-
-prdTopic :: Topic ProductRequirementDocument
-prdTopic = topic "prd"
-
-updateModel :: Action -> Effect parent Model Action
-updateModel = \case
-  SetPRDOpen open -> modify $ \(Model _ prd) -> (Model open prd)
-  NoOp -> pure ()
-  Subscribe -> subscribe prdTopic SetPRD (\_ -> NoOp) -- TEMP FIXME: some error log instead of just NoOp?
-  SetPRD prd -> modify $ \(Model open _) -> (Model open prd)
-
-prdButton open prd =
-  button_
-    [ onClick $ SetPRDOpen $ not open,
-      classes_
-        [ "fixed z-50 hover:animate-wiggle hover:[animation-delay:0.25s]",
-          "top-2 sm:top-4 md:top-6 lg:top-8 xl:top-12 2xl:top-16",
-          "right-2 sm:right-4 md:right-6 lg:right-8 xl:right-12 2xl:right-16"
-        ]
-    ]
-    [ svg_
-        [ classes_
-            [ "fill-none stroke-2 stroke-neutral-600",
-              "size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20",
-              "hover:size-8 sm:hover:size-10 md:hover:size-12 lg:hover:size-16 xl:hover:size-20 2xl:hover:size-24"
-            ],
-          xmlns_ "http://www.w3.org/2000/svg",
-          viewBox_ "0 0 24 24"
-        ]
-        [path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"]]
-    ]
-
-viewModel :: Model -> View Model Action
-viewModel (Model open prd) =
+prdView :: Bool -> ProductRequirementDocument -> View model action
+prdView open prd =
   div_
-    [class_ "contents"]
-    [ prdButton open prd,
-      div_
-        [onClick $ SetPRDOpen False, class_ $ if open then "fixed left-0 top-0 h-full w-full overflow-auto z-40" else "hidden"]
-        [ div_ [onClickWithOptions stopPropagation NoOp, class_ "flex flex-col gap-12 md:gap-20 lg:gap-24 xl:gap-28 container mx-auto p-6 sm:p-12 md:p-16 lg:p-20 xl:p-24 2xl:p-28 bg-neutral-100 relative"] $
-            [ -- button_ [onClick Close, class_ "sm:m-12 md:m-16 lg:m-20 xl:m-24 2xl:m-28 hover:animate-wiggle"]
-              problemAlignmentView,
-              solutionAlignmentView,
-              launchReadinessView
-            ]
+    [class_ $ if open then "fixed left-0 top-0 h-full w-full overflow-auto z-40" else "hidden"]
+    [ div_ [class_ "flex flex-col gap-12 md:gap-20 lg:gap-24 xl:gap-28 container mx-auto p-6 sm:p-12 md:p-16 lg:p-20 xl:p-24 2xl:p-28 bg-neutral-100 relative"] $
+        [ -- button_ [onClick Close, class_ "sm:m-12 md:m-16 lg:m-20 xl:m-24 2xl:m-28 hover:animate-wiggle"]
+          problemAlignmentView,
+          solutionAlignmentView,
+          launchReadinessView
         ]
     ]
   where
@@ -277,7 +233,3 @@ viewModel (Model open prd) =
                       "TEMP FIXME: deadline"
                     ]
              in keyMilestoneView <$> prd._launchReadiness
-
-prdComponent :: Bool -> ProductRequirementDocument -> Component parent Model Action
-prdComponent open prd =
-  (component (Model open prd) updateModel viewModel) {initialAction = Just Subscribe}

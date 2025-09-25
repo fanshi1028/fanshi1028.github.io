@@ -12,6 +12,7 @@ import Miso
 import Miso.Html.Element as Html
 import Miso.Html.Property
 import Miso.Html.Render
+import Route
 import Route.View
 import System.File.OsPath as IO
 import System.OsPath
@@ -24,7 +25,7 @@ main =
         file <- (<.>) <$> encodeUtf (toLower <$> show route) <*> encodeUtf ".html"
         withRunInIO $ \runInIO -> do
           IO.withFile file WriteMode $ \h ->
-            runInIO . BS.hPutStr h . toHtml . wrapHtml . routerView $ Right route
+            runInIO . BS.hPutStr h . toHtml . wrapHtml . navView $ Model route False
     )
     $ boundedEnumFrom minBound
 

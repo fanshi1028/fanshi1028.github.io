@@ -218,7 +218,7 @@ updateModel = \case
       Right n -> validateAll [validateMultiple5, validateMin5, validateMax45] n
 
 viewModel :: Model -> View Model Action
-viewModel m = div_ [class_ "flex flex-col container items-center lg:justify-center min-h-dvh bg-neutral-200 mx-auto gap-6 sm:gap-8 p-10 sm:p-12"] $ case m._pomodoroQueue of
+viewModel m = div_ [class_ "flex flex-col container items-center lg:justify-center min-h-dvh bg-neutral-200 mx-auto gap-6 sm:gap-8 p-16 sm:p-20"] $ case m._pomodoroQueue of
   [] ->
     [ div_ [] $ case m ^. pomodoroPastQueue of
         [] -> []
