@@ -18,10 +18,6 @@ flag local-dev
      default: False
      manual: True
 
-common warnings
-  ghc-options:
-    -funbox-strict-fields -O2 -ferror-spans -fspecialise-aggressively -Wall
-
 common wasm
   if arch(wasm32)
     ghc-options:
@@ -59,13 +55,12 @@ library
 
 executable fanshi1028-site
   import:
-    wasm, warnings
+    wasm
   if flag(local-dev)
     import: lib
   else
     build-depends:
       fanshi1028-site
-  other-modules:
   main-is:
     Main.hs
   build-depends:
@@ -74,9 +69,10 @@ executable fanshi1028-site
     app
   default-language:
     GHC2024
+  ghc-options:
+    -funbox-strict-fields -O2 -ferror-spans -fspecialise-aggressively -Wall
 
 executable prerender
-  import: warnings
   if flag(local-dev)
     import: lib
   else
@@ -90,3 +86,4 @@ executable prerender
     prerender
   default-language:
     GHC2024
+  ghc-options: -O0 -Wall
