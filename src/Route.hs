@@ -34,16 +34,14 @@ updateModel routeToPRD = \case
     io_ . pushURI $ toURI uri
     issue $ SetURI uri
   SetURI Index -> this .= Model Index False
-  SetURI uri -> do
-    open <-
-      use this <&> \case
-        RoutingError _ -> False
-        Model _ open -> open
-    this .= Model uri open
+  SetURI uri ->
+    this %= Model uri . \case
+      RoutingError _ -> False
+      Model _ open -> open
   SetPRDOpen open ->
-    use this >>= \case
-      RoutingError _ -> pure () -- TEMP FIXME
-      Model uri _ -> this .= Model uri open
+    this %= \case
+      err@(RoutingError _) -> err
+      Model uri _ -> Model uri open
 
 routerComponent :: (Model -> View Model Action) -> (Route -> ProductRequirementDocument) -> Model -> Component parent Model Action
 routerComponent routerView routeToPRD uri =
