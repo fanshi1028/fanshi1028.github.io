@@ -1,11 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Route.View where
+module Route.View (routerView) where
 
 import Home
 import Miso
 import Miso.Html.Element
 import Pomodoro
+import ProductRequirementDocument
 import Route
 
 view500 :: MisoString -> View model action
@@ -17,8 +18,21 @@ view500 err =
       text err
     ]
 
-routeToView :: (Either MisoString Route) -> View (Either MisoString Route) Action
+routeToPRD :: Route -> ProductRequirementDocument
+routeToPRD = \case
+  Index -> homePRD
+  Pomodoro -> pomodoroPRD
+
+routeToView :: Route -> View model Action
 routeToView = \case
-  Right Index -> home
-  Right Pomodoro -> div_ [key_ @MisoString "pomodoro-app"] +> pomodoroApp
+  Index -> home
+  Pomodoro -> div_ [key_ @MisoString "pomodoro"] +> pomodoroComponent
+
+routerView :: (Either MisoString Route) -> View (Either MisoString Route) Action
+routerView = \case
+  Right route ->
+    div_ [] $
+      [ div_ [key_ @MisoString "prd"] +> (prdComponent False $ routeToPRD route),
+        routeToView route
+      ]
   Left err' -> view500 err'
