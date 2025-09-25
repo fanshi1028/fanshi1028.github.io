@@ -103,10 +103,9 @@ data KeyMilestone = KeyMilestone
 prdView :: Bool -> ProductRequirementDocument -> View model action
 prdView open prd =
   div_
-    [class_ $ if open then "fixed left-0 top-0 h-full w-full overflow-auto z-40" else "hidden"]
+    [class_ $ if open then "absolute left-0 top-0 h-full w-full overflow-auto z-40" else "hidden"]
     [ div_ [class_ "flex flex-col gap-12 md:gap-20 lg:gap-24 xl:gap-28 container mx-auto p-6 sm:p-12 md:p-16 lg:p-20 xl:p-24 2xl:p-28 bg-neutral-100 relative"] $
-        [ -- button_ [onClick Close, class_ "sm:m-12 md:m-16 lg:m-20 xl:m-24 2xl:m-28 hover:animate-wiggle"]
-          problemAlignmentView,
+        [ problemAlignmentView,
           solutionAlignmentView,
           launchReadinessView
         ]
