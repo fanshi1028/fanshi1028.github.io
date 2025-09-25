@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Route.View (routerView) where
+module Route.View (routerView, routeToPRD) where
 
 import Home
 import Miso

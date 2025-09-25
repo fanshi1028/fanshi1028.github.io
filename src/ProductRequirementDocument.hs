@@ -107,18 +107,21 @@ data Model = Model
   }
   deriving (Eq, Generic, FromJSON, ToJSON)
 
-data Action = NoOp | Close | Subscribe | OpenPRD ProductRequirementDocument
+data Action = NoOp | SetPRDOpen Bool | Subscribe | SetPRD ProductRequirementDocument
+
+prdTopic :: Topic ProductRequirementDocument
+prdTopic = topic "prd"
 
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
-  Close -> modify $ \(Model _ prd) -> (Model False prd)
+  SetPRDOpen open -> modify $ \(Model _ prd) -> (Model open prd)
   NoOp -> pure ()
-  Subscribe -> subscribe prdTopic OpenPRD (\_ -> NoOp) -- TEMP FIXME
-  OpenPRD prd -> modify $ \(Model _ _) -> (Model True prd)
+  Subscribe -> subscribe prdTopic SetPRD (\_ -> NoOp) -- TEMP FIXME: some error log instead of just NoOp?
+  SetPRD prd -> modify $ \(Model open _) -> (Model open prd)
 
 prdButton open prd =
   button_
-    [ onClick $ if open then Close else OpenPRD prd,
+    [ onClick $ SetPRDOpen $ not open,
       classes_
         [ "fixed z-50 hover:animate-wiggle hover:[animation-delay:0.25s]",
           "top-2 sm:top-4 md:top-6 lg:top-8 xl:top-12 2xl:top-16",
@@ -143,7 +146,7 @@ viewModel (Model open prd) =
     [class_ "contents"]
     [ prdButton open prd,
       div_
-        [onClick Close, class_ $ if open then "fixed left-0 top-0 h-full w-full overflow-auto z-40" else "hidden"]
+        [onClick $ SetPRDOpen False, class_ $ if open then "fixed left-0 top-0 h-full w-full overflow-auto z-40" else "hidden"]
         [ div_ [onClickWithOptions stopPropagation NoOp, class_ "flex flex-col gap-12 md:gap-20 lg:gap-24 xl:gap-28 container mx-auto p-6 sm:p-12 md:p-16 lg:p-20 xl:p-24 2xl:p-28 bg-neutral-100 relative"] $
             [ -- button_ [onClick Close, class_ "sm:m-12 md:m-16 lg:m-20 xl:m-24 2xl:m-28 hover:animate-wiggle"]
               problemAlignmentView,
@@ -274,9 +277,6 @@ viewModel (Model open prd) =
                       "TEMP FIXME: deadline"
                     ]
              in keyMilestoneView <$> prd._launchReadiness
-
-prdTopic :: Topic ProductRequirementDocument
-prdTopic = topic "prd"
 
 prdComponent :: Bool -> ProductRequirementDocument -> Component parent Model Action
 prdComponent open prd =
