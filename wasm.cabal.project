@@ -23,4 +23,4 @@ if arch(wasm32)
   -- ghc-wasm-meta, this is superseded by the global cabal.config.
   shared: True
 
-flags: +template-haskell
+flags: +template-haskell +production
