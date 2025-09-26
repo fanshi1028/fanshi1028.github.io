@@ -74,7 +74,10 @@ executable fanshi1028-site
     Main.hs
   build-depends:
     base < 5, miso
-  if !flag(production)
+  if flag(production)
+      cpp-options:
+        -DPRODUCTION
+  else
       build-depends:
         file-embed
   hs-source-dirs:
