@@ -5,7 +5,7 @@
 
 module Main where
 
-#ifndef WASM
+#ifndef PRODUCTION
 import Data.FileEmbed
 #endif
 import Data.Bifunctor
@@ -30,7 +30,7 @@ main = run $ miso $ \(first (ms . show) . route @Route -> uri) ->
           Right uri' -> Model uri' False
       )
   )
-#ifndef WASM
+#ifndef PRODUCTION
     {
       styles = [Style $ ms $(embedFileRelative "static/output.css")]
      , logLevel = DebugAll

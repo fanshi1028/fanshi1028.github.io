@@ -18,6 +18,11 @@ flag local-dev
      default: False
      manual: True
 
+flag production
+     description: production
+     default: False
+     manual: True
+
 common wasm
   if arch(wasm32)
     ghc-options:

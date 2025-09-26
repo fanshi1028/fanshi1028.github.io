@@ -52,7 +52,9 @@
                 }))
               ];
           };
-          fanshi1028-site-js = mkDefaultPackage pkgs.pkgsCross.ghcjs { };
+          fanshi1028-site-js = mkDefaultPackage pkgs.pkgsCross.ghcjs {
+            modifier = drv: pkgs.haskell.lib.appendConfigureFlag [ "production" ];
+          };
           browser_wasi_shim =
             let
               pname = "browser_wasi_shim";
