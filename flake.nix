@@ -53,7 +53,7 @@
               ];
           };
           fanshi1028-site-js = mkDefaultPackage pkgs.pkgsCross.ghcjs {
-            modifier = drv: pkgs.haskell.lib.appendConfigureFlag drv [ "--flags=\"+production\"" ];
+            modifier = drv: pkgs.haskell.lib.appendBuildFlag drv [ "--flags=\"+production\"" ];
           };
           browser_wasi_shim =
             let
