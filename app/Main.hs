@@ -1,7 +1,9 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ViewPatterns #-}
+#ifndef PRODUCTION
+{-# LANGUAGE TemplateHaskell #-}
+#endif
 
 module Main where
 
