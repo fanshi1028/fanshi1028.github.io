@@ -24,6 +24,7 @@ jobs:
         with:
           name: fanshi1028-personal
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+          extraPullNames: haskell-miso-cachix
 
       - name: Nix Build fanshi1028-site-js
         run: |
