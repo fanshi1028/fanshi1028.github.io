@@ -42,7 +42,8 @@ wrapHtml vw =
             link_ [href_ "output.css", rel_ "stylesheet", type_ "text/css"]
           ],
         body_ [] $
-          [ script_ [src_ "index.js", type_ "module"] "",
+          [ -- script_ [src_ "index.js", type_ "module"] "",
+            script_ [src_ "all.js", language_ "javascript", defer_ "true"] "",
             vw
           ]
       ]
