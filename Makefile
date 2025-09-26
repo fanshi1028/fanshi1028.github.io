@@ -5,6 +5,7 @@ all: tailwind update build optim
 
 tailwind:
 	tailwindcss -m -i static/input.css -o static/output.css
+	rm static/input.css
 
 update:
 	wasm32-wasi-cabal --project-file=wasm.cabal.project update
@@ -18,8 +19,8 @@ build:
 	cp -v $(my_wasm) public/
 
 optim:
-	wasm-opt -all -O2 public/fanshi1028-site.wasm -o public/app.wasm
-	wasm-tools strip -o public/app.wasm public/app.wasm
+	wasm-opt -all -O2 public/fanshi1028-site.wasm -o public/fanshi1028-site.wasm
+	wasm-tools strip -o public/fanshi1028-site.wasm public/fanshi1028-site.wasm
 
 serve:
 	http-server public
