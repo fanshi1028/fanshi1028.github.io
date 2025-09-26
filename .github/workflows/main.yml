@@ -29,7 +29,7 @@ jobs:
       - name: Nix Build fanshi1028-site-js
         run: |
           nix build .#fanshi1028-site-js
-          ls ./result/bin
+          ls ./result/bin/fanshi1028-site.jsexe
 
       - name: Cache cabal stuff
         uses: actions/cache@v4
