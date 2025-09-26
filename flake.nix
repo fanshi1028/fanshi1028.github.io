@@ -53,7 +53,12 @@
               ];
           };
           fanshi1028-site-js = mkDefaultPackage pkgs.pkgsCross.ghcjs {
-            modifier = drv: pkgs.haskell.lib.enableCabalFlag drv "production";
+            modifier =
+              drv:
+              pkgs.lib.pipe drv [
+                (pkgs.haskell.lib.compose.enableCabalFlag drv "production")
+                (pkgs.haskell.lib.compose.setBuildTargets [ "fanshi1028-site" ])
+              ];
           };
           browser_wasi_shim =
             let
