@@ -26,11 +26,6 @@ jobs:
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
           extraPullNames: haskell-miso-cachix
 
-      - name: Nix Build fanshi1028-site-js
-        run: |
-          nix build .#fanshi1028-site-js
-          cp -r ./result/bin/fanshi1028-site.jsexe ./public/ghcjs
-
       - name: Cache cabal stuff
         uses: actions/cache@v4
         with:
@@ -41,8 +36,14 @@ jobs:
           key: cabal-${{ runner.os }}-${{ hashFiles('**/*.nix', '**/flake.lock', '**/*.cabal', '**/wasm.cabal.project') }}
           restore-keys: cabal-${{ runner.os }}-
 
-      - name: Build using Nix
+      - name: Nix Develop (WASM) Cabal Build fanshi1028-site
         run: nix develop .#wasm --command bash -c "make"
+
+      - name: Nix Build fanshi1028-site-js
+        run: |
+          nix build .#fanshi1028-site-js
+          cp -r ./result/bin/fanshi1028-site.jsexe ./public/ghcjs
+
 
       - name: Nix Build browser_wasi_shim
         run: |
