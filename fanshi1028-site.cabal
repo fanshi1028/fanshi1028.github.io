@@ -61,6 +61,8 @@ library
     GHC2024
   if flag(local-dev)
     buildable: False
+  if arch(javascript)
+    js-sources: temp-fix.js
 
 executable fanshi1028-site
   import:
