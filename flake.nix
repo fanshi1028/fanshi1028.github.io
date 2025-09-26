@@ -57,7 +57,7 @@
               drv:
               pkgs.lib.pipe drv [
                 (pkgs.haskell.lib.compose.enableCabalFlag "production")
-                (pkgs.haskell.lib.compose.setBuildTargets [ "fanshi1028-site" ])
+                (pkgs.haskell.lib.compose.setBuildTargets [ "exe:fanshi1028-site" ])
               ];
           };
           browser_wasi_shim =
