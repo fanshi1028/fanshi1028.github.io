@@ -32,7 +32,7 @@ common wasm
 
 common lib
   build-depends:
-      aeson, base < 5, containers, file-embed, jsaddle, miso, network-uri, text, time, validation-selective
+      aeson, base < 5, containers, miso, network-uri, text, time, validation-selective
   hs-source-dirs:
       src
   if flag(local-dev)
@@ -73,7 +73,10 @@ executable fanshi1028-site
   main-is:
     Main.hs
   build-depends:
-    base < 5, file-embed, miso
+    base < 5, miso
+  if !flag(production)
+      build-depends:
+        file-embed
   hs-source-dirs:
     app
   default-language:
