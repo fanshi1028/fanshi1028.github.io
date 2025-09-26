@@ -47,7 +47,7 @@ jobs:
       - name: Nix Build browser_wasi_shim
         run: |
           nix build .#browser_wasi_shim
-          cp -r ./result/lib/* ./public//
+          cp -r ./result/lib/* ./public/
 
       - name: Prerender using nix
         run: |
