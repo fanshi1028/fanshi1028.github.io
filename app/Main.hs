@@ -32,9 +32,5 @@ main = run $ miso $ \(first (ms . show) . route @Route -> uri) ->
           Right uri' -> Model uri' False
       )
   )
-#ifndef PRODUCTION
-    {
-      styles = [Style $ ms $(embedFileRelative "static/output.css")]
-     , logLevel = DebugAll
+    { logLevel = DebugAll
     }
-#endif
