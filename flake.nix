@@ -56,7 +56,7 @@
             modifier =
               drv:
               pkgs.lib.pipe drv [
-                (pkgs.haskell.lib.compose.enableCabalFlag drv "production")
+                (pkgs.haskell.lib.compose.enableCabalFlag "production")
                 (pkgs.haskell.lib.compose.setBuildTargets [ "fanshi1028-site" ])
               ];
           };
