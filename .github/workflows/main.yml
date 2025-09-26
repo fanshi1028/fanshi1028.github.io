@@ -42,7 +42,8 @@ jobs:
       - name: Nix Build fanshi1028-site-js
         run: |
           nix build .#fanshi1028-site-js
-          cp -r ./result/bin/fanshi1028-site.jsexe ./public/ghcjs
+          cp -r ./result/bin/fanshi1028-site.jsexe/*.js ./public/
+          cp ./result/bin/fanshi1028-site.jsexe/index.html ./public/ghcjs.html
 
 
       - name: Nix Build browser_wasi_shim
