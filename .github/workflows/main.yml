@@ -26,11 +26,6 @@ jobs:
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
           extraPullNames: haskell-miso-cachix
 
-      - name: Nix Build fanshi1028-site-js
-        run: |
-          nix build .#fanshi1028-site-js
-          ls ./result/bin
-
       - name: Cache cabal stuff
         uses: actions/cache@v4
         with:
@@ -43,6 +38,11 @@ jobs:
 
       - name: Build using Nix
         run: nix develop .#wasm --command bash -c "make"
+
+      - name: Nix Build fanshi1028-site-js
+        run: |
+          nix build .#fanshi1028-site-js
+          ls ./result/bin
 
       - name: Nix Build browser_wasi_shim
         run: |
