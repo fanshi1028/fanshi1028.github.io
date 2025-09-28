@@ -39,18 +39,19 @@ jobs:
       - name: Nix Build wasm-feature-detect
         run: |
           nix build .#wasm-feature-detect
-          cp -rv ./result/lib/node_modules/wasm-feature-detect ./js/wasm-feature-detect
+          cp -rv ./result/lib/node_modules/wasm-feature-detect ./js/
 
       - name: Nix Build browser_wasi_shim
         run: |
           nix build .#browser_wasi_shim
-          cp -rv ./result/lib/node_modules/@bjorn3/browser_wasi_shim ./js/browser_wasi_shim
-
+          cp -rv ./result/lib/node_modules/@bjorn3/browser_wasi_shim ./js/
 
       - name: Nix Build fanshi1028-site-js
         run: |
           nix build .#fanshi1028-site-js
           cp -rv ./result/bin/fanshi1028-site.jsexe/*.js ./js/
+
+
 
       - name: Nix Develop (WASM) Cabal Build fanshi1028-site
         run: nix develop .#wasm --command bash -c "make"
