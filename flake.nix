@@ -77,6 +77,23 @@
 
               npmDepsHash = "sha256-5CUnps7UyX9U7ZRRaUy0t7lpXoOhFR8n7AEPTD0npF0=";
             };
+          wasm-feature-detect =
+            let
+              pname = "wasm-feature-detect";
+              version = "1.8.0";
+            in
+            with pkgs;
+            buildNpmPackage {
+              inherit pname version;
+              src = fetchFromGitHub {
+                owner = "GoogleChromeLabs";
+                repo = pname;
+                tag = "v${version}";
+                hash = "sha256-14OZNnu6kPVfKgxa3ARnmuwgrkwpCFhK2YdK/cvW5vw=";
+              };
+
+              npmDepsHash = "sha256-ikjjc7/MZRswwNsmSJC5KqLrNKbCbKYLQ9v87t1azTc=";
+            };
         }
       );
 
