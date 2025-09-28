@@ -3,12 +3,12 @@ import {
     // mandatory wasm extensions 
     saturatedFloatToInt,
     signExtensions,
-    mutableGlobals
+    mutableGlobals,
     referenceTypes,
     // optional wasm extensions enabled
-    multiValue
-    bulkMemory
-    simd
+    multiValue,
+    bulkMemory,
+    simd,
     // optional wasm extensions not enabled
     // tailCall
 } from "./wasm-feature-detect/index.js";
