@@ -88,6 +88,9 @@ executable fanshi1028-site
     GHC2024
   ghc-options:
     -funbox-strict-fields -O2 -ferror-spans -fspecialise-aggressively -Wall
+  if arch(javascript)
+      cpp-options:
+       -DGHCJS_BROWSER
 
 executable prerender
   if flag(local-dev)
