@@ -59,7 +59,7 @@ jobs:
 
       - name: No Bun Build
         run: |
-          cp -rv ./js/*.js ./public/
+          cp -rv ./js/* ./public/
           # nix develop .#wasm --command bash -c "bun build ./js/index.js --outdir ./public --minify --external ./all.js --external ./ghc_wasm_jsffi.js --external ./browser_wasi_shim/dist/index.js" 
 
       - name: Prerender using nix
