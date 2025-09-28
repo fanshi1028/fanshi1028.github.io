@@ -36,6 +36,9 @@ jobs:
           key: cabal-${{ runner.os }}-${{ hashFiles('**/*.nix', '**/flake.lock', '**/*.cabal', '**/wasm.cabal.project') }}
           restore-keys: cabal-${{ runner.os }}-
 
+      - name: Nix Develop (WASM) Cabal Build fanshi1028-site
+        run: nix develop .#wasm --command bash -c "make"
+
       - name: Nix Build wasm-feature-detect
         run: |
           nix build .#wasm-feature-detect
@@ -50,11 +53,6 @@ jobs:
         run: |
           nix build .#fanshi1028-site-js
           cp -rv ./result/bin/fanshi1028-site.jsexe/*.js ./js/
-
-
-
-      - name: Nix Develop (WASM) Cabal Build fanshi1028-site
-        run: nix develop .#wasm --command bash -c "make"
 
       - name: Bun Build
         run: |
