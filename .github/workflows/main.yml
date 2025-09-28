@@ -47,12 +47,12 @@ jobs:
       - name: Nix Build wasm-feature-detect
         run: |
           nix build .#wasm-feature-detect
-          cp -rv ./result/lib/node_modules/@GoogleChromeLabs/wasm-feature-detect/dist ./public/wasm-feature-detect
+          cp -rv ./result/lib/node_modules/wasm-feature-detect/dist/esm ./public/wasm-feature-detect
 
       - name: Nix Build browser_wasi_shim
         run: |
           nix build .#browser_wasi_shim
-          cp -rv ./result/lib/node_modules//@bjorn3/browser_wasi_shim/dist ./public/node_modules/
+          cp -rv ./result/lib/node_modules/@bjorn3/browser_wasi_shim/dist ./public/browser_wasi_shim
 
       - name: Prerender using nix
         run: |
