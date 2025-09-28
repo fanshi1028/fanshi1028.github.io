@@ -13,10 +13,7 @@ import {
     // tailCall
 } from "./wasm-feature-detect/index.js";
 
-
-
-
-const wasm-feature-detections = await Promise.all([saturatedFloatToInt, signExtensions, mutableGlobals referenceTypes, multiValue, bulkMemory, simd])
+const wasm-feature-detections = await Promise.all([saturatedFloatToInt, signExtensions, mutableGlobals, referenceTypes, multiValue, bulkMemory, simd])
 
 if (wasm-feature-detections.every(i => i)) {
 
