@@ -11,7 +11,7 @@ import {
     simd
     // optional wasm extensions not enabled
     // tailCall
-} from "./node_modules/@GoogleChromeLabs/wasm-feature-detect/dist/index.js";
+} from "./wasm-feature-detect/index.js";
 
 
 
@@ -20,7 +20,7 @@ const wasm-feature-detections = await Promise.all([saturatedFloatToInt, signExte
 
 if (wasm-feature-detections.every(i => i)) {
 
-import { WASI, OpenFile, File, ConsoleStdout } from "./node_modules/@bjorn3/browser_wasi_shim/dist/index.js";
+import { WASI, OpenFile, File, ConsoleStdout } from "./browser_wasi_shim/index.js";
 import ghc_wasm_jsffi from "./ghc_wasm_jsffi.js";
 
 const args = [];
