@@ -1,3 +1,25 @@
+// NOTE:: https://gitlab.haskell.org/haskell-wasm/ghc-wasm-meta/-/tree/master?ref_type=heads#what-it-emits-when-it-emits-a-wasm-file
+import {
+    // mandatory wasm extensions 
+    saturatedFloatToInt,
+    signExtensions,
+    mutableGlobals
+    referenceTypes,
+    // optional wasm extensions enabled
+    multiValue
+    bulkMemory
+    simd
+    // optional wasm extensions not enabled
+    // tailCall
+} from "./node_modules/@GoogleChromeLabs/wasm-feature-detect/dist/index.js";
+
+
+
+
+const wasm-feature-detections = await Promise.all([saturatedFloatToInt, signExtensions, mutableGlobals referenceTypes, multiValue, bulkMemory, simd])
+
+if (wasm-feature-detections.every(i => i)) {
+
 import { WASI, OpenFile, File, ConsoleStdout } from "./node_modules/@bjorn3/browser_wasi_shim/dist/index.js";
 import ghc_wasm_jsffi from "./ghc_wasm_jsffi.js";
 
@@ -20,4 +42,10 @@ Object.assign(instance_exports, instance.exports);
 
 wasi.initialize(instance);
 await instance.exports.hs_start(globalThis.example);
+
+    
+} else {
+    import "all.js"
+}
+
 
