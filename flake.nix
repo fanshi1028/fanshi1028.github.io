@@ -132,8 +132,8 @@
                 ghc-wasm.packages.${system}.all_9_12
               ]
               ++ (with pkgs; [
-                http-server
                 tailwindcss
+                bun
               ]);
           };
         }

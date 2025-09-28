@@ -50,7 +50,7 @@ if (wasm_feature_detections.every(i => i)) {
 
 
 } else {
-    import("all.js")
+    import("./all.js")
 }
 
 
