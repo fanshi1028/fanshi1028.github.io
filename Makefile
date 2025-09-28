@@ -12,10 +12,9 @@ update:
 
 build:
 	wasm32-wasi-cabal --project-file=wasm.cabal.project build fanshi1028-site:exe:fanshi1028-site
-	rm -rf public
-	cp -r static public
+	cp -r static js
 	$(eval my_wasm=$(shell wasm32-wasi-cabal --project-file=wasm.cabal.project list-bin fanshi1028-site | tail -n 1))
-	$(shell wasm32-wasi-ghc --print-libdir)/post-link.mjs --input $(my_wasm) --output public/ghc_wasm_jsffi.js
+	$(shell wasm32-wasi-ghc --print-libdir)/post-link.mjs --input $(my_wasm) --output js/ghc_wasm_jsffi.js
 	cp -v $(my_wasm) public/
 
 optim:
