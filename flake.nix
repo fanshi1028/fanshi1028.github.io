@@ -118,7 +118,9 @@
                   # dyld: Symbol not found: _ubrk_clone
                   #   Referenced from: /nix/store/2dxgd64421azhmwp63h9h3hzczgvh9w7-tailwindcss_4-4.1.7/bin/.tailwindcss-wrapped (which was built for Mac OS X 13.0)
                   #   Expected in: /usr/lib/libicucore.A.dylib
-
+                  bun
+                  typescript
+                  typescript-language-server
                 ]
               );
             returnShellEnv = true;
