@@ -47,12 +47,12 @@ jobs:
       - name: Nix Build wasm-feature-detect
         run: |
           nix build .#wasm-feature-detect
-          cp -rv ./result/lib/* ./public/
+          cp -rvl ./result/lib/node_modules/* ./public/node_modules/
 
       - name: Nix Build browser_wasi_shim
         run: |
           nix build .#browser_wasi_shim
-          cp -rv ./result/lib/* ./public/
+          cp -rvl ./result/lib/node_modules/* ./public/node_modules/
 
       - name: Prerender using nix
         run: |
