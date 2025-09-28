@@ -37,7 +37,10 @@ jobs:
           restore-keys: cabal-${{ runner.os }}-
 
       - name: Nix Develop (WASM) Cabal Build fanshi1028-site
-        run: nix develop .#wasm --command bash -c "make"
+        run: |
+          mkdir -p public
+          mkdir -p js
+          nix develop .#wasm --command bash -c "make"
 
       - name: Nix Build wasm-feature-detect
         run: |
