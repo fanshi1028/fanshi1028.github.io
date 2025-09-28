@@ -26,7 +26,7 @@ const wasm_feature_detections = await Promise.all([
 if (wasm_feature_detections.every(i => i)) {
 
     const { WASI, OpenFile, File, ConsoleStdout } = await import("./browser_wasi_shim/dist/index.js");
-    const ghc_wasm_jsffi = await import("./ghc_wasm_jsffi.js");
+    const { default: ghc_wasm_jsffi } = await import("./ghc_wasm_jsffi.js");
 
     const args = [];
     const env = ["GHCRTS=-H64m"];
