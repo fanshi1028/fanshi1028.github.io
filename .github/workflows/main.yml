@@ -59,7 +59,7 @@ jobs:
 
       - name: Bun Build
         run: |
-          nix develop .#wasm --comand bun build ./js/index.js --outdir ./public --minify
+          nix develop .#wasm --comamnd "bun build ./js/index.js --outdir ./public --minify"
 
       - name: Prerender using nix
         run: |
