@@ -57,9 +57,10 @@ jobs:
           nix build .#fanshi1028-site-js
           cp -rv ./result/bin/fanshi1028-site.jsexe/*.js ./js/
 
-      - name: Bun Build
+      - name: No Bun Build
         run: |
-          nix develop .#wasm --command bash -c "bun build ./js/index.js --outdir ./public --minify --external ./all.js --external ./ghc_wasm_jsffi.js --external ./browser_wasi_shim/dist/index.js" 
+          cp -rv ./js/*.js ./public/
+          # nix develop .#wasm --command bash -c "bun build ./js/index.js --outdir ./public --minify --external ./all.js --external ./ghc_wasm_jsffi.js --external ./browser_wasi_shim/dist/index.js" 
 
       - name: Prerender using nix
         run: |
