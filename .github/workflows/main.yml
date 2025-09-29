@@ -33,6 +33,7 @@ jobs:
           name: wasm-feature-detect
           path: result/lib/node_modules/wasm-feature-detect
           if-no-files-found: error
+          retention-days: 1
 
   build:
     runs-on: ubuntu-latest
@@ -89,7 +90,6 @@ jobs:
         with:
           name: wasm-feature-detect
           path: public/wasm-feature-detect
-          retention-days: 1
 
       - name: Archive artifact
         shell: sh
