@@ -260,39 +260,6 @@ jobs:
           du -h $RUNNER_TEMP/artifact.tar
           echo ::endgroup::
 
-      # - name: Archive artifact zstd
-      #   shell: sh
-      #   run: |
-      #     echo ::group::Archive artifact
-      #     tar \
-      #       --use-compress-program "zstd -T0 --ultra -22" \
-      #       --dereference --hard-dereference \
-      #       --directory ./public \
-      #       -cvf "$RUNNER_TEMP/artifact.tar.zst" \
-      #       --exclude=.git \
-      #       --exclude=.github \
-      #       --exclude=".[^/]*" \
-      #       .
-      #     du -h $RUNNER_TEMP/artifact.tar.zst
-      #     echo ::endgroup::
-
-      # - name: Archive artifact brotli
-      #   shell: sh
-      #   if: runner.os == 'Linux'
-      #   run: |
-      #     echo ::group::Archive artifact
-      #     tar \
-      #       --use-compress-program "brotli -q11" \
-      #       --dereference --hard-dereference \
-      #       --directory ./public \
-      #       -cvf "$RUNNER_TEMP/artifact.tar.br \
-      #       --exclude=.git \
-      #       --exclude=.github \
-      #       --exclude=".[^/]*" \
-      #       .
-      #     du -h $RUNNER_TEMP/artifact.tar.br
-      #     echo ::endgroup::
-
       - name: Upload artifact
         id: upload-artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
