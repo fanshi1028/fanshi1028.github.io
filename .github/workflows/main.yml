@@ -132,7 +132,7 @@ jobs:
         run: |
           closure-compiler --language_in UNSTABLE --compilation_level ADVANCED_OPTIMIZATIONS --warning_level QUIET \
             --isolation_mode IIFE --assume_function_wrapper --emit_use_strict \
-            --jscomp_off=checkVars 
+            --jscomp_off=checkVars \
             --externs=result/bin/fanshi1028-site.jsexe/all.externs.js \
             result/bin/fanshi1028-site.jsexe/all.js \
             > all.js
