@@ -23,9 +23,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: cachix/install-nix-action@v31
 
-      - name: Magic Nix Cache
-        uses: DeterminateSystems/magic-nix-cache-action@v13
-
       - uses: cachix/cachix-action@v16
         with:
           name: fanshi1028-personal
@@ -49,9 +46,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: cachix/install-nix-action@v31
 
-      - name: Magic Nix Cache
-        uses: DeterminateSystems/magic-nix-cache-action@v13
-
       - uses: cachix/cachix-action@v16
         with:
           name: fanshi1028-personal
@@ -74,9 +68,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: cachix/install-nix-action@v31
-
-      - name: Magic Nix Cache
-        uses: DeterminateSystems/magic-nix-cache-action@v13
 
       - uses: cachix/cachix-action@v16
         with:
@@ -102,9 +93,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: cachix/install-nix-action@v31
 
-      - name: Magic Nix Cache
-        uses: DeterminateSystems/magic-nix-cache-action@v13
-
       - uses: cachix/cachix-action@v16
         with:
           name: fanshi1028-personal
@@ -127,9 +115,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: cachix/install-nix-action@v31
-
-      - name: Magic Nix Cache
-        uses: DeterminateSystems/magic-nix-cache-action@v13
 
       - uses: cachix/cachix-action@v16
         with:
@@ -170,9 +155,6 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: cachix/install-nix-action@v31
-
-      - name: Magic Nix Cache
-        uses: DeterminateSystems/magic-nix-cache-action@v13
 
       - uses: cachix/cachix-action@v16
         with:
