@@ -124,10 +124,19 @@ jobs:
         run: |
           nix build .#fanshi1028-site-js
 
+      - name: Optimise JS
+        shell: nix shell .#closurecompiler --command bash -e {0}
+        run: |
+          closurecompiler --language_in UNSTABLE --compilation_level ADVANCED_OPTIMIZATIONS --warning_level QUIET \
+            --isolation_mode IIFE --assume_function_wrapper --emit_use_strict \
+            --js result/bin/fanshi1028-site.jsexe/all.js \
+            --js result/bin/fanshi1028-site.jsexe/all.externs.js \
+            --js_output_file all.js
+
       - uses: actions/upload-artifact@v4
         with:
           name: fanshi1028-site-js
-          path: result/bin/fanshi1028-site.jsexe
+          path: ./all.js
           if-no-files-found: error
           retention-days: 1
 
