@@ -96,7 +96,6 @@ jobs:
       - name: Nix Build fanshi1028-site-js
         run: |
           nix build .#fanshi1028-site-js
-          cp -rv ./result/bin/fanshi1028-site.jsexe/*.js ./js/
 
       - uses: actions/upload-artifact@v4
         with:
