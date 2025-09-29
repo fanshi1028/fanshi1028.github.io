@@ -125,22 +125,23 @@ jobs:
         run: |
           nix build .#fanshi1028-site-js
 
-      - name: Optimise JS
-        shell: nix shell .#closurecompiler --command bash -e {0}
-        # NOTE: https://discourse.haskell.org/t/ghc-js-backend-improve-compiled-size/12098/17
-        # NOTE: https://github.com/ghcjs/ghcjs/wiki/Deployment
-        run: |
-          closure-compiler --language_in UNSTABLE --compilation_level ADVANCED_OPTIMIZATIONS --warning_level QUIET \
-            --isolation_mode IIFE --assume_function_wrapper --emit_use_strict \
-            --jscomp_off=checkVars \
-            --externs=result/bin/fanshi1028-site.jsexe/all.externs.js \
-            result/bin/fanshi1028-site.jsexe/all.js \
-            > all.js
+      # - name: Optimise JS
+      #   shell: nix shell .#closurecompiler --command bash -e {0}
+      #   # NOTE: https://discourse.haskell.org/t/ghc-js-backend-improve-compiled-size/12098/17
+      #   # NOTE: https://github.com/ghcjs/ghcjs/wiki/Deployment
+      #   run: |
+      #     closure-compiler --language_in UNSTABLE --compilation_level ADVANCED_OPTIMIZATIONS --warning_level QUIET \
+      #       --isolation_mode IIFE --assume_function_wrapper --emit_use_strict \
+      #       --jscomp_off=checkVars \
+      #       --externs=result/bin/fanshi1028-site.jsexe/all.externs.js \
+      #       result/bin/fanshi1028-site.jsexe/all.js \
+      #       > all.js
 
       - uses: actions/upload-artifact@v4
         with:
           name: fanshi1028-site-js
-          path: ./all.js
+          # path: ./all.js
+          path: result/bin/fanshi1028-site.jsexe/all.js
           if-no-files-found: error
           retention-days: 1
 
