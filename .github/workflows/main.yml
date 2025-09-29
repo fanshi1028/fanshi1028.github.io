@@ -127,7 +127,7 @@ jobs:
       - name: Optimise JS
         shell: nix shell .#closurecompiler --command bash -e {0}
         run: |
-          closurecompiler --language_in UNSTABLE --compilation_level ADVANCED_OPTIMIZATIONS --warning_level QUIET \
+          closure-compiler --language_in UNSTABLE --compilation_level ADVANCED_OPTIMIZATIONS --warning_level QUIET \
             --isolation_mode IIFE --assume_function_wrapper --emit_use_strict \
             --js result/bin/fanshi1028-site.jsexe/all.js \
             --js result/bin/fanshi1028-site.jsexe/all.externs.js \
