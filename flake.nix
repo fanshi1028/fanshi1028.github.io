@@ -42,7 +42,7 @@
           pkgs = import nixpkgs { inherit system overlays; };
         in
         {
-          inherit (pkgs) tailwindcss;
+          inherit (pkgs) tailwindcss closurecompiler;
           prerender = mkDefaultPackage pkgs {
             modifier =
               drv:
