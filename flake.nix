@@ -42,6 +42,7 @@
           pkgs = import nixpkgs { inherit system overlays; };
         in
         {
+          inherit (pkgs) tailwindcss;
           prerender = mkDefaultPackage pkgs {
             modifier =
               drv:
@@ -127,14 +128,7 @@
           };
           wasm = pkgs.mkShell {
             name = "The miso ${system} GHC WASM ${ghcVersion} shell";
-            packages =
-              [
-                ghc-wasm.packages.${system}.all_9_12
-              ]
-              ++ (with pkgs; [
-                tailwindcss
-                bun
-              ]);
+            packages = [ ghc-wasm.packages.${system}.all_9_12 ];
           };
         }
       );
