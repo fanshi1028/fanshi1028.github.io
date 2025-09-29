@@ -57,6 +57,28 @@ jobs:
           path: result/lib/node_modules/@bjorn3/browser_wasi_shim
           if-no-files-found: error
           retention-days: 1
+
+  build-css:
+    runs-on: ubuntu-latest
+    steps
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v31
+
+      - uses: cachix/cachix-action@v16
+        with:
+          name: fanshi1028-personal
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+
+      - name: TailwindCSS
+        run: |
+          nix run .#tailwindcss -- -m -i static/input.css -o output.css
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: css
+          path: ./output.css
+          if-no-files-found: error
+          retention-days: 1
           
   prerender:
     runs-on: ubuntu-latest
@@ -104,9 +126,11 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  build:
+  build-site-wasm:
     runs-on: ubuntu-latest
-    needs: [build-wasm-feature-detect, build-browser_wasi_shim, prerender, build-site-js]
+    defaults:
+      runs:
+        shell: nix develop .#wasm --command bash -e {0}
 
     steps:
       - uses: actions/checkout@v4
@@ -128,18 +152,42 @@ jobs:
             dist-newstyle
           key: cabal-${{ runner.os }}-${{ hashFiles('**/*.nix', '**/flake.lock', '**/*.cabal', '**/wasm.cabal.project') }}
           restore-keys: cabal-${{ runner.os }}-
-
+      
       - name: Nix Develop (WASM) Cabal Build fanshi1028-site
         run: |
-          mkdir -p public
-          mkdir -p js
-          nix develop .#wasm --command bash -c "make"
+          wasm32-wasi-cabal --project-file=wasm.cabal.project configure
+          wasm32-wasi-cabal build fanshi1028-site:exe:fanshi1028-site
 
-      - name: No Bun Build
+      - name: find wasmArtifactPath 
         run: |
-          cp -rv ./js/* ./public/
-          # nix develop .#wasm --command bash -c "bun build ./js/index.js --outdir ./public --minify --external ./all.js --external ./ghc_wasm_jsffi.js --external ./browser_wasi_shim/dist/index.js" 
+          echo "wasmArtifactPath=$(wasm32-wasi-cabal list-bin exe:fanshi1028-site | tail -n 1)" >> $GITHUB_ENV
 
+      - name: find ghcLibPath
+        run: |
+          echo "ghcLibPath=$(wasm32-wasi-ghc --print-libdir)" >> $GITHUB_ENV
+
+      - name: Link
+        run: |
+          ${{env.ghcLibPath}}/post-link.mjs --input ${{env.wasmArtifactPath}} --output ghc_wasm_jsffi.js
+
+      - name: Optimise wasm
+        run: |
+          wasm-opt -all -O2 ${{env.wasmArtifactPath}} -o fanshi1028-site.wasm
+          wasm-tools strip -o fanshi1028-site.wasm fanshi1028-site.wasm
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fanshi1028-site-wasm
+          path: |
+            fanshi1028-site.wasm
+            ghc_wasm_jsffi.js
+          if-no-files-found: error
+          retention-days: 1
+  build:
+    runs-on: ubuntu-latest
+    needs: [build-wasm-feature-detect, build-browser_wasi_shim, prerender, build-site-js, build-site-wasm]
+
+    steps:
       - uses: actions/download-artifact@v5
         with:
           name: wasm-feature-detect
@@ -159,6 +207,21 @@ jobs:
         with:
           name: fanshi1028-site-js
           path: public
+
+      - uses: actions/download-artifact@v5
+        with:
+          name: fanshi1028-site-wasm
+          path: public
+
+      - uses: actions/download-artifact@v5
+        with:
+          name: css
+          path: public
+
+      - name: Prepare some static files
+        run: |
+          cp -v static/index.js public/
+          cp -v static/favicon.ico public/
 
       - name: Archive artifact
         shell: sh
