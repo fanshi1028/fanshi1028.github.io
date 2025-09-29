@@ -194,19 +194,9 @@ jobs:
 
       - uses: actions/download-artifact@v5
         with:
-          name: wasm-feature-detect
-          path: public/wasm-feature-detect
-
-      - uses: actions/download-artifact@v5
-        with:
-          name: browser_wasi_shim
-          path: public/browser_wasi_shim
-
-      - uses: actions/download-artifact@v5
-        with:
-          name: prerender
+          name: fanshi1028-site-wasm
           path: public
-          
+
       - uses: actions/download-artifact@v5
         with:
           name: fanshi1028-site-js
@@ -214,8 +204,18 @@ jobs:
 
       - uses: actions/download-artifact@v5
         with:
-          name: fanshi1028-site-wasm
+          name: prerender
           path: public
+
+      - uses: actions/download-artifact@v5
+        with:
+          name: wasm-feature-detect
+          path: public/wasm-feature-detect
+
+      - uses: actions/download-artifact@v5
+        with:
+          name: browser_wasi_shim
+          path: public/browser_wasi_shim
 
       - uses: actions/download-artifact@v5
         with:
