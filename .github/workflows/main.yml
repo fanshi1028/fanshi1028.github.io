@@ -190,6 +190,8 @@ jobs:
     needs: [build-wasm-feature-detect, build-browser_wasi_shim, prerender, build-site-js, build-site-wasm]
 
     steps:
+      - uses: actions/checkout@v4
+
       - uses: actions/download-artifact@v5
         with:
           name: wasm-feature-detect
