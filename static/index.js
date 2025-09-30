@@ -46,7 +46,7 @@ if (wasm_feature_detections.every(i => i)) {
     Object.assign(instance_exports, instance.exports);
 
     wasi.initialize(instance);
-    await instance.exports.hs_start(globalThis.example);
+    await instance.exports.hs_start();
 
 
 } else {
