@@ -24,7 +24,7 @@ const wasm_feature_detections = await Promise.all([
 ])
 
 if (wasm_feature_detections.every(i => i)) {
-    await import("wasm.js")
+    await import("./wasm.js")
 } else {
     await import("./all.js")
 }
