@@ -122,6 +122,12 @@
                   bun
                   typescript
                   typescript-language-server
+                  prettier
+                  closurecompiler
+                  # webpack-cli
+                  # swc
+                  uglify-js
+                  http-server
                 ]
               );
             returnShellEnv = true;
