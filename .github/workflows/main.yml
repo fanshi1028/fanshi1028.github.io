@@ -241,7 +241,6 @@ jobs:
       - name: Prepare some static files
         run: |
           cp -v static/index.js public/
-          cp -v static/wasm.js public/
           cp -v static/favicon.ico public/
 
       - name: Archive artifact
