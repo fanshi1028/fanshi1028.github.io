@@ -141,7 +141,7 @@ jobs:
         with:
           name: fanshi1028-site-js
           # path: ./all.js
-          path: result/bin/fanshi1028-site.jsexe/all.js
+          path: result/bin/fanshi1028-site.jsexe/*.js
           if-no-files-found: error
           retention-days: 1
 
