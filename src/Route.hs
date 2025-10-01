@@ -11,7 +11,9 @@ import ProductRequirementDocument
 import ProductRequirementDocument.Home
 import ProductRequirementDocument.Pomodoro
 
-data Route = Index | Pomodoro
+data Route
+  = Index -- NOTE: Index must be the first one, code made assumpation base on its Enum being the first one.
+  | Pomodoro
   deriving stock (Eq, Show, Enum, Bounded, Generic)
   deriving anyclass (Router)
 
