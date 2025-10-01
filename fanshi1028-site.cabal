@@ -63,6 +63,7 @@ library
     buildable: False
   if arch(javascript)
     js-sources: temp-fix.js
+  ghc-options: -Wall
 
 executable fanshi1028-site
   import:
