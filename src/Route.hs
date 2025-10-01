@@ -8,12 +8,14 @@ import Miso
 import Miso.Lens
 import Miso.Router
 import ProductRequirementDocument
+import ProductRequirementDocument.Dashboard
 import ProductRequirementDocument.Home
 import ProductRequirementDocument.Pomodoro
 
 data Route
   = Index -- NOTE: Index must be the first one, code made assumpation base on its Enum being the first one.
   | Pomodoro
+  | Dashboard
   deriving stock (Eq, Show, Enum, Bounded, Generic)
   deriving anyclass (Router)
 
@@ -35,6 +37,7 @@ routeToPRD :: Route -> ProductRequirementDocument
 routeToPRD = \case
   Index -> homePRD
   Pomodoro -> pomodoroPRD
+  Dashboard -> dashboardPRD
 
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
