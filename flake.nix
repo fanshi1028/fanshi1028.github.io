@@ -100,8 +100,6 @@
               pkgs.haskell.lib.addBuildTools drv (
                 with pkgs;
                 [
-                  self.packages.${system}.wasm-feature-detect
-                  self.packages.${system}.browser_wasi_shim
                   cabal-install
                   tailwindcss
                   ghciwatch
