@@ -378,11 +378,7 @@ defaultModel =
 
 pomodoroComponent :: Component parent Model Action
 pomodoroComponent =
-  ( component
-      defaultModel
-      Pomodoro.updateModel
-      Pomodoro.viewModel
-  )
+  (component defaultModel updateModel viewModel)
     { mailbox = \v -> case fromJSON v of
         Error _ -> Nothing
         Aeson.Success Clock.ClockDoneMessage -> Just Pomodoro.PreNextTransition
