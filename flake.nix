@@ -8,6 +8,14 @@
     # copied from miso's flake
     nixpkgs.url = "github:nixos/nixpkgs?rev=9e2e8a7878573d312db421d69e071690ec34e98c";
     ghc-wasm.url = "gitlab:haskell-wasm/ghc-wasm-meta?host=gitlab.haskell.org";
+    browser_wasi_shim = {
+      url = "github:bjorn3/browser_wasi_shim?ref=v0.4.2";
+      flake = false;
+    };
+    wasm-feature-detect = {
+      url = "github:GoogleChromeLabs/wasm-feature-detect?ref=v1.8.0";
+      flake = false;
+    };
   };
 
   outputs =
@@ -16,6 +24,8 @@
       miso,
       nixpkgs,
       ghc-wasm,
+      browser_wasi_shim,
+      wasm-feature-detect,
     }:
     let
       systems = [
@@ -61,40 +71,20 @@
                 (pkgs.haskell.lib.compose.setBuildTargets [ "exe:fanshi1028-site" ])
               ];
           };
-          browser_wasi_shim =
-            let
-              pname = "browser_wasi_shim";
-              version = "0.4.2";
-            in
-            with pkgs;
-            buildNpmPackage {
-              inherit pname version;
-              src = fetchFromGitHub {
-                owner = "bjorn3";
-                repo = pname;
-                tag = "v${version}";
-                hash = "sha256-okP2bT4rcqtwTk7eOdyC+DqoLACTS9srANgSEkjb06A=";
-              };
+          browser_wasi_shim = pkgs.buildNpmPackage {
+            pname = "browser_wasi_shim";
+            version = "0.4.2";
+            src = browser_wasi_shim;
+            npmDepsHash = "sha256-5CUnps7UyX9U7ZRRaUy0t7lpXoOhFR8n7AEPTD0npF0=";
+          };
+          wasm-feature-detect = pkgs.buildNpmPackage {
+            pname = "wasm-feature-detect";
+            version = "1.8.0";
+            src = wasm-feature-detect;
+            npmDepsHash = "sha256-ikjjc7/MZRswwNsmSJC5KqLrNKbCbKYLQ9v87t1azTc=";
+          };
 
-              npmDepsHash = "sha256-5CUnps7UyX9U7ZRRaUy0t7lpXoOhFR8n7AEPTD0npF0=";
-            };
-          wasm-feature-detect =
-            let
-              pname = "wasm-feature-detect";
-              version = "1.8.0";
-            in
-            with pkgs;
-            buildNpmPackage {
-              inherit pname version;
-              src = fetchFromGitHub {
-                owner = "GoogleChromeLabs";
-                repo = pname;
-                tag = "v${version}";
-                hash = "sha256-14OZNnu6kPVfKgxa3ARnmuwgrkwpCFhK2YdK/cvW5vw=";
-              };
 
-              npmDepsHash = "sha256-ikjjc7/MZRswwNsmSJC5KqLrNKbCbKYLQ9v87t1azTc=";
-            };
         }
       );
 
@@ -110,6 +100,8 @@
               pkgs.haskell.lib.addBuildTools drv (
                 with pkgs;
                 [
+                  self.packages.${system}.wasm-feature-detect
+                  self.packages.${system}.browser_wasi_shim
                   cabal-install
                   tailwindcss
                   ghciwatch
