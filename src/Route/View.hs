@@ -22,10 +22,12 @@ view500 err =
       text err
     ]
 
-routeToView :: Route -> View model Action
+data UnderConstruction = UnderConstruction
+
+routeToView :: Route -> Either UnderConstruction (View model Action)
 routeToView = \case
-  Index -> home
-  Pomodoro -> div_ [key_ @MisoString "pomodoro"] +> pomodoroComponent
+  Index -> Right home
+  Pomodoro -> Right $ div_ [key_ @MisoString "pomodoro"] +> pomodoroComponent
 
 homeButton :: Route -> View model Action
 homeButton Index = div_ [] []
@@ -68,17 +70,21 @@ prdButton open =
 navView :: Model -> View Model Action
 navView = \case
   Model route open ->
-    div_ [] $
-      [ nav_
-          [ classes_
-              [ "fixed flex flex-col z-50",
-                "gap-2 md:gap-4 xl:gap-6",
-                "top-2 sm:top-4 md:top-6 lg:top-8 xl:top-12 2xl:top-16",
-                "right-2 sm:right-4 md:right-6 lg:right-8 xl:right-12 2xl:right-16"
-              ]
-          ]
-          [homeButton route, prdButton open],
-        prdView open $ routeToPRD route,
-        routeToView route
-      ]
+    let navCls =
+          classes_
+            [ "fixed flex flex-col z-50",
+              "gap-2 md:gap-4 xl:gap-6",
+              "top-2 sm:top-4 md:top-6 lg:top-8 xl:top-12 2xl:top-16",
+              "right-2 sm:right-4 md:right-6 lg:right-8 xl:right-12 2xl:right-16"
+            ]
+     in div_ [] $ case routeToView route of
+          Left _ ->
+            [ nav_ [navCls] [homeButton route],
+              prdView True $ routeToPRD route
+            ]
+          Right vw ->
+            [ nav_ [navCls] [homeButton route, prdButton open],
+              prdView open $ routeToPRD route,
+              vw
+            ]
   RoutingError err' -> view500 err'
