@@ -38,9 +38,11 @@ common lib
   if flag(local-dev)
       other-modules:
         Clock
+        Dashboard
         Home
         Pomodoro
         ProductRequirementDocument
+        ProductRequirementDocument.Dashboard
         ProductRequirementDocument.Home
         ProductRequirementDocument.Pomodoro
         Route
@@ -50,9 +52,11 @@ library
   import: lib
   exposed-modules:
     Clock
+    Dashboard
     Home
     Pomodoro
     ProductRequirementDocument
+    ProductRequirementDocument.Dashboard
     ProductRequirementDocument.Home
     ProductRequirementDocument.Pomodoro
     Route

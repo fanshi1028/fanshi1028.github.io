@@ -2,6 +2,7 @@
 
 module Route.View (navView) where
 
+import Dashboard
 import Home
 import Miso
 import Miso.Html
@@ -28,6 +29,7 @@ routeToView :: Route -> Either UnderConstruction (View model Action)
 routeToView = \case
   Index -> Right home
   Pomodoro -> Right $ div_ [key_ @MisoString "pomodoro"] +> pomodoroComponent
+  Dashboard -> Left UnderConstruction -- TEMP FIXME
 
 homeButton :: Route -> View model Action
 homeButton Index = div_ [] []
