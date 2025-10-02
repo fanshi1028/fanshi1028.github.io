@@ -32,7 +32,7 @@ common wasm
 
 common lib
   build-depends:
-      aeson, base < 5, containers, miso, network-uri, text, time, validation-selective
+      aeson, base < 5, containers, lens, miso, network-uri, text, time, validation-selective
   hs-source-dirs:
       src
   if flag(local-dev)
