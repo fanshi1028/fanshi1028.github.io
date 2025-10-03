@@ -34,6 +34,7 @@ data Model
 -- uvIndex :: Lens Model Int
 -- uvIndex = lens _uvIndex $ \record x -> record {_uvIndex = x}
 
+-- TEMP FIXME: refine retry mechanism
 newtype Retry = Retry Natural deriving newtype (Enum, Eq)
 
 noRetry :: Retry
@@ -69,7 +70,14 @@ uvIndexURI (Geolocation lat long _) =
 
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
-  FetchLocationData (Retry _) -> geolocation SetLocation (HandleError . Left)
+  FetchLocationData retry ->
+    geolocation
+      SetLocation
+      ( \err ->
+          if retry == noRetry
+            then HandleError $ Left err
+            else FetchLocationData $ pred retry
+      )
   FetchUVIndexData retry ->
     getLocation <$> get >>= \case
       Left mErr -> do
