@@ -20,7 +20,7 @@ newtype UVIndexFetchError = UVIndexFetchError {_unUVIndexFetchError :: MisoStrin
 
 newtype UVIndex = UVIndex Double
   deriving stock (Eq, Show)
-  deriving newtype (FromJSON)
+  deriving newtype (FromJSON, ToJSON)
 
 data Model
   = NoLocationData (Maybe GeolocationError)
@@ -40,7 +40,16 @@ newtype Retry = Retry Natural deriving newtype (Enum, Eq)
 noRetry :: Retry
 noRetry = Retry 0
 
-data Action = FetchLocationData Retry | FetchUVIndexData Retry | SetLocation Geolocation | SetUVIndex UVIndex | HandleError (Either GeolocationError UVIndexFetchError) -- TEMP FIXME
+data Action
+  = FetchLocationData Retry
+  | FetchUVIndexDataFromCache Retry
+  | FetchUVIndexData Retry
+  | SetLocation Geolocation
+  | SetUVIndex UVIndex
+  | HandleError (Either GeolocationError UVIndexFetchError) -- TEMP FIXME
+
+makeStorageKey :: Geolocation -> MisoString
+makeStorageKey (Geolocation lat long _) = ms $ show lat <> "," <> show long
 
 defaultModel :: Model
 defaultModel = NoLocationData Nothing -- TEMP FIXME
@@ -78,6 +87,20 @@ updateModel = \case
             then HandleError $ Left err
             else FetchLocationData $ pred retry
       )
+  FetchUVIndexDataFromCache retry ->
+    getLocation <$> get >>= \case
+      Left mErr -> do
+        io_ . consoleError . ms $ show mErr -- TEMP FIXME
+        issue $ FetchLocationData retry
+      Right (makeStorageKey -> k) ->
+        io $
+          getLocalStorage k >>= \case
+            Left "Not Found" -> pure $ FetchUVIndexData retry
+            Left err ->
+              FetchUVIndexData retry <$ do
+                consoleLog (ms err)
+                removeLocalStorage k -- NOTE: remove invalid cache
+            Right idx -> pure $ SetUVIndex idx
   FetchUVIndexData retry ->
     getLocation <$> get >>= \case
       Left mErr -> do
@@ -122,7 +145,9 @@ updateModel = \case
       Left mErr -> do
         io_ . consoleError . ms $ show mErr -- TEMP FIXME
         issue . FetchLocationData $ Retry 3
-      Right location -> put $ Model idx location -- TEMP FIXME: could location be outdated?
+      Right location -> do
+        io_ $ setLocalStorage (makeStorageKey location) idx
+        put $ Model idx location -- TEMP FIXME: could location be outdated?
   HandleError err -> io_ . consoleLog $ "Failed to fetch: " <> either (ms . show) _unUVIndexFetchError err
 
 -- undefined -- TEMP FIXME
