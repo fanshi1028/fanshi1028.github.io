@@ -58,6 +58,15 @@ data UVData = UVData
 instance FromJSON UVData where
   parseJSON = withObject "UVdata" $ \o -> UVData <$> o .: "time" <*> o .: "uvi"
 
+uvIndexURI :: Geolocation -> URI
+uvIndexURI (Geolocation lat long _) =
+  URI
+    "https:"
+    (Just $ nullURIAuth & uriRegNameLens .~ "currentuvindex.com")
+    "/api/v1/uvi"
+    ("?latitude=" <> show lat <> "&longitude=" <> show long)
+    ""
+
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
   FetchLocationData (Retry _) -> geolocation SetLocation (HandleError . Left)
@@ -66,20 +75,9 @@ updateModel = \case
       Left mErr -> do
         io_ . consoleError . ms $ show mErr -- TEMP FIXME
         issue $ FetchLocationData retry
-      Right (Geolocation lat long _) ->
+      Right geo@(Geolocation lat long _) ->
         getJSON
-          ( ms $
-              uriToString
-                id
-                ( URI
-                    "https:"
-                    (Just $ nullURIAuth & uriRegNameLens .~ "currentuvindex.com")
-                    "/api/v1/uvi"
-                    ("?latitude=" <> show lat <> "&longitude=" <> show long)
-                    ""
-                )
-                ""
-          )
+          (ms $ uriToString id (uvIndexURI geo) "")
           []
           ( \(Response _ _ _ (v :: Value)) ->
               case iparse
@@ -87,15 +85,15 @@ updateModel = \case
                     o .: "ok" >>= \case
                       False -> fail "expected ok to be true"
                       True -> do
-                        geo <- (,) <$> o .: "latitude" <*> o .: "longitude"
+                        geo' <- (,) <$> o .: "latitude" <*> o .: "longitude"
                         now' <- o .: "now"
                         forecast <- o .: "forecast"
                         history <- o .: "history"
-                        pure (geo, history, now' :| forecast)
+                        pure (geo', history, now' :| forecast)
                 )
                 v of
-                ISuccess (geo, _history :: [UVData], (UVData _ r) :| _) -- TEMP FIXME: ignore fastcast for now
-                  | geo == (lat, long) -> SetUVIndex r
+                ISuccess (geo', _history :: [UVData], (UVData _ r) :| _) -- TEMP FIXME: ignore fastcast for now
+                  | geo' == (lat, long) -> SetUVIndex r
                   | otherwise ->
                       if retry /= noRetry
                         then FetchUVIndexData $ pred retry
