@@ -80,19 +80,21 @@ updateModel = \case
           (ms $ uriToString id (uvIndexURI geo) "")
           []
           ( \(Response _ _ _ (v :: Value)) ->
+              -- NOTE: https://currentuvindex.com/api
               case iparse
                 ( withObject "response" $ \o ->
                     o .: "ok" >>= \case
-                      False -> fail "expected ok to be true"
+                      False -> Left <$> o .: "message"
                       True -> do
                         geo' <- (,) <$> o .: "latitude" <*> o .: "longitude"
                         now' <- o .: "now"
                         forecast <- o .: "forecast"
                         history <- o .: "history"
-                        pure (geo', history, now' :| forecast)
+                        pure $ Right (geo', history, now' :| forecast)
                 )
                 v of
-                ISuccess (geo', _history :: [UVData], (UVData _ r) :| _) -- TEMP FIXME: ignore fastcast for now
+                ISuccess (Left msg) -> HandleError . Right $ UVIndexFetchError msg
+                ISuccess (Right (geo', _history :: [UVData], (UVData _ r) :| _forecast)) -- TEMP FIXME: ignore history & forecast for now
                   | geo' == (lat, long) -> SetUVIndex r
                   | otherwise ->
                       if retry /= noRetry
