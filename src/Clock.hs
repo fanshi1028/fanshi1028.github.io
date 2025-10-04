@@ -7,10 +7,7 @@ import Control.Concurrent (threadDelay)
 import Control.Monad (forever)
 import Control.Monad.IO.Class (liftIO)
 import Data.Aeson hiding ((.=))
-import Data.Fixed
-import Data.Proxy
 import Data.Time
-import GHC.Float.RealFracMethods
 import GHC.Generics
 import Miso
 import Miso.Html
@@ -23,21 +20,21 @@ import Prelude hiding (error)
 
 data Model = Model
   { _active :: Bool,
-    _timeLeft :: DiffTime,
-    _lastTick :: Maybe Double
+    _timeLeft :: NominalDiffTime,
+    _lastTick :: Maybe UTCTime
   }
   deriving (Eq)
 
 active :: Lens Model Bool
 active = lens _active $ \record x -> record {_active = x}
 
-lastTick :: Lens Model (Maybe Double)
+lastTick :: Lens Model (Maybe UTCTime)
 lastTick = lens _lastTick $ \record x -> record {_lastTick = x}
 
-timeLeft :: Lens Model DiffTime
+timeLeft :: Lens Model NominalDiffTime
 timeLeft = lens _timeLeft $ \record x -> record {_timeLeft = x}
 
-data Action = Tick Double | Start | Stop | End
+data Action = Tick UTCTime | Start | Stop | End
 
 data StopWatchTickSub = StopWatchTickSub
 
@@ -58,16 +55,12 @@ updateModel = \case
       timeleft' ->
         lastTick <<.= Just t >>= \case
           Nothing -> pure ()
-          Just lt -> do
-            -- NOTE: https://developer.mozilla.org/en-US/docs/Web/API/Performance/now
-            let milliToPico = (* fromIntegral (resolution (Proxy @E12) `div` resolution (Proxy @E3)))
-                diff = picosecondsToDiffTime . truncateDoubleInteger . milliToPico $ t - lt
-            timeLeft .= max 0 (timeleft' - diff)
+          Just lt -> timeLeft .= max 0 (timeleft' - (t `diffUTCTime` lt))
   Start -> do
     active .= True
     startSub StopWatchTickSub $ \sink -> forever $ do
       liftIO $ threadDelay 100000
-      now >>= sink . Tick
+      liftIO getCurrentTime >>= sink . Tick
   Stop -> do
     active .= False
     lastTick .= Nothing
@@ -93,6 +86,6 @@ viewModel m =
         ]
     ]
 
-clockComponent :: Bool -> DiffTime -> Component parent Model Action
+clockComponent :: Bool -> NominalDiffTime -> Component parent Model Action
 clockComponent active' currentPomodoroTime =
   (component (Model active' currentPomodoroTime Nothing) updateModel viewModel) {initialAction = Just Clock.Start}
