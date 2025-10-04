@@ -42,7 +42,7 @@ stageToMisoString = \case
 
 data Pomodoro = MkPomodoro
   { _pomodoroStage :: PomodoroStage,
-    _pomodoroTime :: DiffTime
+    _pomodoroTime :: NominalDiffTime
   }
   deriving stock (Eq, Show, Ord)
 
@@ -111,10 +111,10 @@ pomodoroAllPastQueues = lens _pomodoroPastQueues $ \record x -> record {_pomodor
 pomodoroQueue :: Lens Model [(Pomodoro, PomodoroQueueIndex)]
 pomodoroQueue = lens _pomodoroQueue $ \record x -> record {_pomodoroQueue = x}
 
-naturalAsMinutesToDiffTime :: Natural -> DiffTime
-naturalAsMinutesToDiffTime n = secondsToDiffTime $ 60 * fromIntegral n
+naturalAsMinutesToDiffTime :: Natural -> NominalDiffTime
+naturalAsMinutesToDiffTime n = realToFrac . secondsToDiffTime $ 60 * fromIntegral n
 
-mkDefaultPomodoroQueue :: DiffTime -> DiffTime -> DiffTime -> [(Pomodoro, PomodoroQueueIndex)]
+mkDefaultPomodoroQueue :: NominalDiffTime -> NominalDiffTime -> NominalDiffTime -> [(Pomodoro, PomodoroQueueIndex)]
 mkDefaultPomodoroQueue pomodoro' shortBreak' longBreak' =
   Prelude.zip
     [ MkPomodoro Pomodoro pomodoro',
