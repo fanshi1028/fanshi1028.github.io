@@ -1,0 +1,33 @@
+name: Build and deploy
+
+on:
+  push:
+    branches: dev_env
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-dev_env:
+    runs-on: macos-15-intel
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v31
+
+      - uses: cachix/cachix-action@v16
+        with:
+          name: fanshi1028-personal
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+
+      - name: Build Dev Shell
+        shell: nix develop --command bash -e {0}
+        run: |
+          ghc-pkg list
+          haskell-language-server --version
+          ghc --version
+          cabal --version
