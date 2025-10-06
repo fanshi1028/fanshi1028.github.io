@@ -65,6 +65,10 @@
               version = "2.12.0.0";
               sha256 = "sha256-IYcegXWZh9b4GythKHqn8mcvJFwz8dYhzcI1+7dnI+g=";
             };
+            hls-test-utils = pkgs.haskell.lib.overrideCabal hsuper.hls-test-utils {
+              version = "2.12.0.0";
+              sha256 = "sha256-L5ZC7V1zG9Q6liLTHRhACkazUUCAY+dGcnFypFVdCnM=";
+            };
             haskell-language-server = pkgs.lib.pipe hsuper.haskell-language-server (
               with pkgs.haskell.lib.compose;
               [
