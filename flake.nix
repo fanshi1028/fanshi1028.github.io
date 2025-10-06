@@ -41,54 +41,63 @@
       overlays = [ (import "${miso}/nix/overlay.nix") ];
       mkHaskellPackages =
         pkgs:
-        pkgs.haskell.packages."ghc${ghcVersion}".override {
-          overrides = hself: hsuper: {
-            hie-bios = hself.callHackageDirect {
-              pkg = "hie-bios";
-              ver = "0.17.0";
-              sha256 = "sha256-P4gEuewldhE/xd57xxH7Ho5IB931kPlptDtWNIT3j4Y=";
-            } { };
-            hiedb = hself.callHackageDirect {
-              pkg = "hiedb";
-              ver = "0.7.0.0";
-              sha256 = "sha256-kdMmsvP3ofHZNzpCgdWO9kOZ1/hC7yRiFTy8K1X92kQ=";
-            } { };
-            ghcide = hself.callHackageDirect {
-              pkg = "ghcide";
-              ver = "2.12.0.0";
-              sha256 = "sha256-uN//E/oQnotrTGVZ5Y1h1aCxLthrYvURERaV4Pe7Dhw=";
-            } { };
-            hls-graph = hself.callHackageDirect {
-              pkg = "hls-graph";
-              ver = "2.12.0.0";
-              sha256 = "sha256-ELoMhRp57rcVEHEJRrcppP3Fc9ouwoMgbOuPUwSQ7sM=";
-            } { };
-            hls-plugin-api = hself.callHackageDirect {
-              pkg = "hls-plugin-api";
-              ver = "2.12.0.0";
-              sha256 = "sha256-pZpOxJI2WSgF0x+zW7nlCvrdeOu0EdAFhwOVS6k+JGA=";
-            } { };
-            hls-test-utils = hself.callHackageDirect {
-              pkg = "hls-test-utils";
-              ver = "2.12.0.0";
-              sha256 = "sha256-B9mlC364BTtUzjyzVeJVymmR0+cw9tB2/A+PezBl2nc=";
-            } { };
-            haskell-language-server = pkgs.lib.pipe hsuper.haskell-language-server (
-              with pkgs.haskell.lib.compose;
-              [
-                (overrideCabal {
-                  version = "2.12.0.0";
-                  sha256 = "sha256-F2mzrBp+wJcdD+xKh1XVJPf3JN/I76zk9ZD9q26dR9E=";
-                })
-                (appendBuildFlags [
-                  "-f-floskell"
-                  "-f-stylishhaskell"
-                  "-f-fourmolu"
-                  "-f-cabalfmt"
-                ])
-              ]
-            );
-          };
+        let
+          hsPkgs = pkgs.haskell.packages."ghc${ghcVersion}";
+        in
+        hsPkgs.override {
+          overrides =
+            hself: hsuper:
+            (hsPkgs.overides hself hsuper)
+            // {
+              hie-bios = hself.callHackageDirect {
+                pkg = "hie-bios";
+                ver = "0.17.0";
+                sha256 = "sha256-P4gEuewldhE/xd57xxH7Ho5IB931kPlptDtWNIT3j4Y=";
+              } { };
+              hiedb = hself.callHackageDirect {
+                pkg = "hiedb";
+                ver = "0.7.0.0";
+                sha256 = "sha256-kdMmsvP3ofHZNzpCgdWO9kOZ1/hC7yRiFTy8K1X92kQ=";
+              } { };
+              ghcide = hself.callHackageDirect {
+                pkg = "ghcide";
+                ver = "2.12.0.0";
+                sha256 = "sha256-uN//E/oQnotrTGVZ5Y1h1aCxLthrYvURERaV4Pe7Dhw=";
+              } { };
+              hls-graph = hself.callHackageDirect {
+                pkg = "hls-graph";
+                ver = "2.12.0.0";
+                sha256 = "sha256-ELoMhRp57rcVEHEJRrcppP3Fc9ouwoMgbOuPUwSQ7sM=";
+              } { };
+              hls-plugin-api = hself.callHackageDirect {
+                pkg = "hls-plugin-api";
+                ver = "2.12.0.0";
+                sha256 = "sha256-pZpOxJI2WSgF0x+zW7nlCvrdeOu0EdAFhwOVS6k+JGA=";
+              } { };
+              hls-test-utils = hself.callHackageDirect {
+                pkg = "hls-test-utils";
+                ver = "2.12.0.0";
+                sha256 = "sha256-B9mlC364BTtUzjyzVeJVymmR0+cw9tB2/A+PezBl2nc=";
+              } { };
+              haskell-language-server = pkgs.lib.pipe hsuper.haskell-language-server (
+                with pkgs.haskell.lib.compose;
+                [
+                  (overrideCabal {
+                    version = "2.12.0.0";
+                    sha256 = "sha256-F2mzrBp+wJcdD+xKh1XVJPf3JN/I76zk9ZD9q26dR9E=";
+                  })
+                  (appendBuildFlags [
+                    "-f-floskell"
+                    "-f-stylishhaskell"
+                    "-f-fourmolu"
+                    "-f-cabalfmt"
+                  ])
+                ]
+              );
+
+              # NOTE: https://github.com/NixOS/nixpkgs/blob/0a51bb996cfaf87d903da5391a8b898c06886bcd/pkgs/development/haskell-modules/configuration-common.nix#L258C11-L258C67
+              ghc-paths = hsuper.ghc-paths.override { Cabal = null; };
+            };
         };
       mkDefaultPackage =
         pkgs: args:
