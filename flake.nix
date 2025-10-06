@@ -110,7 +110,7 @@
                     "-f-cabalfmt"
                     # NOTE: https://haskell-language-server.readthedocs.io/en/latest/support/plugin-support.html
                     # NOTE: below not supported ghc 9.12 yet
-                    "-f-retire"
+                    "-f-retrie"
                     "-f-stan"
                     "-f-splice"
                   ])
