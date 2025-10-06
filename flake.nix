@@ -44,21 +44,38 @@
         let
           hsPkgs = pkgs.haskell.packages."ghc${ghcVersion}";
           hsOverlay = hself: hsuper: {
-            hie-bios = hself.callHackageDirect {
-              pkg = "hie-bios";
-              ver = "0.17.0";
-              sha256 = "sha256-P4gEuewldhE/xd57xxH7Ho5IB931kPlptDtWNIT3j4Y=";
-            } { };
-            hiedb = hself.callHackageDirect {
-              pkg = "hiedb";
-              ver = "0.7.0.0";
-              sha256 = "sha256-kdMmsvP3ofHZNzpCgdWO9kOZ1/hC7yRiFTy8K1X92kQ=";
-            } { };
-            ghcide = hself.callHackageDirect {
-              pkg = "ghcide";
-              ver = "2.12.0.0";
-              sha256 = "sha256-uN//E/oQnotrTGVZ5Y1h1aCxLthrYvURERaV4Pe7Dhw=";
-            } { };
+            # NOTE: https://github.com/NixOS/nixpkgs/blob/0a51bb996cfaf87d903da5391a8b898c06886bcd/pkgs/development/haskell-modules/configuration-nix.nix#L112
+            hie-bios = pkgs.haskell.lib.dontCheck (
+              hself.callHackageDirect {
+                pkg = "hie-bios";
+                ver = "0.17.0";
+                sha256 = "sha256-P4gEuewldhE/xd57xxH7Ho5IB931kPlptDtWNIT3j4Y=";
+              } { }
+            );
+            # NOTE: https://github.com/NixOS/nixpkgs/blob/0a51bb996cfaf87d903da5391a8b898c06886bcd/pkgs/development/haskell-modules/configuration-nix.nix#L105
+            hiedb =
+              pkgs.haskell.lib.overrideCabal
+                (hself.callHackageDirect {
+                  pkg = "hiedb";
+                  ver = "0.7.0.0";
+                  sha256 = "sha256-kdMmsvP3ofHZNzpCgdWO9kOZ1/hC7yRiFTy8K1X92kQ=";
+                } { })
+                (drv: {
+                  preCheck = ''
+                    export PATH=$PWD/dist/build/hiedb:$PATH
+                  '';
+                });
+            # NOTE: https://github.com/NixOS/nixpkgs/blob/0a51bb996cfaf87d903da5391a8b898c06886bcd/pkgs/development/haskell-modules/configuration-nix.nix#L100
+            ghcide =
+              pkgs.haskell.lib.overrideCabal
+                (hself.callHackageDirect {
+                  pkg = "ghcide";
+                  ver = "2.12.0.0";
+                  sha256 = "sha256-uN//E/oQnotrTGVZ5Y1h1aCxLthrYvURERaV4Pe7Dhw=";
+                } { })
+                (drv: {
+                  preCheck = ''export PATH="$PWD/dist/build/ghcide:$PATH"'';
+                });
             hls-graph = hself.callHackageDirect {
               pkg = "hls-graph";
               ver = "2.12.0.0";
