@@ -54,11 +54,7 @@
                 ver = "0.17.0";
                 sha256 = "sha256-P4gEuewldhE/xd57xxH7Ho5IB931kPlptDtWNIT3j4Y=";
               } { };
-              hiedb = hself.callHackageDirect {
-                pkg = "hiedb";
-                ver = "0.7.0.0";
-                sha256 = "sha256-kdMmsvP3ofHZNzpCgdWO9kOZ1/hC7yRiFTy8K1X92kQ=";
-              } { };
+              hiedb = hsuper.hiedb_0_7_0_0;
               ghcide = hself.callHackageDirect {
                 pkg = "ghcide";
                 ver = "2.12.0.0";
