@@ -44,6 +44,15 @@
               version = "2.12.0.0";
               sha256 = "sha256-FJkpM5tGK7qA0FzXLB8zdo4NiCNdpjtlvZzxSWNCClQ";
             };
+
+            hls-graph = pkgs.haskell.lib.overrideCabal hsuper.hls-graph {
+              version = "2.12.0.0";
+              sha256 = "sha256-tCDF2YPdjEfr7SWcCe/zcH2LwuMI+8FurHYG4v3ig/w=";
+            };
+            hls-plugin-api = pkgs.haskell.lib.overrideCabal hsuper.hls-plugin-api {
+              version = "2.12.0.0";
+              sha256 = "sha256-IYcegXWZh9b4GythKHqn8mcvJFwz8dYhzcI1+7dnI+g=";
+            };
             haskell-language-server = pkgs.lib.pipe hsuper.haskell-language-server (
               with pkgs.haskell.lib.compose;
               [
