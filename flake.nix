@@ -46,32 +46,32 @@
             hie-bios = hself.callHackageDirect {
               pkg = "hie-bios";
               ver = "0.17.0";
-              sha256 = "sha256-0acJbwE1V7yid7UY1fzzA4U91ouAqm0ftHb+ceRk8zU=";
+              sha256 = "sha256-P4gEuewldhE/xd57xxH7Ho5IB931kPlptDtWNIT3j4Y=";
             } { };
             hiedb = hself.callHackageDirect {
               pkg = "hiedb";
               ver = "0.7.0.0";
-              sha256 = "sha256-lpaJQsMP4OxEQix0gXlzpTdDJ8yspZwOeL89ysmXClY=";
+              sha256 = "sha256-kdMmsvP3ofHZNzpCgdWO9kOZ1/hC7yRiFTy8K1X92kQ=";
             } { };
             ghcide = hself.callHackageDirect {
               pkg = "ghcide";
               ver = "2.12.0.0";
-              sha256 = "sha256-FJkpM5tGK7qA0FzXLB8zdo4NiCNdpjtlvZzxSWNCClQ";
+              sha256 = "sha256-uN//E/oQnotrTGVZ5Y1h1aCxLthrYvURERaV4Pe7Dhw=";
             } { };
             hls-graph = hself.callHackageDirect {
               pkg = "hls-graph";
               ver = "2.12.0.0";
-              sha256 = "sha256-tCDF2YPdjEfr7SWcCe/zcH2LwuMI+8FurHYG4v3ig/w=";
+              sha256 = "sha256-ELoMhRp57rcVEHEJRrcppP3Fc9ouwoMgbOuPUwSQ7sM=";
             } { };
             hls-plugin-api = hself.callHackageDirect {
               pkg = "hls-plugin-api";
               ver = "2.12.0.0";
-              sha256 = "sha256-IYcegXWZh9b4GythKHqn8mcvJFwz8dYhzcI1+7dnI+g=";
+              sha256 = "sha256-pZpOxJI2WSgF0x+zW7nlCvrdeOu0EdAFhwOVS6k+JGA=";
             } { };
             hls-test-utils = hself.callHackageDirect {
               pkg = "hls-test-utils";
               ver = "2.12.0.0";
-              sha256 = "sha256-L5ZC7V1zG9Q6liLTHRhACkazUUCAY+dGcnFypFVdCnM=";
+              sha256 = "sha256-B9mlC364BTtUzjyzVeJVymmR0+cw9tB2/A+PezBl2nc=";
             } { };
             haskell-language-server = pkgs.lib.pipe hsuper.haskell-language-server (
               with pkgs.haskell.lib.compose;
