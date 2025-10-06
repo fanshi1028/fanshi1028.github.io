@@ -46,6 +46,7 @@
             ghcide = pkgs.haskell.lib.overrideCabal hsuper.ghcide {
               version = "2.12.0.0";
               sha256 = "sha256-FJkpM5tGK7qA0FzXLB8zdo4NiCNdpjtlvZzxSWNCClQ";
+              patches = [ ];
             };
 
             hls-graph = pkgs.haskell.lib.overrideCabal hsuper.hls-graph {
