@@ -36,9 +36,30 @@
       ];
       ghcVersion = "9122";
       overlays = [ (import "${miso}/nix/overlay.nix") ];
+      mkHaskellPackages =
+        pkgs:
+        pkgs.haskell.packages."ghc${ghcVersion}".override {
+          overrides = hself: hsuper: {
+            haskell-language-server = pkgs.lib.pipe hsuper.haskell-language-server (
+              with pkgs.haskell.lib.compose;
+              [
+                (overrideCabal {
+                  version = "2.12.0.0";
+                  sha256 = "sha256-F2mzrBp+wJcdD+xKh1XVJPf3JN/I76zk9ZD9q26dR9E=";
+                })
+                (appendBuildFlags [
+                  "-f-floskell"
+                  "-f-stylishhaskell"
+                  "-f-fourmolu"
+                  "-f-cabalfmt"
+                ])
+              ]
+            );
+          };
+        };
       mkDefaultPackage =
         pkgs: args:
-        pkgs.haskell.packages."ghc${ghcVersion}".developPackage (
+        (mkHaskellPackages pkgs).developPackage (
           {
             root = ./.;
           }
@@ -102,7 +123,7 @@
                   tailwindcss
                   ghciwatch
                   # (haskell-language-server.override { supportedGhcVersions = [ ghcVersion ]; })
-                  haskell.packages."ghc${ghcVersion}".haskell-language-server
+                  ((mkHaskellPackages pkgs).haskell-language-server)
                   # NOTE: tailwindcss_4 when trying to run
                   # dyld: Symbol not found: _ubrk_clone
                   #   Referenced from: /nix/store/2dxgd64421azhmwp63h9h3hzczgvh9w7-tailwindcss_4-4.1.7/bin/.tailwindcss-wrapped (which was built for Mac OS X 13.0)
