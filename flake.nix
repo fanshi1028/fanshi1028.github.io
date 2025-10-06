@@ -45,32 +45,32 @@
           overrides = hself: hsuper: {
             hie-bios = hsuper.callHackageDirect {
               pkg = "hie-bios";
-              version = "0.17.0";
+              ver = "0.17.0";
               sha256 = "sha256-0acJbwE1V7yid7UY1fzzA4U91ouAqm0ftHb+ceRk8zU=";
             } { };
             hiedb = hsuper.callHackageDirect {
               pkg = "hiedb";
-              version = "0.7.0.0";
+              ver = "0.7.0.0";
               sha256 = "sha256-lpaJQsMP4OxEQix0gXlzpTdDJ8yspZwOeL89ysmXClY=";
             } { };
             ghcide = hsuper.callHackageDirect {
               pkg = "ghcide";
-              version = "2.12.0.0";
+              ver = "2.12.0.0";
               sha256 = "sha256-FJkpM5tGK7qA0FzXLB8zdo4NiCNdpjtlvZzxSWNCClQ";
             } { };
             hls-graph = hsuper.callHackageDirect {
               pkg = "hls-graph";
-              version = "2.12.0.0";
+              ver = "2.12.0.0";
               sha256 = "sha256-tCDF2YPdjEfr7SWcCe/zcH2LwuMI+8FurHYG4v3ig/w=";
             } { };
             hls-plugin-api = hsuper.callHackageDirect {
               pkg = "hls-plugin-api";
-              version = "2.12.0.0";
+              ver = "2.12.0.0";
               sha256 = "sha256-IYcegXWZh9b4GythKHqn8mcvJFwz8dYhzcI1+7dnI+g=";
             } { };
             hls-test-utils = hsuper.callHackageDirect {
               pkg = "hls-test-utils";
-              version = "2.12.0.0";
+              ver = "2.12.0.0";
               sha256 = "sha256-L5ZC7V1zG9Q6liLTHRhACkazUUCAY+dGcnFypFVdCnM=";
             } { };
             haskell-language-server = pkgs.lib.pipe hsuper.haskell-language-server (
