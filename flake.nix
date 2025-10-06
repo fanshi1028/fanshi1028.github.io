@@ -43,6 +43,14 @@
         pkgs:
         pkgs.haskell.packages."ghc${ghcVersion}".override {
           overrides = hself: hsuper: {
+            hie-bios = pkgs.haskell.lib.overrideCabal hsuper.hie-bios {
+              version = "0.17.0";
+              sha256 = "sha256-0acJbwE1V7yid7UY1fzzA4U91ouAqm0ftHb+ceRk8zU=";
+            };
+            hiedb = pkgs.haskell.lib.overrideCabal hsuper.hiedb {
+              version = "0.7.0.0";
+              sha256 = "sha256-lpaJQsMP4OxEQix0gXlzpTdDJ8yspZwOeL89ysmXClY=";
+            };
             ghcide = pkgs.haskell.lib.overrideCabal hsuper.ghcide {
               version = "2.12.0.0";
               sha256 = "sha256-FJkpM5tGK7qA0FzXLB8zdo4NiCNdpjtlvZzxSWNCClQ";
