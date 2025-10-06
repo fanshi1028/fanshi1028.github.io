@@ -47,7 +47,7 @@
         hsPkgs.override {
           overrides =
             hself: hsuper:
-            (hsPkgs.overides hself hsuper)
+            (hsPkgs.overrides hself hsuper)
             // {
               hie-bios = hself.callHackageDirect {
                 pkg = "hie-bios";
