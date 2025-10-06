@@ -1,4 +1,7 @@
 {
+  nixConfig.extra-substituters = [
+    "https://fanshi1028-personal.cachix.org"
+  ];
 
   inputs = {
     miso = {
