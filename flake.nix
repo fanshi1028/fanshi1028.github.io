@@ -43,32 +43,32 @@
         pkgs:
         pkgs.haskell.packages."ghc${ghcVersion}".override {
           overrides = hself: hsuper: {
-            hie-bios = hsuper.callHackageDirect {
+            hie-bios = hself.callHackageDirect {
               pkg = "hie-bios";
               ver = "0.17.0";
               sha256 = "sha256-0acJbwE1V7yid7UY1fzzA4U91ouAqm0ftHb+ceRk8zU=";
             } { };
-            hiedb = hsuper.callHackageDirect {
+            hiedb = hself.callHackageDirect {
               pkg = "hiedb";
               ver = "0.7.0.0";
               sha256 = "sha256-lpaJQsMP4OxEQix0gXlzpTdDJ8yspZwOeL89ysmXClY=";
             } { };
-            ghcide = hsuper.callHackageDirect {
+            ghcide = hself.callHackageDirect {
               pkg = "ghcide";
               ver = "2.12.0.0";
               sha256 = "sha256-FJkpM5tGK7qA0FzXLB8zdo4NiCNdpjtlvZzxSWNCClQ";
             } { };
-            hls-graph = hsuper.callHackageDirect {
+            hls-graph = hself.callHackageDirect {
               pkg = "hls-graph";
               ver = "2.12.0.0";
               sha256 = "sha256-tCDF2YPdjEfr7SWcCe/zcH2LwuMI+8FurHYG4v3ig/w=";
             } { };
-            hls-plugin-api = hsuper.callHackageDirect {
+            hls-plugin-api = hself.callHackageDirect {
               pkg = "hls-plugin-api";
               ver = "2.12.0.0";
               sha256 = "sha256-IYcegXWZh9b4GythKHqn8mcvJFwz8dYhzcI1+7dnI+g=";
             } { };
-            hls-test-utils = hsuper.callHackageDirect {
+            hls-test-utils = hself.callHackageDirect {
               pkg = "hls-test-utils";
               ver = "2.12.0.0";
               sha256 = "sha256-L5ZC7V1zG9Q6liLTHRhACkazUUCAY+dGcnFypFVdCnM=";
