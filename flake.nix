@@ -43,32 +43,36 @@
         pkgs:
         pkgs.haskell.packages."ghc${ghcVersion}".override {
           overrides = hself: hsuper: {
-            hie-bios = pkgs.haskell.lib.overrideCabal hsuper.hie-bios {
+            hie-bios = hsuper.callHackageDirect {
+              pkg = "hie-bios";
               version = "0.17.0";
               sha256 = "sha256-0acJbwE1V7yid7UY1fzzA4U91ouAqm0ftHb+ceRk8zU=";
-            };
-            hiedb = pkgs.haskell.lib.overrideCabal hsuper.hiedb {
+            } { };
+            hiedb = hsuper.callHackageDirect {
+              pkg = "hiedb";
               version = "0.7.0.0";
               sha256 = "sha256-lpaJQsMP4OxEQix0gXlzpTdDJ8yspZwOeL89ysmXClY=";
-            };
-            ghcide = pkgs.haskell.lib.overrideCabal hsuper.ghcide {
+            } { };
+            ghcide = hsuper.callHackageDirect {
+              pkg = "ghcide";
               version = "2.12.0.0";
               sha256 = "sha256-FJkpM5tGK7qA0FzXLB8zdo4NiCNdpjtlvZzxSWNCClQ";
-              patches = [ ];
-            };
-
-            hls-graph = pkgs.haskell.lib.overrideCabal hsuper.hls-graph {
+            } { };
+            hls-graph = hsuper.callHackageDirect {
+              pkg = "hls-graph";
               version = "2.12.0.0";
               sha256 = "sha256-tCDF2YPdjEfr7SWcCe/zcH2LwuMI+8FurHYG4v3ig/w=";
-            };
-            hls-plugin-api = pkgs.haskell.lib.overrideCabal hsuper.hls-plugin-api {
+            } { };
+            hls-plugin-api = hsuper.callHackageDirect {
+              pkg = "hls-plugin-api";
               version = "2.12.0.0";
               sha256 = "sha256-IYcegXWZh9b4GythKHqn8mcvJFwz8dYhzcI1+7dnI+g=";
-            };
-            hls-test-utils = pkgs.haskell.lib.overrideCabal hsuper.hls-test-utils {
+            } { };
+            hls-test-utils = hsuper.callHackageDirect {
+              pkg = "hls-test-utils";
               version = "2.12.0.0";
               sha256 = "sha256-L5ZC7V1zG9Q6liLTHRhACkazUUCAY+dGcnFypFVdCnM=";
-            };
+            } { };
             haskell-language-server = pkgs.lib.pipe hsuper.haskell-language-server (
               with pkgs.haskell.lib.compose;
               [
