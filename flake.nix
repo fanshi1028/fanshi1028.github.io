@@ -83,8 +83,6 @@
             src = wasm-feature-detect;
             npmDepsHash = "sha256-ikjjc7/MZRswwNsmSJC5KqLrNKbCbKYLQ9v87t1azTc=";
           };
-
-
         }
       );
 
