@@ -104,8 +104,8 @@
                   (overrideCabal (drv: {
                     # NOTE: https://github.com/facebook/Haxl/issues/165
                     postPatch = ''
-                      substituteInPlace Setup.hs \
-                          --replace-fail Setup Main
+                      substituteInPlace Setup.hs --replace-fail Setup Main
+                      sed -i 's/time >= 1.4 \&\& < 1.13/time >= 1.4 \&\& < 1.15/g' haxl.cabal
                     '';
                   }))
                 ]
