@@ -104,7 +104,6 @@
                   cabal-install
                   tailwindcss
                   ghciwatch
-                  # (haskell-language-server.override { supportedGhcVersions = [ ghcVersion ]; })
                   haskell.packages."ghc${ghcVersion}".haskell-language-server
                   # NOTE: tailwindcss_4 when trying to run
                   # dyld: Symbol not found: _ubrk_clone
