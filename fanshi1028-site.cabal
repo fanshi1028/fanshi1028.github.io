@@ -1,52 +1,65 @@
-cabal-version:      3.0
-name:               fanshi1028-site
-version:            0.1.0.0
-synopsis:           fanshi1028's personal site
-description:        fanshi1028's personal site
-license:            MIT
-license-file:       LICENSE
-author:             fanshi1028
-maintainer:         fanshi1028
-copyright:          fanshi1028 @ 2025
-category:           Web
-build-type:         Simple
-extra-doc-files:    CHANGELOG.md
+cabal-version: 3.0
+name: fanshi1028-site
+version: 0.1.0.0
+synopsis: fanshi1028's personal site
+description: fanshi1028's personal site
+license: MIT
+license-file: LICENSE
+author: fanshi1028
+maintainer: fanshi1028
+copyright: fanshi1028 @ 2025
+category: Web
+build-type: Simple
+extra-doc-files: CHANGELOG.md
 
 -- NOTE: https://mercurytechnologies.github.io/ghciwatch/integration/multiple-components.html
 flag local-dev
-     description: enable local dev (for using ghciwatch)
-     default: False
-     manual: True
+  description: enable local dev (for using ghciwatch)
+  default: False
+  manual: True
 
 flag production
-     description: production
-     default: False
-     manual: True
+  description: production
+  default: False
+  manual: True
 
 common wasm
   if arch(wasm32)
     ghc-options:
-      -no-hs-main -optl-mexec-model=reactor "-optl-Wl,--export=hs_start"
+      -no-hs-main
+      -optl-mexec-model=reactor
+      "-optl-Wl,--export=hs_start"
+
     cpp-options:
       -DWASM
 
 common lib
   build-depends:
-      aeson, base < 5, containers, lens, miso, network-uri, text, time, validation-selective
+    aeson,
+    base <5,
+    containers,
+    lens,
+    miso,
+    network-uri,
+    text,
+    time,
+    validation-selective,
+
   hs-source-dirs:
-      src
+    src
+
   if flag(local-dev)
-      other-modules:
-        Clock
-        Dashboard
-        Home
-        Pomodoro
-        ProductRequirementDocument
-        ProductRequirementDocument.Dashboard
-        ProductRequirementDocument.Home
-        ProductRequirementDocument.Pomodoro
-        Route
-        Route.View
+    other-modules:
+      Clock
+      Dashboard
+      Home
+      Pomodoro
+      ProductRequirementDocument
+      ProductRequirementDocument.Dashboard
+      ProductRequirementDocument.Home
+      ProductRequirementDocument.Pomodoro
+      Route
+      Route.View
 
 library
   import: lib
@@ -61,10 +74,13 @@ library
     ProductRequirementDocument.Pomodoro
     Route
     Route.View
+
   default-language:
     GHC2024
+
   if flag(local-dev)
     buildable: False
+
   if arch(javascript)
     js-sources: temp-fix.js
   ghc-options: -Wall
@@ -72,27 +88,39 @@ library
 executable fanshi1028-site
   import:
     wasm
+
   if flag(local-dev)
     import: lib
   else
     build-depends:
       fanshi1028-site
+
   main-is:
     Main.hs
+
   build-depends:
-    base < 5, miso
+    base <5,
+    miso,
+
   if flag(production)
-      cpp-options:
-        -DPRODUCTION
+    cpp-options:
+      -DPRODUCTION
   else
-      build-depends:
-        file-embed
+    build-depends:
+      file-embed
+
   hs-source-dirs:
     app
+
   default-language:
     GHC2024
+
   ghc-options:
-    -funbox-strict-fields -O2 -ferror-spans -fspecialise-aggressively -Wall
+    -funbox-strict-fields
+    -O2
+    -ferror-spans
+    -fspecialise-aggressively
+    -Wall
 
 executable prerender
   if flag(local-dev)
@@ -100,12 +128,24 @@ executable prerender
   else
     build-depends:
       fanshi1028-site
+
   main-is:
     Main.hs
+
   build-depends:
-    base < 5, bytestring, file-io, filepath, miso, unliftio
+    base <5,
+    bytestring,
+    file-io,
+    filepath,
+    miso,
+    unliftio,
+
   hs-source-dirs:
     prerender
+
   default-language:
     GHC2024
-  ghc-options: -O0 -Wall
+
+  ghc-options:
+    -O0
+    -Wall
