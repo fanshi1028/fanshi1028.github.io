@@ -96,6 +96,9 @@
         in
         {
           default = mkDefaultPackage pkgs {
+            overrides = hself: hsuper: {
+              haxl = pkgs.haskell.lib.unmarkBroken haxl;
+            };
             modifier =
               drv:
               pkgs.haskell.lib.addBuildTools drv (
