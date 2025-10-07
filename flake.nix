@@ -44,6 +44,21 @@
         pkgs.haskell.packages."ghc${ghcVersion}".developPackage (
           {
             root = ./.;
+            overrides = hself: hsuper: {
+              haxl = pkgs.lib.pipe hsuper.haxl (
+                with pkgs.haskell.lib.compose;
+                [
+                  unmarkBroken
+                  (overrideCabal (drv: {
+                    # NOTE: https://github.com/facebook/Haxl/issues/165
+                    postPatch = ''
+                      substituteInPlace Setup.hs --replace-fail Setup Main
+                      sed -i 's/time >= 1.4 \&\& < 1.13/time >= 1.4 \&\& < 1.15/g' haxl.cabal
+                    '';
+                  }))
+                ]
+              );
+            };
           }
           // args
         );
@@ -96,21 +111,6 @@
         in
         {
           default = mkDefaultPackage pkgs {
-            overrides = hself: hsuper: {
-              haxl = pkgs.lib.pipe hsuper.haxl (
-                with pkgs.haskell.lib.compose;
-                [
-                  unmarkBroken
-                  (overrideCabal (drv: {
-                    # NOTE: https://github.com/facebook/Haxl/issues/165
-                    postPatch = ''
-                      substituteInPlace Setup.hs --replace-fail Setup Main
-                      sed -i 's/time >= 1.4 \&\& < 1.13/time >= 1.4 \&\& < 1.15/g' haxl.cabal
-                    '';
-                  }))
-                ]
-              );
-            };
             modifier =
               drv:
               pkgs.haskell.lib.addBuildTools drv (
