@@ -39,89 +39,78 @@
       ];
       ghcVersion = "9122";
       overlays = [ (import "${miso}/nix/overlay.nix") ];
-      mkHaskellPackages =
+      make-haskell-language-server-scope = pkgs: hself: hsuper: {
+        # NOTE: https://github.com/NixOS/nixpkgs/blob/0a51bb996cfaf87d903da5391a8b898c06886bcd/pkgs/development/haskell-modules/configuration-nix.nix#L112
+        hie-bios = pkgs.haskell.lib.dontCheck (
+          hself.callHackageDirect {
+            pkg = "hie-bios";
+            ver = "0.17.0";
+            sha256 = "sha256-P4gEuewldhE/xd57xxH7Ho5IB931kPlptDtWNIT3j4Y=";
+          } { }
+        );
+        # NOTE: https://github.com/NixOS/nixpkgs/blob/0a51bb996cfaf87d903da5391a8b898c06886bcd/pkgs/development/haskell-modules/configuration-nix.nix#L105
+        hiedb =
+          pkgs.haskell.lib.overrideCabal
+            (hself.callHackageDirect {
+              pkg = "hiedb";
+              ver = "0.7.0.0";
+              sha256 = "sha256-kdMmsvP3ofHZNzpCgdWO9kOZ1/hC7yRiFTy8K1X92kQ=";
+            } { })
+            (drv: {
+              preCheck = ''
+                export PATH=$PWD/dist/build/hiedb:$PATH
+              '';
+            });
+        # NOTE: https://github.com/NixOS/nixpkgs/blob/0a51bb996cfaf87d903da5391a8b898c06886bcd/pkgs/development/haskell-modules/configuration-nix.nix#L100
+        ghcide =
+          pkgs.haskell.lib.overrideCabal
+            (hself.callHackageDirect {
+              pkg = "ghcide";
+              ver = "2.12.0.0";
+              sha256 = "sha256-uN//E/oQnotrTGVZ5Y1h1aCxLthrYvURERaV4Pe7Dhw=";
+            } { })
+            (drv: {
+              preCheck = ''export PATH="$PWD/dist/build/ghcide:$PATH"'';
+            });
+        hls-graph = hself.callHackageDirect {
+          pkg = "hls-graph";
+          ver = "2.12.0.0";
+          sha256 = "sha256-ELoMhRp57rcVEHEJRrcppP3Fc9ouwoMgbOuPUwSQ7sM=";
+        } { };
+        hls-plugin-api = hself.callHackageDirect {
+          pkg = "hls-plugin-api";
+          ver = "2.12.0.0";
+          sha256 = "sha256-pZpOxJI2WSgF0x+zW7nlCvrdeOu0EdAFhwOVS6k+JGA=";
+        } { };
+        hls-test-utils = hself.callHackageDirect {
+          pkg = "hls-test-utils";
+          ver = "2.12.0.0";
+          sha256 = "sha256-B9mlC364BTtUzjyzVeJVymmR0+cw9tB2/A+PezBl2nc=";
+        } { };
+        # NOTE: https://github.com/NixOS/nixpkgs/blob/09c221b2f0726da85b124efb60a1d123971dfa08/pkgs/development/haskell-modules/make-package-set.nix#L266
+
+      };
+      make-haskell-language-server =
         pkgs:
         let
-          hsPkgs = pkgs.haskell.packages."ghc${ghcVersion}";
-          hsOverlay = hself: hsuper: {
-            # NOTE: https://github.com/NixOS/nixpkgs/blob/0a51bb996cfaf87d903da5391a8b898c06886bcd/pkgs/development/haskell-modules/configuration-nix.nix#L112
-            hie-bios = pkgs.haskell.lib.dontCheck (
-              hself.callHackageDirect {
-                pkg = "hie-bios";
-                ver = "0.17.0";
-                sha256 = "sha256-P4gEuewldhE/xd57xxH7Ho5IB931kPlptDtWNIT3j4Y=";
-              } { }
-            );
-            # NOTE: https://github.com/NixOS/nixpkgs/blob/0a51bb996cfaf87d903da5391a8b898c06886bcd/pkgs/development/haskell-modules/configuration-nix.nix#L105
-            hiedb =
-              pkgs.haskell.lib.overrideCabal
-                (hself.callHackageDirect {
-                  pkg = "hiedb";
-                  ver = "0.7.0.0";
-                  sha256 = "sha256-kdMmsvP3ofHZNzpCgdWO9kOZ1/hC7yRiFTy8K1X92kQ=";
-                } { })
-                (drv: {
-                  preCheck = ''
-                    export PATH=$PWD/dist/build/hiedb:$PATH
-                  '';
-                });
-            # NOTE: https://github.com/NixOS/nixpkgs/blob/0a51bb996cfaf87d903da5391a8b898c06886bcd/pkgs/development/haskell-modules/configuration-nix.nix#L100
-            ghcide =
-              pkgs.haskell.lib.overrideCabal
-                (hself.callHackageDirect {
-                  pkg = "ghcide";
-                  ver = "2.12.0.0";
-                  sha256 = "sha256-uN//E/oQnotrTGVZ5Y1h1aCxLthrYvURERaV4Pe7Dhw=";
-                } { })
-                (drv: {
-                  preCheck = ''export PATH="$PWD/dist/build/ghcide:$PATH"'';
-                });
-            hls-graph = hself.callHackageDirect {
-              pkg = "hls-graph";
-              ver = "2.12.0.0";
-              sha256 = "sha256-ELoMhRp57rcVEHEJRrcppP3Fc9ouwoMgbOuPUwSQ7sM=";
-            } { };
-            hls-plugin-api = hself.callHackageDirect {
-              pkg = "hls-plugin-api";
-              ver = "2.12.0.0";
-              sha256 = "sha256-pZpOxJI2WSgF0x+zW7nlCvrdeOu0EdAFhwOVS6k+JGA=";
-            } { };
-            hls-test-utils = hself.callHackageDirect {
-              pkg = "hls-test-utils";
-              ver = "2.12.0.0";
-              sha256 = "sha256-B9mlC364BTtUzjyzVeJVymmR0+cw9tB2/A+PezBl2nc=";
-            } { };
-          };
+          pkg = "haskell-language-server";
+          ver = "2.12.0.0";
+          pkgver = "${pkg}-${ver}";
         in
-        hsPkgs.override {
-          overrides = hself: hsuper: {
-            haskell-language-server =
-              (pkgs.lib.pipe hsuper.haskell-language-server (
-                with pkgs.haskell.lib.compose;
-                [
-                  (overrideCabal {
-                    version = "2.12.0.0";
-                    sha256 = "sha256-F2mzrBp+wJcdD+xKh1XVJPf3JN/I76zk9ZD9q26dR9E=";
-                  })
-                  (appendBuildFlags [
-                    "-f-floskell"
-                    "-f-stylishhaskell"
-                    "-f-fourmolu"
-                    "-f-cabalfmt"
-                    # NOTE: https://haskell-language-server.readthedocs.io/en/latest/support/plugin-support.html
-                    # NOTE: below not supported ghc 9.12 yet
-                    "-f-retrie"
-                    "-f-stan"
-                    "-f-splice"
-                  ])
-                ]
-              )).overrideScope
-                hsOverlay;
-          };
-        };
+        (pkgs.haskell.packages."ghc${ghcVersion}".callCabal2nixWithOptions pkg
+          (pkgs.fetchzip {
+            url = "mirror://hackage/${pkgver}/${pkgver}.tar.gz";
+            sha256 = "sha256-79uoFnat1Z8Q4gIyt0Poz5Lq2PruG0iRIFhItpu5PYc=";
+          })
+          # NOTE: https://haskell-language-server.readthedocs.io/en/latest/support/plugin-support.html
+          # NOTE: retrie stan splice not supported for 9.12 yet
+          "-f-floskell -f-stylishhaskell -f-fourmolu -f-cabalfmt -f-retrie -f-stan -f-splice"
+          { }
+        ).overrideScope
+          (make-haskell-language-server-scope pkgs);
       mkDefaultPackage =
         pkgs: args:
-        (mkHaskellPackages pkgs).developPackage (
+        pkgs.haskell.packages."ghc${ghcVersion}".developPackage (
           {
             root = ./.;
           }
@@ -185,7 +174,7 @@
                   tailwindcss
                   ghciwatch
                   # (haskell-language-server.override { supportedGhcVersions = [ ghcVersion ]; })
-                  ((mkHaskellPackages pkgs).haskell-language-server)
+                  (make-haskell-language-server pkgs)
                   # NOTE: tailwindcss_4 when trying to run
                   # dyld: Symbol not found: _ubrk_clone
                   #   Referenced from: /nix/store/2dxgd64421azhmwp63h9h3hzczgvh9w7-tailwindcss_4-4.1.7/bin/.tailwindcss-wrapped (which was built for Mac OS X 13.0)
