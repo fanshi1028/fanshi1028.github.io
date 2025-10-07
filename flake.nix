@@ -97,7 +97,19 @@
         {
           default = mkDefaultPackage pkgs {
             overrides = hself: hsuper: {
-              haxl = pkgs.haskell.lib.unmarkBroken hsuper.haxl;
+              haxl = pkgs.lib.pipe hsuper.haxl (
+                with pkgs.haskell.lib.compose;
+                [
+                  unmarkBroken
+                  (overrideCabal (drv: {
+                    # NOTE: https://github.com/facebook/Haxl/pull/164
+                    postPatch = ''
+                      substituteInPlace Setup.hs \
+                          --replace-fail Setup Main
+                    '';
+                  }))
+                ]
+              );
             };
             modifier =
               drv:
