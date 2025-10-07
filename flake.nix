@@ -97,7 +97,7 @@
         {
           default = mkDefaultPackage pkgs {
             overrides = hself: hsuper: {
-              haxl = pkgs.haskell.lib.unmarkBroken haxl;
+              haxl = pkgs.haskell.lib.unmarkBroken hsuper.haxl;
             };
             modifier =
               drv:
