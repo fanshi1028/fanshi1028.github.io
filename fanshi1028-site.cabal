@@ -38,6 +38,7 @@ common lib
     aeson,
     base <5,
     containers,
+    haxl,
     lens,
     miso,
     network-uri,
