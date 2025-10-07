@@ -102,7 +102,7 @@
                 [
                   unmarkBroken
                   (overrideCabal (drv: {
-                    # NOTE: https://github.com/facebook/Haxl/pull/164
+                    # NOTE: https://github.com/facebook/Haxl/issues/165
                     postPatch = ''
                       substituteInPlace Setup.hs \
                           --replace-fail Setup Main
