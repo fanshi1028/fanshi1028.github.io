@@ -104,7 +104,6 @@
                   cabal-install
                   tailwindcss
                   ghciwatch
-                  haskell.packages."ghc${ghcVersion}".haskell-language-server
                   # NOTE: tailwindcss_4 when trying to run
                   # dyld: Symbol not found: _ubrk_clone
                   #   Referenced from: /nix/store/2dxgd64421azhmwp63h9h3hzczgvh9w7-tailwindcss_4-4.1.7/bin/.tailwindcss-wrapped (which was built for Mac OS X 13.0)
@@ -119,6 +118,10 @@
                   uglify-js
                   http-server
                 ]
+                ++ (with haskell.packages."ghc${ghcVersion}"; [
+                  haskell-language-server
+                  cabal-gild_1_6_0_0
+                ])
               );
             returnShellEnv = true;
           };
