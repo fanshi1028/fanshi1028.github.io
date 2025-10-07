@@ -49,6 +49,7 @@ common lib
     src
 
   if flag(local-dev)
+    -- cabal-gild: discover src
     other-modules:
       Clock
       Dashboard
@@ -63,6 +64,7 @@ common lib
 
 library
   import: lib
+  -- cabal-gild: discover src
   exposed-modules:
     Clock
     Dashboard
