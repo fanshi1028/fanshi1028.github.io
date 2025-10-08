@@ -36,9 +36,11 @@ common wasm
 common lib
   build-depends:
     aeson,
+    async,
     base <5,
     containers,
     data-interval,
+    hashable,
     haxl,
     jsaddle,
     lens,
@@ -46,6 +48,7 @@ common lib
     network-uri,
     text,
     time,
+    unliftio,
     validation-selective,
 
   hs-source-dirs:
@@ -56,7 +59,7 @@ common lib
     other-modules:
       Clock
       Dashboard
-      Dashboard.UVIndex
+      Dashboard.DataSource.HongKongObservatoryWeatherAPI
       Home
       Pomodoro
       ProductRequirementDocument
@@ -72,7 +75,7 @@ library
   exposed-modules:
     Clock
     Dashboard
-    Dashboard.UVIndex
+    Dashboard.DataSource.HongKongObservatoryWeatherAPI
     Home
     Pomodoro
     ProductRequirementDocument
