@@ -3,24 +3,18 @@
 
 module Dashboard (dashboardComponent) where
 
-import Control.Lens.Setter
+import Control.Monad.IO.Class
+import Dashboard.UVIndex
 import Data.Aeson
 import Data.Aeson.Types
-import Data.Function
-import Data.List.NonEmpty
-import Data.Time
+import Data.List.NonEmpty hiding (unzip)
+import Data.Text hiding (show)
+import Haxl.Core
 import Miso hiding (URI)
 import Miso.Html.Element
 import Miso.Navigator
 import Network.URI
-import Network.URI.Lens
 import Numeric.Natural
-
-newtype UVIndexFetchError = UVIndexFetchError {_unUVIndexFetchError :: MisoString} deriving (Eq)
-
-newtype UVIndex = UVIndex Double
-  deriving stock (Eq, Show)
-  deriving newtype (FromJSON, ToJSON)
 
 data Model
   = NoLocationData (Maybe GeolocationError)
@@ -31,15 +25,6 @@ data Model
       }
   deriving (Eq) -- TEMP FIXME
 
--- uvIndex :: Lens Model Int
--- uvIndex = lens _uvIndex $ \record x -> record {_uvIndex = x}
-
--- TEMP FIXME: refine retry mechanism
-newtype Retry = Retry Natural deriving newtype (Enum, Eq)
-
-noRetry :: Retry
-noRetry = Retry 0
-
 data Action
   = FetchLocationData Retry
   | FetchUVIndexDataFromCache Retry
@@ -47,6 +32,13 @@ data Action
   | SetLocation Geolocation
   | SetUVIndex UVIndex
   | HandleError (Either GeolocationError UVIndexFetchError) -- TEMP FIXME
+
+
+-- TEMP FIXME: refine retry mechanism
+newtype Retry = Retry Natural deriving newtype (Enum, Eq)
+
+noRetry :: Retry
+noRetry = Retry 0
 
 makeStorageKey :: Geolocation -> MisoString
 makeStorageKey (Geolocation lat long _) = ms $ show lat <> "," <> show long
@@ -59,23 +51,6 @@ getLocation m = case m of
   NoLocationData mErr -> Left mErr
   NoUVIndexData _ location -> Right location
   Model _ location -> Right location
-
-data UVData = UVData
-  { _time :: UTCTime,
-    _uvi :: UVIndex
-  }
-
-instance FromJSON UVData where
-  parseJSON = withObject "UVdata" $ \o -> UVData <$> o .: "time" <*> o .: "uvi"
-
-uvIndexURI :: Geolocation -> URI
-uvIndexURI (Geolocation lat long _) =
-  URI
-    "https:"
-    (Just $ nullURIAuth & uriRegNameLens .~ "currentuvindex.com")
-    "/api/v1/uvi"
-    ("?latitude=" <> show lat <> "&longitude=" <> show long)
-    ""
 
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
@@ -106,7 +81,13 @@ updateModel = \case
       Left mErr -> do
         io_ . consoleError . ms $ show mErr -- TEMP FIXME
         issue $ FetchLocationData retry
-      Right geo@(Geolocation lat long _) ->
+      Right geo@(Geolocation lat long _) -> do
+        _ <- io_ $ liftIO $ do
+          env' <- initEnvWithData @[Text] stateEmpty () undefined -- TEMP FIXME
+          runHaxl env' $ do
+            _ <- dataFetch $ GetUVIndex undefined -- TEMP FIXME
+            pure ()
+        -- TEMP FIXME
         getJSON
           (ms $ uriToString id (uvIndexURI geo) "")
           []
