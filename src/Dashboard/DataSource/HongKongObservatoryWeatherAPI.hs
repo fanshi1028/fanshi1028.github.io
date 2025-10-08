@@ -1,0 +1,350 @@
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE OverloadedRecordDot #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE NoFieldSelectors #-}
+
+module Dashboard.DataSource.HongKongObservatoryWeatherAPI where
+
+import Control.Concurrent
+import Control.Concurrent.Async
+import Control.Exception (throw)
+import Control.Lens.Setter hiding ((.=))
+import Control.Monad.IO.Class
+import Data.Aeson
+import Data.Aeson.KeyMap qualified as AKM
+import Data.Aeson.Types
+import Data.Function
+import Data.Functor
+import Data.Hashable
+import Data.Interval
+import Data.Text hiding (show)
+import Data.Text qualified as T
+import Data.Time
+import Data.Void
+import GHC.Generics
+import Haxl.Core hiding (throw)
+import Language.Javascript.JSaddle hiding (Object, Success)
+import Miso hiding (URI, defaultOptions, on)
+import Miso.FFI qualified as FFI
+import Network.URI
+import Network.URI.Lens
+import Numeric.Natural
+import UnliftIO.Exception
+
+{-# WARNING fromJSValViaValue "partial, throw error when JSON assumption is wrong" #-}
+fromJSValViaValue :: (FromJSON a) => JSVal -> JSM (Maybe a)
+fromJSValViaValue a =
+  fromJSVal a <&> \mv ->
+    ifromJSON <$> mv >>= \case
+      ISuccess r -> Just r
+      IError path' err ->
+        -- HACK
+        throw . JSONError . T.pack $ formatPath path' <> ": " <> err
+
+data LocalWeatherForecast = LocalWeatherForecast
+  { generalSituation :: StrictText, -- General Situation
+    tcInfo :: StrictText, -- Tropical Cyclone Information
+    fireDangerWarning :: StrictText, -- Fire Danger Warning Message
+    forecastPeriod :: StrictText, -- Forecast Period
+    forecastDesc :: StrictText, -- Forecast Description
+    outlook :: StrictText, -- Outlook
+    updateTime :: UTCTime -- Update Time YYYY-MM-DD'T'hh:mm:ssZ Example: 2020-09-01T08:19:00+08:00
+  }
+  deriving stock (Show, Generic)
+  deriving anyclass (FromJSON)
+
+instance FromJSVal LocalWeatherForecast where
+  fromJSVal = fromJSValViaValue
+
+data Depth = Depth
+  { unit :: StrictText, -- depth unit
+    value :: StrictText -- depth value
+  }
+  deriving stock (Show, Generic)
+  deriving anyclass (FromJSON)
+
+data SoilTemp = SoilTemp
+  { place :: StrictText, -- location
+    value :: StrictText, -- value
+    unit :: StrictText, -- unit
+    recordTime :: UTCTime, -- record time YYYY-MMDD'T'hh:mm:ssZ Example: 2020-09- 01T08:19:00+08:00
+    depth :: Depth
+  }
+  deriving stock (Show, Generic)
+  deriving anyclass (FromJSON)
+
+data SeaTemp = SeaTemp
+  { place :: StrictText, -- location
+    value :: StrictText, -- value
+    unit :: StrictText, -- unit
+    recordTime :: UTCTime -- record time YYYY-MMDD'T'hh:mm:ssZ Example: 2020-09- 01T08:19:00+08:00
+  }
+  deriving stock (Show, Generic)
+  deriving anyclass (FromJSON)
+
+data NineDayWeatherForecast = NineDayWeatherForecast
+  { weatherForecast :: [StrictText], -- Weather Forecast
+    forecastDate :: Day, -- Forecast Date YYYYMMDD
+    forecastWeather :: StrictText, -- Forecast Weather
+    forecastMaxtemp :: StrictText, -- Forecast Maximum Temperature
+    forecastMintemp :: StrictText, -- Forecast Minimum Temperature
+    week :: StrictText, -- Week
+    forecastWind :: StrictText, -- Forecast Wind
+    forecastMaxrh :: StrictText, -- Forecast Maximum Relative Humidity
+    forecastMinrh :: StrictText, -- Forecast Minimum Relative Humidity
+    forecastIcon :: StrictText, -- Forecast Weather Icon Weather icon list: https://www.hko.gov.hk/textonly/v2 /explain/wxicon_e.htm
+    ------------------------------------------------------------------------------------------------
+    -- Probability of Significant Rain Response value:                                            --
+    --    High                                                                                    --
+    --    Medium                                                                                  --
+    --    High Medium                                                                             --
+    --    Medium Low Low                                                                          --
+    -- Response value description: https://www.hko.gov.hk/en/wxinfo/currwx/fnd.htm?tablenote=true --
+    ------------------------------------------------------------------------------------------------
+    psr :: StrictText,
+    soilTemp :: SoilTemp, -- Soil Temperature
+    seaTemp :: SeaTemp -- Sea Surface Temperature
+  }
+  deriving stock (Show, Generic)
+  deriving anyclass (FromJSON)
+
+instance FromJSVal NineDayWeatherForecast where
+  fromJSVal = fromJSValViaValue
+
+data DataWithInterval a = DataWithInterval
+  { --  Start Time YYYY-MM-DD'T'hh:mm:ssZ Example: 2020-09-01T08:19:00+08:00 endTime End Time
+    --  End Time YYYY-MM-DD'T'hh:mm:ssZ Example: 2020-09-01T08:19:00+08:00 endTime End Time
+    interval :: Interval UTCTime,
+    _data :: [a]
+  }
+  deriving stock (Show)
+
+instance (FromJSON a) => FromJSON (DataWithInterval a) where
+  parseJSON = withObject "data with interval" $ \o -> do
+    t1 <- Finite <$> o .: "startTime"
+    t2 <- Finite <$> o .: "endTime"
+    DataWithInterval (t1 <=..<= t2) <$> o .: "data"
+
+data Lightning = Lightning
+  { place :: StrictText, -- location
+    occur :: Bool
+  }
+  deriving stock (Show, Generic)
+  deriving anyclass (FromJSON)
+
+data Rainfall = Rainfall
+  { interval :: Interval Float, -- Minimum & Maximum rainfall record
+    unit :: StrictText, -- unit
+    place :: StrictText, -- location
+    main :: Bool -- Maintenance flag (TRUE/FALSE)
+  }
+  deriving stock (Show)
+
+instance FromJSON Rainfall where
+  parseJSON = withObject "Rainfall" $ \o -> do
+    min' <- (fmap Finite <$> o .:? "min") .!= NegInf
+    max' <- (fmap Finite <$> o .:? "max") .!= PosInf
+    Rainfall (min' <=..<= max')
+      <$> o .: "unit"
+      <*> o .: "place"
+      <*> ( o .: "main" >>= \case
+              "TRUE" -> pure True
+              "FALSE" -> pure False
+              txt -> fail $ "expected String: TRUE | FALSE but got " <> T.unpack txt
+          )
+
+data UVIndexData = UVIndexData
+  { place :: StrictText, -- location
+    value :: Float, -- value
+    desc :: StrictText, -- description
+    message :: Maybe StrictText -- message
+  }
+  deriving stock (Show, Eq, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+
+data UVIndex = UVIndex
+  { _data :: [UVIndexData],
+    recordDesc :: StrictText -- record description
+  }
+  deriving stock (Show, Eq)
+
+-- NOTE FIXME round trip test
+instance FromJSON UVIndex where
+  parseJSON = withObject "UVIndex" $ \o ->
+    UVIndex <$> o .: "data" <*> o .: "recordDesc"
+
+instance ToJSON UVIndex where
+  toEncoding uvi = pairs $ "data" .= uvi._data <> "recordDesc" .= uvi.recordDesc
+  toJSON uvi = object ["data" .= uvi._data, "recordDesc" .= uvi.recordDesc]
+
+data DataWithRecordTime a = DataWithRecordTime
+  { recordTime :: UTCTime, -- record time YYYY-MMDD'T'hh:mm:ssZ Example: 2020-09- 01T08:19:00+08:00
+    _data :: [a]
+  }
+  deriving stock (Show)
+
+instance (FromJSON a) => FromJSON (DataWithRecordTime a) where
+  parseJSON = withObject "data with record time" $ \o -> do
+    DataWithRecordTime <$> o .: "recordTime" <*> o .: "data"
+
+data Temperature = Temperature
+  { place :: StrictText, -- location
+    value :: Float, -- value
+    unit :: StrictText -- unit
+  }
+  deriving stock (Show, Generic)
+  deriving anyclass (FromJSON)
+
+data Humidity = Humidity
+  { place :: StrictText, -- location
+    value :: Float, -- value
+    unit :: StrictText -- unit
+  }
+  deriving stock (Show, Generic)
+  deriving anyclass (FromJSON)
+
+data CurrentWeatherReport = CurrentWeatherReport
+  { lightning :: Maybe (DataWithInterval Lightning),
+    rainfall :: DataWithInterval Rainfall,
+    icon :: [Natural], -- Icon Return a List Weather icon list: https://www.hko.gov.hk/textonly/v2/expla in/wxicon_e.htm
+    iconUpdateTime :: UTCTime, -- Icon Update Time YYYY-MM-DD'T'hh:mm:ssZ Example: 2020-09-01T08:19:00+08:00
+    uvindex :: UVIndex,
+    updateTime :: UTCTime, -- Update Time YYYY-MM-DD'T'hh:mm:ssZ Example: 2020-09-01T08:19:00+08:00
+    warningMessage :: [StrictText], -- Warning Message Return a List. If no data for warning message, empty string will be returned.
+    rainstormReminder :: Maybe StrictText, -- Rainstorm Reminder
+    specialWxTips :: [StrictText], -- Special Weather Tips
+    tcmessage :: StrictText, -- Message of tropical cyclone position Return a List. NOTE: got text, are you kidding me?
+    mintempFrom00To09 :: Maybe StrictText, -- Minimum temperature from midnight to 9 am
+    rainfallFrom00To12 :: Maybe StrictText, -- Accumulated rainfall at HKO from midnight to noon
+    rainfallLastMonth :: Maybe StrictText, -- Rainfall in last month
+    rainfallJanuaryToLastMonth :: Maybe StrictText, --  Accumulated rainfall from January to last month
+    temperature :: DataWithRecordTime Temperature, -- Temperature
+    humidity :: DataWithRecordTime Humidity -- Humidity
+  }
+  deriving stock (Show, Generic)
+
+instance FromJSON CurrentWeatherReport where
+  parseJSON = withObject "CurrentWeatherReport" $ \o -> do
+    f1 <-
+      o .:? "warningMessage" >>= \case
+        Nothing -> pure id
+        Just "" -> pure $ AKM.insert "warningMessage" emptyArray
+        Just txt -> fail $ "expected empty string but got" <> T.unpack txt
+    f2 <-
+      o .:? "specialWxTips" <&> \case
+        Nothing -> AKM.insert "specialWxTips" emptyArray
+        Just (_ :: [StrictText]) -> id
+    genericParseJSON defaultOptions . Object $ f1 $ f2 o
+
+instance FromJSVal CurrentWeatherReport where
+  fromJSVal = fromJSValViaValue
+
+-- NOTE: Weather Information API
+data HKOWeatherInformationReq a where
+  GetLocalWeaterForecast :: HKOWeatherInformationReq LocalWeatherForecast
+  Get9DayWeatherForecast :: HKOWeatherInformationReq NineDayWeatherForecast
+  GetCurrentWeatherReport :: HKOWeatherInformationReq CurrentWeatherReport
+  GetWeatherWarningSummary :: HKOWeatherInformationReq Value
+  GetWeatherWarningInfo :: HKOWeatherInformationReq Value
+  GetSpecialWeatherTips :: HKOWeatherInformationReq Value
+
+deriving instance Eq (HKOWeatherInformationReq a)
+
+instance Hashable (HKOWeatherInformationReq a) where
+  hashWithSalt s req = hashWithSalt @Int s $ case req of
+    GetLocalWeaterForecast -> 0
+    Get9DayWeatherForecast -> 1
+    GetCurrentWeatherReport -> 2
+    GetWeatherWarningSummary -> 3
+    GetWeatherWarningInfo -> 4
+    GetSpecialWeatherTips -> 5
+
+deriving instance Show (HKOWeatherInformationReq a)
+
+instance ShowP HKOWeatherInformationReq where showp = show
+
+instance StateKey HKOWeatherInformationReq where
+  data State HKOWeatherInformationReq = HKOWeatherInformationReqState
+
+instance DataSourceName HKOWeatherInformationReq where
+  dataSourceName _ = "HKO Weather Information API"
+
+hkoWeatherInformationReqToURI :: HKOWeatherInformationReq a -> URI
+hkoWeatherInformationReqToURI req =
+  URI
+    "https:"
+    (Just $ nullURIAuth & uriRegNameLens .~ "data.weather.gov.hk")
+    "/weatherAPI/opendata/weather.php"
+    ( "?dataType=" <> case req of
+        GetLocalWeaterForecast -> "flw"
+        Get9DayWeatherForecast -> "fnd"
+        GetCurrentWeatherReport -> "rhrread"
+        GetWeatherWarningSummary -> "warnsum"
+        GetWeatherWarningInfo -> "warninginfo"
+        GetSpecialWeatherTips -> "set"
+    )
+    ""
+
+instance DataSource JSContextRef HKOWeatherInformationReq where
+  fetch reqState flags javaScriptContext =
+    backgroundFetchPar
+      ( -- NOTE: sad boilerplate
+        \req -> case req of
+          GetLocalWeaterForecast -> handler req
+          Get9DayWeatherForecast -> handler req
+          GetCurrentWeatherReport -> handler req
+          GetWeatherWarningSummary -> handler req
+          GetWeatherWarningInfo -> handler req
+          GetSpecialWeatherTips -> handler req
+      )
+      reqState
+      flags
+      javaScriptContext
+    where
+      handler :: (forall a. (FromJSVal a) => HKOWeatherInformationReq a -> IO (Either SomeException a))
+      handler req = do
+        successMVar <- newEmptyMVar
+        failMVar <- newEmptyMVar
+        let url = ms $ uriToString id (hkoWeatherInformationReqToURI req) ""
+            successCB = \(Response _ _ _ v) -> liftIO $ putMVar successMVar v
+            failCB =
+              liftIO . putMVar failMVar . toException . \case
+                Response Nothing _ _ _ -> FetchError "CORS or Network Error"
+                Response (Just code) headers mErrMsg (v :: Value)
+                  | code < 300 -> do
+                      FetchError $ "TEMP FIXME ?????: " <> intercalate ", " [T.show code, T.show headers, T.show mErrMsg, T.show v]
+                  | code < 400 -> FetchError $ "TEMP FIXME Redirect: " <> intercalate ", " [T.show code, T.show headers, T.show mErrMsg, T.show v]
+                  | code < 500 -> FetchError $ "TEMP FIXME Client Error: " <> intercalate ", " [T.show code, T.show headers, T.show mErrMsg, T.show v]
+                  | otherwise -> FetchError $ "Server Error: " <> intercalate ", " [T.show code, T.show headers, T.show mErrMsg, T.show v]
+        runJSM (FFI.fetch url "GET" Nothing [] successCB failCB JSON) javaScriptContext
+        race (readMVar failMVar) (readMVar successMVar)
+
+-- NOTE: Earthquake Information API
+data HKOEarthquakeInformationReq a where
+  GetQuickEarthquakeMessages :: HKOEarthquakeInformationReq Void
+  GetLocallyFeltEarthTremor :: HKOEarthquakeInformationReq Void
+
+data HKOOpenDataReq a where
+  -- NOTE: Open Data (Climate and Weather Information) API
+  GetHourlyHeightsOfAstronomicalTides :: HKOOpenDataReq Void
+  GetTimesAndHeightsOfAstronomicalHighAndLowTides :: HKOOpenDataReq Void
+  GetTimesOfSunriseSunTransitAndSunset :: HKOOpenDataReq Void
+  TimesOfMoonriseMoonTransitAndMoonset :: HKOOpenDataReq Void
+  GetGregorianLunarCalendarConversionTable :: HKOOpenDataReq Void
+  GetCloudToGroundAndCloudToCloudLightningCount :: HKOOpenDataReq Void
+  GetLatest10MinuteMeanVisibility :: HKOOpenDataReq Void
+  GetDailyMeanTemperature :: HKOOpenDataReq Void
+  GetDailyMaximumTemperature :: HKOOpenDataReq Void
+  GetDailyMinimumTemperature :: HKOOpenDataReq Void
+  GetWeatherAndRadiationLevelReport :: HKOOpenDataReq Void
+
+-- NOTE: Gregorian-Lunar Calendar Conversion API
+data HKOGregorianlLunarConversionReq a where
+  GetLunarDate :: HKOGregorianlLunarConversionReq Void
+
+-- NOTE: Rainfall in The Past Hour from Automatic Weather Station API
+data HKOHourlyRainFallReq a where
+  GetHourlyRainFall :: HKOHourlyRainFallReq Void

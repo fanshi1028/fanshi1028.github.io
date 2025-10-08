@@ -1,20 +1,22 @@
+{-# LANGUAGE ApplicativeDo #-}
+{-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ViewPatterns #-}
 
 module Dashboard (dashboardComponent) where
 
 import Control.Monad.IO.Class
-import Dashboard.UVIndex
-import Data.Aeson
-import Data.Aeson.Types
-import Data.List.NonEmpty hiding (unzip)
+import Dashboard.DataSource.HongKongObservatoryWeatherAPI
 import Data.Text hiding (show)
 import Haxl.Core
+import Haxl.Core.Monad (flattenWT)
+import Language.Javascript.JSaddle
 import Miso hiding (URI)
 import Miso.Html.Element
 import Miso.Navigator
-import Network.URI
 import Numeric.Natural
+
+newtype UVIndexFetchError = UVIndexFetchError {_unUVIndexFetchError :: MisoString} deriving (Eq)
 
 data Model
   = NoLocationData (Maybe GeolocationError)
@@ -32,7 +34,6 @@ data Action
   | SetLocation Geolocation
   | SetUVIndex UVIndex
   | HandleError (Either GeolocationError UVIndexFetchError) -- TEMP FIXME
-
 
 -- TEMP FIXME: refine retry mechanism
 newtype Retry = Retry Natural deriving newtype (Enum, Eq)
@@ -78,43 +79,27 @@ updateModel = \case
             Right idx -> pure $ SetUVIndex idx
   FetchUVIndexData retry ->
     getLocation <$> get >>= \case
-      Left mErr -> do
-        io_ . consoleError . ms $ show mErr -- TEMP FIXME
-        issue $ FetchLocationData retry
-      Right geo@(Geolocation lat long _) -> do
-        _ <- io_ $ liftIO $ do
-          env' <- initEnvWithData @[Text] stateEmpty () undefined -- TEMP FIXME
-          runHaxl env' $ do
-            _ <- dataFetch $ GetUVIndex undefined -- TEMP FIXME
-            pure ()
-        -- TEMP FIXME
-        getJSON
-          (ms $ uriToString id (uvIndexURI geo) "")
-          []
-          ( \(Response _ _ _ (v :: Value)) ->
-              -- NOTE: https://currentuvindex.com/api
-              case iparse
-                ( withObject "response" $ \o ->
-                    o .: "ok" >>= \case
-                      False -> Left <$> o .: "message"
-                      True -> do
-                        geo' <- (,) <$> o .: "latitude" <*> o .: "longitude"
-                        now' <- o .: "now"
-                        forecast <- o .: "forecast"
-                        history <- o .: "history"
-                        pure $ Right (geo', history, now' :| forecast)
-                )
-                v of
-                ISuccess (Left msg) -> HandleError . Right $ UVIndexFetchError msg
-                ISuccess (Right (geo', _history :: [UVData], (UVData _ r) :| _forecast)) -- TEMP FIXME: ignore history & forecast for now
-                  | geo' == (lat, long) -> SetUVIndex r
-                  | otherwise ->
-                      if retry /= noRetry
-                        then FetchUVIndexData $ pred retry
-                        else HandleError . Right $ UVIndexFetchError "geolocation not matched"
-                IError path' err -> HandleError . Right . UVIndexFetchError . ms $ formatError path' err
-          )
-          (HandleError . Right . UVIndexFetchError . body)
+      Left mErr -> io $ do
+        consoleError . ms $ show mErr -- TEMP FIXME
+        pure $ FetchLocationData retry
+      Right geo@(Geolocation lat long _) -> io $ do
+        jscontext <- askJSM
+        (r, wt) <- liftIO $ do
+          -- env' <- initEnvWithData @[Text] stateEmpty jscontext undefined -- TEMP FIXME
+          env' <- initEnv (stateSet HKOWeatherInformationReqState stateEmpty) jscontext
+          runHaxlWithWrites
+            env'
+            -- { flags = defaultFlags {trace = 3}
+            -- }
+            $ do
+              tellWrite @Text "Start Request"
+              -- r1 <- dataFetch GetLocalWeaterForecast
+              -- r2 <- dataFetch Get9DayWeatherForecast
+              r3 <- dataFetch GetCurrentWeatherReport
+              pure r3.uvindex
+        traverse (consoleLog . ms) $ flattenWT wt
+        consoleLog . ms $ show r
+        pure $ SetUVIndex r
   SetLocation location ->
     get >>= \case
       Model _ ((== location) -> True) -> io_ $ consoleLog "same location"
@@ -123,15 +108,13 @@ updateModel = \case
         issue . FetchUVIndexData $ Retry 3
   SetUVIndex idx ->
     getLocation <$> get >>= \case
-      Left mErr -> do
-        io_ . consoleError . ms $ show mErr -- TEMP FIXME
-        issue . FetchLocationData $ Retry 3
+      Left mErr -> io $ do
+        consoleError . ms $ show mErr -- TEMP FIXME
+        pure $ FetchLocationData $ Retry 3
       Right location -> do
         io_ $ setLocalStorage (makeStorageKey location) idx
         put $ Model idx location -- TEMP FIXME: could location be outdated?
   HandleError err -> io_ . consoleLog $ "Failed to fetch: " <> either (ms . show) _unUVIndexFetchError err
-
--- undefined -- TEMP FIXME
 
 -- TEMP FIXME
 viewModel :: Model -> View Model Action
