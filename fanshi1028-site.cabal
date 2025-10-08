@@ -38,7 +38,9 @@ common lib
     aeson,
     base <5,
     containers,
+    hashable,
     haxl,
+    jsaddle,
     lens,
     miso,
     network-uri,
@@ -54,6 +56,7 @@ common lib
     other-modules:
       Clock
       Dashboard
+      Dashboard.UVIndex
       Home
       Pomodoro
       ProductRequirementDocument
@@ -69,6 +72,7 @@ library
   exposed-modules:
     Clock
     Dashboard
+    Dashboard.UVIndex
     Home
     Pomodoro
     ProductRequirementDocument
