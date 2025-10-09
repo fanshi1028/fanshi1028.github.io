@@ -127,7 +127,7 @@
                   uglify-js
                   http-server
                   (haskell-language-server.override {
-                    supportedGhcVersions = [ "ghc${ghcVersion}" ];
+                    supportedGhcVersions = [ ghcVersion ];
                     supportedFormatters = [ "ormolu" ];
                   })
                 ]
