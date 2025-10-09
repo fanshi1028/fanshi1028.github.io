@@ -59,13 +59,13 @@
     in
     {
       packages = builtins.mapAttrs (
-        system: _:
+        system: pkgs:
         let
-          pkgs = import nixpkgs { inherit system overlays; };
+          pkgsWithMisoOverlays = import nixpkgs { inherit system overlays; };
         in
         {
           inherit (pkgs) tailwindcss closurecompiler;
-          prerender = mkDefaultPackage pkgs {
+          prerender = mkDefaultPackage pkgsWithMisoOverlays {
             modifier =
               drv:
               pkgs.lib.pipe drv [
@@ -75,7 +75,7 @@
                 }))
               ];
           };
-          fanshi1028-site-js = mkDefaultPackage pkgs.pkgsCross.ghcjs {
+          fanshi1028-site-js = mkDefaultPackage pkgsWithMisoOverlays.pkgsCross.ghcjs {
             modifier =
               drv:
               pkgs.lib.pipe drv [
@@ -99,12 +99,12 @@
       ) nixpkgs.legacyPackages;
 
       devShells = builtins.mapAttrs (
-        system: _:
+        system: pkgs:
         let
-          pkgs = import nixpkgs { inherit system overlays; };
+          pkgsWithMisoOverlays = import nixpkgs { inherit system overlays; };
         in
         {
-          default = mkDefaultPackage pkgs {
+          default = mkDefaultPackage pkgsWithMisoOverlays {
             modifier =
               drv:
               pkgs.haskell.lib.addBuildTools drv (
@@ -126,9 +126,12 @@
                   # swc
                   uglify-js
                   http-server
+                  (haskell-language-server.override {
+                    supportedGhcVersions = [ "ghc${ghcVersion}" ];
+                    supportedFormatters = [ "ormolu" ];
+                  })
                 ]
                 ++ (with haskell.packages."ghc${ghcVersion}"; [
-                  haskell-language-server
                   cabal-gild_1_6_0_0
                 ])
               );
