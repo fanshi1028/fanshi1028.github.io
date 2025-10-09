@@ -28,6 +28,6 @@ jobs:
         shell: nix develop --command bash -e {0}
         run: |
           ghc-pkg list
-          haskell-language-server --version
+          haskell-language-server-wrapper --version
           ghc --version
           cabal --version
