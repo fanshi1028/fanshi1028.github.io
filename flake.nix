@@ -31,12 +31,6 @@
       wasm-feature-detect,
     }:
     let
-      systems = [
-        "x86_64-linux"
-        "aarch64-linux"
-        "x86_64-darwin"
-        "aarch64-darwin"
-      ];
       ghcVersion = "9122";
       overlays = [ (import "${miso}/nix/overlay.nix") ];
       mkDefaultPackage =
@@ -64,8 +58,8 @@
         );
     in
     {
-      packages = nixpkgs.lib.genAttrs systems (
-        system:
+      packages = builtins.mapAttrs (
+        system: _:
         let
           pkgs = import nixpkgs { inherit system overlays; };
         in
@@ -102,10 +96,10 @@
             npmDepsHash = "sha256-ikjjc7/MZRswwNsmSJC5KqLrNKbCbKYLQ9v87t1azTc=";
           };
         }
-      );
+      ) nixpkgs.legacyPackages;
 
-      devShells = nixpkgs.lib.genAttrs systems (
-        system:
+      devShells = builtins.mapAttrs (
+        system: _:
         let
           pkgs = import nixpkgs { inherit system overlays; };
         in
@@ -145,6 +139,6 @@
             packages = [ ghc-wasm.packages.${system}.all_9_12 ];
           };
         }
-      );
+      ) nixpkgs.legacyPackages;
     };
 }
