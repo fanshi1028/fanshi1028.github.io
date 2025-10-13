@@ -82,19 +82,13 @@ stageToSettingLens = \case
 
 newtype PomodoroQueueIndex = PomodoroQueueIndex Int deriving stock (Eq, Show, Ord)
 
-data Transition = FutureItemTransition PomodoroQueueIndex deriving stock (Eq, Show, Ord)
-
 data Model = Model
   { _settings :: PomodoroSettings,
     _settingsOpen :: Bool,
     _pomodoroPastQueues :: NonEmpty [(Pomodoro, PomodoroQueueIndex)],
-    _pomodoroQueue :: [(Pomodoro, PomodoroQueueIndex)],
-    _transitionMap :: Map Transition Bool
+    _pomodoroQueue :: [(Pomodoro, PomodoroQueueIndex)]
   }
   deriving (Eq)
-
-transitionMap :: Lens Model (Map Transition Bool)
-transitionMap = lens _transitionMap $ \record x -> record {_transitionMap = x}
 
 settings :: Lens Model PomodoroSettings
 settings = lens _settings $ \record x -> record {_settings = x}
@@ -132,11 +126,7 @@ data Action
   = SettingsOpen Bool
   | Set PomodoroStage MisoString
   | ApplyPomodoroSettings
-  | PreNextTransition
   | Next
-      { _current :: (Pomodoro, PomodoroQueueIndex),
-        _future :: [(Pomodoro, PomodoroQueueIndex)]
-      }
   | PomodoroEnd
   deriving stock (Eq, Show)
 
@@ -175,27 +165,14 @@ updateModel = \case
           when noFuture $ pomodoroAllPastQueues %= ([] <|)
           settingsOpen .= False
   SettingsOpen open -> settingsOpen .= open
-  PreNextTransition ->
-    use pomodoroQueue >>= \case
+  Next -> use pomodoroQueue >>= \case
       [] -> issue PomodoroEnd
       current : restFuture -> do
         case restFuture of
-          [] -> pure ()
-          (_, FutureItemTransition -> futureTransition) : _ ->
-            Map.lookup futureTransition <$> use transitionMap >>= \case
-              Just _ -> io_ $ consoleWarn "Tranistion exists, user probably clicked '>>' too fast, drop extra event to avoid UI bug"
-              Nothing -> transitionMap %= Map.insert futureTransition False
-        startSub (show PreNextTransition) $ \sink -> do
-          liftIO $ threadDelay 200000
-          sink $ Next current restFuture
-  (Next current@(_, idx) future) -> do
-    case future of
-      [] -> settingsOpen .= True
-      (_, FutureItemTransition -> futureTransition) : _ -> transitionMap %= Map.insert futureTransition True
-
-    pomodoroPastQueue %= (current :)
-    transitionMap %= Map.delete (FutureItemTransition idx) -- NOTE: cleanup old future item transitions
-    pomodoroQueue .= future
+          [] -> settingsOpen .= True
+          _ -> pure ()
+        pomodoroPastQueue %= (current :)
+        pomodoroQueue .= restFuture
   PomodoroEnd -> mailParent PomodoroDone
   Set (stageToSettingLens -> stageLens) str -> do
     let validateMax45 n = failureIf (n > 45) (PomodoroMinuteSettingValidationError "must <= 45")
@@ -217,7 +194,7 @@ viewModel m = div_ [class_ "flex flex-col container items-center lg:justify-cent
           ],
       div_ [class_ sizeCls] $ [settingsView True]
     ]
-  (_pomodoroTime -> currentPomodoroTime, _) : future ->
+  current@(_pomodoroTime -> currentPomodoroTime, _) : future ->
     [ h1_ [class_ "sr-only"] [text "Pomodoro"],
       let currentPomodoroView =
             div_
@@ -243,35 +220,24 @@ viewModel m = div_ [class_ "flex flex-col container items-center lg:justify-cent
             [class_ "contents"]
             [ h2_ [class_ "sr-only"] [text "Pomodoro Queue"],
               ul_ [class_ "flex flex-col lg:flex-row lg:justify-around lg:w-full items-center gap-3"] $
-                let pastItemView i =
+                let pastItemView (i, idx) =
                       li_
-                        [ classes_
-                            ["px-2",
+                        [key_ $ "past-item-" <> show idx,
+                          classes_ [
+                              "px-2",
                               "transition-[transform,opacity] opacity-100 starting:opacity-0 translate-y-0 starting:translate-y-16"
                             ]
                         ]
                         [pomodoroView (Just "text-neutral-400 font-semibold sm:text-lg xl:text-xl") i]
-                    futureItemView (i, idx) =
-                      li_
-                        [ classes_
-                            [ "px-2",
-                              case Map.lookup (FutureItemTransition idx) m._transitionMap of
-                                Nothing -> ""
-                                Just False -> "transition-[transform,opacity] -translate-y-16 opacity-0"
-                                Just True -> "transition-[transform,opacity]"
-                            ]
-                        ]
+                    futureItemView extraCls (i, idx) = li_ [key_ $ "future-item-" <> show idx, classes_ [ "px-2", extraCls]]
                         [pomodoroView (Just "text-neutral-500 font-semibold text-lg sm:text-xl xl:text-2xl") i]
                  in [ case m ^. pomodoroPastQueue of
                         [] -> div_ [class_ "lg:basis-1/4"] []
-                        justPast : rest -> ul_ [class_ "contents md:flex md:flex-col md:items-center md:justify-start md:self-start lg:basis-1/4 xl:gap-2"] $ foldl' (\acc i -> pastItemView (fst i) : acc) [pastItemView $ fst justPast] rest,
+                        justPast : rest -> ul_ [class_ "contents md:flex md:flex-col md:items-center md:justify-start md:self-start lg:basis-1/4 xl:gap-2"] $ foldl' (\acc i -> pastItemView i : acc) [pastItemView justPast] rest,
                       div_ [classes_ ["relative my-6", sizeCls]] [settingsView False, currentPomodoroView],
-                      case future of
-                        [] -> div_ [class_ "lg:basis-1/4"] []
-                        nearFuture : rest ->
-                          ul_
+                      ul_
                             [class_ "contents md:flex md:flex-col md:items-center md:justify-end md:self-end lg:basis-1/4 gap-2 xl:gap-4"]
-                            (futureItemView nearFuture : (futureItemView <$> rest))
+                            (futureItemView "transition-[transform,opacity] opacity-0 -translate-y-16 h-0" current : (futureItemView "" <$> future))
                     ]
             ]
     ]
@@ -362,12 +328,11 @@ defaultModel =
     True
     ([] :| [])
     []
-    mempty
 
 pomodoroComponent :: Component parent Model Action
 pomodoroComponent =
   (component defaultModel updateModel viewModel)
     { mailbox = \v -> case fromJSON v of
         Error _ -> Nothing
-        Aeson.Success Clock.ClockDoneMessage -> Just Pomodoro.PreNextTransition
+        Aeson.Success Clock.ClockDoneMessage -> Just Pomodoro.Next
     }
