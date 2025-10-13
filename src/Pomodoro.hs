@@ -82,7 +82,7 @@ stageToSettingLens = \case
 
 newtype PomodoroQueueIndex = PomodoroQueueIndex Int deriving stock (Eq, Show, Ord)
 
-data Transition = PastItemTransition PomodoroQueueIndex | FutureItemTransition PomodoroQueueIndex deriving stock (Eq, Show, Ord)
+data Transition = FutureItemTransition PomodoroQueueIndex deriving stock (Eq, Show, Ord)
 
 data Model = Model
   { _settings :: PomodoroSettings,
@@ -137,7 +137,6 @@ data Action
       { _current :: (Pomodoro, PomodoroQueueIndex),
         _future :: [(Pomodoro, PomodoroQueueIndex)]
       }
-  | PostNextTransition (Pomodoro, PomodoroQueueIndex)
   | PomodoroEnd
   deriving stock (Eq, Show)
 
@@ -189,22 +188,14 @@ updateModel = \case
         startSub (show PreNextTransition) $ \sink -> do
           liftIO $ threadDelay 200000
           sink $ Next current restFuture
-  next@(Next current@(_, idx) future) -> do
+  (Next current@(_, idx) future) -> do
     case future of
       [] -> settingsOpen .= True
       (_, FutureItemTransition -> futureTransition) : _ -> transitionMap %= Map.insert futureTransition True
 
-    pomodoroPastQueue <<%= (current :) >>= \case
-      [] -> pure ()
-      (_, lastPastIdx) : _ -> transitionMap %= Map.delete (PastItemTransition lastPastIdx) -- NOTE: cleanup old past item transitions
-    transitionMap %= Map.insert (PastItemTransition idx) False
+    pomodoroPastQueue %= (current :)
     transitionMap %= Map.delete (FutureItemTransition idx) -- NOTE: cleanup old future item transitions
     pomodoroQueue .= future
-
-    startSub (show next) $ \sink -> do
-      liftIO $ threadDelay 200000
-      sink $ PostNextTransition current
-  PostNextTransition (_, justPastIdx) -> transitionMap %= Map.insert (PastItemTransition justPastIdx) True
   PomodoroEnd -> mailParent PomodoroDone
   Set (stageToSettingLens -> stageLens) str -> do
     let validateMax45 n = failureIf (n > 45) (PomodoroMinuteSettingValidationError "must <= 45")
@@ -255,11 +246,8 @@ viewModel m = div_ [class_ "flex flex-col container items-center lg:justify-cent
                 let pastItemView (i, idx) =
                       li_
                         [ classes_
-                            [ "px-2",
-                              case Map.lookup (PastItemTransition idx) m._transitionMap of
-                                Nothing -> ""
-                                Just False -> "transition-[transform,opacity] opacity-0 translate-y-16"
-                                Just True -> "transition-[transform,opacity]"
+                            ["px-2",
+                              "transition-[transform,opacity] opacity-100 starting:opacity-0 translate-y-0 starting:translate-y-16"
                             ]
                         ]
                         [pomodoroView (Just "text-neutral-400 font-semibold sm:text-lg xl:text-xl") i]
