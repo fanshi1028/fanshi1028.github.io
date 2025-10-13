@@ -11,13 +11,9 @@ export default {
         },
       },
       animation: {
-          wiggle: 'wiggle 0.1s ease-in-out 2',
-      }
+        wiggle: 'wiggle 0.1s ease-in-out 2',
+      },
     },
   },
-  plugins: [
-   require('@tailwindcss/typography'),
-   require('@tailwindcss/forms')
-  ],
+  plugins: [require('@tailwindcss/typography'), require('@tailwindcss/forms')],
 } satisfies Config
-
