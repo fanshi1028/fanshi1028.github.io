@@ -15,5 +15,11 @@ export default {
       },
     },
   },
-  plugins: [require('@tailwindcss/typography'), require('@tailwindcss/forms')],
+  plugins: [
+    require('@tailwindcss/typography'),
+    require('@tailwindcss/forms'),
+    ({ addVariant }) => {
+      addVariant('starting', '@starting-style')
+    },
+  ],
 } satisfies Config
