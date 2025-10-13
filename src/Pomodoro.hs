@@ -243,7 +243,7 @@ viewModel m = div_ [class_ "flex flex-col container items-center lg:justify-cent
             [class_ "contents"]
             [ h2_ [class_ "sr-only"] [text "Pomodoro Queue"],
               ul_ [class_ "flex flex-col lg:flex-row lg:justify-around lg:w-full items-center gap-3"] $
-                let pastItemView (i, idx) =
+                let pastItemView i =
                       li_
                         [ classes_
                             ["px-2",
@@ -264,7 +264,7 @@ viewModel m = div_ [class_ "flex flex-col container items-center lg:justify-cent
                         [pomodoroView (Just "text-neutral-500 font-semibold text-lg sm:text-xl xl:text-2xl") i]
                  in [ case m ^. pomodoroPastQueue of
                         [] -> div_ [class_ "lg:basis-1/4"] []
-                        justPast : rest -> ul_ [class_ "contents md:flex md:flex-col md:items-center md:justify-start md:self-start lg:basis-1/4 xl:gap-2"] $ foldl' (\acc i -> pastItemView i : acc) [pastItemView justPast] rest,
+                        justPast : rest -> ul_ [class_ "contents md:flex md:flex-col md:items-center md:justify-start md:self-start lg:basis-1/4 xl:gap-2"] $ foldl' (\acc i -> pastItemView (fst i) : acc) [pastItemView $ fst justPast] rest,
                       div_ [classes_ ["relative my-6", sizeCls]] [settingsView False, currentPomodoroView],
                       case future of
                         [] -> div_ [class_ "lg:basis-1/4"] []
