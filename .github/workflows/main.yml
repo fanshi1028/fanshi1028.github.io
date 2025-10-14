@@ -173,13 +173,14 @@ jobs:
         shell: bash -e {0}
         run: |
           mkdir -p miso
-          nix develop --redirect .#miso --unpack ./miso
+          nix develop --redirect .#miso ./miso --unpack
 
       - name: Prepare local patched haxl source
         shell: bash -e {0}
         run: |
           mkdir -p haxl
-          nix develop --redirect .#haxl --unpack ./haxl
+          nix develop  --redirect .#haxl ./haxl --unpack
+          nix develop  --redirect .#haxl ./haxl --pahse postPatch
 
       - name: Freeze cabal deps used in development
         shell: nix develop .#without-build-tools --command bash -e {0}
