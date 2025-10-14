@@ -39,6 +39,8 @@
           {
             root = ./.;
             overrides = hself: hsuper: {
+              # NOTE: https://github.com/haskell/time/issues/266#issuecomment-2561585220
+              time = hsuper.time_1_14;
               haxl = pkgs.lib.pipe hsuper.haxl (
                 with pkgs.haskell.lib.compose;
                 [
