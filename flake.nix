@@ -111,6 +111,7 @@
           pkgsWithMisoOverlays = import nixpkgs { inherit system overlays; };
         in
         {
+          without-build-tools = mkDefaultPackage pkgsWithMisoOverlays { returnShellEnv = true; };
           default = mkDefaultPackage pkgsWithMisoOverlays {
             modifier =
               drv:
