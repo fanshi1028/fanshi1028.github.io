@@ -1,4 +1,3 @@
-
 name: Build and deploy
 
 on:
@@ -26,7 +25,7 @@ jobs:
       - uses: cachix/cachix-action@v16
         with:
           name: fanshi1028-personal
-          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
       - name: Nix Build wasm-feature-detect
         run: |
@@ -49,7 +48,7 @@ jobs:
       - uses: cachix/cachix-action@v16
         with:
           name: fanshi1028-personal
-          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
       - name: Nix Build browser_wasi_shim
         run: |
@@ -72,7 +71,7 @@ jobs:
       - uses: cachix/cachix-action@v16
         with:
           name: fanshi1028-personal
-          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
       - name: TailwindCSS
         shell: nix shell .#tailwindcss --command bash -e {0}
@@ -85,7 +84,7 @@ jobs:
           path: ./output.css
           if-no-files-found: error
           retention-days: 1
-          
+
   prerender:
     runs-on: ubuntu-latest
 
@@ -96,7 +95,7 @@ jobs:
       - uses: cachix/cachix-action@v16
         with:
           name: fanshi1028-personal
-          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
       - name: Prerender using nix
         run: |
@@ -119,7 +118,7 @@ jobs:
       - uses: cachix/cachix-action@v16
         with:
           name: fanshi1028-personal
-          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
       - name: Nix Build fanshi1028-site-js
         run: |
@@ -157,7 +156,7 @@ jobs:
       - uses: cachix/cachix-action@v16
         with:
           name: fanshi1028-personal
-          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
           extraPullNames: haskell-miso-cachix
 
       - name: Cache cabal stuff
@@ -169,13 +168,13 @@ jobs:
             dist-newstyle
           key: cabal-${{ runner.os }}-${{ hashFiles('**/*.nix', '**/flake.lock', '**/*.cabal', '**/wasm.cabal.project') }}
           restore-keys: cabal-${{ runner.os }}-
-      
+
       - name: Nix Develop (WASM) Cabal Build fanshi1028-site
         run: |
           wasm32-wasi-cabal --project-file=wasm.cabal.project configure
           wasm32-wasi-cabal --project-file=wasm.cabal.project build fanshi1028-site:exe:fanshi1028-site
 
-      - name: find wasmArtifactPath 
+      - name: find wasmArtifactPath
         run: |
           echo "wasmArtifactPath=$(wasm32-wasi-cabal --project-file=wasm.cabal.project list-bin exe:fanshi1028-site | tail -n 1)" >> $GITHUB_ENV
 
@@ -203,7 +202,14 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    needs: [build-wasm-feature-detect, build-browser_wasi_shim, prerender, build-site-js, build-site-wasm]
+    needs:
+      [
+        build-wasm-feature-detect,
+        build-browser_wasi_shim,
+        prerender,
+        build-site-js,
+        build-site-wasm,
+      ]
 
     steps:
       - uses: actions/checkout@v4
@@ -264,7 +270,7 @@ jobs:
         with:
           name: 'github-pages'
           path: ${{ runner.temp }}/artifact.tar
-          retention-days: "1"
+          retention-days: '1'
           if-no-files-found: error
 
   deploy:
@@ -281,4 +287,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
