@@ -144,6 +144,7 @@ jobs:
 
   build-site-wasm:
     runs-on: ubuntu-latest
+    if: false
     defaults:
       run:
         shell: nix develop .#wasm --command bash -e {0}
