@@ -182,7 +182,7 @@ jobs:
           mkdir -p haxl
           cd haxl
           nix develop ..#haxl --unpack
-          nix develop ..#haxl --postPatch
+          nix develop ..#haxl --phase postPatch
 
       - name: Freeze cabal deps used in development
         shell: nix develop --command bash -e {0}
