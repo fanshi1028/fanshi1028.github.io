@@ -184,6 +184,12 @@ jobs:
           nix develop ..#haxl --unpack
           nix develop ..#haxl --phase postPatch
 
+      - name: Freeze cabal deps used in development
+        shell: nix develop --command bash -e {0}
+        run: |
+          cabal freeze
+          mv cabal.project.freeze wasm.cabal.project.freeze
+
       - name: Nix Develop (WASM) Cabal Build fanshi1028-site
         run: |
           wasm32-wasi-cabal --project-file=wasm.cabal.project configure
