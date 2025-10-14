@@ -33,25 +33,28 @@
     let
       ghcVersion = "9122";
       overlays = [ (import "${miso}/nix/overlay.nix") ];
+      applyFixToHaxl =
+        haxl:
+        nixpkgs.lib.pipe haxl (
+          with nixpkgs.haskell.lib.compose;
+          [
+            unmarkBroken
+            (overrideCabal (drv: {
+              # NOTE: https://github.com/facebook/Haxl/issues/165
+              postPatch = ''
+                substituteInPlace Setup.hs --replace-fail Setup Main
+                sed -i 's/time >= 1.4 \&\& < 1.13/time >= 1.4 \&\& < 1.15/g' haxl.cabal
+              '';
+            }))
+          ]
+        );
       mkDefaultPackage =
         pkgs: args:
         pkgs.haskell.packages."ghc${ghcVersion}".developPackage (
           {
             root = ./.;
             overrides = hself: hsuper: {
-              haxl = pkgs.lib.pipe hsuper.haxl (
-                with pkgs.haskell.lib.compose;
-                [
-                  unmarkBroken
-                  (overrideCabal (drv: {
-                    # NOTE: https://github.com/facebook/Haxl/issues/165
-                    postPatch = ''
-                      substituteInPlace Setup.hs --replace-fail Setup Main
-                      sed -i 's/time >= 1.4 \&\& < 1.13/time >= 1.4 \&\& < 1.15/g' haxl.cabal
-                    '';
-                  }))
-                ]
-              );
+              haxl = applyFixToHaxl hsuper.haxl;
             };
           }
           // args
@@ -65,6 +68,10 @@
         in
         {
           inherit (pkgs) tailwindcss closurecompiler;
+
+          miso = pkgsWithMisoOverlays.haskell.packages."ghc${ghcVersion}".miso;
+          haxl = applyFixToHaxl pkgsWithMisoOverlays.haskell.packages."ghc${ghcVersion}".haxl;
+
           prerender = mkDefaultPackage pkgsWithMisoOverlays {
             modifier =
               drv:
