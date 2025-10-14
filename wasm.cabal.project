@@ -10,6 +10,6 @@ source-repository-package
   location: https://github.com/dmjio/miso
   branch: e6798ccb6776352e506dfb47bed6f2c1ff77a859
 
-flags: +template-haskell +production
+flags: +production
 -- from flake input nixpkgs's lastModified
 index-state: @1751996040
