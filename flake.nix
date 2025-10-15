@@ -140,7 +140,8 @@
                   })
                 ]
                 ++ (with haskell.packages."ghc${ghcVersion}"; [
-                  cabal-gild_1_6_0_0
+                  cabal-gild_1_6_0_0,
+                  ormolu_0_8_0_0
                 ])
               );
             returnShellEnv = true;
