@@ -181,9 +181,12 @@ jobs:
           nix develop .#haxl --unpack
           nix develop .#haxl --phase postPatch
 
-      - name: Nix Develop (WASM) Cabal Build fanshi1028-site
+      - name: Nix Develop (WASM) Cabal Update
         run: |
           wasm32-wasi-cabal update
+
+      - name: Nix Develop (WASM) Cabal Build fanshi1028-site
+        run: |
           wasm32-wasi-cabal --project-file=wasm.cabal.project build fanshi1028-site:exe:fanshi1028-site
 
       - name: find wasmArtifactPath
