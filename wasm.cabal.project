@@ -1,5 +1,3 @@
 -- -*- mode: haskell-cabal;-*-
 packages: ./*.cabal ./*/*.cabal
 flags: +production
-optimization: True
-shared: True
