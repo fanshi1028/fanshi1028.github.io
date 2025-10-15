@@ -165,6 +165,7 @@ jobs:
           path: |
             ~/.ghc-wasm/.cabal/packages
             ~/.ghc-wasm/.cabal/store
+            wasm.cabal.project.freeze
             dist-newstyle
           key: cabal-${{ runner.os }}-${{ hashFiles('**/*.nix', '**/flake.lock', '**/*.cabal', '**/wasm.cabal.project') }}
           restore-keys: cabal-${{ runner.os }}-
@@ -179,12 +180,6 @@ jobs:
         run: |
           nix develop .#haxl --unpack
           nix develop .#haxl --phase postPatch
-
-      - name: Freeze cabal deps used in development
-        shell: nix develop .#without-build-tools --command bash -e {0}
-        run: |
-          cabal freeze
-          mv cabal.project.freeze wasm.cabal.project.freeze
 
       - name: Nix Develop (WASM) Cabal Build fanshi1028-site
         run: |
@@ -207,6 +202,10 @@ jobs:
         run: |
           wasm-opt -all -O2 ${{env.wasmArtifactPath}} -o fanshi1028-site.wasm
           wasm-tools strip -o fanshi1028-site.wasm fanshi1028-site.wasm
+
+      - name: Freeze cabal deps used
+        run: |
+          wasm32-wasi-cabal freeze --project-file=wasm.cabal.project
 
       - uses: actions/upload-artifact@v4
         with:
