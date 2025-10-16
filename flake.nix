@@ -115,7 +115,13 @@
           default = mkDefaultPackage pkgsWithMisoOverlays {
             overrides = hself: hsuper: {
               haxl = applyFixToHaxl pkgs hsuper.haxl;
-              jsaddle = enableCabalFlag "check-unchecked" (enableCabalFlag "call-stacks" hsuper.jsaddle);
+              jsaddle = pkgs.lib.pipe hsuper.jsaddle (
+                with pkgs.haskell.lib.compose;
+                [
+                  (enableCabalFlag "call-stacks")
+                  (enableCabalFlag "check-unchecked")
+                ]
+              );
             };
             modifier =
               drv:
