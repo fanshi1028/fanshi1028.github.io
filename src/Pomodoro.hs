@@ -9,13 +9,10 @@ module Pomodoro (pomodoroComponent) where
 import Clock
 import Control.Applicative
 import Control.Category
-import Control.Concurrent
 import Control.Monad
-import Control.Monad.IO.Class
 import Data.Aeson as Aeson hiding ((.=))
 import Data.Bifunctor
 import Data.List.NonEmpty as NE
-import Data.Map.Strict as Map hiding (foldl', toList)
 import Data.Maybe
 import Data.Time
 import GHC.Generics
@@ -165,7 +162,8 @@ updateModel = \case
           when noFuture $ pomodoroAllPastQueues %= ([] <|)
           settingsOpen .= False
   SettingsOpen open -> settingsOpen .= open
-  Next -> use pomodoroQueue >>= \case
+  Next ->
+    use pomodoroQueue >>= \case
       [] -> issue PomodoroEnd
       current : restFuture -> do
         case restFuture of
@@ -222,22 +220,24 @@ viewModel m = div_ [class_ "flex flex-col container items-center lg:justify-cent
               ul_ [class_ "flex flex-col lg:flex-row lg:justify-around lg:w-full items-center gap-3"] $
                 let pastItemView (i, idx) =
                       li_
-                        [key_ $ "past-item-" <> show idx,
-                          classes_ [
-                              "px-2",
+                        [ key_ $ "past-item-" <> show idx,
+                          classes_
+                            [ "px-2",
                               "transition-[transform,opacity] opacity-100 starting:opacity-0 translate-y-0 starting:translate-y-16"
                             ]
                         ]
                         [pomodoroView (Just "text-neutral-400 font-semibold sm:text-lg xl:text-xl") i]
-                    futureItemView extraCls (i, idx) = li_ [key_ $ "future-item-" <> show idx, classes_ [ "px-2", extraCls]]
+                    futureItemView extraCls (i, idx) =
+                      li_
+                        [key_ $ "future-item-" <> show idx, classes_ ["px-2", extraCls]]
                         [pomodoroView (Just "text-neutral-500 font-semibold text-lg sm:text-xl xl:text-2xl") i]
                  in [ case m ^. pomodoroPastQueue of
                         [] -> div_ [class_ "lg:basis-1/4"] []
                         justPast : rest -> ul_ [class_ "contents md:flex md:flex-col md:items-center md:justify-start md:self-start lg:basis-1/4 xl:gap-2"] $ foldl' (\acc i -> pastItemView i : acc) [pastItemView justPast] rest,
                       div_ [classes_ ["relative my-6", sizeCls]] [settingsView False, currentPomodoroView],
                       ul_
-                            [class_ "contents md:flex md:flex-col md:items-center md:justify-end md:self-end lg:basis-1/4 gap-2 xl:gap-4"]
-                            (futureItemView "transition-[transform,opacity] opacity-0 -translate-y-16 h-0" current : (futureItemView "" <$> future))
+                        [class_ "contents md:flex md:flex-col md:items-center md:justify-end md:self-end lg:basis-1/4 gap-2 xl:gap-4"]
+                        (futureItemView "transition-[transform,opacity] opacity-0 -translate-y-16 h-0" current : (futureItemView "" <$> future))
                     ]
             ]
     ]
