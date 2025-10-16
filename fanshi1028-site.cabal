@@ -59,6 +59,7 @@ common lib
     other-modules:
       Clock
       Dashboard
+      Dashboard.DataSource.BrowserGeolocationAPI
       Dashboard.DataSource.HongKongObservatoryWeatherAPI
       Home
       Pomodoro
@@ -75,6 +76,7 @@ library
   exposed-modules:
     Clock
     Dashboard
+    Dashboard.DataSource.BrowserGeolocationAPI
     Dashboard.DataSource.HongKongObservatoryWeatherAPI
     Home
     Pomodoro
