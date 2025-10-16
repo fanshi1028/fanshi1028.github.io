@@ -85,10 +85,13 @@
           fanshi1028-site-js = mkDefaultPackage pkgsWithMisoOverlays.pkgsCross.ghcjs {
             modifier =
               drv:
-              pkgs.lib.pipe drv [
-                (pkgs.haskell.lib.compose.enableCabalFlag "production")
-                (pkgs.haskell.lib.compose.setBuildTargets [ "exe:fanshi1028-site" ])
-              ];
+              pkgs.lib.pipe drv (
+                with pkgs.haskell.lib.compose;
+                [
+                  (enableCabalFlag "production")
+                  (setBuildTargets [ "exe:fanshi1028-site" ])
+                ]
+              );
           };
           browser_wasi_shim = pkgs.buildNpmPackage {
             pname = "browser_wasi_shim";
