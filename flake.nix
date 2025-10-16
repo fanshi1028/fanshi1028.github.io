@@ -113,6 +113,10 @@
         {
           without-build-tools = mkDefaultPackage pkgsWithMisoOverlays { returnShellEnv = true; };
           default = mkDefaultPackage pkgsWithMisoOverlays {
+            overrides = hself: hsuper: {
+              haxl = applyFixToHaxl pkgs hsuper.haxl;
+              jsaddle = enableCabalFlags "check-unchecked" (enableCabalFlags "call-stacks" hsuper.jsaddle);
+            };
             modifier =
               drv:
               pkgs.haskell.lib.addBuildTools drv (
