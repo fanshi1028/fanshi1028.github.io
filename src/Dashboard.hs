@@ -6,6 +6,7 @@
 module Dashboard (dashboardComponent) where
 
 import Control.Monad.IO.Class
+import Dashboard.DataSource.BrowserGeolocationAPI
 import Dashboard.DataSource.HongKongObservatoryWeatherAPI
 import Data.Text hiding (show)
 import Haxl.Core
@@ -15,11 +16,11 @@ import Miso hiding (URI)
 import Miso.Html.Element
 import Miso.Navigator
 
-newtype UVIndexFetchError = UVIndexFetchError {_unUVIndexFetchError :: MisoString} deriving (Eq)
-
 data Model
   = NoLocationData (Maybe GeolocationError)
-  | NoUVIndexData (Maybe UVIndexFetchError) Geolocation
+  | NoUVIndexData
+      (Maybe Text) -- NOTE TEMP: HaxlException as Text because it has no Eq instance
+      Geolocation
   | Model
       { _uvIndex :: UVIndex,
         _location :: Geolocation
@@ -27,12 +28,9 @@ data Model
   deriving (Eq) -- TEMP FIXME
 
 data Action
-  = FetchLocationData
-  | FetchUVIndexDataFromCache
-  | FetchUVIndexData
+  = FetchUVIndexData
   | SetLocation Geolocation
-  | SetUVIndex UVIndex
-  | HandleError (Either GeolocationError UVIndexFetchError) -- TEMP FIXME
+  | SetUVIndex Geolocation UVIndex
 
 makeStorageKey :: Geolocation -> MisoString
 makeStorageKey (Geolocation lat long _) = ms $ show lat <> "," <> show long
@@ -40,61 +38,44 @@ makeStorageKey (Geolocation lat long _) = ms $ show lat <> "," <> show long
 defaultModel :: Model
 defaultModel = NoLocationData Nothing -- TEMP FIXME
 
-getLocation :: Model -> Either (Maybe GeolocationError) Geolocation
-getLocation m = case m of
-  NoLocationData mErr -> Left mErr
-  NoUVIndexData _ location -> Right location
-  Model _ location -> Right location
-
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
-  FetchLocationData -> geolocation SetLocation $ HandleError . Left
-  FetchUVIndexDataFromCache ->
-    getLocation <$> get >>= \case
-      Left mErr -> io $ FetchLocationData <$ do consoleError . ms $ show mErr -- TEMP FIXME
-      Right (makeStorageKey -> k) ->
-        io $
-          getLocalStorage k >>= \case
-            Left "Not Found" -> pure $ FetchUVIndexData
-            Left err ->
-              FetchUVIndexData <$ do
-                consoleLog (ms err)
-                removeLocalStorage k -- NOTE: remove invalid cache
-            Right idx -> pure $ SetUVIndex idx
-  FetchUVIndexData ->
-    getLocation <$> get >>= \case
-      Left mErr -> io $ FetchLocationData <$ do consoleError . ms $ show mErr -- TEMP FIXME
-      Right geo@(Geolocation lat long _) -> io $ do
-        jscontext <- askJSM
-        (r, wt) <- liftIO $ do
-          -- env' <- initEnvWithData @[Text] stateEmpty jscontext undefined -- TEMP FIXME
-          env' <- initEnv (stateSet HKOWeatherInformationReqState stateEmpty) jscontext
-          runHaxlWithWrites
-            env'
-            -- { flags = defaultFlags {trace = 3}
-            -- }
-            $ do
-              tellWrite @Text "Start Request"
-              -- r1 <- dataFetch GetLocalWeaterForecast
-              -- r2 <- dataFetch Get9DayWeatherForecast
-              r3 <- dataFetch GetCurrentWeatherReport
-              pure r3.uvindex
-        traverse (consoleLog . ms) $ flattenWT wt
-        consoleLog . ms $ show r
-        pure $ SetUVIndex r
+  -- Right (makeStorageKey -> k) ->
+  --   io $
+  --     getLocalStorage k >>= \case
+  --       Left "Not Found" -> pure $ FetchUVIndexData
+  --       Left err ->
+  --         FetchUVIndexData <$ do
+  --           consoleLog (ms err)
+  --           removeLocalStorage k -- NOTE: remove invalid cache
+  --       Right idx -> pure $ SetUVIndex idx
+  FetchUVIndexData -> for $ do
+    jscontext <- askJSM
+    ((geo, r), wt) <- liftIO $ do
+      env' <- initEnv (stateSet LocationReqState $ stateSet HKOWeatherInformationReqState stateEmpty) jscontext
+      runHaxlWithWrites
+        env'
+        -- { flags = defaultFlags {trace = 3}
+        -- }
+        $ do
+          tellWrite @Text "Start Request"
+          -- r1 <- dataFetch GetLocalWeaterForecast
+          -- r2 <- dataFetch Get9DayWeatherForecast
+          geo@(Geolocation lat long _) <- dataFetch LocationReq
+          r3 <- dataFetch GetCurrentWeatherReport
+          pure (geo, r3.uvindex)
+    traverse (consoleLog . ms) $ flattenWT wt
+    consoleLog . ms $ show r
+    pure $ [SetLocation geo, SetUVIndex geo r]
   SetLocation location ->
     get >>= \case
       Model _ ((== location) -> True) -> io_ $ consoleLog "same location"
       _ -> do
         put $ NoUVIndexData Nothing location
         issue FetchUVIndexData
-  SetUVIndex idx ->
-    getLocation <$> get >>= \case
-      Left mErr -> io $ FetchLocationData <$ do consoleError . ms $ show mErr -- TEMP FIXME
-      Right location -> do
-        io_ $ setLocalStorage (makeStorageKey location) idx
-        put $ Model idx location -- TEMP FIXME: could location be outdated?
-  HandleError err -> io_ . consoleLog $ "Failed to fetch: " <> either (ms . show) _unUVIndexFetchError err
+  SetUVIndex geo idx -> do
+    io_ $ setLocalStorage (makeStorageKey geo) idx
+    put $ Model idx geo -- TEMP FIXME: could location be outdated?
 
 -- TEMP FIXME
 viewModel :: Model -> View Model Action
@@ -120,9 +101,9 @@ viewModel = \case
           "We are sorry. "
             <> case mErr of
               Nothing -> "We have no UV index data for you"
-              Just (_unUVIndexFetchError -> err) -> case err of
+              Just err -> case err of
                 "" -> "Something went wrong while fetching the UV index for you"
-                _ -> "thing went wrong while fetching the UV index for you: " <> err
+                _ -> "thing went wrong while fetching the UV index for you: " <> ms err
       ]
   Model uvIndex location ->
     div_ [] $
@@ -134,5 +115,5 @@ viewModel = \case
 dashboardComponent :: Component parent Model Action
 dashboardComponent =
   (component defaultModel updateModel viewModel)
-    { initialAction = Just FetchLocationData
+    { initialAction = Just FetchUVIndexData
     }

@@ -8,6 +8,7 @@
 
 module Dashboard.DataSource.HongKongObservatoryWeatherAPI where
 
+import Control.Applicative
 import Control.Concurrent
 import Control.Concurrent.Async
 import Control.Exception (throw)
@@ -171,10 +172,24 @@ data UVIndex = UVIndex
   }
   deriving stock (Show, Eq)
 
--- NOTE FIXME round trip test
 instance FromJSON UVIndex where
-  parseJSON = withObject "UVIndex" $ \o ->
-    UVIndex <$> o .: "data" <*> o .: "recordDesc"
+  parseJSON v =
+    ( withObject
+        "UVIndex"
+        ( \o ->
+            UVIndex <$> o .: "data" <*> o .: "recordDesc"
+        )
+        v
+    )
+      -- NOTE: it just return empty string at night!! not mentioned in doc, so nice!
+      <|> ( withText
+              "UVIndex"
+              ( \case
+                  "" -> pure $ UVIndex [] "nighttime no uv!"
+                  txt -> fail $ "unexpected! got nonempty string as uvindex: " <> unpack txt
+              )
+              v
+          )
 
 instance ToJSON UVIndex where
   toEncoding uvi = pairs $ "data" .= uvi._data <> "recordDesc" .= uvi.recordDesc
