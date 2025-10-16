@@ -14,7 +14,6 @@ import Language.Javascript.JSaddle
 import Miso hiding (URI)
 import Miso.Html.Element
 import Miso.Navigator
-import Numeric.Natural
 
 newtype UVIndexFetchError = UVIndexFetchError {_unUVIndexFetchError :: MisoString} deriving (Eq)
 
@@ -28,18 +27,12 @@ data Model
   deriving (Eq) -- TEMP FIXME
 
 data Action
-  = FetchLocationData Retry
-  | FetchUVIndexDataFromCache Retry
-  | FetchUVIndexData Retry
+  = FetchLocationData
+  | FetchUVIndexDataFromCache
+  | FetchUVIndexData
   | SetLocation Geolocation
   | SetUVIndex UVIndex
   | HandleError (Either GeolocationError UVIndexFetchError) -- TEMP FIXME
-
--- TEMP FIXME: refine retry mechanism
-newtype Retry = Retry Natural deriving newtype (Enum, Eq)
-
-noRetry :: Retry
-noRetry = Retry 0
 
 makeStorageKey :: Geolocation -> MisoString
 makeStorageKey (Geolocation lat long _) = ms $ show lat <> "," <> show long
@@ -55,33 +48,22 @@ getLocation m = case m of
 
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
-  FetchLocationData retry ->
-    geolocation
-      SetLocation
-      ( \err ->
-          if retry == noRetry
-            then HandleError $ Left err
-            else FetchLocationData $ pred retry
-      )
-  FetchUVIndexDataFromCache retry ->
+  FetchLocationData -> geolocation SetLocation $ HandleError . Left
+  FetchUVIndexDataFromCache ->
     getLocation <$> get >>= \case
-      Left mErr -> do
-        io_ . consoleError . ms $ show mErr -- TEMP FIXME
-        issue $ FetchLocationData retry
+      Left mErr -> io $ FetchLocationData <$ do consoleError . ms $ show mErr -- TEMP FIXME
       Right (makeStorageKey -> k) ->
         io $
           getLocalStorage k >>= \case
-            Left "Not Found" -> pure $ FetchUVIndexData retry
+            Left "Not Found" -> pure $ FetchUVIndexData
             Left err ->
-              FetchUVIndexData retry <$ do
+              FetchUVIndexData <$ do
                 consoleLog (ms err)
                 removeLocalStorage k -- NOTE: remove invalid cache
             Right idx -> pure $ SetUVIndex idx
-  FetchUVIndexData retry ->
+  FetchUVIndexData ->
     getLocation <$> get >>= \case
-      Left mErr -> io $ do
-        consoleError . ms $ show mErr -- TEMP FIXME
-        pure $ FetchLocationData retry
+      Left mErr -> io $ FetchLocationData <$ do consoleError . ms $ show mErr -- TEMP FIXME
       Right geo@(Geolocation lat long _) -> io $ do
         jscontext <- askJSM
         (r, wt) <- liftIO $ do
@@ -105,12 +87,10 @@ updateModel = \case
       Model _ ((== location) -> True) -> io_ $ consoleLog "same location"
       _ -> do
         put $ NoUVIndexData Nothing location
-        issue . FetchUVIndexData $ Retry 3
+        issue FetchUVIndexData
   SetUVIndex idx ->
     getLocation <$> get >>= \case
-      Left mErr -> io $ do
-        consoleError . ms $ show mErr -- TEMP FIXME
-        pure $ FetchLocationData $ Retry 3
+      Left mErr -> io $ FetchLocationData <$ do consoleError . ms $ show mErr -- TEMP FIXME
       Right location -> do
         io_ $ setLocalStorage (makeStorageKey location) idx
         put $ Model idx location -- TEMP FIXME: could location be outdated?
@@ -154,5 +134,5 @@ viewModel = \case
 dashboardComponent :: Component parent Model Action
 dashboardComponent =
   (component defaultModel updateModel viewModel)
-    { initialAction = Just . FetchLocationData $ Retry 3
+    { initialAction = Just FetchLocationData
     }
