@@ -13,16 +13,17 @@ import Control.Applicative
 import Control.Concurrent
 import Control.Concurrent.Async
 import Control.Exception (throw)
-import Control.Lens.Setter hiding ((.=))
+import Control.Lens.Setter hiding ((*~), (.=))
 import Control.Monad.IO.Class
 import Data.Aeson
+import Data.Aeson.Key
 import Data.Aeson.KeyMap qualified as AKM
 import Data.Aeson.Types
 import Data.Function
 import Data.Functor
 import Data.Hashable
 import Data.Interval
-import Data.Text hiding (concat, foldl', show)
+import Data.Text hiding (concat, elem, foldl', show)
 import Data.Text qualified as T
 import Data.Time
 import Data.Typeable
@@ -35,6 +36,9 @@ import Miso.FFI qualified as FFI
 import Network.URI
 import Network.URI.Lens
 import Numeric.Natural
+import Numeric.Units.Dimensional
+import Numeric.Units.Dimensional.NonSI
+import Numeric.Units.Dimensional.SIUnits
 import UnliftIO.Exception
 
 {-# WARNING fromJSValViaValue "partial, throw error when JSON assumption is wrong" #-}
@@ -73,22 +77,56 @@ instance FromJSVal LocalWeatherForecast where
 
 data SoilTemp = SoilTemp
   { place :: StrictText, -- location
-    value :: Float, -- value
-    unit :: StrictText, -- unit
+    value :: ThermodynamicTemperature Float, -- value
     recordTime :: UTCTime, -- record time YYYY-MMDD'T'hh:mm:ssZ Example: 2020-09- 01T08:19:00+08:00
-    depth :: ValueWithUnit
+    depth :: Length Float
   }
-  deriving stock (Show, Generic)
-  deriving anyclass (FromJSON)
+  deriving stock (Show)
+
+instance FromJSON SoilTemp where
+  parseJSON = withObject "SoilTemp" $ \o ->
+    SoilTemp
+      <$> o .: "place"
+      <*> ( (*~)
+              <$> o .: "value"
+              <*> ( o .: "unit" >>= \case
+                      "C" -> pure degreeCelsius
+                      txt -> fail $ "unexpected temperature unit: " <> txt
+                  )
+          )
+      <*> o .: "recordTime"
+      <*> ( o .: "depth"
+              >>= withObject
+                "depth"
+                ( \depth ->
+                    (*~)
+                      <$> depth .: "value"
+                      <*> ( depth .: "unit" >>= \case
+                              "metre" -> pure meter
+                              txt -> fail $ "unexpected length unit: " <> txt
+                          )
+                )
+          )
 
 data SeaTemp = SeaTemp
   { place :: StrictText, -- location
-    value :: Float, -- value
-    unit :: StrictText, -- unit
+    value :: ThermodynamicTemperature Float, -- value
     recordTime :: UTCTime -- record time YYYY-MMDD'T'hh:mm:ssZ Example: 2020-09- 01T08:19:00+08:00
   }
-  deriving stock (Show, Generic)
-  deriving anyclass (FromJSON)
+  deriving stock (Show)
+
+instance FromJSON SeaTemp where
+  parseJSON = withObject "SeaTemp" $ \o ->
+    SeaTemp
+      <$> o .: "place"
+      <*> ( (*~)
+              <$> o .: "value"
+              <*> ( o .: "unit" >>= \case
+                      "C" -> pure degreeCelsius
+                      txt -> fail $ "unexpected temperature unit: " <> txt
+                  )
+          )
+      <*> o .: "recordTime"
 
 data ValueWithUnit = ValueWithUnit
   { value :: Float,
@@ -102,11 +140,8 @@ data WeatherForecast = WeatherForecast
     week :: DayOfWeek, -- Week
     forecastWind :: StrictText, -- Forecast Wind
     forecastWeather :: StrictText, -- Forecast Weather
-    forecastIcon :: Natural, -- Forecast Weather Icon Weather icon list: https://www.hko.gov.hk/textonly/v2 /explain/wxicon_e.htm
-    forecastMaxtemp :: ValueWithUnit, -- Forecast Maximum Temperature
-    forecastMintemp :: ValueWithUnit, -- Forecast Minimum Temperature
-    forecastMaxrh :: ValueWithUnit, -- Forecast Maximum Relative Humidity
-    forecastMinrh :: ValueWithUnit, -- Forecast Minimum Relative Humidity
+    forecastTempInterval :: Interval (ThermodynamicTemperature Float), -- Forecast Temperature
+    forecastRHInterval :: Interval (Dimensionless Float), -- Forecast  Relative Humidity
     ------------------------------------------------------------------------------------------------
     -- Probability of Significant Rain Response value:                                            --
     --    High                                                                                    --
@@ -115,23 +150,58 @@ data WeatherForecast = WeatherForecast
     --    Medium Low Low                                                                          --
     -- Response value description: https://www.hko.gov.hk/en/wxinfo/currwx/fnd.htm?tablenote=true --
     ------------------------------------------------------------------------------------------------
-    psr :: StrictText
+    psr :: StrictText, -- TEMP FIXME
+    forecastIcon :: Natural
   }
-  deriving stock (Show, Generic)
+  deriving stock (Show)
 
 instance FromJSON WeatherForecast where
-  parseJSON = withObject "WeatherForecast" $ \o -> do
-    day <- toJSON <$> (o .: "forecastDate" >>= parseTimeM @_ @Day False defaultTimeLocale "%Y%m%d")
-    genericParseJSON
-      defaultOptions
-        { rejectUnknownFields = True,
-          fieldLabelModifier = \case
-            "forecastIcon" -> "ForecastIcon"
-            "psr" -> "PSR"
-            txt -> txt
-        }
-      . Object
-      $ AKM.insert "forecastDate" day o
+  parseJSON = withObject "WeatherForecast" $ \o ->
+    WeatherForecast
+      <$> (o .: "forecastDate" >>= parseTimeM @_ @Day False defaultTimeLocale "%Y%m%d")
+      <*> o .: "week"
+      <*> o .: "forecastWind"
+      <*> o .: "forecastWeather"
+      <*> ( do
+              let parseValueWithUnit k =
+                    o .: fromString k
+                      >>= withObject
+                        k
+                        ( \o' ->
+                            (*~)
+                              <$> o' .: "value"
+                              <*> ( o' .: "unit" >>= \case
+                                      "C" -> pure degreeCelsius
+                                      txt -> fail $ "unexpected temperature unit: " <> txt
+                                  )
+                        )
+              min' <- parseValueWithUnit "forecastMintemp"
+              max' <- parseValueWithUnit "forecastMaxtemp"
+              pure $ Finite min' <=..<= Finite max'
+          )
+      <*> ( do
+              let parseValueWithUnit k =
+                    o .: fromString k
+                      >>= withObject
+                        k
+                        ( \o' ->
+                            (*~)
+                              <$> o' .: "value"
+                              <*> ( o' .: "unit" >>= \case
+                                      "percent" -> pure percent
+                                      txt -> fail $ "unexpected relative humidity unit: " <> txt
+                                  )
+                        )
+              min' <- parseValueWithUnit "forecastMinrh"
+              max' <- parseValueWithUnit "forecastMaxrh"
+              pure $ Finite min' <=..<= Finite max'
+          )
+      <*> ( o .: "PSR" >>= \case
+              txt
+                | txt `elem` ["High", "Medium High", "Medium", "Medium Low", "Low"] -> pure txt -- TEMP FIXME
+                | otherwise -> fail $ "unexpected PSR value: " <> T.unpack txt
+          )
+      <*> o .: "ForecastIcon"
 
 data NineDayWeatherForecast = NineDayWeatherForecast
   { weatherForecast :: [WeatherForecast], -- Weather Forecast
@@ -171,8 +241,7 @@ data Lightning = Lightning
   deriving anyclass (FromJSON)
 
 data Rainfall = Rainfall
-  { interval :: Interval Float, -- Minimum & Maximum rainfall record
-    unit :: StrictText, -- unit
+  { interval :: Interval (Length Float), -- Minimum & Maximum rainfall record
     place :: StrictText, -- location
     main :: Bool -- Maintenance flag (TRUE/FALSE)
   }
@@ -180,11 +249,14 @@ data Rainfall = Rainfall
 
 instance FromJSON Rainfall where
   parseJSON = withObject "Rainfall" $ \o -> do
-    min' <- (fmap Finite <$> o .:? "min") .!= NegInf
-    max' <- (fmap Finite <$> o .:? "max") .!= PosInf
+    unit <-
+      o .: "unit" >>= \case
+        "mm" -> pure $ milli meter
+        txt -> fail $ "unexpected length unit: " <> txt
+    min' <- (fmap (Finite . (*~ unit)) <$> o .:? "min") .!= NegInf
+    max' <- (fmap (Finite . (*~ unit)) <$> o .:? "max") .!= PosInf
     Rainfall (min' <=..<= max')
-      <$> o .: "unit"
-      <*> o .: "place"
+      <$> o .: "place"
       <*> ( o .: "main" >>= \case
               "TRUE" -> pure True
               "FALSE" -> pure False
@@ -241,19 +313,39 @@ instance (FromJSON a) => FromJSON (DataWithRecordTime a) where
 
 data Temperature = Temperature
   { place :: StrictText, -- location
-    value :: Float, -- value
-    unit :: StrictText -- unit
+    value :: ThermodynamicTemperature Float -- value
   }
-  deriving stock (Show, Generic)
-  deriving anyclass (FromJSON)
+  deriving stock (Show)
+
+instance FromJSON Temperature where
+  parseJSON = withObject "Temperature" $ \o ->
+    Temperature
+      <$> o .: "place"
+      <*> ( (*~)
+              <$> o .: "value"
+              <*> ( o .: "unit" >>= \case
+                      "C" -> pure degreeCelsius
+                      txt -> fail $ "unexpected temperature unit: " <> txt
+                  )
+          )
 
 data Humidity = Humidity
   { place :: StrictText, -- location
-    value :: Float, -- value
-    unit :: StrictText -- unit
+    value :: Dimensionless Float -- value
   }
-  deriving stock (Show, Generic)
-  deriving anyclass (FromJSON)
+  deriving stock (Show)
+
+instance FromJSON Humidity where
+  parseJSON = withObject "Humidity" $ \o ->
+    Humidity
+      <$> o .: "place"
+      <*> ( (*~)
+              <$> o .: "value"
+              <*> ( o .: "unit" >>= \case
+                      "percent" -> pure percent
+                      txt -> fail $ "unexpected humidity unit: " <> txt
+                  )
+          )
 
 data CurrentWeatherReport = CurrentWeatherReport
   { lightning :: Maybe (DataWithInterval Lightning),
