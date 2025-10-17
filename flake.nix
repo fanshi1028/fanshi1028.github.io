@@ -151,6 +151,7 @@
                     supportedGhcVersions = [ ghcVersion ];
                     supportedFormatters = [ "ormolu" ];
                   })
+                  emacs-lsp-booster
                 ]
                 ++ (with haskell.packages."ghc${ghcVersion}"; [
                   cabal-gild_1_6_0_0
