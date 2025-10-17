@@ -21,7 +21,7 @@ import Data.Function
 import Data.Functor
 import Data.Hashable
 import Data.Interval
-import Data.Text hiding (show)
+import Data.Text hiding (foldl', show)
 import Data.Text qualified as T
 import Data.Time
 import Data.Void
@@ -231,7 +231,7 @@ data CurrentWeatherReport = CurrentWeatherReport
     warningMessage :: [StrictText], -- Warning Message Return a List. If no data for warning message, empty string will be returned.
     rainstormReminder :: Maybe StrictText, -- Rainstorm Reminder
     specialWxTips :: [StrictText], -- Special Weather Tips
-    tcmessage :: StrictText, -- Message of tropical cyclone position Return a List. NOTE: got text, are you kidding me?
+    tcmessage :: [StrictText], -- Message of tropical cyclone position Return a List. NOTE: got empty text, are you kidding me?
     mintempFrom00To09 :: Maybe StrictText, -- Minimum temperature from midnight to 9 am
     rainfallFrom00To12 :: Maybe StrictText, -- Accumulated rainfall at HKO from midnight to noon
     rainfallLastMonth :: Maybe StrictText, -- Rainfall in last month
@@ -243,16 +243,20 @@ data CurrentWeatherReport = CurrentWeatherReport
 
 instance FromJSON CurrentWeatherReport where
   parseJSON = withObject "CurrentWeatherReport" $ \o -> do
-    f1 <-
-      o .:? "warningMessage" >>= \case
-        Nothing -> pure id
-        Just "" -> pure $ AKM.insert "warningMessage" emptyArray
-        Just txt -> fail $ "expected empty string but got" <> T.unpack txt
-    f2 <-
-      o .:? "specialWxTips" <&> \case
-        Nothing -> AKM.insert "specialWxTips" emptyArray
-        Just (_ :: [StrictText]) -> id
-    genericParseJSON defaultOptions . Object $ f1 $ f2 o
+    let noArrayDataAsEmptyString k =
+          o .:? k >>= \case
+            Nothing -> pure id
+            Just "" -> pure $ AKM.insert k emptyArray
+            Just txt -> fail $ "expected empty string but got " <> T.unpack txt
+    objectFixes <-
+      sequenceA
+        [ noArrayDataAsEmptyString "tcmessage",
+          noArrayDataAsEmptyString "warningMessage",
+          o .:? "specialWxTips" <&> \case
+            Nothing -> AKM.insert "specialWxTips" emptyArray
+            Just (_ :: [StrictText]) -> id
+        ]
+    genericParseJSON defaultOptions . Object $ foldl' (&) o objectFixes
 
 instance FromJSVal CurrentWeatherReport where
   fromJSVal = fromJSValViaValue
