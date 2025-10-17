@@ -22,7 +22,7 @@ import Data.Function
 import Data.Functor
 import Data.Hashable
 import Data.Interval
-import Data.Text hiding (foldl', show)
+import Data.Text hiding (concat, foldl', show)
 import Data.Text qualified as T
 import Data.Time
 import Data.Typeable
@@ -37,20 +37,24 @@ import Network.URI.Lens
 import Numeric.Natural
 import UnliftIO.Exception
 
--- NOTE: kind of copied from gParseJSON in Data.Aeson.Types.FromJSON
-contextCons :: (Typeable a) => Proxy a -> Parser b -> Parser b
-contextCons (typeRepTyCon . typeRep -> tyCon) =
-  prependFailure ("parsing " ++ tyConModule tyCon ++ "(" ++ tyConName tyCon ++ ")" ++ " failed, ")
-
 {-# WARNING fromJSValViaValue "partial, throw error when JSON assumption is wrong" #-}
-fromJSValViaValue :: (FromJSON a) => JSVal -> JSM (Maybe a)
-fromJSValViaValue a =
+fromJSValViaValue :: (FromJSON a, Typeable a) => Proxy a -> JSVal -> JSM (Maybe a)
+fromJSValViaValue (typeRepTyCon . typeRep -> tyCon) a =
   fromJSVal a <&> \mv ->
     ifromJSON <$> mv >>= \case
       ISuccess r -> Just r
       IError path' err ->
         -- HACK
-        throw . JSONError . T.pack $ formatPath path' <> ": " <> err
+        throw . JSONError . T.pack $
+          concat
+            [ "Error in ",
+              tyConModule tyCon,
+              "(",
+              tyConName tyCon,
+              formatRelativePath path',
+              "):",
+              err
+            ]
 
 data LocalWeatherForecast = LocalWeatherForecast
   { generalSituation :: StrictText, -- General Situation
@@ -65,7 +69,7 @@ data LocalWeatherForecast = LocalWeatherForecast
   deriving anyclass (FromJSON)
 
 instance FromJSVal LocalWeatherForecast where
-  fromJSVal = fromJSValViaValue
+  fromJSVal = fromJSValViaValue Proxy
 
 data SoilTemp = SoilTemp
   { place :: StrictText, -- location
@@ -117,7 +121,7 @@ data WeatherForecast = WeatherForecast
 
 instance FromJSON WeatherForecast where
   parseJSON = withObject "WeatherForecast" $ \o -> do
-    day <- contextCons (Proxy @WeatherForecast) $ toJSON <$> (o .: "forecastDate" >>= parseTimeM @_ @Day False defaultTimeLocale "%Y%m%d")
+    day <- toJSON <$> (o .: "forecastDate" >>= parseTimeM @_ @Day False defaultTimeLocale "%Y%m%d")
     genericParseJSON
       defaultOptions
         { rejectUnknownFields = True,
@@ -143,7 +147,7 @@ data NineDayWeatherForecast = NineDayWeatherForecast
   deriving anyclass (FromJSON)
 
 instance FromJSVal NineDayWeatherForecast where
-  fromJSVal = fromJSValViaValue
+  fromJSVal = fromJSValViaValue Proxy
 
 data DataWithInterval a = DataWithInterval
   { --  Start Time YYYY-MM-DD'T'hh:mm:ssZ Example: 2020-09-01T08:19:00+08:00 endTime End Time
@@ -154,7 +158,7 @@ data DataWithInterval a = DataWithInterval
   deriving stock (Show)
 
 instance (FromJSON a) => FromJSON (DataWithInterval a) where
-  parseJSON = withObject "data with interval" $ \o -> do
+  parseJSON = withObject "DataWithInterval" $ \o -> do
     t1 <- Finite <$> o .: "startTime"
     t2 <- Finite <$> o .: "endTime"
     DataWithInterval (t1 <=..<= t2) <$> o .: "data"
@@ -232,7 +236,7 @@ data DataWithRecordTime a = DataWithRecordTime
   deriving stock (Show)
 
 instance (FromJSON a) => FromJSON (DataWithRecordTime a) where
-  parseJSON = withObject "data with record time" $ \o -> do
+  parseJSON = withObject "DataWithRecordTime" $ \o -> do
     DataWithRecordTime <$> o .: "recordTime" <*> o .: "data"
 
 data Temperature = Temperature
@@ -289,7 +293,7 @@ instance FromJSON CurrentWeatherReport where
     genericParseJSON defaultOptions . Object $ foldl' (&) o objectFixes
 
 instance FromJSVal CurrentWeatherReport where
-  fromJSVal = fromJSValViaValue
+  fromJSVal = fromJSValViaValue Proxy
 
 -- NOTE: Weather Information API
 data HKOWeatherInformationReq a where
