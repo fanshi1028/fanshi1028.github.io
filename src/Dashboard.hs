@@ -8,18 +8,19 @@ module Dashboard (dashboardComponent) where
 import Control.Monad.IO.Class
 import Dashboard.DataSource.BrowserGeolocationAPI
 import Dashboard.DataSource.HongKongObservatoryWeatherAPI
-import Data.Text hiding (show)
+import Data.Text
 import Haxl.Core
 import Haxl.Core.Monad (flattenWT)
 import Language.Javascript.JSaddle
 import Miso hiding (URI)
 import Miso.Html.Element
 import Miso.Navigator
+import Prelude hiding (show)
 
 data Model
   = NoLocationData (Maybe GeolocationError)
   | NoUVIndexData
-      (Maybe Text) -- NOTE TEMP: HaxlException as Text because it has no Eq instance
+      (Maybe StrictText) -- NOTE TEMP: HaxlException as Text because it has no Eq instance
       Geolocation
   | Model
       { _uvIndex :: UVIndex,
@@ -51,22 +52,24 @@ updateModel = \case
   --       Right idx -> pure $ SetUVIndex idx
   FetchUVIndexData -> for $ do
     jscontext <- askJSM
-    ((geo, r), wt) <- liftIO $ do
+    ((geo, r1, r2, r3), wt) <- liftIO $ do
       env' <- initEnv (stateSet LocationReqState $ stateSet HKOWeatherInformationReqState stateEmpty) jscontext
       runHaxlWithWrites
         env'
         -- { flags = defaultFlags {trace = 3}
         -- }
         $ do
-          tellWrite @Text "Start Request"
-          -- r1 <- dataFetch GetLocalWeaterForecast
-          -- r2 <- dataFetch Get9DayWeatherForecast
-          geo@(Geolocation lat long _) <- dataFetch LocationReq
+          tellWrite "Start Request"
+          r1 <- dataFetch GetLocalWeaterForecast
+          tellWrite $ show r1
+          r2 <- dataFetch Get9DayWeatherForecast
+          tellWrite $ show r2
           r3 <- dataFetch GetCurrentWeatherReport
-          pure (geo, r3.uvindex)
+          tellWrite $ show r3
+          geo@(Geolocation lat long _) <- dataFetch LocationReq
+          pure (geo, r1, r2, r3)
     traverse (consoleLog . ms) $ flattenWT wt
-    consoleLog . ms $ show r
-    pure $ [SetLocation geo, SetUVIndex geo r]
+    pure $ [SetLocation geo, SetUVIndex geo r3.uvindex]
   SetLocation location ->
     get >>= \case
       Model _ ((== location) -> True) -> io_ $ consoleLog "same location"

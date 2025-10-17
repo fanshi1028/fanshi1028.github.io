@@ -4,6 +4,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE NoFieldSelectors #-}
 
 module Dashboard.DataSource.HongKongObservatoryWeatherAPI where
@@ -24,6 +25,7 @@ import Data.Interval
 import Data.Text hiding (foldl', show)
 import Data.Text qualified as T
 import Data.Time
+import Data.Typeable
 import Data.Void
 import GHC.Generics
 import Haxl.Core hiding (throw)
@@ -34,6 +36,11 @@ import Network.URI
 import Network.URI.Lens
 import Numeric.Natural
 import UnliftIO.Exception
+
+-- NOTE: kind of copied from gParseJSON in Data.Aeson.Types.FromJSON
+contextCons :: (Typeable a) => Proxy a -> Parser b -> Parser b
+contextCons (typeRepTyCon . typeRep -> tyCon) =
+  prependFailure ("parsing " ++ tyConModule tyCon ++ "(" ++ tyConName tyCon ++ ")" ++ " failed, ")
 
 {-# WARNING fromJSValViaValue "partial, throw error when JSON assumption is wrong" #-}
 fromJSValViaValue :: (FromJSON a) => JSVal -> JSM (Maybe a)
@@ -60,43 +67,42 @@ data LocalWeatherForecast = LocalWeatherForecast
 instance FromJSVal LocalWeatherForecast where
   fromJSVal = fromJSValViaValue
 
-data Depth = Depth
-  { unit :: StrictText, -- depth unit
-    value :: StrictText -- depth value
-  }
-  deriving stock (Show, Generic)
-  deriving anyclass (FromJSON)
-
 data SoilTemp = SoilTemp
   { place :: StrictText, -- location
-    value :: StrictText, -- value
+    value :: Float, -- value
     unit :: StrictText, -- unit
     recordTime :: UTCTime, -- record time YYYY-MMDD'T'hh:mm:ssZ Example: 2020-09- 01T08:19:00+08:00
-    depth :: Depth
+    depth :: ValueWithUnit
   }
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON)
 
 data SeaTemp = SeaTemp
   { place :: StrictText, -- location
-    value :: StrictText, -- value
+    value :: Float, -- value
     unit :: StrictText, -- unit
     recordTime :: UTCTime -- record time YYYY-MMDD'T'hh:mm:ssZ Example: 2020-09- 01T08:19:00+08:00
   }
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON)
 
-data NineDayWeatherForecast = NineDayWeatherForecast
-  { weatherForecast :: [StrictText], -- Weather Forecast
-    forecastDate :: Day, -- Forecast Date YYYYMMDD
-    forecastWeather :: StrictText, -- Forecast Weather
-    forecastMaxtemp :: StrictText, -- Forecast Maximum Temperature
-    forecastMintemp :: StrictText, -- Forecast Minimum Temperature
-    week :: StrictText, -- Week
+data ValueWithUnit = ValueWithUnit
+  { value :: Float,
+    unit :: StrictText
+  }
+  deriving stock (Show, Generic)
+  deriving anyclass (FromJSON)
+
+data WeatherForecast = WeatherForecast
+  { forecastDate :: Day, -- Forecast Date YYYYMMDD
+    week :: DayOfWeek, -- Week
     forecastWind :: StrictText, -- Forecast Wind
-    forecastMaxrh :: StrictText, -- Forecast Maximum Relative Humidity
-    forecastMinrh :: StrictText, -- Forecast Minimum Relative Humidity
-    forecastIcon :: StrictText, -- Forecast Weather Icon Weather icon list: https://www.hko.gov.hk/textonly/v2 /explain/wxicon_e.htm
+    forecastWeather :: StrictText, -- Forecast Weather
+    forecastIcon :: Natural, -- Forecast Weather Icon Weather icon list: https://www.hko.gov.hk/textonly/v2 /explain/wxicon_e.htm
+    forecastMaxtemp :: ValueWithUnit, -- Forecast Maximum Temperature
+    forecastMintemp :: ValueWithUnit, -- Forecast Minimum Temperature
+    forecastMaxrh :: ValueWithUnit, -- Forecast Maximum Relative Humidity
+    forecastMinrh :: ValueWithUnit, -- Forecast Minimum Relative Humidity
     ------------------------------------------------------------------------------------------------
     -- Probability of Significant Rain Response value:                                            --
     --    High                                                                                    --
@@ -105,9 +111,33 @@ data NineDayWeatherForecast = NineDayWeatherForecast
     --    Medium Low Low                                                                          --
     -- Response value description: https://www.hko.gov.hk/en/wxinfo/currwx/fnd.htm?tablenote=true --
     ------------------------------------------------------------------------------------------------
-    psr :: StrictText,
-    soilTemp :: SoilTemp, -- Soil Temperature
-    seaTemp :: SeaTemp -- Sea Surface Temperature
+    psr :: StrictText
+  }
+  deriving stock (Show, Generic)
+
+instance FromJSON WeatherForecast where
+  parseJSON = withObject "WeatherForecast" $ \o -> do
+    day <- contextCons (Proxy @WeatherForecast) $ toJSON <$> (o .: "forecastDate" >>= parseTimeM @_ @Day False defaultTimeLocale "%Y%m%d")
+    genericParseJSON
+      defaultOptions
+        { rejectUnknownFields = True,
+          fieldLabelModifier = \case
+            "forecastIcon" -> "ForecastIcon"
+            "psr" -> "PSR"
+            txt -> txt
+        }
+      . Object
+      $ AKM.insert "forecastDate" day o
+
+data NineDayWeatherForecast = NineDayWeatherForecast
+  { weatherForecast :: [WeatherForecast], -- Weather Forecast
+    soilTemp :: [SoilTemp], -- Soil Temperature, NOTE: doc didn't say it is a list, but you know...
+    seaTemp :: SeaTemp, -- Sea Surface Temperature
+    -----------------------------------------------------------------
+    -- NOTE: Below are not in doc but exists in response. Nice doc --
+    -----------------------------------------------------------------
+    generalSituation :: StrictText,
+    updateTime :: UTCTime
   }
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON)
