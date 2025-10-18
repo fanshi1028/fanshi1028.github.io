@@ -128,13 +128,6 @@ instance FromJSON SeaTemp where
           )
       <*> o .: "recordTime"
 
-data ValueWithUnit = ValueWithUnit
-  { value :: Float,
-    unit :: StrictText
-  }
-  deriving stock (Show, Generic)
-  deriving anyclass (FromJSON)
-
 data WeatherForecast = WeatherForecast
   { forecastDate :: Day, -- Forecast Date YYYYMMDD
     week :: DayOfWeek, -- Week
