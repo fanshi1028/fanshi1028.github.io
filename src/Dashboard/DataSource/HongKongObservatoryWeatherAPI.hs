@@ -370,10 +370,11 @@ data CurrentWeatherReport = CurrentWeatherReport
 instance FromJSON CurrentWeatherReport where
   parseJSON = withObject "CurrentWeatherReport" $ \o -> do
     let noArrayDataAsEmptyString k =
-          o .:? k >>= \case
-            Nothing -> pure id
-            Just "" -> pure $ AKM.insert k emptyArray
-            Just txt -> fail $ "expected empty string but got " <> T.unpack txt
+          ( o .: k >>= \case
+              "" -> pure $ AKM.insert k emptyArray
+              txt -> fail $ "expected empty string but got " <> T.unpack txt
+          )
+            <|> pure id
     objectFixes <-
       sequenceA
         [ noArrayDataAsEmptyString "tcmessage",
