@@ -52,23 +52,20 @@ updateModel = \case
   --       Right idx -> pure $ SetUVIndex idx
   FetchUVIndexData -> for $ do
     jscontext <- askJSM
-    ((geo, r1, r2, r3), wt) <- liftIO $ do
+    ((geo, r3), wt) <- liftIO $ do
       env' <- initEnv (stateSet LocationReqState $ stateSet HKOWeatherInformationReqState stateEmpty) jscontext
-      runHaxlWithWrites
-        env'
-        -- { flags = defaultFlags {trace = 3}
-        -- }
-        $ do
-          tellWrite "Start Request"
+      runHaxlWithWrites env'
+       -- {flags = defaultFlags {trace = 3}}
+       $ do
           r1 <- dataFetch GetLocalWeaterForecast
-          tellWrite $ show r1
           r2 <- dataFetch Get9DayWeatherForecast
-          tellWrite $ show r2
           r3 <- dataFetch GetCurrentWeatherReport
-          tellWrite $ show r3
-          geo@(Geolocation lat long _) <- dataFetch LocationReq
-          pure (geo, r1, r2, r3)
-    traverse (consoleLog . ms) $ flattenWT wt
+          r4 <- dataFetch GetWeatherWarningSummary
+          r5 <- dataFetch GetWeatherWarningInfo
+          r5 <- dataFetch GetSpecialWeatherTips
+          geo <- dataFetch LocationReq
+          pure (geo, r3)
+    traverse (consoleLog . ms @StrictText) $ flattenWT wt
     pure $ [SetLocation geo, SetUVIndex geo r3.uvindex]
   SetLocation location ->
     get >>= \case
