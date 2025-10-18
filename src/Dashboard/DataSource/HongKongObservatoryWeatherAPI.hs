@@ -423,7 +423,7 @@ hkoWeatherInformationReqToURI req =
         GetCurrentWeatherReport -> "rhrread"
         GetWeatherWarningSummary -> "warnsum"
         GetWeatherWarningInfo -> "warninginfo"
-        GetSpecialWeatherTips -> "set"
+        GetSpecialWeatherTips -> "swt"
     )
     ""
 
