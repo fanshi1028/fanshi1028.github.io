@@ -221,7 +221,7 @@ prdView open prd =
                               div_ [class_ "px-2 flex flex-col sm:flex-row xl:flex-row-reverse xl:justify-between gap-2 sm:gap-4 lg:gap-6 mt-2 sm:mt-4"] $
                                 [ h4_ [class_ "text-neutral-300 font-bold sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl sm:mt-2 sm:-ml-4 xl:ml-0 sm:[writing-mode:vertical-lr]"] ["Key Decisions"],
                                   ul_ [class_ "list-disc list-inside flex flex-col gap-2 sm:gap-4"] $
-                                    let decisionView decision' = li_ [class_ "prose 2xl:prose-lg text-neutral-800"] [text $ ms decision']
+                                    let decisionView decision' = li_ [class_ "prose 2xl:prose-lg text-neutral-800 break-words"] [text $ ms decision']
                                      in decisionView decision : (decisionView <$> restDecisions)
                                 ]
                             ]
