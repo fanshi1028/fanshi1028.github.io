@@ -8,6 +8,9 @@ module Dashboard (dashboardComponent) where
 import Control.Monad.IO.Class
 import Dashboard.DataSource.BrowserGeolocationAPI
 import Dashboard.DataSource.HongKongObservatoryWeatherAPI
+import Dashboard.DataSource.MisoRunAction
+import Data.Foldable
+import Data.Function
 import Data.Text
 import Haxl.Core
 import Haxl.Core.Monad (flattenWT)
@@ -51,23 +54,29 @@ updateModel = \case
   --           consoleLog (ms err)
   --           removeLocalStorage k -- NOTE: remove invalid cache
   --       Right idx -> pure $ SetUVIndex idx
-  FetchUVIndexData -> for $ do
+  FetchUVIndexData -> startSub @MisoString "FetchUVIndexData" $ \sink -> do
     jscontext <- askJSM
-    ((geo, r3), wt) <- liftIO $ do
-      env' <- initEnv (stateSet LocationReqState $ stateSet HKOWeatherInformationReqState stateEmpty) jscontext
-      runHaxlWithWrites env'
-       -- {flags = defaultFlags {trace = 3}}
-       $ do
-          r1 <- dataFetch GetLocalWeaterForecast
-          r2 <- dataFetch Get9DayWeatherForecast
-          r3 <- dataFetch GetCurrentWeatherReport
-          r4 <- dataFetch GetWeatherWarningSummary
-          r5 <- dataFetch GetWeatherWarningInfo
-          r5 <- dataFetch GetSpecialWeatherTips
-          geo <- dataFetch LocationReq
-          pure (geo, r3)
-    traverse (consoleLog . ms @StrictText) $ flattenWT wt
-    pure $ [SetLocation geo, SetUVIndex geo r3.uvindex]
+    (_, wt) <- liftIO $ do
+      env' <-
+        initEnv
+          ( stateEmpty
+              & stateSet (MisoRunActionState sink)
+              & stateSet LocationReqState
+              & stateSet HKOWeatherInformationReqState
+          )
+          jscontext
+      runHaxlWithWrites env' {flags = defaultFlags {trace = 3}} $ do
+        r1 <- dataFetch GetLocalWeaterForecast
+        r2 <- dataFetch Get9DayWeatherForecast
+        geo <- dataFetch LocationReq
+        misoRunAction $ SetLocation geo
+        dataFetch GetCurrentWeatherReport >>= \r ->
+          misoRunAction (SetUVIndex geo r.uvindex)
+        r4 <- dataFetch GetWeatherWarningSummary
+        r5 <- dataFetch GetWeatherWarningInfo
+        r5 <- dataFetch GetSpecialWeatherTips
+        pure ()
+    traverse_ (consoleLog . ms @StrictText) $ flattenWT wt
   SetLocation location ->
     get >>= \case
       Model _ ((== location) -> True) -> io_ $ consoleLog "same location"
