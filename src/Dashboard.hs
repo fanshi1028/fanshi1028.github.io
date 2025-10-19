@@ -32,6 +32,7 @@ data Action
   = FetchUVIndexData
   | SetLocation Geolocation
   | SetUVIndex Geolocation UVIndex
+  deriving stock (Show, Eq)
 
 makeStorageKey :: Geolocation -> MisoString
 makeStorageKey (Geolocation lat long _) = ms $ show lat <> "," <> show long
