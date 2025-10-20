@@ -91,7 +91,7 @@
           };
           fanshi1028-site-js = mkDefaultPackage pkgsWithMisoOverlays.pkgsCross.ghcjs {
             overrides = hself: hsuper: {
-              zlib = pkgs.lib.pip hsuper.zlib (
+              zlib = pkgs.lib.pipe hsuper.zlib (
                 with pkgs.haskell.lib.compse;
                 [
                   (overrideCabal (drv: {
