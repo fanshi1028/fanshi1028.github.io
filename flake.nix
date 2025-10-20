@@ -97,7 +97,7 @@
                   [
                     (enableCabalFlag "bundled-c-zlib")
                     (overrideCabal (drv: {
-                      libraryHaskellDepends = (drv.libraryHaskellDepends or [ ]) ++ hsuper.zlib-clib;
+                      libraryHaskellDepends = (drv.libraryHaskellDepends or [ ]) ++ [ hsuper.zlib-clib ];
                     }))
                   ]
                 )).override
