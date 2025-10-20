@@ -96,7 +96,8 @@
                 [
                   (enableCabalFlag "bundled-c-zlib")
                   (overrideCabal (drv: {
-                    extraLibraries = [ ];
+                    libraryHaskellDepends = drv.libraryHaskellDepends ++ hsuper.zlib-clib;
+                    librarySystemDepends = pkgs.lib.lists.remove pkgs.zlib drv.librarySystemDepends;
                   }))
                 ]
               );
