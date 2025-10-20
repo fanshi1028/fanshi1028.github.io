@@ -83,6 +83,10 @@
               ];
           };
           fanshi1028-site-js = mkDefaultPackage pkgsWithMisoOverlays.pkgsCross.ghcjs {
+            overrides = hself: hsuper: {
+              haxl = applyFixToHaxl pkgs hsuper.haxl;
+              zlib = pkgs.haskell.lib.enableCabalFlag hsuper.zlib "bundled-c-zlib";
+            };
             modifier =
               drv:
               pkgs.lib.pipe drv (
