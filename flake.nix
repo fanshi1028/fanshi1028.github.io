@@ -67,7 +67,7 @@
                     '';
                   });
                 }
-                // (if args.overrides == null then { } else args.overrides hself hsuper)
+                // (if args ? overrides then args.overrides hself hsuper else { })
               );
           }
         );
