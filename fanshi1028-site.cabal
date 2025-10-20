@@ -48,6 +48,7 @@ common lib
     miso,
     network-uri,
     retry,
+    serialise,
     text,
     time,
     unliftio,
