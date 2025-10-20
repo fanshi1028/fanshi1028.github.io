@@ -92,7 +92,8 @@
           fanshi1028-site-js = mkDefaultPackage pkgsWithMisoOverlays.pkgsCross.ghcjs {
             overrides = hself: hsuper: {
               zlib =
-                pkgs.haskell.lib.callCabal2nixWithOptions hsuper.zlib.name hsuper.zlib.src "-fbundled-c-zlib"
+                pkgs.haskell.packages."ghc${ghcVersion}".callCabal2nixWithOptions hsuper.zlib.name hsuper.zlib.src
+                  "-fbundled-c-zlib"
                   { };
             };
             modifier =
