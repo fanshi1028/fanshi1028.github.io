@@ -53,11 +53,18 @@
         pkgs.haskell.packages."ghc${ghcVersion}".developPackage (
           {
             root = ./.;
-            overrides = hself: hsuper: {
-              haxl = applyFixToHaxl pkgs hsuper.haxl;
-            };
           }
           // args
+          // {
+            overrides =
+              hself: hsuper:
+              (
+                {
+                  haxl = applyFixToHaxl pkgs hsuper.haxl;
+                }
+                // (if args.overrides == null then { } else args.overrides hself hsuper)
+              );
+          }
         );
     in
     {
@@ -84,7 +91,6 @@
           };
           fanshi1028-site-js = mkDefaultPackage pkgsWithMisoOverlays.pkgsCross.ghcjs {
             overrides = hself: hsuper: {
-              haxl = applyFixToHaxl pkgs hsuper.haxl;
               zlib = pkgs.haskell.lib.enableCabalFlag hsuper.zlib "bundled-c-zlib";
             };
             modifier =
@@ -121,7 +127,6 @@
           without-build-tools = mkDefaultPackage pkgsWithMisoOverlays { returnShellEnv = true; };
           default = mkDefaultPackage pkgsWithMisoOverlays {
             overrides = hself: hsuper: {
-              haxl = applyFixToHaxl pkgs hsuper.haxl;
               jsaddle = pkgs.lib.pipe hsuper.jsaddle (
                 with pkgs.haskell.lib.compose;
                 [
