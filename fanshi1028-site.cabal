@@ -47,6 +47,7 @@ common lib
     lens,
     miso,
     network-uri,
+    retry,
     text,
     time,
     unliftio,
