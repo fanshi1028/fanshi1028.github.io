@@ -95,7 +95,7 @@
                 (pkgs.lib.pipe hsuper.zlib (with pkgs.haskell.lib.compose; [ (enableCabalFlag "bundled-c-zlib") ]))
                 .overrideAttrs
                   (oldAttrs: {
-                    buildInputs = pkgs.lib.list.remove pkgs.zlib oldAttrs.buildInputs;
+                    buildInputs = pkgs.lib.lists.remove pkgs.zlib (oldAttrs.buildInputs or [ ]);
                   });
             };
             modifier =
