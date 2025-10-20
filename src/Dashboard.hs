@@ -8,7 +8,7 @@ module Dashboard (dashboardComponent) where
 import Control.Monad.IO.Class
 import Dashboard.DataSource.BrowserGeolocationAPI
 import Dashboard.DataSource.HongKongObservatoryWeatherAPI
-import Dashboard.DataSource.MisoRunAction
+import Dashboard.DataSource.MisoRun
 import Data.Foldable
 import Data.Function
 import Data.Text
