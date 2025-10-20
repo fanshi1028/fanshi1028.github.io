@@ -9,9 +9,13 @@ import Control.Monad.IO.Class
 import Dashboard.DataSource.BrowserGeolocationAPI
 import Dashboard.DataSource.HongKongObservatoryWeatherAPI
 import Dashboard.DataSource.MisoRun
+import Data.Aeson
 import Data.Foldable
 import Data.Function
+import Data.Functor
 import Data.Text
+import Data.Time
+import Data.Typeable
 import Haxl.Core
 import Haxl.Core.Monad (flattenWT)
 import Language.Javascript.JSaddle
@@ -37,45 +41,56 @@ data Action
   | SetUVIndex Geolocation UVIndex
   deriving stock (Show, Eq)
 
-makeStorageKey :: Geolocation -> MisoString
-makeStorageKey (Geolocation lat long _) = ms $ show lat <> "," <> show long
+makeReqStorageKey :: (Typeable req) => req -> MisoString
+makeReqStorageKey req = ms $ showsTypeRep (typeOf req) ""
 
 defaultModel :: Model
 defaultModel = NoLocationData Nothing -- TEMP FIXME
 
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
-  -- Right (makeStorageKey -> k) ->
-  --   io $
-  --     getLocalStorage k >>= \case
-  --       Left "Not Found" -> pure $ FetchUVIndexData
-  --       Left err ->
-  --         FetchUVIndexData <$ do
-  --           consoleLog (ms err)
-  --           removeLocalStorage k -- NOTE: remove invalid cache
-  --       Right idx -> pure $ SetUVIndex idx
   FetchUVIndexData -> startSub @MisoString "FetchUVIndexData" $ \sink -> do
     jscontext <- askJSM
-    (_, wt) <- liftIO $ do
-      env' <-
-        initEnv
-          ( stateEmpty
-              & stateSet (MisoRunActionState sink)
-              & stateSet LocationReqState
-              & stateSet HKOWeatherInformationReqState
-          )
-          jscontext
+    let st =
+          stateEmpty
+            & stateSet (MisoRunActionState sink)
+            & stateSet LocationReqState
+            & stateSet HKOWeatherInformationReqState
+        getCache :: (Request req a, FromJSON a) => req a -> (a -> Bool) -> JSM (GenHaxl u w ())
+        getCache req@(makeReqStorageKey -> key) validateCache =
+          getLocalStorage key >>= \case
+            Left _ -> pure $ pure ()
+            Right res
+              | validateCache res -> pure $ cacheRequest req $ Right res
+              | otherwise -> pure () <$ removeLocalStorage key
+    t <- liftIO getCurrentTime
+    loadCache <-
+      sequence
+        [ getCache GetLocalWeaterForecast $ \localWeaterForecast ->
+            t `diffUTCTime` localWeaterForecast.updateTime >= 60 * 15,
+          getCache Get9DayWeatherForecast $ \nineDayWeatherForecast ->
+            t `diffUTCTime` nineDayWeatherForecast.updateTime >= 60 * 60 * 12,
+          getCache GetCurrentWeatherReport $ \currentWeatherReport ->
+            t `diffUTCTime` currentWeatherReport.updateTime >= 60 * 15,
+          getCache GetWeatherWarningSummary $ const @_ @Value False, -- TEMP FIXME
+          getCache GetWeatherWarningInfo $ const @_ @Value False, -- TEMP FIXME
+          getCache GetSpecialWeatherTips $ const @_ @Value False -- TEMP FIXME
+        ]
+    -- TEMP FIXME setCache!!!!!
+    (caches', wt) <- liftIO $ do
+      env' <- initEnv st jscontext
       runHaxlWithWrites env' {flags = defaultFlags {trace = 3}} $ do
-        r1 <- dataFetch GetLocalWeaterForecast
-        r2 <- dataFetch Get9DayWeatherForecast
-        geo <- dataFetch LocationReq
+        sequenceA loadCache
+        localWeaterForecast <- dataFetch GetLocalWeaterForecast
+        dataFetch Get9DayWeatherForecast
+        geo <- uncachedRequest LocationReq
         misoRunAction $ SetLocation geo
         dataFetch GetCurrentWeatherReport >>= \r ->
           misoRunAction (SetUVIndex geo r.uvindex)
-        r4 <- dataFetch GetWeatherWarningSummary
-        r5 <- dataFetch GetWeatherWarningInfo
-        r5 <- dataFetch GetSpecialWeatherTips
-        pure ()
+        dataFetch GetWeatherWarningSummary
+        dataFetch GetWeatherWarningInfo
+        dataFetch GetSpecialWeatherTips
+        pure $ caches env'
     traverse_ (consoleLog . ms @StrictText) $ flattenWT wt
   SetLocation location ->
     get >>= \case
@@ -83,9 +98,7 @@ updateModel = \case
       _ -> do
         put $ NoUVIndexData Nothing location
         issue FetchUVIndexData
-  SetUVIndex geo idx -> do
-    io_ $ setLocalStorage (makeStorageKey geo) idx
-    put $ Model idx geo -- TEMP FIXME: could location be outdated?
+  SetUVIndex geo idx -> put $ Model idx geo -- TEMP FIXME: could location be outdated?
 
 -- TEMP FIXME
 viewModel :: Model -> View Model Action
