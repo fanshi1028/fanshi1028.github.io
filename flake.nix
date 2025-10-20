@@ -61,6 +61,11 @@
               (
                 {
                   haxl = applyFixToHaxl pkgs hsuper.haxl;
+                  zlib = pkgs.haskell.lib.overrideCabal hsuper.zlib (drv: {
+                    postPatch = ''
+                      sed -i 's/impl(ghcjs)/impl(ghcjs) || arch(javascript)/g' zlib.cabal
+                    '';
+                  });
                 }
                 // (if args.overrides == null then { } else args.overrides hself hsuper)
               );
@@ -90,9 +95,6 @@
               ];
           };
           fanshi1028-site-js = mkDefaultPackage pkgsWithMisoOverlays.pkgsCross.ghcjs {
-            overrides = hself: hsuper: {
-              zlib = pkgs.haskell.lib.enableCabalFlag hsuper.zlib "bundled-c-zlib";
-            };
             modifier =
               drv:
               pkgs.lib.pipe drv (
