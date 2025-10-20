@@ -94,13 +94,13 @@
               zlib = pkgs.lib.pipe hsuper.zlib (
                 with pkgs.haskell.lib.compose;
                 [
+                  (enableCabalFlag "bundled-c-zlib")
                   (overrideCabal (drv: {
                     postPatch = ''
                       sed -i 's/impl(ghcjs)/impl(ghcjs) || arch(javascript)/g' zlib.cabal
-                      sed -i 's/extra-libraries: z//g' zlib.cabal
                     '';
+                    editedCabalFile = "";
                   }))
-                  (enableCabalFlag "bundled-c-zlib")
                 ]
               );
             };
