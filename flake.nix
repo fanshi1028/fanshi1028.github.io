@@ -90,19 +90,6 @@
               ];
           };
           fanshi1028-site-js = mkDefaultPackage pkgsWithMisoOverlays.pkgsCross.ghcjs {
-            overrides = hself: hsuper: {
-              zlib =
-                (pkgs.lib.pipe hsuper.zlib (
-                  with pkgs.haskell.lib.compose;
-                  [
-                    (enableCabalFlag "bundled-c-zlib")
-                    (overrideCabal (drv: {
-                      libraryHaskellDepends = (drv.libraryHaskellDepends or [ ]) ++ [ hsuper.zlib-clib ];
-                    }))
-                  ]
-                )).override
-                  { zlib = null; };
-            };
             modifier =
               drv:
               pkgs.lib.pipe drv (
