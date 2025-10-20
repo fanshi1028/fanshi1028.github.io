@@ -96,11 +96,10 @@
                 [
                   (enableCabalFlag "bundled-c-zlib")
                   (overrideCabal (drv: {
-                    libraryHaskellDepends = drv.libraryHaskellDepends ++ hsuper.zlib-clib;
-                    librarySystemDepends = pkgs.lib.lists.remove pkgs.zlib drv.librarySystemDepends;
+                    libraryHaskellDepends = (drv.libraryHaskellDepends or []) ++ hsuper.zlib-clib;
                   }))
                 ]
-              );
+              ).override { zlib = null };
             };
             modifier =
               drv:
