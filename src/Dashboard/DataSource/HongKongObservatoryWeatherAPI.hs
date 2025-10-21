@@ -10,16 +10,18 @@
 module Dashboard.DataSource.HongKongObservatoryWeatherAPI where
 
 import Codec.Serialise
+import Codec.Serialise.Decoding
+import Codec.Serialise.Encoding
 import Control.Applicative
 import Control.Concurrent
 import Control.Concurrent.Async
 import Control.Exception (throw)
 import Control.Lens.Setter hiding ((*~), (.=))
 import Control.Monad.IO.Class
-import Data.Aeson
+import Data.Aeson hiding (Encoding, decode, encode)
 import Data.Aeson.Key
 import Data.Aeson.KeyMap qualified as AKM
-import Data.Aeson.Types
+import Data.Aeson.Types hiding (Encoding)
 import Data.Function
 import Data.Functor
 import Data.Hashable
@@ -33,12 +35,13 @@ import Data.Void
 import GHC.Generics
 import Haxl.Core hiding (throw)
 import Language.Javascript.JSaddle hiding (Object, Success)
-import Miso hiding (URI, defaultOptions, on)
+import Miso hiding (Decoder, URI, defaultOptions, on)
 import Miso.FFI qualified as FFI
 import Network.URI
 import Network.URI.Lens
 import Numeric.Natural
 import Numeric.Units.Dimensional
+import Numeric.Units.Dimensional.Coercion
 import Numeric.Units.Dimensional.NonSI
 import Numeric.Units.Dimensional.SIUnits
 import UnliftIO.Exception
@@ -83,7 +86,14 @@ data SoilTemp = SoilTemp
     recordTime :: UTCTime, -- record time YYYY-MMDD'T'hh:mm:ssZ Example: 2020-09- 01T08:19:00+08:00
     depth :: Length Float
   }
-  deriving stock (Show)
+  deriving stock (Eq, Show)
+
+instance Serialise SoilTemp where
+  encode (SoilTemp place value recordTime depth) = encodeListLen 5 <> encodeWord 0 <> encode place <> encode (unQuantity value) <> encode recordTime <> encode (unQuantity depth)
+  decode =
+    (,) <$> decodeListLen <*> decodeWord >>= \case
+      (5, 0) -> SoilTemp <$> decode <*> ((*~ degreeCelsius) <$> decode) <*> decode <*> ((*~ meter) <$> decode)
+      _ -> fail "invalid SoilTemp encoding"
 
 instance FromJSON SoilTemp where
   parseJSON = withObject "SoilTemp" $ \o ->
@@ -115,7 +125,14 @@ data SeaTemp = SeaTemp
     value :: ThermodynamicTemperature Float, -- value
     recordTime :: UTCTime -- record time YYYY-MMDD'T'hh:mm:ssZ Example: 2020-09- 01T08:19:00+08:00
   }
-  deriving stock (Show)
+  deriving stock (Eq, Show)
+
+instance Serialise SeaTemp where
+  encode (SeaTemp place value recordTime) = encodeListLen 4 <> encodeWord 0 <> encode place <> encode (unQuantity value) <> encode recordTime
+  decode =
+    (,) <$> decodeListLen <*> decodeWord >>= \case
+      (4, 0) -> SeaTemp <$> decode <*> ((*~ degreeCelsius) <$> decode) <*> decode
+      _ -> fail "invalid SoilTemp encoding"
 
 instance FromJSON SeaTemp where
   parseJSON = withObject "SeaTemp" $ \o ->
@@ -148,7 +165,71 @@ data WeatherForecast = WeatherForecast
     psr :: StrictText, -- TEMP FIXME
     forecastIcon :: Natural
   }
-  deriving stock (Show)
+  deriving stock (Eq, Show)
+
+encodeExtended :: (a -> Encoding) -> Extended a -> Encoding
+encodeExtended encoder = \case
+  NegInf -> encodeListLen 1 <> encodeWord 0
+  Finite a -> encodeListLen 2 <> encodeWord 1 <> encoder a
+  PosInf -> encodeListLen 1 <> encodeWord 3
+
+decodeExtended :: Decoder s a -> Decoder s (Extended a)
+decodeExtended decoder =
+  (,) <$> decodeListLen <*> decodeWord >>= \case
+    (1, 0) -> pure NegInf
+    (1, 3) -> pure PosInf
+    (2, 1) -> Finite <$> decoder
+    _ -> fail "invalid Extended encoding"
+
+encodeBoundary :: Boundary -> Encoding
+encodeBoundary = \case
+  Open -> encodeWord 0
+  Closed -> encodeWord 1
+
+decodeBoundary :: Decoder s Boundary
+decodeBoundary =
+  decodeWord >>= \case
+    0 -> pure Open
+    1 -> pure Closed
+    _ -> fail "invalid Boundary encoding"
+
+encodeInterval :: (a -> Encoding) -> Interval a -> Encoding
+encodeInterval encoder interval' =
+  let (lb, lbBoundary) = lowerBound' interval'
+      (ub, ubBoundary) = upperBound' interval'
+   in encodeListLen 5 <> encodeWord 0 <> encodeExtended encoder lb <> encodeBoundary lbBoundary <> encodeExtended encoder ub <> encodeBoundary ubBoundary
+
+decodeInterval :: (Ord a) => Decoder s a -> Decoder s (Interval a)
+decodeInterval decoder =
+  (,) <$> decodeListLen <*> decodeWord >>= \case
+    (5, 0) -> interval <$> ((,) <$> decodeExtended decoder <*> decodeBoundary) <*> ((,) <$> decodeExtended decoder <*> decodeBoundary)
+    _ -> fail "invalid Interval encoding"
+
+instance Serialise WeatherForecast where
+  encode (WeatherForecast forcastDate week forecastWind forecastWeather forecastTempInterval forecastRHInterval psr forecastIcon) =
+    encodeListLen 9
+      <> encodeWord 0
+      <> encode (toModifiedJulianDay forcastDate)
+      <> encode (fromEnum week)
+      <> encode forecastWind
+      <> encode forecastWeather
+      <> encodeInterval (encode . unQuantity) forecastTempInterval
+      <> encodeInterval (encode . unQuantity) forecastRHInterval
+      <> encode psr
+      <> encode forecastIcon
+  decode = do
+    (,) <$> decodeListLen <*> decodeWord >>= \case
+      (9, 0) ->
+        WeatherForecast
+          <$> (ModifiedJulianDay <$> decode)
+          <*> (toEnum <$> decode)
+          <*> decode
+          <*> decode
+          <*> decodeInterval ((*~ degreeCelsius) <$> decode)
+          <*> decodeInterval ((*~ percent) <$> decode)
+          <*> decode
+          <*> decode
+      _ -> fail "invalid WeatherForecast encoding"
 
 instance FromJSON WeatherForecast where
   parseJSON = withObject "WeatherForecast" $ \o ->
@@ -208,8 +289,8 @@ data NineDayWeatherForecast = NineDayWeatherForecast
     generalSituation :: StrictText,
     updateTime :: UTCTime
   }
-  deriving stock (Show, Generic)
-  deriving anyclass (FromJSON)
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (FromJSON, Serialise)
 
 instance FromJSVal NineDayWeatherForecast where
   fromJSVal = fromJSValViaValue Proxy
