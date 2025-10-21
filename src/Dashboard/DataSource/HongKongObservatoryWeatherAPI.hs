@@ -9,6 +9,7 @@
 
 module Dashboard.DataSource.HongKongObservatoryWeatherAPI where
 
+import Codec.Serialise
 import Control.Applicative
 import Control.Concurrent
 import Control.Concurrent.Async
@@ -23,6 +24,7 @@ import Data.Function
 import Data.Functor
 import Data.Hashable
 import Data.Interval
+import Data.Maybe
 import Data.Text hiding (concat, elem, foldl', show)
 import Data.Text qualified as T
 import Data.Time
@@ -69,8 +71,8 @@ data LocalWeatherForecast = LocalWeatherForecast
     outlook :: StrictText, -- Outlook
     updateTime :: UTCTime -- Update Time YYYY-MM-DD'T'hh:mm:ssZ Example: 2020-09-01T08:19:00+08:00
   }
-  deriving stock (Show, Generic)
-  deriving anyclass (FromJSON)
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (FromJSON, Serialise)
 
 instance FromJSVal LocalWeatherForecast where
   fromJSVal = fromJSValViaValue Proxy
