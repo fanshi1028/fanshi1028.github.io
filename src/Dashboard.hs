@@ -44,45 +44,46 @@ data Action
 defaultModel :: Model
 defaultModel = NoLocationData Nothing -- TEMP FIXME
 
+fetchDataSub :: Sink Action -> JSM ()
+fetchDataSub sink = do
+  jscontext <- askJSM
+  t <- liftIO getCurrentTime
+  ((), wt) <- liftIO $ do
+    let st =
+          stateEmpty
+            & stateSet (MisoRunActionState sink)
+            & stateSet LocationReqState
+            & stateSet HKOWeatherInformationReqState
+            & stateSet LocalStorageReqState
+
+    env' <- initEnv st jscontext
+    runHaxlWithWrites env' {flags = defaultFlags {trace = 3}} $
+      () <$ do
+        fromLocalStorageOrDatafetch GetLocalWeaterForecast (\r -> t `diffUTCTime` r.updateTime <= 60 * 15)
+        fromLocalStorageOrDatafetch Get9DayWeatherForecast (\r -> t `diffUTCTime` r.updateTime <= 60 * 60 * 12)
+
+        geo <- uncachedRequest LocationReq
+        misoRunAction $ SetLocation geo
+
+        currentWeatherReport <- fromLocalStorageOrDatafetch GetCurrentWeatherReport (\r -> t `diffUTCTime` r.updateTime <= 60 * 15)
+
+        misoRunAction $ SetUVIndex geo currentWeatherReport.uvindex
+
+        -- fromLocalStorageOrDatafetch GetWeatherWarningSummary (\r -> True)
+
+        -- loadCacheFromLocalStorage GetWeatherWarningInfo $ const @_ @Value False -- TEMP FIXME
+        -- loadCacheFromLocalStorage GetSpecialWeatherTips $ const @_ @Value False-- TEMP FIXME
+        dataFetch GetWeatherWarningSummary
+        dataFetch GetWeatherWarningInfo
+        dataFetch GetSpecialWeatherTips
+
+  traverse_ (consoleLog . ms @StrictText) $ flattenWT wt
+
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
-  FetchUVIndexData -> startSub @MisoString "FetchUVIndexData" $ \sink -> do
-    jscontext <- askJSM
-    t <- liftIO getCurrentTime
-    ((), wt) <- liftIO $ do
-      env' <- initEnv (stateEmpty & stateSet LocalStorageReqState) jscontext
-      runHaxlWithWrites env' {flags = defaultFlags {trace = 3}} $ do
-        loadCacheFromLocalStorage GetLocalWeaterForecast $ \localWeaterForecast ->
-          t `diffUTCTime` localWeaterForecast.updateTime <= 60 * 15
-        loadCacheFromLocalStorage Get9DayWeatherForecast $ \nineDayWeatherForecast ->
-          t `diffUTCTime` nineDayWeatherForecast.updateTime <= 60 * 60 * 12
-        loadCacheFromLocalStorage GetCurrentWeatherReport $ \currentWeatherReport ->
-          t `diffUTCTime` currentWeatherReport.updateTime <= 60 * 15
-      -- loadCacheFromLocalStorage GetWeatherWarningSummary $ const @_ @Value False -- TEMP FIXME
-      -- loadCacheFromLocalStorage GetWeatherWarningInfo $ const @_ @Value False -- TEMP FIXME
-      -- loadCacheFromLocalStorage GetSpecialWeatherTips $ const @_ @Value False-- TEMP FIXME
-
-      let st =
-            stateEmpty
-              & stateSet (MisoRunActionState sink)
-              & stateSet LocationReqState
-              & stateSet HKOWeatherInformationReqState
-              & stateSet LocalStorageReqState
-
-      env'' <- initEnvWithData st jscontext $ caches env'
-      runHaxlWithWrites env'' {flags = defaultFlags {trace = 3}} $
-        () <$ do
-          dataFetch GetLocalWeaterForecast >>= setCacheToLocalStorage GetLocalWeaterForecast
-          dataFetch Get9DayWeatherForecast >>= setCacheToLocalStorage Get9DayWeatherForecast
-          geo <- uncachedRequest LocationReq
-          misoRunAction $ SetLocation geo
-          dataFetch GetCurrentWeatherReport >>= \r -> do
-            misoRunAction (SetUVIndex geo r.uvindex)
-            setCacheToLocalStorage GetCurrentWeatherReport r
-          dataFetch GetWeatherWarningSummary
-          dataFetch GetWeatherWarningInfo
-          dataFetch GetSpecialWeatherTips
-    traverse_ (consoleLog . ms @StrictText) $ flattenWT wt
+  FetchUVIndexData -> do
+    -- TEMP FIXME
+    pure ()
   SetLocation location ->
     get >>= \case
       Model _ ((== location) -> True) -> io_ $ consoleLog "same location"
@@ -129,5 +130,6 @@ viewModel = \case
 dashboardComponent :: Component parent Model Action
 dashboardComponent =
   (component defaultModel updateModel viewModel)
-    { initialAction = Just FetchUVIndexData
+    { initialAction = Just FetchUVIndexData,
+      subs = [fetchDataSub]
     }
