@@ -27,7 +27,7 @@ import Data.Functor
 import Data.Hashable
 import Data.Interval
 import Data.Maybe
-import Data.Text hiding (concat, elem, foldl', show)
+import Data.Text hiding (concat, elem, foldl', foldr, reverse, show)
 import Data.Text qualified as T
 import Data.Time
 import Data.Typeable
@@ -301,7 +301,20 @@ data DataWithInterval a = DataWithInterval
     interval :: Interval UTCTime,
     _data :: [a]
   }
-  deriving stock (Show)
+  deriving stock (Eq, Show)
+
+encodeDataWithInterval :: (a -> Encoding) -> DataWithInterval a -> Encoding
+encodeDataWithInterval encoder (DataWithInterval interval' _data) = encodeListLen 3 <> encodeWord 0 <> encodeInterval encode interval' <> encodeListWith encoder _data
+
+decodeDataWithInterval :: Decoder s a -> Decoder s (DataWithInterval a)
+decodeDataWithInterval decoder =
+  (,) <$> decodeListLen <*> decodeWord >>= \case
+    (3, 0) -> DataWithInterval <$> decodeInterval decode <*> decodeListWith decoder
+    _ -> fail "invalide DataWithInterval encoding"
+
+instance (Serialise a) => Serialise (DataWithInterval a) where
+  encode = encodeDataWithInterval encode
+  decode = decodeDataWithInterval decode
 
 instance (FromJSON a) => FromJSON (DataWithInterval a) where
   parseJSON = withObject "DataWithInterval" $ \o -> do
@@ -313,15 +326,22 @@ data Lightning = Lightning
   { place :: StrictText, -- location
     occur :: Bool
   }
-  deriving stock (Show, Generic)
-  deriving anyclass (FromJSON)
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (FromJSON, Serialise)
 
 data Rainfall = Rainfall
   { interval :: Interval (Length Float), -- Minimum & Maximum rainfall record
     place :: StrictText, -- location
     main :: Bool -- Maintenance flag (TRUE/FALSE)
   }
-  deriving stock (Show)
+  deriving stock (Eq, Show)
+
+instance Serialise Rainfall where
+  encode (Rainfall interval' place main) = encodeListLen 4 <> encodeWord 0 <> encodeInterval (encode . unQuantity) interval' <> encode place <> encode main
+  decode =
+    (,) <$> decodeListLen <*> decodeWord >>= \case
+      (4, 0) -> Rainfall <$> decodeInterval ((*~ milli meter) <$> decode) <*> decode <*> decode
+      _ -> fail "invalid Rainfall encoding"
 
 instance FromJSON Rainfall where
   parseJSON = withObject "Rainfall" $ \o -> do
@@ -346,13 +366,20 @@ data UVIndexData = UVIndexData
     message :: Maybe StrictText -- message
   }
   deriving stock (Show, Eq, Generic)
-  deriving anyclass (FromJSON, ToJSON)
+  deriving anyclass (FromJSON, ToJSON, Serialise)
 
 data UVIndex = UVIndex
   { _data :: [UVIndexData],
     recordDesc :: StrictText -- record description
   }
   deriving stock (Show, Eq)
+
+instance Serialise UVIndex where
+  encode (UVIndex _data recordDesc) = encodeListLen 3 <> encodeWord 0 <> encode _data <> encode recordDesc
+  decode =
+    (,) <$> decodeListLen <*> decodeWord >>= \case
+      (3, 0) -> UVIndex <$> decode <*> decode
+      _ -> fail "invalid UVIndex encoding"
 
 instance FromJSON UVIndex where
   parseJSON v =
@@ -381,7 +408,32 @@ data DataWithRecordTime a = DataWithRecordTime
   { recordTime :: UTCTime, -- record time YYYY-MMDD'T'hh:mm:ssZ Example: 2020-09- 01T08:19:00+08:00
     _data :: [a]
   }
-  deriving stock (Show)
+  deriving stock (Eq, Show)
+
+-- NOTE: ref defaultEncodeList
+encodeListWith :: (a -> Encoding) -> [a] -> Encoding
+encodeListWith _ [] = encodeListLen 0
+encodeListWith encoder ls = encodeListLenIndef <> foldr (\x r -> encoder x <> r) encodeBreak ls
+
+-- NOTE: ref defaultDecodeList
+decodeListWith :: Decoder s a -> Decoder s [a]
+decodeListWith decoder =
+  decodeListLenOrIndef >>= \case
+    Nothing -> decodeSequenceLenIndef (flip (:)) [] reverse decoder
+    Just n -> decodeSequenceLenN (flip (:)) [] reverse n decoder
+
+encodeDataWithRecordTime :: (a -> Encoding) -> DataWithRecordTime a -> Encoding
+encodeDataWithRecordTime encoder (DataWithRecordTime recordTime _data) = encodeListLen 3 <> encodeWord 0 <> encode recordTime <> encodeListWith encoder _data
+
+decodeDataWithRecordTime :: Decoder s a -> Decoder s (DataWithRecordTime a)
+decodeDataWithRecordTime decoder =
+  (,) <$> decodeListLen <*> decodeWord >>= \case
+    (3, 0) -> DataWithRecordTime <$> decode <*> decodeListWith decoder
+    _ -> fail "invalide DataWithRecordTime encoding"
+
+instance (Serialise a) => Serialise (DataWithRecordTime a) where
+  encode = encodeDataWithRecordTime encode
+  decode = decodeDataWithRecordTime decode
 
 instance (FromJSON a) => FromJSON (DataWithRecordTime a) where
   parseJSON = withObject "DataWithRecordTime" $ \o -> do
@@ -391,7 +443,14 @@ data Temperature = Temperature
   { place :: StrictText, -- location
     value :: ThermodynamicTemperature Float -- value
   }
-  deriving stock (Show)
+  deriving stock (Eq, Show)
+
+instance Serialise Temperature where
+  encode (Temperature place value) = encodeListLen 3 <> encodeWord 0 <> encode place <> encode (unQuantity value)
+  decode =
+    (,) <$> decodeListLen <*> decodeWord >>= \case
+      (3, 0) -> Temperature <$> decode <*> ((*~ degreeCelsius) <$> decode)
+      _ -> fail "invalid Temperature encoding"
 
 instance FromJSON Temperature where
   parseJSON = withObject "Temperature" $ \o ->
@@ -409,7 +468,14 @@ data Humidity = Humidity
   { place :: StrictText, -- location
     value :: Dimensionless Float -- value
   }
-  deriving stock (Show)
+  deriving stock (Eq, Show)
+
+instance Serialise Humidity where
+  encode (Humidity place value) = encodeListLen 3 <> encodeWord 0 <> encode place <> encode (unQuantity value)
+  decode =
+    (,) <$> decodeListLen <*> decodeWord >>= \case
+      (3, 0) -> Humidity <$> decode <*> ((*~ percent) <$> decode)
+      _ -> fail "invalid Humidity encoding"
 
 instance FromJSON Humidity where
   parseJSON = withObject "Humidity" $ \o ->
@@ -441,7 +507,8 @@ data CurrentWeatherReport = CurrentWeatherReport
     temperature :: DataWithRecordTime Temperature, -- Temperature
     humidity :: DataWithRecordTime Humidity -- Humidity
   }
-  deriving stock (Show, Generic)
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (Serialise)
 
 instance FromJSON CurrentWeatherReport where
   parseJSON = withObject "CurrentWeatherReport" $ \o -> do

@@ -56,8 +56,8 @@ updateModel = \case
           t `diffUTCTime` localWeaterForecast.updateTime <= 60 * 15
         loadCacheFromLocalStorage Get9DayWeatherForecast $ \nineDayWeatherForecast ->
           t `diffUTCTime` nineDayWeatherForecast.updateTime <= 60 * 60 * 12
-      -- loadCacheFromLocalStorage GetCurrentWeatherReport $ \currentWeatherReport ->
-      --   t `diffUTCTime` currentWeatherReport.updateTime <= 60 * 15
+        loadCacheFromLocalStorage GetCurrentWeatherReport $ \currentWeatherReport ->
+          t `diffUTCTime` currentWeatherReport.updateTime <= 60 * 15
       -- loadCacheFromLocalStorage GetWeatherWarningSummary $ const @_ @Value False -- TEMP FIXME
       -- loadCacheFromLocalStorage GetWeatherWarningInfo $ const @_ @Value False -- TEMP FIXME
       -- loadCacheFromLocalStorage GetSpecialWeatherTips $ const @_ @Value False-- TEMP FIXME
@@ -78,7 +78,7 @@ updateModel = \case
           misoRunAction $ SetLocation geo
           dataFetch GetCurrentWeatherReport >>= \r -> do
             misoRunAction (SetUVIndex geo r.uvindex)
-          -- setCacheToLocalStorage GetCurrentWeatherReport r
+            setCacheToLocalStorage GetCurrentWeatherReport r
           dataFetch GetWeatherWarningSummary
           dataFetch GetWeatherWarningInfo
           dataFetch GetSpecialWeatherTips
