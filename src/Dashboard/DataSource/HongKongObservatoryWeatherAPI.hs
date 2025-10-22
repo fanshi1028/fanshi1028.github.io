@@ -9,6 +9,7 @@
 
 module Dashboard.DataSource.HongKongObservatoryWeatherAPI where
 
+import Codec.CBOR.JSON
 import Codec.Serialise
 import Codec.Serialise.Decoding
 import Codec.Serialise.Encoding
@@ -64,6 +65,15 @@ fromJSValViaValue (typeRepTyCon . typeRep -> tyCon) a =
               "):",
               err
             ]
+
+newtype SerialisableValue = SerialisableValue Value deriving newtype (Eq, Show, FromJSON)
+
+instance FromJSVal SerialisableValue where
+  fromJSVal v = fmap SerialisableValue <$> fromJSVal v
+
+instance Serialise SerialisableValue where
+  encode (SerialisableValue v) = encodeValue v
+  decode = SerialisableValue <$> decodeValue False
 
 data LocalWeatherForecast = LocalWeatherForecast
   { generalSituation :: StrictText, -- General Situation
@@ -536,9 +546,9 @@ data HKOWeatherInformationReq a where
   GetLocalWeaterForecast :: HKOWeatherInformationReq LocalWeatherForecast
   Get9DayWeatherForecast :: HKOWeatherInformationReq NineDayWeatherForecast
   GetCurrentWeatherReport :: HKOWeatherInformationReq CurrentWeatherReport
-  GetWeatherWarningSummary :: HKOWeatherInformationReq Value
-  GetWeatherWarningInfo :: HKOWeatherInformationReq Value
-  GetSpecialWeatherTips :: HKOWeatherInformationReq Value
+  GetWeatherWarningSummary :: HKOWeatherInformationReq SerialisableValue
+  GetWeatherWarningInfo :: HKOWeatherInformationReq SerialisableValue
+  GetSpecialWeatherTips :: HKOWeatherInformationReq SerialisableValue
 
 deriving instance Eq (HKOWeatherInformationReq a)
 

@@ -69,20 +69,19 @@ fetchDataSub sink = do
 
         misoRunAction $ SetUVIndex geo currentWeatherReport.uvindex
 
-        -- fromLocalStorageOrDatafetch GetWeatherWarningSummary (\r -> True)
-
-        -- loadCacheFromLocalStorage GetWeatherWarningInfo $ const @_ @Value False -- TEMP FIXME
-        -- loadCacheFromLocalStorage GetSpecialWeatherTips $ const @_ @Value False-- TEMP FIXME
-        dataFetch GetWeatherWarningSummary
-        dataFetch GetWeatherWarningInfo
-        dataFetch GetSpecialWeatherTips
+        -- TEMP FIXME
+        fromLocalStorageOrDatafetch GetWeatherWarningSummary (\r -> True)
+        fromLocalStorageOrDatafetch GetWeatherWarningInfo (\r -> True)
+        fromLocalStorageOrDatafetch GetSpecialWeatherTips (\r -> True)
 
   traverse_ (consoleLog . ms @StrictText) $ flattenWT wt
 
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
   FetchUVIndexData -> do
+    -- t <- liftIO getCurrentTime
     -- TEMP FIXME
+    -- _ <- loadCacheFromLocalStorage' GetLocalWeaterForecast $ \localWeaterForecast -> t `diffUTCTime` localWeaterForecast.updateTime <= 60 * 15
     pure ()
   SetLocation location ->
     get >>= \case

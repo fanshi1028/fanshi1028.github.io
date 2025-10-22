@@ -87,9 +87,6 @@ setLocalStorage k v = uncachedRequest $ SetLocalStorage k v
 removeLocalStorage :: Text -> GenHaxl JSContextRef w ()
 removeLocalStorage k = uncachedRequest $ RemoveLocalStorage k
 
-makeReqStorageKey :: (Typeable req) => req -> Text
-makeReqStorageKey req = pack $ showsTypeRep (typeOf req) ""
-
 loadCacheFromLocalStorage :: (Serialise a, Typeable a, Eq a, Show a) => Text -> (a -> Bool) -> GenHaxl JSContextRef w a
 loadCacheFromLocalStorage key validateCache =
   getLocalStorage key >>= \case
@@ -97,8 +94,8 @@ loadCacheFromLocalStorage key validateCache =
       | validateCache res -> pure res
       | otherwise -> fail $ "LocalStorage Cache Invalidated: " <> unpack key
 
-fromLocalStorageOrDatafetch :: (Eq a, Typeable a, Serialise a, Request req a, DataSource JSContextRef req) => req a -> (a -> Bool) -> GenHaxl JSContextRef w a
-fromLocalStorageOrDatafetch req@(makeReqStorageKey -> key) validateCache =
+fromLocalStorageOrDatafetch :: (Eq a, Typeable a, Show (req a), Serialise a, Request req a, DataSource JSContextRef req) => req a -> (a -> Bool) -> GenHaxl JSContextRef w a
+fromLocalStorageOrDatafetch req@(pack . show -> key) validateCache =
   loadCacheFromLocalStorage key validateCache
     `catchAny` do
       r <- dataFetch req
