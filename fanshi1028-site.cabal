@@ -105,6 +105,10 @@ library
 
   if arch(javascript)
     js-sources: temp-fix.js
+
+  if flag(production)
+    cpp-options:
+      -DPRODUCTION
   ghc-options: -Wall
 
 executable fanshi1028-site
