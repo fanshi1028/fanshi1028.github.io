@@ -8,3 +8,11 @@ function h$stg_getThreadAllocationCounterzh() {
   // XXX dummy implementation
   return 0
 }
+
+// warning, unhandled primop: setThreadAllocationCounter# (0,2)
+// uncaught exception in Haskell thread: ReferenceError: h$primop_setThreadAllocationCounterzh is not defined
+// ReferenceError: h$primop_setThreadAllocationCounterzh is not defined
+function h$primop_setThreadAllocationCounterzh() {
+  // XXX dummy implementation
+  return 0
+}
