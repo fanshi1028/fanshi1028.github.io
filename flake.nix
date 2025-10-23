@@ -48,6 +48,17 @@
             }))
           ]
         );
+
+      patch32bitCborg =
+        pkgs: cborg:
+        pkgs.haskell.lib.overrideCabal cborg (drv: {
+          patches = (drv.patches or [ ]) ++ [
+            (pkgs.fetchpatch {
+              url = "https://patch-diff.githubusercontent.com/raw/well-typed/cborg/pull/351.patch";
+              hash = "";
+            })
+          ];
+        });
       mkDefaultPackage =
         pkgs: args:
         pkgs.haskell.packages."ghc${ghcVersion}".developPackage (
@@ -62,6 +73,7 @@
                 {
                   haxl = applyFixToHaxl pkgs hsuper.haxl;
                   hashtables = hsuper.hashtables_1_4_2;
+                  cborg = patch32bitCborg pkg hsuper.cborg;
                 }
                 // (if args ? overrides then args.overrides hself hsuper else { })
               );
@@ -79,6 +91,7 @@
 
           miso = pkgsWithMisoOverlays.haskell.packages."ghc${ghcVersion}".miso;
           haxl = applyFixToHaxl pkgs pkgsWithMisoOverlays.haskell.packages."ghc${ghcVersion}".haxl;
+          cborg = patch32bitCborg pkg pkgsWithMisoOverlays.haskell.packages."ghc${ghcVersion}".cborg;
 
           prerender = mkDefaultPackage pkgsWithMisoOverlays {
             modifier =
