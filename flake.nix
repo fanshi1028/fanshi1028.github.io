@@ -90,6 +90,9 @@
               ];
           };
           fanshi1028-site-js = mkDefaultPackage pkgsWithMisoOverlays.pkgsCross.ghcjs {
+            overrides = hself: hsuper: ({
+              hashtables = pkgs.haskell.lib.enableCabalFlag hsuper.hashtables "portable";
+            });
             modifier =
               drv:
               pkgs.lib.pipe drv (
