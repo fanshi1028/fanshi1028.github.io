@@ -55,8 +55,8 @@
           patches = (drv.patches or [ ]) ++ [
             (pkgs.fetchpatch {
               url = "https://patch-diff.githubusercontent.com/raw/well-typed/cborg/pull/351.patch";
-              hash = "sha256-DnOnnM0nj/28g67vYRE2/xYAPrKGzU0ezdR4AtyF/o8=";
-              stripLen = 6;
+              hash = "";
+              stripLen = 1;
             })
           ];
         });
