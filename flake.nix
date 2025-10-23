@@ -61,6 +61,7 @@
               (
                 {
                   haxl = applyFixToHaxl pkgs hsuper.haxl;
+                  hashtables = hsuper.hashtables_1_4_2;
                 }
                 // (if args ? overrides then args.overrides hself hsuper else { })
               );
@@ -132,6 +133,13 @@
                 [
                   (enableCabalFlag "call-stacks")
                   (enableCabalFlag "check-unchecked")
+                ]
+              );
+              hashtables = pkgs.lib.pipe hsuper.hashtables_1_4_2 (
+                with pkgs.haskell.lib.compose;
+                [
+                  (enableCabalFlag "bounds-checking")
+                  (enableCabalFlag "debug")
                 ]
               );
             };
