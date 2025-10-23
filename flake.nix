@@ -73,7 +73,7 @@
                 {
                   haxl = applyFixToHaxl pkgs hsuper.haxl;
                   hashtables = hsuper.hashtables_1_4_2;
-                  cborg = patch32bitCborg pkg hsuper.cborg;
+                  cborg = patch32bitCborg pkgs hsuper.cborg;
                 }
                 // (if args ? overrides then args.overrides hself hsuper else { })
               );
