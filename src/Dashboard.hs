@@ -1,4 +1,5 @@
 {-# LANGUAGE ApplicativeDo #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ViewPatterns #-}
@@ -21,6 +22,15 @@ import Miso.Html.Element
 import Miso.Html.Event
 import Miso.Navigator
 import Prelude hiding (show)
+
+haxlEnvflags :: Flags
+haxlEnvflags =
+  defaultFlags
+#ifndef PRODUCTION
+    { trace = 3,
+      report = profilingReportFlags
+    }
+#endif
 
 data Model
   = NoLocationData (Maybe GeolocationError)
@@ -57,29 +67,22 @@ fetchDataSub sink = do
 
     t <- getCurrentTime
 
-    runHaxl
-      env'
-        { flags =
-            defaultFlags
-              { trace = 3
-              -- report = profilingReportFlags
-              }
-        }
-      $ () <$ do
-        fromLocalStorageOrDatafetch GetLocalWeaterForecast (\r -> t `diffUTCTime` r.updateTime <= 60 * 15)
-        fromLocalStorageOrDatafetch Get9DayWeatherForecast (\r -> t `diffUTCTime` r.updateTime <= 60 * 60 * 12)
+    runHaxl (env' {flags = haxlEnvflags}) $ do
+      fromLocalStorageOrDatafetch GetLocalWeaterForecast (\r -> t `diffUTCTime` r.updateTime <= 60 * 15)
 
-        geo <- uncachedRequest LocationReq
-        misoRunAction $ SetLocation geo
+      fromLocalStorageOrDatafetch Get9DayWeatherForecast (\r -> t `diffUTCTime` r.updateTime <= 60 * 60 * 12)
 
-        currentWeatherReport <- fromLocalStorageOrDatafetch GetCurrentWeatherReport (\r -> t `diffUTCTime` r.updateTime <= 60 * 15)
+      geo <- uncachedRequest LocationReq
+      misoRunAction $ SetLocation geo
 
-        misoRunAction $ SetUVIndex geo currentWeatherReport.uvindex
+      currentWeatherReport <- fromLocalStorageOrDatafetch GetCurrentWeatherReport (\r -> t `diffUTCTime` r.updateTime <= 60 * 15)
 
-        -- TEMP FIXME
-        fromLocalStorageOrDatafetch GetWeatherWarningSummary $ const True
-        fromLocalStorageOrDatafetch GetWeatherWarningInfo $ const True
-        fromLocalStorageOrDatafetch GetSpecialWeatherTips $ const True
+      misoRunAction $ SetUVIndex geo currentWeatherReport.uvindex
+
+      fromLocalStorageOrDatafetch GetWeatherWarningSummary $ const True
+      fromLocalStorageOrDatafetch GetWeatherWarningInfo $ const True
+      fromLocalStorageOrDatafetch GetSpecialWeatherTips $ const True
+      pure ()
 
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
