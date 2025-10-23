@@ -10,13 +10,11 @@ import Dashboard.DataSource.BrowserGeolocationAPI
 import Dashboard.DataSource.HongKongObservatoryWeatherAPI
 import Dashboard.DataSource.LocalStorage
 import Dashboard.DataSource.MisoRun
-import Data.Foldable
 import Data.Function
 import Data.Functor
 import Data.Text
 import Data.Time
 import Haxl.Core
-import Haxl.Core.Monad (flattenWT)
 import Language.Javascript.JSaddle
 import Miso hiding (URI, getLocalStorage, setLocalStorage)
 import Miso.Html.Element
@@ -47,8 +45,7 @@ defaultModel = NoLocationData Nothing -- TEMP FIXME
 fetchDataSub :: Sink Action -> JSM ()
 fetchDataSub sink = do
   jscontext <- askJSM
-  t <- liftIO getCurrentTime
-  ((), wt) <- liftIO $ do
+  liftIO $ do
     let st =
           stateEmpty
             & stateSet (MisoRunActionState sink)
@@ -56,9 +53,19 @@ fetchDataSub sink = do
             & stateSet HKOWeatherInformationReqState
             & stateSet LocalStorageReqState
 
-    env' <- initEnv st jscontext
-    runHaxlWithWrites env' {flags = defaultFlags {trace = 3}} $
-      () <$ do
+    env' <- initEnv @() st jscontext
+
+    t <- getCurrentTime
+
+    runHaxl
+      env'
+        { flags =
+            defaultFlags
+              { trace = 3
+              -- report = profilingReportFlags
+              }
+        }
+      $ () <$ do
         fromLocalStorageOrDatafetch GetLocalWeaterForecast (\r -> t `diffUTCTime` r.updateTime <= 60 * 15)
         fromLocalStorageOrDatafetch Get9DayWeatherForecast (\r -> t `diffUTCTime` r.updateTime <= 60 * 60 * 12)
 
@@ -70,19 +77,13 @@ fetchDataSub sink = do
         misoRunAction $ SetUVIndex geo currentWeatherReport.uvindex
 
         -- TEMP FIXME
-        fromLocalStorageOrDatafetch GetWeatherWarningSummary (\r -> True)
-        fromLocalStorageOrDatafetch GetWeatherWarningInfo (\r -> True)
-        fromLocalStorageOrDatafetch GetSpecialWeatherTips (\r -> True)
-
-  traverse_ (consoleLog . ms @StrictText) $ flattenWT wt
+        fromLocalStorageOrDatafetch GetWeatherWarningSummary $ const True
+        fromLocalStorageOrDatafetch GetWeatherWarningInfo $ const True
+        fromLocalStorageOrDatafetch GetSpecialWeatherTips $ const True
 
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
-  FetchUVIndexData -> do
-    -- t <- liftIO getCurrentTime
-    -- TEMP FIXME
-    -- _ <- loadCacheFromLocalStorage' GetLocalWeaterForecast $ \localWeaterForecast -> t `diffUTCTime` localWeaterForecast.updateTime <= 60 * 15
-    pure ()
+  FetchUVIndexData -> startSub @Text "FetchUVIndexData" fetchDataSub
   SetLocation location ->
     get >>= \case
       Model _ ((== location) -> True) -> io_ $ consoleLog "same location"
@@ -127,8 +128,4 @@ viewModel = \case
       ]
 
 dashboardComponent :: Component parent Model Action
-dashboardComponent =
-  (component defaultModel updateModel viewModel)
-    { initialAction = Just FetchUVIndexData,
-      subs = [fetchDataSub]
-    }
+dashboardComponent = (component defaultModel updateModel viewModel) {initialAction = Just FetchUVIndexData}
