@@ -9,45 +9,64 @@ import Haxl.Core
 import Language.Javascript.JSaddle
 import Miso
 
-data MisoRun action a where
-  MisoRunAction :: action -> MisoRun action ()
-  MisoRunJSM :: Proxy action -> JSM () -> MisoRun action ()
+-------------------------
+-- NOTE: MisoRunAction --
+-------------------------
 
-instance (Eq action) => Eq (MisoRun action a) where
+data MisoRunAction action a where
+  MisoRunAction :: action -> MisoRunAction action ()
+
+instance (Eq action) => Eq (MisoRunAction action a) where
   (==) (MisoRunAction action1) (MisoRunAction action2) = action1 == action2
-  (==) _ _ = False
 
-instance (Show action) => Show (MisoRun action a) where
-  show = \case
-    MisoRunAction action -> "MisoRunAction " <> show action
-    MisoRunJSM _ _ -> "MisoRunJSM (some JSM)"
+instance (Show action) => Show (MisoRunAction action a) where
+  show (MisoRunAction action) = "MisoRunAction " <> show action
 
-instance (Show action) => ShowP (MisoRun action) where
-  showp misoRun = case misoRun of
-    MisoRunAction _ -> show misoRun
-    MisoRunJSM _ _ -> show misoRun
+instance (Show action) => ShowP (MisoRunAction action) where showp = show
 
 -- HACK: we don't care about the Hashable instance here, because we won't cache the result with `misoRunAction`
-instance (Eq action) => Hashable (MisoRun action a) where
+instance (Eq action) => Hashable (MisoRunAction action a) where
   hashWithSalt s _ = hashWithSalt s (1 :: Int)
 
-instance (Typeable action) => DataSourceName (MisoRun action) where
-  dataSourceName proxy = pack $ showsTypeRep (typeRep proxy) "(MisoRunAction)"
+instance (Typeable action) => DataSourceName (MisoRunAction action) where
+  dataSourceName proxy = pack "MisoRunAction"
 
-instance (Typeable action) => StateKey (MisoRun action) where
-  data State (MisoRun action) = MisoRunActionState JSContextRef (Sink action)
+instance (Typeable action) => StateKey (MisoRunAction action) where
+  data State (MisoRunAction action) = MisoRunActionState JSContextRef (Sink action)
 
-instance (Typeable action, Show action, Eq action) => DataSource u (MisoRun action) where
-  fetch reqState@(MisoRunActionState jscontext sink) =
-    backgroundFetchPar
-      ( fmap Right . flip runJSM jscontext . \case
-          MisoRunAction action -> sink action
-          MisoRunJSM _ jsm -> jsm
-      )
-      reqState
+instance (Typeable action, Show action, Eq action) => DataSource u (MisoRunAction action) where
+  fetch reqState@(MisoRunActionState jscontext sink) = backgroundFetchPar (\(MisoRunAction action) -> Right <$> runJSM (sink action) jscontext) reqState
+
+----------------------
+-- NOTE: MisoRunJSM --
+----------------------
+
+data MisoRunJSM a where
+  MisoRunJSM :: JSM () -> MisoRunJSM ()
+
+instance Eq (MisoRunJSM a) where
+  (==) _ _ = False
+
+instance Show (MisoRunJSM a) where
+  show (MisoRunJSM _) = "MisoRunJSM (some JSM)"
+
+instance ShowP MisoRunJSM where showp = show
+
+-- HACK: we don't care about the Hashable instance here, because we won't cache the result with `misoRunAction`
+instance Hashable (MisoRunJSM a) where
+  hashWithSalt s _ = hashWithSalt s (1 :: Int)
+
+instance DataSourceName MisoRunJSM where
+  dataSourceName proxy = pack "MisoRunActionJSM"
+
+instance StateKey MisoRunJSM where
+  newtype State MisoRunJSM = MisoRunJSMState JSContextRef
+
+instance DataSource u MisoRunJSM where
+  fetch reqState@(MisoRunJSMState jscontext) = backgroundFetchPar (\(MisoRunJSM jsm) -> Right <$> runJSM jsm jscontext) reqState
 
 misoRunAction :: (Typeable action, Show action, Eq action) => action -> GenHaxl JSContextRef w ()
 misoRunAction = uncachedRequest . MisoRunAction
 
-misoRunJSM :: (Typeable action, Show action, Eq action) => Proxy action -> JSM () -> GenHaxl JSContextRef w ()
-misoRunJSM proxy = uncachedRequest . MisoRunJSM proxy
+misoRunJSM :: JSM () -> GenHaxl JSContextRef w ()
+misoRunJSM = uncachedRequest . MisoRunJSM
