@@ -41,34 +41,27 @@ instance StateKey LocalStorage where
 instance DataSourceName LocalStorage where
   dataSourceName _ = pack "localStorage"
 
-localStorage :: JSM JSVal
-localStorage = jsg "window" ! "localStorage"
-
-getLocalStorage' :: (Serialise a) => Text -> JSM (Either SomeException a)
-getLocalStorage' key = do
-  v <- localStorage # "getItem" $ [key]
-  ghcjsPure (isNull v) >>= \case
-    True -> pure . Left . toException . NotFound $ key <> pack ": not found in localStorage"
-    False -> do
-      txt <- fromJSValUnchecked v
-      case decodeBase64Untyped $ encodeUtf8 txt of
-        Left err -> fail . displayException @(Base64Error Void) $ DecodeError err
-        Right r -> case deserialiseOrFail $ fromStrict r of
-          Left err -> fail $ displayException err
-          Right r' -> pure $ Right r'
-
-removeLocalStorage' :: Text -> JSM ()
-removeLocalStorage' key = () <$ (localStorage # "removeItem" $ [key])
-
 instance DataSource JSContextRef LocalStorage where
   fetch state flags jscontext =
-    backgroundFetchPar
-      ( \req -> flip runJSM jscontext $ case req of
-          GetLocalStorage key -> getLocalStorage' key
+    syncFetch
+      ($ jsg "window" ! "localStorage")
+      (const $ pure ())
+      ( \localStorage req -> pure . flip runJSM jscontext $ case req of
+          GetLocalStorage key -> do
+            v <- localStorage # "getItem" $ [key]
+            ghcjsPure (isNull v) >>= \case
+              True -> pure . Left . toException . NotFound $ key <> pack ": not found in localStorage"
+              False -> do
+                txt <- fromJSValUnchecked v
+                case decodeBase64Untyped $ encodeUtf8 txt of
+                  Left err -> fail . displayException @(Base64Error Void) $ DecodeError err
+                  Right r -> case deserialiseOrFail $ fromStrict r of
+                    Left err -> fail $ displayException err
+                    Right r' -> pure $ Right r'
           SetLocalStorage key item ->
             Right () <$ do
               localStorage # "setItem" $ (key, extractBase64 . encodeBase64 . toStrict $ serialise item)
-          RemoveLocalStorage key -> Right <$> removeLocalStorage' key
+          RemoveLocalStorage key -> Right () <$ (localStorage # "removeItem" $ [key])
       )
       state
       flags
