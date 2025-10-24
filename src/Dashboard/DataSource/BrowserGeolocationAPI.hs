@@ -44,10 +44,8 @@ instance DataSource u LocationReq where
               fromJSVal v >>= \case
                 Nothing ->
                   (jsg "JSON" # "stringify" $ [v])
-                    >>= fromJSVal
-                    <&> Left . toException . JSONError . \case
-                      Nothing -> pack "Impossible!succeeded but failed to be parsed as Geolocation."
-                      Just stringified -> pack "Impossible! succeeded but failed to be parsed as Geolocation: " <> stringified
+                    >>= fromJSValUnchecked
+                    <&> \stringified -> Left . toException . JSONError $ pack "Impossible! succeeded but failed to be parsed as Geolocation: " <> stringified
                 Just r -> pure $ Right r
             liftIO $ for_ results (flip putResult result)
         failCB <-
@@ -56,10 +54,9 @@ instance DataSource u LocationReq where
               fromJSVal @GeolocationError v >>= \case
                 Nothing ->
                   (jsg "JSON" # "stringify" $ [v])
-                    >>= fromJSVal
-                    <&> Left . toException . JSONError . \case
-                      Nothing -> pack "Impossible! failed with unstringifiable error"
-                      Just stringified -> pack "Impossible! failed with unexpected error: " <> stringified
+                    >>= fromJSValUnchecked
+                    <&> \stringified ->
+                      Left . toException . JSONError $ pack "Impossible! failed with unexpected error: " <> stringified
                 Just err -> pure . Left . toException . FetchError . pack $ show err
             liftIO $ for_ results (flip putResult result)
         void $ jsg "navigator" ! "geolocation" # "getCurrentPosition" $ (successCB, failCB)
