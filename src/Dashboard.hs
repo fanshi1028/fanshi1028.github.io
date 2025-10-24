@@ -69,7 +69,7 @@ fetchDataSub sink = do
     t <- getCurrentTime
 
     runHaxl (env' {flags = haxlEnvflags}) $ do
-      fromLocalStorageOrDatafetch GetLocalWeaterForecast (\r -> t `diffUTCTime` r.updateTime <= 60 * 15)
+      fromLocalStorageOrDatafetch GetLocalWeatherForecast (\r -> t `diffUTCTime` r.updateTime <= 60 * 15)
 
       fromLocalStorageOrDatafetch Get9DayWeatherForecast (\r -> t `diffUTCTime` r.updateTime <= 60 * 60 * 12)
 
