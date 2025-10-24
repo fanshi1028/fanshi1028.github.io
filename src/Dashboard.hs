@@ -33,24 +33,24 @@ haxlEnvflags =
 #endif
 
 data Model
-  = NoLocationData (Maybe GeolocationError)
-  | NoUVIndexData
-      (Maybe StrictText) -- NOTE TEMP: HaxlException as Text because it has no Eq instance
-      Geolocation
-  | Model
-      { _uvIndex :: UVIndex,
-        _location :: Geolocation
-      }
-  deriving (Eq) -- TEMP FIXME
+  = Model
+  { _location :: Maybe (Either GeolocationError Geolocation),
+    _currentWeatherReport :: Maybe CurrentWeatherReport,
+    _localWeatherForecast :: Maybe LocalWeatherForecast,
+    _9DayWeatherForecast :: Maybe NineDayWeatherForecast
+  }
+  deriving (Eq)
 
 data Action
-  = FetchUVIndexData
+  = FetchWeatherData
   | SetLocation Geolocation
-  | SetUVIndex Geolocation UVIndex
-  deriving stock (Show, Eq)
+  | SetCurrentWeatherReport CurrentWeatherReport
+  | SetLocalWeatherForecast LocalWeatherForecast
+  | Set9DayWeatherForecast NineDayWeatherForecast
+  deriving stock (Eq, Show)
 
 defaultModel :: Model
-defaultModel = NoLocationData Nothing -- TEMP FIXME
+defaultModel = Model Nothing Nothing Nothing Nothing
 
 fetchDataSub :: Sink Action -> JSM ()
 fetchDataSub sink = do
@@ -70,15 +70,15 @@ fetchDataSub sink = do
 
     runHaxl (env' {flags = haxlEnvflags}) $ do
       fromLocalStorageOrDatafetch GetLocalWeatherForecast (\r -> t `diffUTCTime` r.updateTime <= 60 * 15)
+        >>= misoRunAction . SetLocalWeatherForecast
 
       fromLocalStorageOrDatafetch Get9DayWeatherForecast (\r -> t `diffUTCTime` r.updateTime <= 60 * 60 * 12)
+        >>= misoRunAction . Set9DayWeatherForecast
 
-      geo <- uncachedRequest GetCurrentPosition
-      misoRunAction $ SetLocation geo
+      uncachedRequest GetCurrentPosition >>= misoRunAction . SetLocation
 
-      currentWeatherReport <- fromLocalStorageOrDatafetch GetCurrentWeatherReport (\r -> t `diffUTCTime` r.updateTime <= 60 * 15)
-
-      misoRunAction $ SetUVIndex geo currentWeatherReport.uvindex
+      fromLocalStorageOrDatafetch GetCurrentWeatherReport (\r -> t `diffUTCTime` r.updateTime <= 60 * 15)
+        >>= misoRunAction . SetCurrentWeatherReport
 
       fromLocalStorageOrDatafetch GetWeatherWarningSummary $ const True
       fromLocalStorageOrDatafetch GetWeatherWarningInfo $ const True
@@ -87,49 +87,41 @@ fetchDataSub sink = do
 
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
-  FetchUVIndexData -> startSub @Text "FetchUVIndexData" fetchDataSub
-  SetLocation location ->
-    get >>= \case
-      Model _ ((== location) -> True) -> io_ $ consoleLog "same location"
-      _ -> do
-        put $ NoUVIndexData Nothing location
-        issue FetchUVIndexData
-  SetUVIndex geo idx -> put $ Model idx geo -- TEMP FIXME: could location be outdated?
+  FetchWeatherData -> startSub @Text "FetchWeatherData" fetchDataSub
+  SetLocation location -> modify $ \m -> m {_location = Just (Right location)}
+  SetLocalWeatherForecast w -> modify $ \m -> m {_localWeatherForecast = Just w}
+  SetCurrentWeatherReport w -> modify $ \m -> m {_currentWeatherReport = Just w}
+  Set9DayWeatherForecast w -> modify $ \m -> m {_9DayWeatherForecast = Just w}
 
--- TEMP FIXME
+viewCurrentWeatherReport :: CurrentWeatherReport -> View Model Action
+viewCurrentWeatherReport _ = div_ [] ["FIXME TEMP CurrentWeatherReport view not implemented"]
+
+viewLocalWeatherForecast :: LocalWeatherForecast -> View Model Action
+viewLocalWeatherForecast _ = div_ [] ["FIXME TEMP LocalWeatherForecast view not implemented"]
+
+view9DayWeatherForecast :: NineDayWeatherForecast -> View Model Action
+view9DayWeatherForecast _ = div_ [] ["FIXME TEMP 9DayWeatherForecast view not implemented"]
+
 viewModel :: Model -> View Model Action
-viewModel = \case
-  NoLocationData mErr -> case mErr of
-    Nothing -> div_ [] [text "No location data: need to know where you are at to tell you the uv index"]
-    Just (GeolocationError errCode err) ->
+viewModel (Model mELocation mCurrentWeatherReport mLocalWeatherForecast m9DayWeatherForecast) =
+  div_
+    []
+    [ case mELocation of
+        Nothing -> p_ [] [text "No location data: loading"]
+        Just (Right location) -> p_ [] [text $ "you are currently at: " <> ms (show location)]
+        Just (Left (GeolocationError errCode err)) -> p_ [] [text $ "location error: " <> ms (show errCode) <> ", " <> err],
+      -- case  errCode of
+      --   PERMISSION_DENIED -> _
+      --   POSITION_UNAVAILABLE -> _
+      --   TIMEOUT -> "timeout while getting your location"
+      maybe (div_ [] ["FIXME TEMP no CurrentWeatherReport"]) viewCurrentWeatherReport mCurrentWeatherReport,
+      maybe (div_ [] ["FIXME TEMP no LocalWeatherForecast"]) viewLocalWeatherForecast mLocalWeatherForecast,
+      maybe (div_ [] ["FIXME TEMP no NineDayWeatherForecast"]) view9DayWeatherForecast m9DayWeatherForecast,
       div_
         []
-        [ p_ [] [text "No location data: need to know where you are at to tell you the uv index"],
-          br_ [],
-          p_ [] [text $ "location error: " <> ms (show errCode) <> ", " <> err]
-          -- case  errCode of
-          --   PERMISSION_DENIED -> _
-          --   POSITION_UNAVAILABLE -> _
-          --   TIMEOUT -> "timeout while getting your location"
+        [ button_ [onClick FetchWeatherData] [text "TEMP FIXME Test: refetch"]
         ]
-  NoUVIndexData mErr location ->
-    div_ [] $
-      [ text $ "you are currently at: " <> ms (show location),
-        br_ [],
-        text $
-          "We are sorry. "
-            <> case mErr of
-              Nothing -> "We have no UV index data for you"
-              Just err -> case err of
-                "" -> "Something went wrong while fetching the UV index for you"
-                _ -> "thing went wrong while fetching the UV index for you: " <> ms err
-      ]
-  Model uvIndex location ->
-    div_ [] $
-      [ text $ "you are currently at: " <> ms (show location),
-        br_ [],
-        text $ "current uv index is: " <> ms (show uvIndex)
-      ]
+    ]
 
 dashboardComponent :: Component parent Model Action
-dashboardComponent = (component defaultModel updateModel viewModel) {initialAction = Just FetchUVIndexData}
+dashboardComponent = (component defaultModel updateModel viewModel) {initialAction = Just FetchWeatherData}
