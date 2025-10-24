@@ -36,13 +36,13 @@ instance Show (LocalStorage item) where
 instance ShowP LocalStorage where showp = show
 
 instance StateKey LocalStorage where
-  data State LocalStorage = LocalStorageReqState
+  newtype State LocalStorage = LocalStorageReqState JSContextRef
 
 instance DataSourceName LocalStorage where
   dataSourceName _ = pack "localStorage"
 
-instance DataSource JSContextRef LocalStorage where
-  fetch state flags jscontext =
+instance DataSource u LocalStorage where
+  fetch state@(LocalStorageReqState jscontext) =
     syncFetch
       ($ jsg "window" ! "localStorage")
       (const $ pure ())
@@ -64,8 +64,6 @@ instance DataSource JSContextRef LocalStorage where
           RemoveLocalStorage key -> Right () <$ (localStorage # "removeItem" $ [key])
       )
       state
-      flags
-      jscontext
 
 -- HACK: we don't care about the Hashable instance here, because we won't cache the result
 instance Hashable (LocalStorage a) where
