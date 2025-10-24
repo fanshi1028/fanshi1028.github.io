@@ -616,7 +616,6 @@ instance DataSource u HKOWeatherInformationReq where
                   | code < 400 -> FetchError $ "TEMP FIXME Redirect: " <> intercalate ", " [T.show code, T.show headers, T.show mErrMsg, T.show v]
                   | code < 500 -> FetchError $ "TEMP FIXME Client Error: " <> intercalate ", " [T.show code, T.show headers, T.show mErrMsg, T.show v]
                   | otherwise -> FetchError $ "Server Error: " <> intercalate ", " [T.show code, T.show headers, T.show mErrMsg, T.show v]
-        runJSM (FFI.fetch url "GET" Nothing [] successCB failCB JSON) javaScriptContext
         runJSM (FFI.fetch url "GET" Nothing [] successCB failCB JSON) jscontext
         race (readMVar failMVar) (readMVar successMVar)
 
