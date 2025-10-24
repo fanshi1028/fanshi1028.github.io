@@ -35,18 +35,16 @@ instance (Typeable action) => DataSourceName (MisoRun action) where
   dataSourceName proxy = pack $ showsTypeRep (typeRep proxy) "(MisoRunAction)"
 
 instance (Typeable action) => StateKey (MisoRun action) where
-  data State (MisoRun action) = MisoRunActionState (Sink action)
+  data State (MisoRun action) = MisoRunActionState JSContextRef (Sink action)
 
-instance (Typeable action, Show action, Eq action) => DataSource JSContextRef (MisoRun action) where
-  fetch reqState@(MisoRunActionState sink) flags javaScriptContext =
+instance (Typeable action, Show action, Eq action) => DataSource u (MisoRun action) where
+  fetch reqState@(MisoRunActionState jscontext sink) =
     backgroundFetchPar
-      ( fmap Right . flip runJSM javaScriptContext . \case
+      ( fmap Right . flip runJSM jscontext . \case
           MisoRunAction action -> sink action
           MisoRunJSM _ jsm -> jsm
       )
       reqState
-      flags
-      javaScriptContext
 
 misoRunAction :: (Typeable action, Show action, Eq action) => action -> GenHaxl JSContextRef w ()
 misoRunAction = uncachedRequest . MisoRunAction

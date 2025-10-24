@@ -58,7 +58,7 @@ fetchDataSub sink = do
   liftIO $ do
     let st =
           stateEmpty
-            & stateSet (MisoRunActionState sink)
+            & stateSet (MisoRunActionState jscontext sink)
             & stateSet LocationReqState
             & stateSet (HKOWeatherInformationReqState jscontext)
             & stateSet (LocalStorageReqState jscontext)
