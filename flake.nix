@@ -8,6 +8,10 @@
       url = "github:dmjio/miso";
       flake = false;
     };
+    cborg = {
+      url = "github:well-typed/cborg?rev=36eb23049ba4d0e33a8487420eb3b270899d64a7";
+      flake = false;
+    };
     # copied from miso's flake
     nixpkgs.url = "github:nixos/nixpkgs?rev=9e2e8a7878573d312db421d69e071690ec34e98c";
     ghc-wasm.url = "gitlab:haskell-wasm/ghc-wasm-meta?host=gitlab.haskell.org";
@@ -25,6 +29,7 @@
     {
       self,
       miso,
+      cborg,
       nixpkgs,
       ghc-wasm,
       browser_wasi_shim,
@@ -63,6 +68,7 @@
                 {
                   haxl = applyFixToHaxl pkgs hsuper.haxl;
                   hashtables = hsuper.hashtables_1_4_2;
+                  cborg = pkgs.haskell.lib.overrideSrc hsuper.cborg { src = "${cborg}/cborg"; };
                 }
                 // (if args ? overrides then args.overrides hself hsuper else { })
               );

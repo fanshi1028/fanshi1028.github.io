@@ -17,6 +17,23 @@
         "type": "github"
       }
     },
+    "cborg": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1755022331,
+        "narHash": "sha256-RKOmhcxj8HZ9NbvoYjclVKwvQcDxeRkEkvYdVyXJOH0=",
+        "owner": "well-typed",
+        "repo": "cborg",
+        "rev": "36eb23049ba4d0e33a8487420eb3b270899d64a7",
+        "type": "github"
+      },
+      "original": {
+        "owner": "well-typed",
+        "repo": "cborg",
+        "rev": "36eb23049ba4d0e33a8487420eb3b270899d64a7",
+        "type": "github"
+      }
+    },
     "flake-utils": {
       "inputs": {
         "systems": "systems"
@@ -107,6 +124,7 @@
     "root": {
       "inputs": {
         "browser_wasi_shim": "browser_wasi_shim",
+        "cborg": "cborg",
         "ghc-wasm": "ghc-wasm",
         "miso": "miso",
         "nixpkgs": "nixpkgs_2",
