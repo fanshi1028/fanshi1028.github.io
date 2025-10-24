@@ -53,6 +53,17 @@
             }))
           ]
         );
+      applyFixToCborg =
+        pkgs: cborg:
+        nixpkgs.lib.pipe cborg (
+          with pkgs.haskell.lib.compose;
+          [
+            (overrideSrc { src = "${cborg}/cborg"; })
+            (overrideCabal (drv: {
+              patches = [ ];
+            }))
+          ]
+        );
 
       mkDefaultPackage =
         pkgs: args:
@@ -68,7 +79,7 @@
                 {
                   haxl = applyFixToHaxl pkgs hsuper.haxl;
                   hashtables = hsuper.hashtables_1_4_2;
-                  cborg = pkgs.haskell.lib.overrideSrc hsuper.cborg { src = "${cborg}/cborg"; };
+                  cborg = applyFixToCborg pkgs hsuper.cborg;
                 }
                 // (if args ? overrides then args.overrides hself hsuper else { })
               );
