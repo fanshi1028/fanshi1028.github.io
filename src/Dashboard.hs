@@ -60,7 +60,7 @@ fetchDataSub sink = do
           stateEmpty
             & stateSet (MisoRunActionState jscontext sink)
             & stateSet (MisoRunJSMState jscontext)
-            & stateSet LocationReqState
+            & stateSet (LocationReqState jscontext)
             & stateSet (HKOWeatherInformationReqState jscontext)
             & stateSet (LocalStorageReqState jscontext)
 
@@ -73,7 +73,7 @@ fetchDataSub sink = do
 
       fromLocalStorageOrDatafetch Get9DayWeatherForecast (\r -> t `diffUTCTime` r.updateTime <= 60 * 60 * 12)
 
-      geo <- uncachedRequest LocationReq
+      geo <- uncachedRequest GetCurrentPosition
       misoRunAction $ SetLocation geo
 
       currentWeatherReport <- fromLocalStorageOrDatafetch GetCurrentWeatherReport (\r -> t `diffUTCTime` r.updateTime <= 60 * 15)
