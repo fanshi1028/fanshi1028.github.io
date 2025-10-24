@@ -2,10 +2,10 @@
 
 module Dashboard.DataSource.BrowserGeolocationAPI where
 
-import Control.Concurrent
-import Control.Concurrent.Async
 import Control.Monad
 import Control.Monad.IO.Class
+import Data.Foldable
+import Data.Functor
 import Data.Hashable
 import Data.Text (pack)
 import Haxl.Core
@@ -14,16 +14,8 @@ import Miso
 import Miso.Navigator hiding (geolocation)
 import UnliftIO.Exception
 
--- NOTE: Copied from Miso.FFI.Internal
-geolocation :: (JSVal -> JSM ()) -> (JSVal -> JSM ()) -> JSM ()
-geolocation successful errorful = do
-  geo <- jsg "navigator" ! "geolocation"
-  cb1 <- asyncCallback1 successful
-  cb2 <- asyncCallback1 errorful
-  void $ geo # "getCurrentPosition" $ (cb1, cb2)
-
 data LocationReq a where
-  LocationReq :: LocationReq Geolocation
+  GetCurrentPosition :: LocationReq Geolocation
 
 deriving instance Eq (LocationReq a)
 
@@ -35,33 +27,40 @@ deriving instance Show (LocationReq a)
 instance ShowP LocationReq where showp = show
 
 instance StateKey LocationReq where
-  data State LocationReq = LocationReqState
+  newtype State LocationReq = LocationReqState JSContextRef
 
 instance DataSourceName LocationReq where
   dataSourceName _ = pack "browser geolocation api"
 
-instance DataSource JSContextRef LocationReq where
-  fetch reqState flags javaScriptContext =
-    backgroundFetchPar
-      ( \req -> case req of
-          LocationReq -> handler req
-      )
-      reqState
-      flags
-      javaScriptContext
-    where
-      handler :: (forall a. (FromJSVal a) => LocationReq a -> IO (Either SomeException a))
-      handler LocationReq = do
-        successMVar <- newEmptyMVar @Geolocation
-        failMVar <- newEmptyMVar @GeolocationError
-        runJSM
-          ( geolocation
-              (fromJSValUnchecked >=> liftIO . putMVar successMVar)
-              (fromJSValUnchecked >=> liftIO . putMVar failMVar)
-          )
-          javaScriptContext
-        race
-          ( -- NOTE: sadly Geolocation doesn't has a Exception instance for some reason
-            toException . userError . show <$> readMVar failMVar
-          )
-          (readMVar successMVar)
+instance DataSource u LocationReq where
+  fetch (LocationReqState jscontext) _ _ = AsyncFetch $ \reqs inner -> do
+    let results = [r | BlockedFetch GetCurrentPosition r <- reqs]
+    case results of
+      [] -> pure ()
+      _ : _ -> flip runJSM jscontext $ do
+        successCB <-
+          asyncCallback1 $ \v -> do
+            result <-
+              fromJSVal v >>= \case
+                Nothing ->
+                  (jsg "JSON" # "stringify" $ [v])
+                    >>= fromJSVal
+                    <&> Left . toException . JSONError . \case
+                      Nothing -> pack "Impossible!succeeded but failed to be parsed as Geolocation."
+                      Just stringified -> pack "Impossible! succeeded but failed to be parsed as Geolocation: " <> stringified
+                Just r -> pure $ Right r
+            liftIO $ for_ results (flip putResult result)
+        failCB <-
+          asyncCallback1 $ \v -> do
+            result <-
+              fromJSVal @GeolocationError v >>= \case
+                Nothing ->
+                  (jsg "JSON" # "stringify" $ [v])
+                    >>= fromJSVal
+                    <&> Left . toException . JSONError . \case
+                      Nothing -> pack "Impossible! failed with unstringifiable error"
+                      Just stringified -> pack "Impossible! failed with unexpected error: " <> stringified
+                Just err -> pure . Left . toException . FetchError . pack $ show err
+            liftIO $ for_ results (flip putResult result)
+        void $ jsg "navigator" ! "geolocation" # "getCurrentPosition" $ (successCB, failCB)
+    inner
