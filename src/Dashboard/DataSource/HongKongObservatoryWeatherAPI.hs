@@ -566,7 +566,7 @@ deriving instance Show (HKOWeatherInformationReq a)
 instance ShowP HKOWeatherInformationReq where showp = show
 
 instance StateKey HKOWeatherInformationReq where
-  data State HKOWeatherInformationReq = HKOWeatherInformationReqState
+  newtype State HKOWeatherInformationReq = HKOWeatherInformationReqState JSContextRef
 
 instance DataSourceName HKOWeatherInformationReq where
   dataSourceName _ = "HKO Weather Information API"
@@ -587,8 +587,8 @@ hkoWeatherInformationReqToURI req =
     )
     ""
 
-instance DataSource JSContextRef HKOWeatherInformationReq where
-  fetch reqState flags javaScriptContext =
+instance DataSource u HKOWeatherInformationReq where
+  fetch reqState@(HKOWeatherInformationReqState jscontext) =
     backgroundFetchPar
       ( -- NOTE: sad boilerplate
         \req -> case req of
@@ -600,8 +600,6 @@ instance DataSource JSContextRef HKOWeatherInformationReq where
           GetSpecialWeatherTips -> handler req
       )
       reqState
-      flags
-      javaScriptContext
     where
       handler :: (forall a. (FromJSVal a) => HKOWeatherInformationReq a -> IO (Either SomeException a))
       handler req = do
@@ -619,6 +617,7 @@ instance DataSource JSContextRef HKOWeatherInformationReq where
                   | code < 500 -> FetchError $ "TEMP FIXME Client Error: " <> intercalate ", " [T.show code, T.show headers, T.show mErrMsg, T.show v]
                   | otherwise -> FetchError $ "Server Error: " <> intercalate ", " [T.show code, T.show headers, T.show mErrMsg, T.show v]
         runJSM (FFI.fetch url "GET" Nothing [] successCB failCB JSON) javaScriptContext
+        runJSM (FFI.fetch url "GET" Nothing [] successCB failCB JSON) jscontext
         race (readMVar failMVar) (readMVar successMVar)
 
 -- NOTE: Earthquake Information API
