@@ -9,7 +9,7 @@
       flake = false;
     };
     cborg = {
-      url = "github:well-typed/cborg?rev=36eb23049ba4d0e33a8487420eb3b270899d64a7&dir=cborg";
+      url = "github:well-typed/cborg?rev=36eb23049ba4d0e33a8487420eb3b270899d64a7";
       flake = false;
     };
     # copied from miso's flake
@@ -54,11 +54,11 @@
           ]
         );
       applyFixToCborg =
-        pkgs: cborg:
-        nixpkgs.lib.pipe cborg (
+        pkgs: pkg:
+        nixpkgs.lib.pipe pkg (
           with pkgs.haskell.lib.compose;
           [
-            (overrideSrc { src = "${cborg}/."; })
+            (overrideSrc { src = "${cborg}/cborg"; })
             (overrideCabal (drv: {
               patches = [ ];
             }))
