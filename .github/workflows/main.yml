@@ -181,6 +181,11 @@ jobs:
           nix develop .#haxl --unpack
           nix develop .#haxl --phase postPatch
 
+      - name: Prepare local cborg source
+        shell: bash -e {0}
+        run: |
+          nix develop .#cborg --unpack
+
       - name: Nix Develop (WASM) Cabal Update
         run: |
           wasm32-wasi-cabal update
