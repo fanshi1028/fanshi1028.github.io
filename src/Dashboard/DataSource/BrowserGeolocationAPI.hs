@@ -38,6 +38,8 @@ instance DataSource u LocationReq where
     case results of
       [] -> pure ()
       _ : _ -> flip runJSM jscontext $ do
+        options <- create
+        setProp (toJSString "enableHighAccuracy") jsTrue options
         successCB <-
           asyncCallback1 $ \v -> do
             result <-
@@ -59,5 +61,5 @@ instance DataSource u LocationReq where
                       Left . toException . JSONError $ pack "Impossible! failed with unexpected error: " <> stringified
                 Just err -> pure . Left . toException . FetchError . pack $ show err
             liftIO $ for_ results (flip putResult result)
-        void $ jsg "navigator" ! "geolocation" # "getCurrentPosition" $ (successCB, failCB)
+        void $ jsg "navigator" ! "geolocation" # "getCurrentPosition" $ (successCB, failCB, options)
     inner
