@@ -60,7 +60,7 @@ fetchDataSub sink = do
           stateEmpty
             & stateSet (MisoRunActionState sink)
             & stateSet LocationReqState
-            & stateSet HKOWeatherInformationReqState
+            & stateSet (HKOWeatherInformationReqState jscontext)
             & stateSet (LocalStorageReqState jscontext)
 
     env' <- initEnv @() st jscontext
