@@ -97,6 +97,7 @@
 
           miso = pkgsWithMisoOverlays.haskell.packages."ghc${ghcVersion}".miso;
           haxl = applyFixToHaxl pkgs pkgsWithMisoOverlays.haskell.packages."ghc${ghcVersion}".haxl;
+          cborg = applyFixToCborg pkgs pkgsWithMisoOverlays.haskell.packages."ghc${ghcVersion}".cborg;
 
           prerender = mkDefaultPackage pkgsWithMisoOverlays {
             modifier =
