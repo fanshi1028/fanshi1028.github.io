@@ -543,7 +543,7 @@ instance FromJSVal CurrentWeatherReport where
 
 -- NOTE: Weather Information API
 data HKOWeatherInformationReq a where
-  GetLocalWeaterForecast :: HKOWeatherInformationReq LocalWeatherForecast
+  GetLocalWeatherForecast :: HKOWeatherInformationReq LocalWeatherForecast
   Get9DayWeatherForecast :: HKOWeatherInformationReq NineDayWeatherForecast
   GetCurrentWeatherReport :: HKOWeatherInformationReq CurrentWeatherReport
   GetWeatherWarningSummary :: HKOWeatherInformationReq SerialisableValue
@@ -554,7 +554,7 @@ deriving instance Eq (HKOWeatherInformationReq a)
 
 instance Hashable (HKOWeatherInformationReq a) where
   hashWithSalt s req = hashWithSalt @Int s $ case req of
-    GetLocalWeaterForecast -> 0
+    GetLocalWeatherForecast -> 0
     Get9DayWeatherForecast -> 1
     GetCurrentWeatherReport -> 2
     GetWeatherWarningSummary -> 3
@@ -578,7 +578,7 @@ hkoWeatherInformationReqToURI req =
     (Just $ nullURIAuth & uriRegNameLens .~ "data.weather.gov.hk")
     "/weatherAPI/opendata/weather.php"
     ( "?dataType=" <> case req of
-        GetLocalWeaterForecast -> "flw"
+        GetLocalWeatherForecast -> "flw"
         Get9DayWeatherForecast -> "fnd"
         GetCurrentWeatherReport -> "rhrread"
         GetWeatherWarningSummary -> "warnsum"
@@ -592,7 +592,7 @@ instance DataSource u HKOWeatherInformationReq where
     backgroundFetchPar
       ( -- NOTE: sad boilerplate
         \req -> case req of
-          GetLocalWeaterForecast -> handler req
+          GetLocalWeatherForecast -> handler req
           Get9DayWeatherForecast -> handler req
           GetCurrentWeatherReport -> handler req
           GetWeatherWarningSummary -> handler req
