@@ -35,7 +35,12 @@ instance (Typeable action) => StateKey (MisoRunAction action) where
   data State (MisoRunAction action) = MisoRunActionState JSContextRef (Sink action)
 
 instance (Typeable action, Show action, Eq action) => DataSource u (MisoRunAction action) where
-  fetch reqState@(MisoRunActionState jscontext sink) = backgroundFetchPar (\(MisoRunAction action) -> Right <$> runJSM (sink action) jscontext) reqState
+  fetch reqState@(MisoRunActionState jscontext sink) =
+    syncFetch
+      ($ ())
+      (const $ pure ())
+      (\() (MisoRunAction action) -> pure $ Right <$> runJSM (sink action) jscontext)
+      reqState
 
 ----------------------
 -- NOTE: MisoRunJSM --
