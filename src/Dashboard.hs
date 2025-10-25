@@ -267,16 +267,16 @@ viewModel (Model mELocation mCurrentWeatherReport mLocalWeatherForecast m9DayWea
   div_
     [class_ "flex flex-col gap-8"]
     [ case mELocation of
-        Nothing -> p_ [] [text "No location data: loading"]
+        Nothing -> p_ [] [text "location data loading"]
         Just (Right location) -> p_ [] [text $ "you are currently at: " <> ms (show location)]
         Just (Left (GeolocationError errCode err)) -> p_ [] [text $ "location error: " <> ms (show errCode) <> ", " <> err],
       -- case  errCode of
       --   PERMISSION_DENIED -> _
       --   POSITION_UNAVAILABLE -> _
       --   TIMEOUT -> "timeout while getting your location"
-      maybe (div_ [] ["FIXME TEMP no CurrentWeatherReport"]) viewCurrentWeatherReport mCurrentWeatherReport,
-      maybe (div_ [] ["FIXME TEMP no LocalWeatherForecast"]) viewLocalWeatherForecast mLocalWeatherForecast,
-      maybe (div_ [] ["FIXME TEMP no NineDayWeatherForecast"]) view9DayWeatherForecast m9DayWeatherForecast,
+      maybe (div_ [] ["CurrentWeatherReport loading"]) viewCurrentWeatherReport mCurrentWeatherReport,
+      maybe (div_ [] ["LocalWeatherForecast loading"]) viewLocalWeatherForecast mLocalWeatherForecast,
+      maybe (div_ [] ["NineDayWeatherForecast loading"]) view9DayWeatherForecast m9DayWeatherForecast,
       div_
         []
         [ button_ [onClick FetchWeatherData] [text "TEMP FIXME Test: refetch"]
