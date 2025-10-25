@@ -257,7 +257,22 @@ viewCurrentWeatherReport wr =
     ]
 
 viewLocalWeatherForecast :: LocalWeatherForecast -> View Model Action
-viewLocalWeatherForecast _ = div_ [] ["FIXME TEMP LocalWeatherForecast view not implemented"]
+viewLocalWeatherForecast lwf =
+  div_ [class_ "flex flex-col gap-6"] $
+    [ h2_ [] ["Local Weather Forecast"],
+      div_ [class_ "flex flex-col gap-4"] $
+        let displayNonEmptyText = \case
+              "" -> div_ [class_ "hidden"] []
+              t -> div_ [class_ "prose"] [text $ ms t]
+         in [ text . ms $ show lwf.updateTime,
+              displayNonEmptyText lwf.generalSituation,
+              displayNonEmptyText lwf.tcInfo,
+              displayNonEmptyText lwf.fireDangerWarning,
+              displayNonEmptyText lwf.forecastPeriod,
+              displayNonEmptyText lwf.forecastDesc,
+              displayNonEmptyText lwf.outlook
+            ]
+    ]
 
 view9DayWeatherForecast :: NineDayWeatherForecast -> View Model Action
 view9DayWeatherForecast _ = div_ [] ["FIXME TEMP 9DayWeatherForecast view not implemented"]
