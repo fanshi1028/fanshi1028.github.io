@@ -99,22 +99,21 @@ data SoilTemp = SoilTemp
   deriving stock (Eq, Show)
 
 instance Serialise SoilTemp where
-  encode (SoilTemp place value recordTime depth) = encodeListLen 5 <> encodeWord 0 <> encode place <> encode (unQuantity value) <> encode recordTime <> encode (unQuantity depth)
+  encode (SoilTemp place value recordTime depth) = encodeListLen 5 <> encodeWord 0 <> encode place <> encode (toDegreeCelsiusAbsolute value) <> encode recordTime <> encode (unQuantity depth)
   decode =
     (,) <$> decodeListLen <*> decodeWord >>= \case
-      (5, 0) -> SoilTemp <$> decode <*> ((*~ degreeCelsius) <$> decode) <*> decode <*> ((*~ meter) <$> decode)
+      (5, 0) -> SoilTemp <$> decode <*> (fromDegreeCelsiusAbsolute <$> decode) <*> decode <*> ((*~ meter) <$> decode)
       _ -> fail "invalid SoilTemp encoding"
 
 instance FromJSON SoilTemp where
   parseJSON = withObject "SoilTemp" $ \o ->
     SoilTemp
       <$> o .: "place"
-      <*> ( (*~)
-              <$> o .: "value"
-              <*> ( o .: "unit" >>= \case
-                      "C" -> pure degreeCelsius
-                      txt -> fail $ "unexpected temperature unit: " <> txt
-                  )
+      <*> ( ( o .: "unit" >>= \case
+                "C" -> pure fromDegreeCelsiusAbsolute
+                txt -> fail $ "unexpected temperature unit: " <> txt
+            )
+              <*> o .: "value"
           )
       <*> o .: "recordTime"
       <*> ( o .: "depth"
@@ -138,22 +137,21 @@ data SeaTemp = SeaTemp
   deriving stock (Eq, Show)
 
 instance Serialise SeaTemp where
-  encode (SeaTemp place value recordTime) = encodeListLen 4 <> encodeWord 0 <> encode place <> encode (unQuantity value) <> encode recordTime
+  encode (SeaTemp place value recordTime) = encodeListLen 4 <> encodeWord 0 <> encode place <> encode (toDegreeCelsiusAbsolute value) <> encode recordTime
   decode =
     (,) <$> decodeListLen <*> decodeWord >>= \case
-      (4, 0) -> SeaTemp <$> decode <*> ((*~ degreeCelsius) <$> decode) <*> decode
+      (4, 0) -> SeaTemp <$> decode <*> (fromDegreeCelsiusAbsolute <$> decode) <*> decode
       _ -> fail "invalid SoilTemp encoding"
 
 instance FromJSON SeaTemp where
   parseJSON = withObject "SeaTemp" $ \o ->
     SeaTemp
       <$> o .: "place"
-      <*> ( (*~)
-              <$> o .: "value"
-              <*> ( o .: "unit" >>= \case
-                      "C" -> pure degreeCelsius
-                      txt -> fail $ "unexpected temperature unit: " <> txt
-                  )
+      <*> ( ( o .: "unit" >>= \case
+                "C" -> pure fromDegreeCelsiusAbsolute
+                txt -> fail $ "unexpected temperature unit: " <> txt
+            )
+              <*> o .: "value"
           )
       <*> o .: "recordTime"
 
@@ -223,7 +221,7 @@ instance Serialise WeatherForecast where
       <> encode (fromEnum week)
       <> encode forecastWind
       <> encode forecastWeather
-      <> encodeInterval (encode . unQuantity) forecastTempInterval
+      <> encodeInterval (encode . toDegreeCelsiusAbsolute) forecastTempInterval
       <> encodeInterval (encode . unQuantity) forecastRHInterval
       <> encode psr
       <> encode forecastIcon
@@ -235,7 +233,7 @@ instance Serialise WeatherForecast where
           <*> (toEnum <$> decode)
           <*> decode
           <*> decode
-          <*> decodeInterval ((*~ degreeCelsius) <$> decode)
+          <*> decodeInterval (fromDegreeCelsiusAbsolute <$> decode)
           <*> decodeInterval ((*~ percent) <$> decode)
           <*> decode
           <*> decode
@@ -254,12 +252,11 @@ instance FromJSON WeatherForecast where
                       >>= withObject
                         k
                         ( \o' ->
-                            (*~)
-                              <$> o' .: "value"
-                              <*> ( o' .: "unit" >>= \case
-                                      "C" -> pure degreeCelsius
-                                      txt -> fail $ "unexpected temperature unit: " <> txt
-                                  )
+                            ( o' .: "unit" >>= \case
+                                "C" -> pure fromDegreeCelsiusAbsolute
+                                txt -> fail $ "unexpected temperature unit: " <> txt
+                            )
+                              <*> o' .: "value"
                         )
               min' <- parseValueWithUnit "forecastMintemp"
               max' <- parseValueWithUnit "forecastMaxtemp"
@@ -456,22 +453,21 @@ data Temperature = Temperature
   deriving stock (Eq, Show)
 
 instance Serialise Temperature where
-  encode (Temperature place value) = encodeListLen 3 <> encodeWord 0 <> encode place <> encode (unQuantity value)
+  encode (Temperature place value) = encodeListLen 3 <> encodeWord 0 <> encode place <> encode (toDegreeCelsiusAbsolute value)
   decode =
     (,) <$> decodeListLen <*> decodeWord >>= \case
-      (3, 0) -> Temperature <$> decode <*> ((*~ degreeCelsius) <$> decode)
+      (3, 0) -> Temperature <$> decode <*> (fromDegreeCelsiusAbsolute <$> decode)
       _ -> fail "invalid Temperature encoding"
 
 instance FromJSON Temperature where
   parseJSON = withObject "Temperature" $ \o ->
     Temperature
       <$> o .: "place"
-      <*> ( (*~)
-              <$> o .: "value"
-              <*> ( o .: "unit" >>= \case
-                      "C" -> pure degreeCelsius
-                      txt -> fail $ "unexpected temperature unit: " <> txt
-                  )
+      <*> ( ( o .: "unit" >>= \case
+                "C" -> pure fromDegreeCelsiusAbsolute
+                txt -> fail $ "unexpected temperature unit: " <> txt
+            )
+              <*> o .: "value"
           )
 
 data Humidity = Humidity
