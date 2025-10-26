@@ -100,11 +100,11 @@ updateModel = \case
 viewCurrentWeatherReport :: CurrentWeatherReport -> View Model Action
 viewCurrentWeatherReport
   ( CurrentWeatherReport
-      lightning
-      (DataWithInterval rainfallsInterval rainfalls)
+      mLightning
+      rainfall
       icon
       iconUpdateTime
-      (UVIndex uvIndexData uvIndexDesc)
+      uvindex
       updateTime
       warningMessage
       rainstormReminder
@@ -114,21 +114,24 @@ viewCurrentWeatherReport
       rainfallFrom00To12
       rainfallLastMonth
       rainfallJanuaryToLastMonth
-      (DataWithRecordTime temperatureRecordTime temperatureData)
-      (DataWithRecordTime humidityRecordTime humidityData)
+      temperature
+      humidity
     ) =
     div_ [class_ "flex flex-col gap-6"] $
       [ h2_ [] ["Current Weather Report"],
         p_ [] [text . ms $ "Updated at " <> show updateTime],
         div_ [class_ "flex flex-col gap-3"] $
-          [ -- NOTE: skipped icon, iconUpdateTime,
-            case lightning of
+          [ case mLightning of
               Nothing -> div_ [class_ "hidden"] []
               Just (DataWithInterval lightningsInterval lightnings) ->
                 div_ [] $
                   [ h3_ [class_ "sr-only"] ["Lighting"],
                     div_ [] $
-                      [ div_ [] [text . ms $ "lightning time view: " <> show lightningsInterval],
+                      [ div_ [] $
+                          [ text . ms $ case (lowerBound lightningsInterval, upperBound lightningsInterval) of
+                              (Finite lb, Finite ub) -> show lb <> " - " <> show ub
+                              _ -> "impossible: unexpected time interval for rainfall data"
+                          ],
                         ul_ [] $
                           foldl'
                             ( \acc -> \case
@@ -140,66 +143,8 @@ viewCurrentWeatherReport
                             lightnings
                       ]
                   ],
-            div_ [] $
-              [ h3_ [class_ "sr-only"] ["Rainfall"],
-                div_ [] $
-                  [ div_
-                      []
-                      [ text . ms $ case (lowerBound rainfallsInterval, upperBound rainfallsInterval) of
-                          (Finite lb, Finite ub) -> show lb <> " - " <> show ub
-                          _ -> "impossible: unexpected time interval for rainfall data"
-                      ],
-                    ul_ [class_ "flex flex-col gap-2"] $
-                      foldl'
-                        ( \acc -> \case
-                            Rainfall ll place _ ->
-                              li_
-                                []
-                                [ div_ [class_ "flex flex-row gap-2"] $
-                                    [ label_ [] [text . ms $ place <> ":"],
-                                      div_
-                                        []
-                                        [ text . ms $ case (lowerBound ll, upperBound ll) of
-                                            -- FIXME Rainfall interval better type
-                                            (NegInf, Finite rf) -> pack (showIn (milli meter) rf)
-                                            (Finite rf1, Finite rf2) -> pack (showIn (milli meter) rf1 <> " - " <> showIn (milli meter) rf2)
-                                            (_, PosInf) -> "impossible: upperBound pos inf"
-                                            (_, NegInf) -> "impossible: upperBound neg inf"
-                                            (PosInf, _) -> "impossible: lowerBound pos inf"
-                                        ]
-                                    ]
-                                ]
-                                : acc -- NOTE: does item order matter here?
-                        )
-                        []
-                        rainfalls
-                  ]
-              ],
-            div_ [] $
-              [ h3_ [class_ "sr-only"] ["UV Index"],
-                div_ [] $
-                  [ p_ [] [text $ ms uvIndexDesc],
-                    ul_ [] $
-                      foldl'
-                        ( \acc -> \(UVIndexData place value desc' mMessage) ->
-                            li_
-                              [class_ "flex flex-col gap-2"]
-                              [ div_
-                                  [class_ "flex flex-row gap-2"]
-                                  [ label_ [] [text $ ms place],
-                                    div_ [] [text . ms $ show value],
-                                    div_ [] [text $ ms desc']
-                                  ],
-                                div_ [] $ case mMessage of
-                                  Nothing -> []
-                                  Just message -> [text $ ms message]
-                              ]
-                              : acc
-                        )
-                        []
-                        uvIndexData
-                  ]
-              ],
+            viewRainfall rainfall,
+            viewUVIndex uvindex,
             case foldl' (\acc msg -> li_ [] [text (ms msg)] : acc) [] warningMessage of
               [] -> div_ [class_ "hidden"] []
               lis -> div_ [] $ [h3_ [class_ "sr-only"] ["Warning Message"], ul_ [class_ "flex flex-col gap-2"] lis],
@@ -228,44 +173,108 @@ viewCurrentWeatherReport
               Nothing -> div_ [class_ "hidden"] []
               Just "" -> div_ [class_ "hidden"] []
               Just msg -> div_ [] $ [h3_ [class_ "sr-only"] ["Rainfall January To Last Month"], div_ [] [text $ ms msg]],
-            div_ [] $
-              [ h3_ [class_ "sr-only"] ["Temperature"],
-                div_ [] $
-                  [ div_ [] [text . ms $ show temperatureRecordTime],
-                    ul_ [class_ "flex flex-col gap-2"] $
-                      foldl'
-                        ( \acc (Temperature place value) ->
-                            li_
-                              [class_ "flex flex-row gap-2"]
-                              [ label_ [] [text $ ms place <> ":"],
-                                div_ [] [text . ms $ show (toDegreeCelsiusAbsolute value) <> " °C"]
-                              ]
-                              : acc
-                        )
-                        []
-                        temperatureData
-                  ]
-              ],
-            div_ [] $
-              [ h3_ [class_ "sr-only"] ["Humidity"],
-                div_ [] $
-                  [ div_ [] [text . ms $ show humidityRecordTime],
-                    ul_ [class_ "flex flex-col gap-2"] $
-                      foldl'
-                        ( \acc (Humidity place value) ->
-                            li_
-                              [class_ "flex flex-row gap-2"]
-                              [ label_ [] [text $ ms place <> ":"],
-                                div_ [] [text . ms $ showIn percent value]
-                              ]
-                              : acc
-                        )
-                        []
-                        humidityData
-                  ]
-              ]
+            viewTemperature temperature,
+            viewHumidity humidity
           ]
       ]
+    where
+      viewUVIndex (UVIndex _data desc) =
+        div_ [] $
+          [ h3_ [class_ "sr-only"] ["UV Index"],
+            div_ [] $
+              [ p_ [] [text $ ms desc],
+                ul_ [] $
+                  foldl'
+                    ( \acc -> \(UVIndexData place value desc' mMessage) ->
+                        li_
+                          [class_ "flex flex-col gap-2"]
+                          [ div_
+                              [class_ "flex flex-row gap-2"]
+                              [ label_ [] [text $ ms place],
+                                div_ [] [text . ms $ show value],
+                                div_ [] [text $ ms desc']
+                              ],
+                            div_ [] $ case mMessage of
+                              Nothing -> []
+                              Just message -> [text $ ms message]
+                          ]
+                          : acc
+                    )
+                    []
+                    _data
+              ]
+          ]
+      viewHumidity (DataWithRecordTime recordTime _data) =
+        div_ [] $
+          [ h3_ [class_ "sr-only"] ["Humidity"],
+            div_ [] $
+              [ div_ [] [text . ms $ show recordTime],
+                ul_ [class_ "flex flex-col gap-2"] $
+                  foldl'
+                    ( \acc (Humidity place value) ->
+                        li_
+                          [class_ "flex flex-row gap-2"]
+                          [ label_ [] [text $ ms place <> ":"],
+                            div_ [] [text . ms $ showIn percent value]
+                          ]
+                          : acc
+                    )
+                    []
+                    _data
+              ]
+          ]
+      viewTemperature (DataWithRecordTime recordTime _data) =
+        div_ [] $
+          [ h3_ [class_ "sr-only"] ["Temperature"],
+            div_ [] $
+              [ div_ [] [text . ms $ show recordTime],
+                ul_ [class_ "flex flex-col gap-2"] $
+                  foldl'
+                    ( \acc (Temperature place value) ->
+                        li_
+                          [class_ "flex flex-row gap-2"]
+                          [ label_ [] [text $ ms place <> ":"],
+                            div_ [] [text . ms $ show (toDegreeCelsiusAbsolute value) <> " °C"]
+                          ]
+                          : acc
+                    )
+                    []
+                    _data
+              ]
+          ]
+      viewRainfall (DataWithInterval timeInterval _data) =
+        div_ [] $
+          [ h3_ [class_ "sr-only"] ["Rainfall"],
+            div_ [] $
+              [ div_ [] $
+                  [ text . ms $ case (lowerBound timeInterval, upperBound timeInterval) of
+                      (Finite lb, Finite ub) -> show lb <> " - " <> show ub
+                      _ -> "impossible: unexpected time interval for rainfall data"
+                  ],
+                ul_ [class_ "flex flex-col gap-2"] $
+                  foldl'
+                    ( \acc ->
+                        -- NOTE: does item order matter here?
+                        (: acc) . \(Rainfall ll place main) ->
+                          li_ [] $
+                            [ div_ [class_ "flex flex-row gap-2"] $
+                                [ label_ [] [text . ms $ place <> ":"],
+                                  div_ [] $
+                                    [ text . ms $ case (lowerBound ll, upperBound ll) of
+                                        -- FIXME Rainfall interval better type
+                                        (NegInf, Finite rf) -> pack (showIn (milli meter) rf)
+                                        (Finite rf1, Finite rf2) -> pack (showIn (milli meter) rf1 <> " - " <> showIn (milli meter) rf2)
+                                        (_, PosInf) -> "impossible: upperBound pos inf"
+                                        (_, NegInf) -> "impossible: upperBound neg inf"
+                                        (PosInf, _) -> "impossible: lowerBound pos inf"
+                                    ]
+                                ]
+                            ]
+                    )
+                    []
+                    _data
+              ]
+          ]
 
 viewLocalWeatherForecast :: LocalWeatherForecast -> View Model Action
 viewLocalWeatherForecast
