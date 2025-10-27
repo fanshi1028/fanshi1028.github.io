@@ -257,7 +257,7 @@ viewCurrentWeatherReport
             div_ [] $
               [ div_ [] $
                   [ text . ms $ case (lowerBound timeInterval, upperBound timeInterval) of
-                      (Finite lb, Finite ub) -> show lb <> " - " <> show ub
+                      (Finite lb, Finite ub) -> show (utcToLocalTime timeZone lb) <> " - " <> show (utcToLocalTime timeZone ub)
                       _ -> "impossible: unexpected time interval for rainfall data"
                   ],
                 ul_ [class_ "flex flex-col gap-2"] $
