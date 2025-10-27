@@ -2,8 +2,10 @@
 
 module Dashboard.DataSource.MisoRun (misoRunAction, misoRunJSM, State (..)) where
 
+import Control.Monad.IO.Class
+import Data.Foldable
 import Data.Hashable
-import Data.Text hiding (show)
+import Data.Text hiding (foldl', show)
 import Data.Typeable
 import Haxl.Core
 import Language.Javascript.JSaddle
@@ -29,18 +31,22 @@ instance (Eq action) => Hashable (MisoRunAction action a) where
   hashWithSalt s _ = hashWithSalt s (1 :: Int)
 
 instance (Typeable action) => DataSourceName (MisoRunAction action) where
-  dataSourceName proxy = pack "MisoRunAction"
+  dataSourceName _ = pack "MisoRunAction"
 
 instance (Typeable action) => StateKey (MisoRunAction action) where
   data State (MisoRunAction action) = MisoRunActionState JSContextRef (Sink action)
 
 instance (Typeable action, Show action, Eq action) => DataSource u (MisoRunAction action) where
-  fetch reqState@(MisoRunActionState jscontext sink) =
-    syncFetch
-      ($ ())
-      (const $ pure ())
-      (\() (MisoRunAction action) -> pure $ Right <$> runJSM (sink action) jscontext)
-      reqState
+  fetch (MisoRunActionState jscontext sink) _ _ =
+    SyncFetch $ \reqs ->
+      flip runJSM jscontext $
+        foldlM
+          ( \() (BlockedFetch (MisoRunAction action) r) -> do
+              sink action
+              liftIO (putResult r $ Right ())
+          )
+          ()
+          reqs
 
 ----------------------
 -- NOTE: MisoRunJSM --
@@ -62,7 +68,7 @@ instance Hashable (MisoRunJSM a) where
   hashWithSalt s _ = hashWithSalt s (1 :: Int)
 
 instance DataSourceName MisoRunJSM where
-  dataSourceName proxy = pack "MisoRunActionJSM"
+  dataSourceName _ = pack "MisoRunActionJSM"
 
 instance StateKey MisoRunJSM where
   newtype State MisoRunJSM = MisoRunJSMState JSContextRef
