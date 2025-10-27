@@ -29,8 +29,8 @@ import Miso.Navigator
 import Numeric.Units.Dimensional hiding ((*))
 import Numeric.Units.Dimensional.Coercion
 import Numeric.Units.Dimensional.NonSI
-import Numeric.Units.Dimensional.SIUnits hiding (fromDegreeCelsiusAbsolute, toDegreeCelsiusAbsolute)
-import Prelude hiding (show)
+import Numeric.Units.Dimensional.SIUnits hiding (toDegreeCelsiusAbsolute)
+import Prelude hiding (show, (-))
 
 haxlEnvflags :: Flags
 haxlEnvflags =
@@ -40,6 +40,12 @@ haxlEnvflags =
       report = profilingReportFlags
     }
 #endif
+
+----------------------------------------------------------------------------------------
+-- NOTE: copied from Numeric.Units.Dimensional.SIUnits but weaken Float -> Fractional --
+----------------------------------------------------------------------------------------
+toDegreeCelsiusAbsolute :: (Fractional a) => ThermodynamicTemperature a -> a
+toDegreeCelsiusAbsolute x = (x - 273.15 *~ degreeCelsius) /~ degreeCelsius
 
 data Model
   = Model
