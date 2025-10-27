@@ -10,6 +10,7 @@ module Dashboard (dashboardComponent) where
 import Control.Monad.IO.Class
 import Dashboard.DataSource.BrowserGeolocationAPI
 import Dashboard.DataSource.HongKongObservatoryWeatherAPI
+import Dashboard.DataSource.IO
 import Dashboard.DataSource.LocalStorage
 import Dashboard.DataSource.MisoRun
 import Data.Function
@@ -18,6 +19,7 @@ import Data.Maybe
 import Data.Text hiding (foldl')
 import Data.Time
 import Haxl.Core
+import Haxl.DataSource.ConcurrentIO
 import Language.Javascript.JSaddle
 import Miso hiding (URI, getLocalStorage, setLocalStorage)
 import Miso.Html.Element
@@ -65,6 +67,7 @@ fetchDataSub :: Sink Action -> JSM ()
 fetchDataSub sink = do
   jscontext <- askJSM
   liftIO $ do
+    ioState <- mkConcurrentIOState
     let st =
           stateEmpty
             & stateSet (MisoRunActionState jscontext sink)
@@ -72,14 +75,15 @@ fetchDataSub sink = do
             & stateSet (LocationReqState jscontext)
             & stateSet (HKOWeatherInformationReqState jscontext)
             & stateSet (LocalStorageReqState jscontext)
+            & stateSet ioState
 
     env' <- initEnv @() st jscontext
 
-    t <- getCurrentTime
-    tz <- getCurrentTimeZone
-
     runHaxl (env' {flags = haxlEnvflags}) $ do
-      misoRunAction $ SetTimeZone tz
+      t <- dataFetch GetCurrentTime
+
+      dataFetch GetCurrentTimeZone >>= misoRunAction . SetTimeZone
+
       fromLocalStorageOrDatafetch GetLocalWeatherForecast (\r -> t `diffUTCTime` r.updateTime <= 60 * 15)
         >>= misoRunAction . SetLocalWeatherForecast
 
