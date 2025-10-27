@@ -28,6 +28,7 @@ import Data.Functor
 import Data.Hashable
 import Data.Interval
 import Data.Maybe
+import Data.Scientific
 import Data.Text hiding (concat, elem, foldl', foldr, reverse, show)
 import Data.Text qualified as T
 import Data.Time
@@ -44,8 +45,15 @@ import Numeric.Natural
 import Numeric.Units.Dimensional
 import Numeric.Units.Dimensional.Coercion
 import Numeric.Units.Dimensional.NonSI
-import Numeric.Units.Dimensional.SIUnits
+import Numeric.Units.Dimensional.SIUnits hiding (fromDegreeCelsiusAbsolute)
 import UnliftIO.Exception
+import Prelude hiding ((+), (-))
+
+----------------------------------------------------------------------------------------
+-- NOTE: copied from Numeric.Units.Dimensional.SIUnits but weaken Float -> Fractional --
+----------------------------------------------------------------------------------------
+fromDegreeCelsiusAbsolute :: (Fractional a) => a -> ThermodynamicTemperature a
+fromDegreeCelsiusAbsolute x = x *~ degreeCelsius + 273.15 *~ degreeCelsius
 
 {-# WARNING fromJSValViaValue "partial, throw error when JSON assumption is wrong" #-}
 fromJSValViaValue :: (FromJSON a, Typeable a) => Proxy a -> JSVal -> JSM (Maybe a)
@@ -92,17 +100,26 @@ instance FromJSVal LocalWeatherForecast where
 
 data SoilTemp = SoilTemp
   { place :: StrictText, -- location
-    value :: ThermodynamicTemperature Float, -- value
+    value :: ThermodynamicTemperature Scientific, -- value
     recordTime :: UTCTime, -- record time YYYY-MMDD'T'hh:mm:ssZ Example: 2020-09- 01T08:19:00+08:00
-    depth :: Length Float
+    depth :: Length Scientific
   }
   deriving stock (Eq, Show)
 
+encodeScientific :: Scientific -> Encoding
+encodeScientific (normalize -> v) = encodeListLen 2 <> encode (coefficient v) <> encode (base10Exponent v)
+
+decodeScientific :: Decoder s Scientific
+decodeScientific =
+  decodeListLen >>= \case
+    2 -> scientific <$> decode <*> decode
+    _ -> fail "invalid Scientic encoding"
+
 instance Serialise SoilTemp where
-  encode (SoilTemp place value recordTime depth) = encodeListLen 5 <> encodeWord 0 <> encode place <> encode (toDegreeCelsiusAbsolute value) <> encode recordTime <> encode (unQuantity depth)
+  encode (SoilTemp place value recordTime depth) = encodeListLen 5 <> encodeWord 0 <> encode place <> encodeScientific (unQuantity value) <> encode recordTime <> encodeScientific (unQuantity depth)
   decode =
     (,) <$> decodeListLen <*> decodeWord >>= \case
-      (5, 0) -> SoilTemp <$> decode <*> (fromDegreeCelsiusAbsolute <$> decode) <*> decode <*> ((*~ meter) <$> decode)
+      (5, 0) -> SoilTemp <$> decode <*> ((*~ degreeCelsius) <$> decodeScientific) <*> decode <*> ((*~ meter) <$> decodeScientific)
       _ -> fail "invalid SoilTemp encoding"
 
 instance FromJSON SoilTemp where
@@ -131,16 +148,16 @@ instance FromJSON SoilTemp where
 
 data SeaTemp = SeaTemp
   { place :: StrictText, -- location
-    value :: ThermodynamicTemperature Float, -- value
+    value :: ThermodynamicTemperature Scientific, -- value
     recordTime :: UTCTime -- record time YYYY-MMDD'T'hh:mm:ssZ Example: 2020-09- 01T08:19:00+08:00
   }
   deriving stock (Eq, Show)
 
 instance Serialise SeaTemp where
-  encode (SeaTemp place value recordTime) = encodeListLen 4 <> encodeWord 0 <> encode place <> encode (toDegreeCelsiusAbsolute value) <> encode recordTime
+  encode (SeaTemp place value recordTime) = encodeListLen 4 <> encodeWord 0 <> encode place <> encodeScientific (unQuantity value) <> encode recordTime
   decode =
     (,) <$> decodeListLen <*> decodeWord >>= \case
-      (4, 0) -> SeaTemp <$> decode <*> (fromDegreeCelsiusAbsolute <$> decode) <*> decode
+      (4, 0) -> SeaTemp <$> decode <*> ((*~ degreeCelsius) <$> decodeScientific) <*> decode
       _ -> fail "invalid SoilTemp encoding"
 
 instance FromJSON SeaTemp where
@@ -160,8 +177,8 @@ data WeatherForecast = WeatherForecast
     week :: DayOfWeek, -- Week
     forecastWind :: StrictText, -- Forecast Wind
     forecastWeather :: StrictText, -- Forecast Weather
-    forecastTempInterval :: Interval (ThermodynamicTemperature Float), -- Forecast Temperature
-    forecastRHInterval :: Interval (Dimensionless Float), -- Forecast  Relative Humidity
+    forecastTempInterval :: Interval (ThermodynamicTemperature Scientific), -- Forecast Temperature
+    forecastRHInterval :: Interval (Dimensionless Scientific), -- Forecast  Relative Humidity
     ------------------------------------------------------------------------------------------------
     -- Probability of Significant Rain Response value:                                            --
     --    High                                                                                    --
@@ -222,8 +239,8 @@ instance Serialise WeatherForecast where
       <> encode (fromEnum week)
       <> encode forecastWind
       <> encode forecastWeather
-      <> encodeInterval (encode . toDegreeCelsiusAbsolute) forecastTempInterval
-      <> encodeInterval (encode . unQuantity) forecastRHInterval
+      <> encodeInterval (encodeScientific . unQuantity) forecastTempInterval
+      <> encodeInterval (encodeScientific . unQuantity) forecastRHInterval
       <> encode psr
       <> encode forecastIcon
   decode = do
@@ -234,8 +251,8 @@ instance Serialise WeatherForecast where
           <*> (toEnum <$> decode)
           <*> decode
           <*> decode
-          <*> decodeInterval (fromDegreeCelsiusAbsolute <$> decode)
-          <*> decodeInterval ((*~ percent) <$> decode)
+          <*> decodeInterval ((*~ degreeCelsius) <$> decodeScientific)
+          <*> decodeInterval ((*~ percent) <$> decodeScientific)
           <*> decode
           <*> decode
       _ -> fail "invalid WeatherForecast encoding"
@@ -338,17 +355,17 @@ data Lightning = Lightning
   deriving anyclass (FromJSON, Serialise)
 
 data Rainfall = Rainfall
-  { interval :: Interval (Length Float), -- Minimum & Maximum rainfall record
+  { interval :: Interval (Length Scientific), -- Minimum & Maximum rainfall record
     place :: StrictText, -- location
     main :: Bool -- Maintenance flag (TRUE/FALSE)
   }
   deriving stock (Eq, Show)
 
 instance Serialise Rainfall where
-  encode (Rainfall interval' place main) = encodeListLen 4 <> encodeWord 0 <> encodeInterval (encode . unQuantity) interval' <> encode place <> encode main
+  encode (Rainfall interval' place main) = encodeListLen 4 <> encodeWord 0 <> encodeInterval (encodeScientific . unQuantity) interval' <> encode place <> encode main
   decode =
     (,) <$> decodeListLen <*> decodeWord >>= \case
-      (4, 0) -> Rainfall <$> decodeInterval ((*~ milli meter) <$> decode) <*> decode <*> decode
+      (4, 0) -> Rainfall <$> decodeInterval ((*~ milli meter) <$> decodeScientific) <*> decode <*> decode
       _ -> fail "invalid Rainfall encoding"
 
 instance FromJSON Rainfall where
@@ -369,12 +386,19 @@ instance FromJSON Rainfall where
 
 data UVIndexData = UVIndexData
   { place :: StrictText, -- location
-    value :: Float, -- value
+    value :: Scientific, -- value
     desc :: StrictText, -- description
     message :: Maybe StrictText -- message
   }
   deriving stock (Show, Eq, Generic)
-  deriving anyclass (FromJSON, ToJSON, Serialise)
+  deriving anyclass (FromJSON, ToJSON)
+
+instance Serialise UVIndexData where
+  encode (UVIndexData place value desc message) = encodeListLen 5 <> encodeWord 0 <> encode place <> encodeScientific value <> encode desc <> encode message
+  decode =
+    (,) <$> decodeListLen <*> decodeWord >>= \case
+      (5, 0) -> UVIndexData <$> decode <*> decodeScientific <*> decode <*> decode
+      _ -> fail "invalid Rainfall encoding"
 
 data UVIndex = UVIndex
   { _data :: [UVIndexData],
@@ -449,15 +473,15 @@ instance (FromJSON a) => FromJSON (DataWithRecordTime a) where
 
 data Temperature = Temperature
   { place :: StrictText, -- location
-    value :: ThermodynamicTemperature Float -- value
+    value :: ThermodynamicTemperature Scientific -- value
   }
   deriving stock (Eq, Show)
 
 instance Serialise Temperature where
-  encode (Temperature place value) = encodeListLen 3 <> encodeWord 0 <> encode place <> encode (toDegreeCelsiusAbsolute value)
+  encode (Temperature place value) = encodeListLen 3 <> encodeWord 0 <> encode place <> encodeScientific (unQuantity value)
   decode =
     (,) <$> decodeListLen <*> decodeWord >>= \case
-      (3, 0) -> Temperature <$> decode <*> (fromDegreeCelsiusAbsolute <$> decode)
+      (3, 0) -> Temperature <$> decode <*> ((*~ degreeCelsius) <$> decodeScientific)
       _ -> fail "invalid Temperature encoding"
 
 instance FromJSON Temperature where
@@ -473,15 +497,15 @@ instance FromJSON Temperature where
 
 data Humidity = Humidity
   { place :: StrictText, -- location
-    value :: Dimensionless Float -- value
+    value :: Dimensionless Scientific -- value
   }
   deriving stock (Eq, Show)
 
 instance Serialise Humidity where
-  encode (Humidity place value) = encodeListLen 3 <> encodeWord 0 <> encode place <> encode (unQuantity value)
+  encode (Humidity place value) = encodeListLen 3 <> encodeWord 0 <> encode place <> encodeScientific (unQuantity value)
   decode =
     (,) <$> decodeListLen <*> decodeWord >>= \case
-      (3, 0) -> Humidity <$> decode <*> ((*~ percent) <$> decode)
+      (3, 0) -> Humidity <$> decode <*> ((*~ percent) <$> decodeScientific)
       _ -> fail "invalid Humidity encoding"
 
 instance FromJSON Humidity where

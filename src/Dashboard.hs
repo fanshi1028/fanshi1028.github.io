@@ -29,7 +29,7 @@ import Miso.Navigator
 import Numeric.Units.Dimensional hiding ((*))
 import Numeric.Units.Dimensional.Coercion
 import Numeric.Units.Dimensional.NonSI
-import Numeric.Units.Dimensional.SIUnits
+import Numeric.Units.Dimensional.SIUnits hiding (fromDegreeCelsiusAbsolute, toDegreeCelsiusAbsolute)
 import Prelude hiding (show)
 
 haxlEnvflags :: Flags
