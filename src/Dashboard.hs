@@ -14,6 +14,7 @@ import Dashboard.DataSource.LocalStorage
 import Dashboard.DataSource.MisoRun
 import Data.Function
 import Data.Interval
+import Data.Maybe
 import Data.Text hiding (foldl')
 import Data.Time
 import Haxl.Core
@@ -40,6 +41,7 @@ haxlEnvflags =
 data Model
   = Model
   { _location :: Maybe (Either GeolocationError Geolocation),
+    _timeZone :: Maybe TimeZone,
     _currentWeatherReport :: Maybe CurrentWeatherReport,
     _localWeatherForecast :: Maybe LocalWeatherForecast,
     _9DayWeatherForecast :: Maybe NineDayWeatherForecast
@@ -49,13 +51,14 @@ data Model
 data Action
   = FetchWeatherData
   | SetLocation Geolocation
+  | SetTimeZone TimeZone
   | SetCurrentWeatherReport CurrentWeatherReport
   | SetLocalWeatherForecast LocalWeatherForecast
   | Set9DayWeatherForecast NineDayWeatherForecast
   deriving stock (Eq, Show)
 
 defaultModel :: Model
-defaultModel = Model Nothing Nothing Nothing Nothing
+defaultModel = Model Nothing Nothing Nothing Nothing Nothing
 
 fetchDataSub :: Sink Action -> JSM ()
 fetchDataSub sink = do
@@ -72,8 +75,10 @@ fetchDataSub sink = do
     env' <- initEnv @() st jscontext
 
     t <- getCurrentTime
+    tz <- getCurrentTimeZone
 
     runHaxl (env' {flags = haxlEnvflags}) $ do
+      misoRunAction $ SetTimeZone tz
       fromLocalStorageOrDatafetch GetLocalWeatherForecast (\r -> t `diffUTCTime` r.updateTime <= 60 * 15)
         >>= misoRunAction . SetLocalWeatherForecast
 
@@ -94,12 +99,14 @@ updateModel :: Action -> Effect parent Model Action
 updateModel = \case
   FetchWeatherData -> startSub @Text "FetchWeatherData" fetchDataSub
   SetLocation location -> modify $ \m -> m {_location = Just (Right location)}
+  SetTimeZone tz -> modify $ \m -> m {_timeZone = Just tz}
   SetLocalWeatherForecast w -> modify $ \m -> m {_localWeatherForecast = Just w}
   SetCurrentWeatherReport w -> modify $ \m -> m {_currentWeatherReport = Just w}
   Set9DayWeatherForecast w -> modify $ \m -> m {_9DayWeatherForecast = Just w}
 
-viewCurrentWeatherReport :: CurrentWeatherReport -> View Model Action
+viewCurrentWeatherReport :: Maybe TimeZone -> CurrentWeatherReport -> View Model Action
 viewCurrentWeatherReport
+  (fromMaybe utc -> timeZone)
   ( CurrentWeatherReport
       mLightning
       rainfall
@@ -120,7 +127,7 @@ viewCurrentWeatherReport
     ) =
     div_ [class_ "flex flex-col gap-6"] $
       [ h2_ [] ["Current Weather Report"],
-        p_ [] [text . ms $ "Updated at " <> show updateTime],
+        p_ [] [text . ms $ "Updated at " <> show (utcToLocalTime timeZone updateTime)],
         div_ [class_ "flex flex-col gap-3"] $
           [ case mLightning of
               Nothing -> div_ [class_ "hidden"] []
@@ -209,7 +216,7 @@ viewCurrentWeatherReport
         div_ [] $
           [ h3_ [class_ "sr-only"] ["Humidity"],
             div_ [] $
-              [ div_ [] [text . ms $ show recordTime],
+              [ div_ [] [text . ms . show $ utcToLocalTime timeZone recordTime],
                 ul_ [class_ "flex flex-col gap-2"] $
                   foldl'
                     ( \acc (Humidity place value) ->
@@ -228,7 +235,7 @@ viewCurrentWeatherReport
         div_ [] $
           [ h3_ [class_ "sr-only"] ["Temperature"],
             div_ [] $
-              [ div_ [] [text . ms $ show recordTime],
+              [ div_ [] [text . ms . show $ utcToLocalTime timeZone recordTime],
                 ul_ [class_ "flex flex-col gap-2"] $
                   foldl'
                     ( \acc (Temperature place value) ->
@@ -277,8 +284,9 @@ viewCurrentWeatherReport
               ]
           ]
 
-viewLocalWeatherForecast :: LocalWeatherForecast -> View Model Action
+viewLocalWeatherForecast :: Maybe TimeZone -> LocalWeatherForecast -> View Model Action
 viewLocalWeatherForecast
+  (fromMaybe utc -> timeZone)
   ( LocalWeatherForecast
       generalSituation
       tcInfo
@@ -294,7 +302,7 @@ viewLocalWeatherForecast
           let displayNonEmptyText = \case
                 "" -> div_ [class_ "hidden"] []
                 t -> div_ [class_ "prose"] [text $ ms t]
-           in [ text . ms $ show updateTime,
+           in [ p_ [] [text . ms $ "Updated at " <> show (utcToLocalTime timeZone updateTime)],
                 displayNonEmptyText generalSituation,
                 displayNonEmptyText tcInfo,
                 displayNonEmptyText fireDangerWarning,
@@ -304,11 +312,11 @@ viewLocalWeatherForecast
               ]
       ]
 
-view9DayWeatherForecast :: NineDayWeatherForecast -> View Model Action
-view9DayWeatherForecast _ = div_ [class_ "flex flex-col gap-6"] $ []
+view9DayWeatherForecast :: Maybe TimeZone -> NineDayWeatherForecast -> View Model Action
+view9DayWeatherForecast _ _ = div_ [class_ "flex flex-col gap-6"] $ []
 
 viewModel :: Model -> View Model Action
-viewModel (Model mELocation mCurrentWeatherReport mLocalWeatherForecast m9DayWeatherForecast) =
+viewModel (Model mELocation mTimeZone mCurrentWeatherReport mLocalWeatherForecast m9DayWeatherForecast) =
   div_
     [class_ "flex flex-col gap-8"]
     [ case mELocation of
@@ -319,9 +327,9 @@ viewModel (Model mELocation mCurrentWeatherReport mLocalWeatherForecast m9DayWea
       --   PERMISSION_DENIED -> _
       --   POSITION_UNAVAILABLE -> _
       --   TIMEOUT -> "timeout while getting your location"
-      maybe (div_ [] ["CurrentWeatherReport loading"]) viewCurrentWeatherReport mCurrentWeatherReport,
-      maybe (div_ [] ["LocalWeatherForecast loading"]) viewLocalWeatherForecast mLocalWeatherForecast,
-      maybe (div_ [] ["NineDayWeatherForecast loading"]) view9DayWeatherForecast m9DayWeatherForecast,
+      maybe (div_ [] ["CurrentWeatherReport loading"]) (viewCurrentWeatherReport mTimeZone) mCurrentWeatherReport,
+      maybe (div_ [] ["LocalWeatherForecast loading"]) (viewLocalWeatherForecast mTimeZone) mLocalWeatherForecast,
+      maybe (div_ [] ["NineDayWeatherForecast loading"]) (view9DayWeatherForecast mTimeZone) m9DayWeatherForecast,
       div_
         []
         [ button_ [onClick FetchWeatherData] [text "TEMP FIXME Test: refetch"]
