@@ -47,7 +47,7 @@ import Numeric.Units.Dimensional.Coercion
 import Numeric.Units.Dimensional.NonSI
 import Numeric.Units.Dimensional.SIUnits hiding (fromDegreeCelsiusAbsolute)
 import UnliftIO.Exception
-import Prelude hiding ((+), (-))
+import Prelude hiding ((+))
 
 ----------------------------------------------------------------------------------------
 -- NOTE: copied from Numeric.Units.Dimensional.SIUnits but weaken Float -> Fractional --
