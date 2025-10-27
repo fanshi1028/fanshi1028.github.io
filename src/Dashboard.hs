@@ -69,8 +69,8 @@ data Action
 defaultModel :: Model
 defaultModel = Model Nothing Nothing Nothing Nothing Nothing
 
-fetchDataSub :: Sink Action -> JSM ()
-fetchDataSub sink = do
+fetchData :: Sink Action -> JSM ()
+fetchData sink = do
   jscontext <- askJSM
   liftIO $ do
     ioState <- mkConcurrentIOState
@@ -108,7 +108,7 @@ fetchDataSub sink = do
 
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
-  FetchWeatherData -> startSub @Text "FetchWeatherData" fetchDataSub
+  FetchWeatherData -> withSink fetchData
   SetLocation location -> modify $ \m -> m {_location = Just (Right location)}
   SetTimeZone tz -> modify $ \m -> m {_timeZone = Just tz}
   SetLocalWeatherForecast w -> modify $ \m -> m {_localWeatherForecast = Just w}
