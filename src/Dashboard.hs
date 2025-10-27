@@ -25,6 +25,7 @@ import Miso.Html.Event
 import Miso.Html.Property hiding (label_)
 import Miso.Navigator
 import Numeric.Units.Dimensional hiding ((*))
+import Numeric.Units.Dimensional.Coercion
 import Numeric.Units.Dimensional.NonSI
 import Numeric.Units.Dimensional.SIUnits
 import Prelude hiding (show)
@@ -313,7 +314,69 @@ viewLocalWeatherForecast
       ]
 
 view9DayWeatherForecast :: Maybe TimeZone -> NineDayWeatherForecast -> View Model Action
-view9DayWeatherForecast _ _ = div_ [class_ "flex flex-col gap-6"] $ []
+view9DayWeatherForecast
+  (fromMaybe utc -> timeZone)
+  ( NineDayWeatherForecast
+      weatherForecasts
+      soilTemps
+      seaTemp
+      generalSituation -- :: StrictText,
+      updateTime -- :: UTCTime
+    ) =
+    case foldl' (\acc weatherForecast -> viewWeatherForecast weatherForecast : acc) [] weatherForecasts of
+      [] -> div_ [class_ "hidden"] []
+      viewWeatherForecasts ->
+        div_ [class_ "flex flex-col gap-6"] $
+          [ h2_ [] [text "9 Day Weather Forecast"],
+            p_ [] [text . ms $ "Updated at " <> show (utcToLocalTime timeZone updateTime)],
+            ul_ [] viewWeatherForecasts,
+            case generalSituation of
+              "" -> div_ [class_ "hidden"] []
+              _ -> div_ [class_ "prose"] [text $ ms generalSituation],
+            case foldl' (\acc soilTemp -> viewSoilTemp soilTemp : acc) [] soilTemps of
+              [] -> div_ [class_ "hidden"] []
+              viewSoilTemps -> ul_ [class_ "flex flex-col gap-2"] viewSoilTemps,
+            viewSeaTemp seaTemp
+          ]
+    where
+      viewWeatherForecast
+        ( WeatherForecast
+            forecastDate
+            week
+            forecastWind
+            forecastWeather
+            forecastTempInterval
+            forecastRHInterval
+            psr
+            forecastIcon
+          ) =
+          div_ [class_ "flex flex-col gap-2"] $
+            [ div_ [class_ "flex flex-row gap-2"] $
+                [div_ [] [text . ms $ show week], div_ [] [text . ms $ show forecastDate]],
+              case forecastWind of
+                "" -> div_ [class_ "hidden"] []
+                _ -> div_ [] [text . ms $ forecastWind],
+              case forecastWeather of
+                "" -> div_ [class_ "hidden"] []
+                _ -> div_ [] [text . ms $ forecastWeather],
+              div_ [] $
+                [ text . ms $ case (lowerBound forecastTempInterval, upperBound forecastTempInterval) of
+                    (Finite lb, Finite ub) -> show (toDegreeCelsiusAbsolute lb) <> " - " <> show (toDegreeCelsiusAbsolute ub) <> " °C"
+                    _ -> "impossible: unexpected temperature interval for forecast data"
+                ],
+              div_ [] $
+                [ text . ms $ case (lowerBound forecastRHInterval, upperBound forecastRHInterval) of
+                    (Finite lb, Finite ub) -> show (unQuantity lb * 100) <> " - " <> pack (showIn percent ub)
+                    _ -> "impossible: unexpected relative humidity interval for forecast data"
+                ],
+              case psr of
+                "" -> div_ [class_ "hidden"] []
+                _ -> div_ [] [text . ms $ psr <> " probability of significant rain"]
+            ]
+      viewSeaTemp (SeaTemp place value recordTime) =
+        p_ [class_ "prose"] [text . ms $ "Sea temperature is " <> show (toDegreeCelsiusAbsolute value) <> " °C in " <> place <> " at " <> show (utcToLocalTime timeZone recordTime)]
+      viewSoilTemp (SoilTemp place value recordTime depth) =
+        p_ [class_ "prose"] [text . ms $ "Soil temperature is " <> show (toDegreeCelsiusAbsolute value) <> " °C at " <> pack (showIn meter depth) <> " in " <> place <> " at " <> show (utcToLocalTime timeZone recordTime)]
 
 viewModel :: Model -> View Model Action
 viewModel (Model mELocation mTimeZone mCurrentWeatherReport mLocalWeatherForecast m9DayWeatherForecast) =
