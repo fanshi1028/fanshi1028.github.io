@@ -165,9 +165,10 @@ data WeatherForecast = WeatherForecast
     ------------------------------------------------------------------------------------------------
     -- Probability of Significant Rain Response value:                                            --
     --    High                                                                                    --
+    --    Medium High                                                                             --
     --    Medium                                                                                  --
-    --    High Medium                                                                             --
-    --    Medium Low Low                                                                          --
+    --    Medium Low                                                                              --
+    --    Low                                                                                     --
     -- Response value description: https://www.hko.gov.hk/en/wxinfo/currwx/fnd.htm?tablenote=true --
     ------------------------------------------------------------------------------------------------
     psr :: StrictText, -- TEMP FIXME
