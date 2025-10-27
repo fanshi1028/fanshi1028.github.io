@@ -51,6 +51,7 @@ common lib
     miso,
     network-uri,
     retry,
+    scientific,
     serialise,
     text,
     time,
