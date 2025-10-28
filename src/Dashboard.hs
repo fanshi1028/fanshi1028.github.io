@@ -85,14 +85,14 @@ data Action
 defaultModel :: Model
 defaultModel = Model Nothing Nothing Nothing Nothing Nothing
 
-jsGetTimezoneOffsetAndSetTimeZone :: JSM Action
-jsGetTimezoneOffsetAndSetTimeZone = do
-  date <- jsg "Date"
-  (new date () # "getTimezoneOffset") ()
-    >>= fromJSVal
-    >>= \case
-      Nothing -> fail "Date.getTimezoneOffset returned unexpected value"
-      Just min' -> pure . SetTimeZone $ minutesToTimeZone min'
+-- jsGetTimezoneOffsetAndSetTimeZone :: JSM Action
+-- jsGetTimezoneOffsetAndSetTimeZone = do
+--   date <- jsg "Date"
+--   (new date () # "getTimezoneOffset") ()
+--     >>= fromJSVal
+--     >>= \case
+--       Nothing -> fail "Date.getTimezoneOffset returned unexpected value"
+--       Just min' -> pure . SetTimeZone $ minutesToTimeZone min'
 
 fetchData :: Sink Action -> JSM ()
 fetchData sink = do
@@ -114,7 +114,7 @@ fetchData sink = do
     runHaxl (env' {flags = haxlEnvflags}) $ do
       t <- dataFetch GetCurrentTime
 
-      misoRunJSMAction jsGetTimezoneOffsetAndSetTimeZone
+      -- misoRunJSMAction jsGetTimezoneOffsetAndSetTimeZone
 
       fromLocalStorageOrDatafetch GetLocalWeatherForecast (\r -> t `diffUTCTime` r.updateTime <= 60 * 15)
         >>= misoRunAction . SetLocalWeatherForecast
