@@ -87,7 +87,8 @@ defaultModel = Model Nothing Nothing Nothing Nothing Nothing
 
 jsGetTimezoneOffsetAndSetTimeZone :: JSM Action
 jsGetTimezoneOffsetAndSetTimeZone = do
-  offset <- ((new (jsg "Date") ()) # "getTimezoneOffset") ()
+  date <- jsg "Date"
+  offset <- (new date () # "getTimezoneOffset") ()
   fromJSVal offset >>= \case
     Nothing -> fail "Date.getTimezoneOffset returned unexpected value"
     Just min' -> pure . SetTimeZone $ minutesToTimeZone min'
