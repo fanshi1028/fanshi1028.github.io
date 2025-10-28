@@ -26,9 +26,10 @@ createMapLibre id' geo = do
   withAsync
     ( forever $ do
         maplibregl <- jsg "maplibregl"
-        valIsUndefined maplibregl >>= \case
-          False -> new (maplibregl ! "Map") [mkMapLibreCfg id' geo] >>= liftIO . putMVar mapLibreMVar
-          True -> consoleLog $ toMisoString "hi"
-        liftIO (threadDelay 100000)
+        maplibreglDefined <- not <$> valIsUndefined maplibregl
+        when (maplibreglDefined) $
+          new (maplibregl ! "Map") [mkMapLibreCfg id' geo]
+            >>= liftIO . putMVar mapLibreMVar
+        liftIO $ threadDelay 100000
     )
     $ \ensureMaplibregl -> liftIO (readMVar mapLibreMVar) `finally` uninterruptibleCancel ensureMaplibregl
