@@ -19,7 +19,6 @@ import Data.Text hiding (foldl')
 import Data.Time
 import Haxl.Core
 import Haxl.DataSource.ConcurrentIO
-import Haxl.Prelude (catchAny)
 import Language.Javascript.JSaddle hiding (catch)
 import MapLibre
 import Miso hiding (URI, getLocalStorage, setLocalStorage)
@@ -112,7 +111,7 @@ fetchData sink = do
     runHaxl (env' {flags = haxlEnvflags}) $ do
       t <- dataFetch GetCurrentTime
 
-      (dataFetch GetCurrentTimeZone >>= misoRunAction . SetTimeZone) `catchAny` misoRunJSMAction jsGetTimezoneOffsetAndSetTimeZone
+      misoRunJSMAction jsGetTimezoneOffsetAndSetTimeZone
 
       fromLocalStorageOrDatafetch GetLocalWeatherForecast (\r -> t `diffUTCTime` r.updateTime <= 60 * 15)
         >>= misoRunAction . SetLocalWeatherForecast
