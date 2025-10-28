@@ -20,6 +20,7 @@ import Data.Time
 import Haxl.Core
 import Haxl.DataSource.ConcurrentIO
 import Language.Javascript.JSaddle
+import MapLibre
 import Miso hiding (URI, getLocalStorage, setLocalStorage)
 import Miso.Html.Element
 import Miso.Html.Event
@@ -123,7 +124,9 @@ fetchData sink = do
 
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
-  FetchWeatherData -> withSink fetchData
+  FetchWeatherData -> do
+    withSink fetchData
+    withSink $ \_ -> () <$ createMapLibre "maplibre" (Geolocation 0 0 0) -- TEMP FIXME
   SetLocation loc -> location .= Just (Right loc)
   SetTimeZone tz -> timeZone .= Just tz
   SetLocalWeatherForecast w -> localWeatherForecast .= Just w
@@ -407,7 +410,8 @@ viewModel :: Model -> View Model Action
 viewModel (Model mELocation mTimeZone mCurrentWeatherReport mLocalWeatherForecast m9DayWeatherForecast) =
   div_
     [class_ "flex flex-col gap-8"]
-    [ case mELocation of
+    [ div_ [id_ "maplibre", class_ "self-stretch h-72"] [],
+      case mELocation of
         Nothing -> p_ [] [text "location data loading"]
         Just (Right location') -> p_ [] [text $ "you are currently at: " <> ms (show location')]
         Just (Left (GeolocationError errCode err)) -> p_ [] [text $ "location error: " <> ms (show errCode) <> ", " <> err],
@@ -425,4 +429,9 @@ viewModel (Model mELocation mTimeZone mCurrentWeatherReport mLocalWeatherForecas
     ]
 
 dashboardComponent :: Component parent Model Action
-dashboardComponent = (component defaultModel updateModel viewModel) {initialAction = Just FetchWeatherData}
+dashboardComponent =
+  (component defaultModel updateModel viewModel)
+    { scripts = [Src "https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"],
+      styles = [Href "https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css"],
+      initialAction = Just FetchWeatherData
+    }
