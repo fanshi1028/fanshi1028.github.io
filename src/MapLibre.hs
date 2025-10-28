@@ -6,7 +6,7 @@ import Control.Monad.IO.Class
 import Language.Javascript.JSaddle.Object
 import Language.Javascript.JSaddle.Types
 import Language.Javascript.JSaddle.Value
-import Miso.Navigator hiding (new)
+import Miso.Navigator
 import UnliftIO.Async
 
 mkMapLibreCfg :: JSString -> Geolocation -> JSM Object

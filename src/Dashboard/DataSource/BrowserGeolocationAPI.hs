@@ -10,7 +10,7 @@ import Data.Hashable
 import Data.Text (pack)
 import Haxl.Core
 import Language.Javascript.JSaddle
-import Miso
+import Miso hiding ((<#))
 import Miso.Navigator hiding (geolocation)
 import UnliftIO.Exception
 
@@ -39,7 +39,7 @@ instance DataSource u LocationReq where
       [] -> pure ()
       _ : _ -> flip runJSM jscontext $ do
         options <- create
-        setProp (toJSString "enableHighAccuracy") jsTrue options
+        (options <# "enableHighAccuracy") jsTrue
         successCB <-
           asyncCallback1 $ \v -> do
             result <-
