@@ -72,6 +72,7 @@ common lib
       Dashboard.DataSource.LocalStorage
       Dashboard.DataSource.MisoRun
       Home
+      MapLibre
       Pomodoro
       ProductRequirementDocument
       ProductRequirementDocument.Dashboard
@@ -92,6 +93,7 @@ library
     Dashboard.DataSource.LocalStorage
     Dashboard.DataSource.MisoRun
     Home
+    MapLibre
     Pomodoro
     ProductRequirementDocument
     ProductRequirementDocument.Dashboard
