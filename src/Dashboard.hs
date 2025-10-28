@@ -19,7 +19,8 @@ import Data.Text hiding (foldl')
 import Data.Time
 import Haxl.Core
 import Haxl.DataSource.ConcurrentIO
-import Language.Javascript.JSaddle
+import Haxl.Prelude (catchAny)
+import Language.Javascript.JSaddle hiding (catch)
 import MapLibre
 import Miso hiding (URI, getLocalStorage, setLocalStorage)
 import Miso.Html.Element
@@ -85,6 +86,13 @@ data Action
 defaultModel :: Model
 defaultModel = Model Nothing Nothing Nothing Nothing Nothing
 
+jsGetTimezoneOffsetAndSetTimeZone :: JSM Action
+jsGetTimezoneOffsetAndSetTimeZone = do
+  offset <- ((new (jsg "Date") ()) # "getTimezoneOffset") ()
+  fromJSVal offset >>= \case
+    Nothing -> fail "Date.getTimezoneOffset returned unexpected value"
+    Just min' -> pure . SetTimeZone $ minutesToTimeZone min'
+
 fetchData :: Sink Action -> JSM ()
 fetchData sink = do
   jscontext <- askJSM
@@ -104,7 +112,7 @@ fetchData sink = do
     runHaxl (env' {flags = haxlEnvflags}) $ do
       t <- dataFetch GetCurrentTime
 
-      dataFetch GetCurrentTimeZone >>= misoRunAction . SetTimeZone
+      (dataFetch GetCurrentTimeZone >>= misoRunAction . SetTimeZone) `catchAny` misoRunJSMAction jsGetTimezoneOffsetAndSetTimeZone
 
       fromLocalStorageOrDatafetch GetLocalWeatherForecast (\r -> t `diffUTCTime` r.updateTime <= 60 * 15)
         >>= misoRunAction . SetLocalWeatherForecast
