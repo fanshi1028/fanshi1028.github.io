@@ -130,11 +130,14 @@ fetchData sink = do
       fromLocalStorageOrDatafetch GetSpecialWeatherTips $ const True
       pure ()
 
+mapLbreId :: MisoString
+mapLbreId = "maplibre"
+
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
   FetchWeatherData -> do
     withSink fetchData
-    withSink $ \_ -> () <$ createMapLibre "maplibre" (Geolocation 0 0 0) -- TEMP FIXME
+    withSink $ \_ -> () <$ createMapLibre mapLbreId (Geolocation 0 0 0) -- TEMP FIXME
   SetLocation loc -> location .= Just (Right loc)
   SetTimeZone tz -> timeZone .= Just tz
   SetLocalWeatherForecast w -> localWeatherForecast .= Just w
@@ -418,7 +421,7 @@ viewModel :: Model -> View Model Action
 viewModel (Model mELocation mTimeZone mCurrentWeatherReport mLocalWeatherForecast m9DayWeatherForecast) =
   div_
     [class_ "flex flex-col gap-8"]
-    [ div_ [id_ "maplibre", class_ "self-stretch h-72"] [],
+    [ div_ [id_ mapLbreId, class_ "self-stretch h-72"] [],
       case mELocation of
         Nothing -> p_ [] [text "location data loading"]
         Just (Right location') -> p_ [] [text $ "you are currently at: " <> ms (show location')]
