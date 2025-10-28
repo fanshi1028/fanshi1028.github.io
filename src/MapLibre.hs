@@ -6,10 +6,8 @@ import Control.Monad.IO.Class
 import Language.Javascript.JSaddle.Object
 import Language.Javascript.JSaddle.Types
 import Language.Javascript.JSaddle.Value
-import Miso (consoleLog, toMisoString)
 import Miso.Navigator hiding (new)
 import UnliftIO.Async
-import UnliftIO.Exception
 
 mkMapLibreCfg :: JSString -> Geolocation -> JSM Object
 mkMapLibreCfg id' (Geolocation lat lon acc) = do
