@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeFamilies #-}
 
-module Dashboard.DataSource.MisoRun (misoRunAction, misoRunJSM, State (..)) where
+module Dashboard.DataSource.MisoRun (misoRunAction, misoRunJSM, misoRunJSMAction, State (..)) where
 
 import Control.Monad.IO.Class
 import Data.Foldable
@@ -76,8 +76,45 @@ instance StateKey MisoRunJSM where
 instance DataSource u MisoRunJSM where
   fetch reqState@(MisoRunJSMState jscontext) = backgroundFetchPar (\(MisoRunJSM jsm) -> Right <$> runJSM jsm jscontext) reqState
 
+----------------------------
+-- NOTE: MisoRunJSMAction --
+----------------------------
+
+data MisoRunJSMAction action a where
+  MisoRunJSMAction :: JSM action -> MisoRunJSMAction action ()
+
+instance (Eq action) => Eq (MisoRunJSMAction action a) where
+  (==) _ _ = False
+
+instance (Show action) => Show (MisoRunJSMAction action a) where
+  show = \case
+    MisoRunJSMAction _ -> "MisoRunJSMAction"
+
+instance (Show action) => ShowP (MisoRunJSMAction action) where showp = show
+
+-- HACK: we don't care about the Hashable instance here, because we won't cache the result with `misoRunJSMAction`
+instance (Eq action) => Hashable (MisoRunJSMAction action a) where
+  hashWithSalt s _ = hashWithSalt s (1 :: Int)
+
+instance (Typeable action) => DataSourceName (MisoRunJSMAction action) where
+  dataSourceName _ = pack "MisoRunJSMAction"
+
+instance (Typeable action) => StateKey (MisoRunJSMAction action) where
+  data State (MisoRunJSMAction action) = MisoRunJSMActionState JSContextRef (Sink action)
+
+instance (Typeable action, Show action, Eq action) => DataSource u (MisoRunJSMAction action) where
+  fetch reqState@(MisoRunJSMActionState jscontext sink) =
+    backgroundFetchPar (\(MisoRunJSMAction jsm) -> Right <$> runJSM (jsm >>= sink) jscontext) reqState
+
+-------------------
+-- NOTE: helpers --
+-------------------
+
 misoRunAction :: (Typeable action, Show action, Eq action) => action -> GenHaxl JSContextRef w ()
 misoRunAction = uncachedRequest . MisoRunAction
 
 misoRunJSM :: JSM () -> GenHaxl JSContextRef w ()
 misoRunJSM = uncachedRequest . MisoRunJSM
+
+misoRunJSMAction :: (Typeable action, Show action, Eq action) => JSM action -> GenHaxl JSContextRef w ()
+misoRunJSMAction = uncachedRequest . MisoRunJSMAction
