@@ -32,4 +32,4 @@ createMapLibre id' geo = do
             >>= liftIO . putMVar mapLibreMVar
         liftIO $ threadDelay 100000
     )
-    $ \ensureMaplibregl -> liftIO (readMVar mapLibreMVar) `finally` uninterruptibleCancel ensureMaplibregl
+    $ \_ -> liftIO (readMVar mapLibreMVar)
