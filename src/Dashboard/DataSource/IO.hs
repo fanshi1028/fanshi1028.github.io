@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE TypeFamilies #-}
 
 module Dashboard.DataSource.IO where
@@ -7,6 +8,10 @@ import Data.Time
 import Haxl.Core
 import Haxl.DataSource.ConcurrentIO
 
+#ifdef javascript_HOST_ARCH
+import Data.Time.LocalTime (minutesToTimeZone)
+#endif
+
 data IOAction
 
 instance ConcurrentIO IOAction where
@@ -15,7 +20,16 @@ instance ConcurrentIO IOAction where
     GetCurrentTimeZone :: ConcurrentIOReq IOAction TimeZone
   performIO = \case
     GetCurrentTime -> getCurrentTime
-    GetCurrentTimeZone -> getCurrentTimeZone
+    GetCurrentTimeZone ->
+       -- TEMP FIXME:  getCurrentTimeZone support JS with time-1.15, remove this when we upgraded
+#ifndef javascript_HOST_ARCH
+       getCurrentTimeZone
+#else
+       minutesToTimeZone <$> getTimezoneOffset
+
+foreign import javascript unsafe "new Date().getTimezoneOffset"
+  getTimezoneOffset :: IO Int
+#endif
 
 deriving instance Eq (ConcurrentIOReq IOAction a)
 
