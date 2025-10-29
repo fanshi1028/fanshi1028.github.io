@@ -74,7 +74,8 @@ nineDayWeatherForecast :: Lens Model (Maybe NineDayWeatherForecast)
 nineDayWeatherForecast = lens _9DayWeatherForecast $ \record x -> record {_9DayWeatherForecast = x}
 
 data Action
-  = FetchWeatherData
+  = InitAction
+  | FetchWeatherData
   | SetLocation Geolocation
   | SetTimeZone TimeZone
   | SetCurrentWeatherReport CurrentWeatherReport
@@ -137,9 +138,11 @@ mapLbreId = "maplibre"
 
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
+  InitAction -> do
+    issue FetchWeatherData
+    io_ $ createMapLibre mapLbreId (Geolocation 0 0 0) -- TEMP FIXME
   FetchWeatherData -> do
     withSink fetchData
-    withSink $ \_ -> () <$ createMapLibre mapLbreId (Geolocation 0 0 0) -- TEMP FIXME
   SetLocation loc -> location .= Just (Right loc)
   SetTimeZone tz -> timeZone .= Just tz
   SetLocalWeatherForecast w -> localWeatherForecast .= Just w
@@ -446,5 +449,5 @@ dashboardComponent =
   (component defaultModel updateModel viewModel)
     { scripts = [Src "https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"],
       styles = [Href "https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css"],
-      initialAction = Just FetchWeatherData
+      initialAction = Just InitAction
     }
