@@ -49,7 +49,7 @@ instance DataSource u LocalStorage where
       ( \localStorage req -> pure . flip runJSM jscontext $ case req of
           GetLocalStorage key -> do
             v <- localStorage # "getItem" $ [key]
-            ghcjsPure (isNull v) >>= \case
+            valIsNull v >>= \case
               True -> pure . Left . toException . NotFound $ key <> pack ": not found in localStorage"
               False -> do
                 txt <- fromJSValUnchecked v
