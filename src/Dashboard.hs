@@ -94,7 +94,6 @@ fetchData sink = do
     let st =
           stateEmpty
             & stateSet (MisoRunActionState jscontext sink)
-            & stateSet (MisoRunJSMState jscontext)
             & stateSet (LocationReqState jscontext)
             & stateSet (HKOWeatherInformationReqState jscontext)
             & stateSet (LocalStorageReqState jscontext)
