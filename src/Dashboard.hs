@@ -95,7 +95,6 @@ fetchData sink = do
           stateEmpty
             & stateSet (MisoRunActionState jscontext sink)
             & stateSet (MisoRunJSMState jscontext)
-            & stateSet (MisoRunJSMActionState jscontext sink)
             & stateSet (LocationReqState jscontext)
             & stateSet (HKOWeatherInformationReqState jscontext)
             & stateSet (LocalStorageReqState jscontext)
