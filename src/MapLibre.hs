@@ -108,6 +108,6 @@ createMap = do
 #ifdef javascript_HOST_ARCH
     liftIO (constructMap maplibregl cfg) >>= storeMapRef
 
-foreign import javascript unsafe "(maplibregl, cfg) => { console.log(JSON.stringify(maplibregl)); console.log(JSON.stringify(cfg)); return new maplibregl.Map(cfg) }"
+foreign import javascript unsafe "(maplibregl, cfg) => new maplibregl.Map(cfg)"
    constructMap  :: MapLibreLib -> Object -> IO JSVal
 #endif
