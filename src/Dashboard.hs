@@ -417,10 +417,6 @@ viewModel (Model mELocation mTimeZone mCurrentWeatherReport mLocalWeatherForecas
   div_
     [class_ "flex flex-col gap-8"]
     [ div_ [key_ "mapLibreComponent", onMounted InitMapLibre] +> mapLibreComponent,
-      case mELocation of
-        Nothing -> p_ [] [text "location data loading"]
-        Just (Right location') -> p_ [] [text $ "you are currently at: " <> ms (show location')]
-        Just (Left (GeolocationError errCode err)) -> p_ [] [text $ "location error: " <> ms (show errCode) <> ", " <> err],
       -- case  errCode of
       --   PERMISSION_DENIED -> _
       --   POSITION_UNAVAILABLE -> _
