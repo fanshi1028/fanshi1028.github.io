@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 module MapLibre (mapLibreComponent, createMap, runMapLibre, mapLibreEaseTo, mapLibreAddMarker) where
 
 import Control.Concurrent
@@ -42,17 +44,35 @@ mapLibreAddMarker (Geolocation lat lon acc) = do
   marker <-
     liftIO (readMVar mapLibreLibMVar) >>= \mapLibreLib -> Marker <$> new (mapLibreLib ! "Marker") ()
   mapLibre <- liftIO $ readMVar mapLibreMVar
+#ifndef javascript_HOST_ARCH
   void $ marker # "setLngLat" $ [[lon, lat]]
   void $ marker # "addTo" $ [mapLibre]
+#endif
+-- TEMP fix for jsaddle FIXME
+#ifdef javascript_HOST_ARCH
+  liftIO $ mapLibreAddMarker mapLibre marker lon lat
+
+foreign import javascript unsafe "(map, marker, lon, lat) => marker.setLngLat([lon, lat]).addTo(map)"
+  mapLibreAddMarker :: MapLibre -> Marker -> Double -> Double -> IO ()
+#endif
 
 mapLibreEaseTo :: Geolocation -> JSM ()
-mapLibreEaseTo (Geolocation lat lon acc) = void $ do
+mapLibreEaseTo (Geolocation lat lon acc) = do
   mapLibre <- liftIO $ readMVar mapLibreMVar
   cfg <- obj
   cfg <# "around" $ [lon, lat]
   cfg <# "center" $ [lon, lat]
   cfg <# "zoom" $ 5
-  mapLibre # "easeTo" $ [cfg]
+#ifndef javascript_HOST_ARCH
+  void $ mapLibre # "easeTo" $ [cfg]
+#endif
+-- TEMP fix for jsaddle FIXME
+#ifdef javascript_HOST_ARCH
+  liftIO $ mapLibreEaseTo mapLibre cfg
+
+foreign import javascript unsafe "(map, cfg) => map.easeTo(cfg)"
+  mapLibreEaseTo :: MapLibre -> Object ->  IO ()
+#endif
 
 
 runMapLibre :: ReaderT MapLibreLib JSM a -> JSM a
