@@ -76,6 +76,7 @@ nineDayWeatherForecast = lens _9DayWeatherForecast $ \record x -> record {_9DayW
 data Action
   = InitAction
   | FetchWeatherData
+  | InitMapLibre
   | SetLocation Geolocation
   | SetTimeZone TimeZone
   | SetCurrentWeatherReport CurrentWeatherReport
@@ -122,14 +123,10 @@ fetchData sink = do
       fromLocalStorageOrDatafetch GetSpecialWeatherTips $ const True
       pure ()
 
-mapLbreId :: MisoString
-mapLbreId = "maplibre"
-
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
-  InitAction -> do
-    issue FetchWeatherData
-    io_ $ createMapLibre mapLbreId (Geolocation 0 0 0) -- TEMP FIXME
+  InitAction -> issue FetchWeatherData
+  InitMapLibre -> io_ createMapLibre
   FetchWeatherData -> do
     withSink fetchData
   SetLocation loc -> location .= Just (Right loc)
@@ -415,7 +412,7 @@ viewModel :: Model -> View Model Action
 viewModel (Model mELocation mTimeZone mCurrentWeatherReport mLocalWeatherForecast m9DayWeatherForecast) =
   div_
     [class_ "flex flex-col gap-8"]
-    [ div_ [id_ mapLbreId, class_ "self-stretch h-72"] [],
+    [ div_ [key_ mapLibreId, onMounted InitMapLibre] +> libreMapComponent,
       case mELocation of
         Nothing -> p_ [] [text "location data loading"]
         Just (Right location') -> p_ [] [text $ "you are currently at: " <> ms (show location')]
@@ -434,9 +431,4 @@ viewModel (Model mELocation mTimeZone mCurrentWeatherReport mLocalWeatherForecas
     ]
 
 dashboardComponent :: Component parent Model Action
-dashboardComponent =
-  (component defaultModel updateModel viewModel)
-    { scripts = [Src "https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"],
-      styles = [Href "https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css"],
-      initialAction = Just InitAction
-    }
+dashboardComponent = (component defaultModel updateModel viewModel) {initialAction = Just InitAction}
