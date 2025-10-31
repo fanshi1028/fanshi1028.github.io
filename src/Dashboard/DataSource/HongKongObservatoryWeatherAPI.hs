@@ -629,22 +629,14 @@ instance DataSource u HKOWeatherInformationReq where
         let url = ms $ uriToString id (hkoWeatherInformationReqToURI req) ""
             successCB = \(Response _ _ _ v) -> liftIO $ putMVar successMVar v
             failCB =
-              liftIO . putMVar failMVar . \case
-                Response Nothing _ _ _ -> toException $ FetchError "CORS or Network Error"
+              liftIO . putMVar failMVar . toException . \case
+                Response Nothing _ _ _ -> FetchError "CORS or Network Error"
                 Response (Just code) headers mErrMsg (v :: Value)
-                  | code < 300 -> toException . FetchError $ "TEMP FIXME ?????: " <> intercalate ", " [T.show code, T.show headers, T.show mErrMsg, T.show v]
-                  | code < 400 -> toException . FetchError $ "TEMP FIXME Redirect: " <> intercalate ", " [T.show code, T.show headers, T.show mErrMsg, T.show v]
-                  | code == 400 -> toException . InvalidParameter . T.show $ fromMaybe "InvalidParameter 400" mErrMsg
-                  | code == 404 -> toException . NotFound . T.show $ fromMaybe "Not Found 404" mErrMsg
-                  -- \| code == 408 -> toException _
-                  -- \| code == 425 -> toException _
-                  -- \| code == 429 -> toException _
-                  | code < 500 -> toException . FetchError $ "TEMP FIXME Client Error: " <> intercalate ", " [T.show code, T.show headers, T.show mErrMsg, T.show v]
-                  | code == 500 -> toException . NotFound . T.show $ fromMaybe "Not Found 404" mErrMsg
-                  -- \| code == 502 -> toException _
-                  -- \| code == 503 -> toException _
-                  -- \| code == 504 -> toException _
-                  | otherwise -> toException . FetchError $ "Server Error: " <> intercalate ", " [T.show code, T.show headers, T.show mErrMsg, T.show v]
+                  | code < 300 -> do
+                      FetchError $ "TEMP FIXME ?????: " <> intercalate ", " [T.show code, T.show headers, T.show mErrMsg, T.show v]
+                  | code < 400 -> FetchError $ "TEMP FIXME Redirect: " <> intercalate ", " [T.show code, T.show headers, T.show mErrMsg, T.show v]
+                  | code < 500 -> FetchError $ "TEMP FIXME Client Error: " <> intercalate ", " [T.show code, T.show headers, T.show mErrMsg, T.show v]
+                  | otherwise -> FetchError $ "Server Error: " <> intercalate ", " [T.show code, T.show headers, T.show mErrMsg, T.show v]
         runJSM (FFI.fetch url "GET" Nothing [] successCB failCB JSON) jscontext
         race (readMVar failMVar) (readMVar successMVar)
 
