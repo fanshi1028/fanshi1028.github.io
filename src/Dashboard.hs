@@ -162,6 +162,8 @@ viewCurrentWeatherReport
     ) =
     div_ [class_ "flex flex-col gap-6"] $
       [ h2_ [] ["Current Weather Report"],
+        -- p_ [] [text . ms $ "Time Zone: " <> show mTimeZone <> " " <> show (timeZoneOffsetString <$> mTimeZone)],
+        -- p_ [] [text . ms $ "Updated at " <> show updateTime],
         p_ [] [text . ms $ "Updated at " <> show (utcToLocalTime timeZone' updateTime)],
         div_ [class_ "flex flex-col gap-3"] $
           [ case mLightning of

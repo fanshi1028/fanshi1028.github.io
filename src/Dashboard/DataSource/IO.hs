@@ -28,7 +28,7 @@ instance ConcurrentIO IOAction where
 #else
        minutesToTimeZone <$> getTimezoneOffset
 
-foreign import javascript unsafe "new Date().getTimezoneOffset"
+foreign import javascript unsafe "() => new Date().getTimezoneOffset()"
   getTimezoneOffset :: IO Int
 #endif
 
