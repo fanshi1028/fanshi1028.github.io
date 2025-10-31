@@ -50,7 +50,7 @@ mapLibreAddMarker (Geolocation lat lon acc) = do
 #endif
 -- TEMP FIX for jsaddle's 'new' FIXME
 #ifdef javascript_HOST_ARCH
-  constructMarker mapLibreLib mapLibre lon lat
+  void . liftIO $ constructMarker mapLibreLib mapLibre lon lat
 
 foreign import javascript unsafe "(maplibregl, maplibre, lon, lat) => new maplibregl.Marker().setLngLat([lon, lat]).ddTo(maplibre)"
    constructMarker  :: MapLibreLib -> MapLibre -> Double -> Double -> IO JSVal
