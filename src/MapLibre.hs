@@ -67,10 +67,10 @@ mapLibreAddMarker (Geolocation lat lon acc) = do
 #endif
 -- TEMP fix for jsaddle FIXME
 #ifdef javascript_HOST_ARCH
-  liftIO $ jsMapLibreAddMarker mapLibre marker lon lat
+  liftIO $ mapLibreAddMarker mapLibre marker lon lat
 
 foreign import javascript unsafe "(map, marker, lon, lat) => marker.setLngLat([lon, lat]).addTo(map)"
-  jsMapLibreAddMarker :: MapLibre -> Marker -> Double -> Double -> IO ()
+  mapLibreAddMarker :: MapLibre -> Marker -> Double -> Double -> IO ()
 #endif
 
 mapLibreEaseTo :: Geolocation -> JSM ()
@@ -85,10 +85,10 @@ mapLibreEaseTo (Geolocation lat lon acc) = do
 #endif
 -- TEMP fix for jsaddle FIXME
 #ifdef javascript_HOST_ARCH
-  liftIO $ jsMapLibreEaseTo mapLibre cfg
+  liftIO $ mapLibreEaseTo mapLibre cfg
 
 foreign import javascript unsafe "(map, cfg) => map.easeTo(cfg)"
-  jsMapLibreEaseTo :: MapLibre -> Object ->  IO ()
+  mapLibreEaseTo :: MapLibre -> Object ->  IO ()
 #endif
 
 
