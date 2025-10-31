@@ -25,10 +25,11 @@ instance ConcurrentIO IOAction where
        -- TEMP FIXME:  getCurrentTimeZone support JS with time-1.15, remove this when we upgraded
 #ifndef javascript_HOST_ARCH
        getCurrentTimeZone
-#else
+#endif
+#ifdef javascript_HOST_ARCH
        minutesToTimeZone <$> getTimezoneOffset
 
-foreign import javascript unsafe "new Date().getTimezoneOffset"
+foreign import javascript unsafe "(() => new Date().getTimezoneOffset())"
   getTimezoneOffset :: IO Int
 #endif
 
