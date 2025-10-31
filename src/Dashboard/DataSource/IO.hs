@@ -18,6 +18,7 @@ instance ConcurrentIO IOAction where
   data ConcurrentIOReq IOAction a where
     GetCurrentTime :: ConcurrentIOReq IOAction UTCTime
     GetCurrentTimeZone :: ConcurrentIOReq IOAction TimeZone
+
   performIO = \case
     GetCurrentTime -> getCurrentTime
     GetCurrentTimeZone ->

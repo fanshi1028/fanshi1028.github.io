@@ -63,8 +63,6 @@ runMapLibre m = do
       Nothing -> withAsync
         ( forever $ do
             maplibregl <- jsg "maplibregl"
-            consoleLog' maplibregl
-
             maplibreglDefined <- not <$> valIsUndefined maplibregl
             when (maplibreglDefined) $ liftIO $ putMVar mapLibreLibMVar $ MapLibreLib maplibregl
             liftIO $ threadDelay 100000
