@@ -52,7 +52,7 @@ mapLibreAddMarker (Geolocation lat lon acc) = do
 #ifdef javascript_HOST_ARCH
   void . liftIO $ constructMarker mapLibreLib mapLibre lon lat
 
-foreign import javascript unsafe "((maplibregl, maplibre, lon, lat) => new maplibregl.Marker().setLngLat([lon, lat]).ddTo(maplibre))"
+foreign import javascript unsafe "((maplibregl, maplibre, lon, lat) => new maplibregl.Marker().setLngLat([lon, lat]).addTo(maplibre))"
    constructMarker  :: MapLibreLib -> MapLibre -> Double -> Double -> IO JSVal
 #endif
 
