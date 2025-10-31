@@ -114,7 +114,10 @@ fetchData sink = do
       fromLocalStorageOrDatafetch Get9DayWeatherForecast (\r -> t `diffUTCTime` r.updateTime <= 60 * 60 * 12)
         >>= misoRunAction . Set9DayWeatherForecast
 
-      uncachedRequest GetCurrentPosition >>= misoRunAction . SetLocation
+      location' <- uncachedRequest GetCurrentPosition
+      misoRunAction $ SetLocation location'
+      misoRunJSM $ mapLibreEaseTo location'
+      misoRunJSM $ mapLibreAddMarker location'
 
       fromLocalStorageOrDatafetch GetCurrentWeatherReport (\r -> t `diffUTCTime` r.updateTime <= 60 * 15)
         >>= misoRunAction . SetCurrentWeatherReport
@@ -127,7 +130,7 @@ fetchData sink = do
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
   InitAction -> issue FetchWeatherData
-  InitMapLibre -> io_ createMapLibre
+  InitMapLibre -> io_ $ runMapLibre createMap
   FetchWeatherData -> do
     withSink fetchData
   SetLocation loc -> location .= Just (Right loc)
@@ -413,7 +416,7 @@ viewModel :: Model -> View Model Action
 viewModel (Model mELocation mTimeZone mCurrentWeatherReport mLocalWeatherForecast m9DayWeatherForecast) =
   div_
     [class_ "flex flex-col gap-8"]
-    [ div_ [key_ mapLibreId, onMounted InitMapLibre] +> libreMapComponent,
+    [ div_ [key_ "mapLibreComponent", onMounted InitMapLibre] +> mapLibreComponent,
       case mELocation of
         Nothing -> p_ [] [text "location data loading"]
         Just (Right location') -> p_ [] [text $ "you are currently at: " <> ms (show location')]
