@@ -7,13 +7,30 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Reader
 import Data.Void
-import Language.Javascript.JSaddle
+import Language.Javascript.JSaddle hiding (new)
 import Miso hiding ((<#))
 import Miso.Html.Element
 import Miso.Html.Property
 import Miso.Navigator
 import System.IO.Unsafe (unsafePerformIO)
 import UnliftIO.Async
+
+#ifndef javascript_HOST_ARCH
+import Language.Javascript.JSaddle.Object qualified as JS (new)
+#endif
+
+new :: (MakeObject constructor, MakeArgs args) => constructor -> args -> JSM JSVal
+#ifndef javascript_HOST_ARCH
+new = JS.new
+#endif
+#ifdef javascript_HOST_ARCH
+foreign import javascript unsafe "(constructor, args) => new constructor(...args)"
+    jsNew :: Object -> [JSVal] -> IO JSVal 
+new constructor args = do
+     arg' <- makeArgs args  
+     constructor' <- makeObject constructor  
+     liftIO $ jsNew constructor' arg'
+#endif
 
 mapLibreId :: MisoString
 mapLibreId = ms "mapLibreId-14yMVNtDA3GBoGwMHBcDu5bhKUHu/9gcFx41dNF+2Zg="
