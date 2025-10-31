@@ -27,7 +27,6 @@ data UnderConstruction = UnderConstruction
 
 routeToView :: Route -> Either UnderConstruction (View model Action)
 routeToView = \case
-  _ -> Right $ div_ [key_ @MisoString "dashboard"] +> dashboardComponent
   Index -> Right home
   Pomodoro -> Right $ div_ [key_ @MisoString "pomodoro"] +> pomodoroComponent
   Dashboard -> Right $ div_ [key_ @MisoString "dashboard"] +> dashboardComponent
