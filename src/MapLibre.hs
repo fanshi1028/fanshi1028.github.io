@@ -42,20 +42,22 @@ mapLibreComponent =
 mapLibreAddMarker :: Geolocation -> JSM ()
 mapLibreAddMarker (Geolocation lat lon acc) = do
   marker <-
-    liftIO (readMVar mapLibreLibMVar) >>= \mapLibreLib -> Marker <$> do
+    liftIO (readMVar mapLibreLibMVar) >>= \mapLibreLib -> 
+      Marker <$> do
+        -- TEMP FIX for jsaddle's 'new' FIXME
 #ifndef javascript_HOST_ARCH
-         new (mapLibreLib ! "Marker") ()
+        new (mapLibreLib ! "Marker") ()
 #endif
 #ifdef javascript_HOST_ARCH
-         constructMarker mapLibreLib cfg
+        constructMarker mapLibreLib
 #endif
   mapLibre <- liftIO $ readMVar mapLibreMVar
   void $ marker # "setLngLat" $ [[lon, lat]]
   void $ marker # "addTo" $ [mapLibre]
 
 #ifdef javascript_HOST_ARCH
-foreign import javascript unsafe "(maplibregl, cfg) => new maplibregl.Marker(cfg)"
-   constructMarker  :: MapLibreLib -> Object -> IO JSVal
+foreign import javascript unsafe "(maplibregl) => new maplibregl.Marker()"
+   constructMarker  :: MapLibreLib -> IO JSVal
 #endif
 
 mapLibreEaseTo :: Geolocation -> JSM ()
@@ -89,13 +91,13 @@ createMap = do
     cfg <- obj
     cfg <# "container" $ mapLibreId
     cfg <# "style" $ "https://demotiles.maplibre.org/style.json"
-    mapLibre <-
--- TEMP FIX for jsaddle's 'new' FIXME
+    mapLibre <- do
+      -- TEMP FIX for jsaddle's 'new' FIXME
 #ifndef javascript_HOST_ARCH
-       new (maplibregl ! "Map") [cfg]
+      new (maplibregl ! "Map") [cfg]
 #endif
 #ifdef javascript_HOST_ARCH
-       constructMap maplibregl cfg
+      constructMap maplibregl cfg
 #endif
     jsg "miso" <# "mapLibre" $ mapLibre
     liftIO . putMVar mapLibreMVar $ MapLibre mapLibre
