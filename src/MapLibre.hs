@@ -60,9 +60,7 @@ mapLibreEaseTo :: Geolocation -> JSM ()
 mapLibreEaseTo (Geolocation lat lon acc) = void $ do
   mapLibre <- liftIO $ readMVar mapLibreMVar
   cfg <- obj
-  cfg <# "around" $ [lon, lat]
   cfg <# "center" $ [lon, lat]
-  cfg <# "zoom" $ 5
 #ifndef javascript_HOST_ARCH
   void $ mapLibre # "easeTo" $ [cfg]
 #endif
@@ -98,6 +96,7 @@ createMap = do
     cfg <- obj
     cfg <# "container" $ mapLibreId
     cfg <# "style" $ "https://tiles.openfreemap.org/styles/liberty"
+    cfg <# "zoom" $ 12
     let storeMapRef = liftIO . putMVar mapLibreMVar . MapLibre
 #ifndef javascript_HOST_ARCH
     new (maplibregl ! "Map") [cfg] >>= storeMapRef
