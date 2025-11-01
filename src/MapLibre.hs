@@ -98,9 +98,7 @@ createMap = do
     cfg <- obj
     cfg <# "container" $ mapLibreId
     cfg <# "style" $ "https://demotiles.maplibre.org/style.json"
-    let storeMapRef mapLibre = do
-          jsg "miso" <# "mapLibre" $ mapLibre
-          liftIO . putMVar mapLibreMVar $ MapLibre mapLibre
+    let storeMapRef = liftIO . putMVar mapLibreMVar . MapLibre
 #ifndef javascript_HOST_ARCH
     new (maplibregl ! "Map") [cfg] >>= storeMapRef
 #endif
