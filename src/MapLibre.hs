@@ -97,7 +97,7 @@ createMap = do
   liftJSM $ do
     cfg <- obj
     cfg <# "container" $ mapLibreId
-    cfg <# "style" $ "https://demotiles.maplibre.org/style.json"
+    cfg <# "style" $ "https://tiles.openfreemap.org/styles/liberty"
     let storeMapRef = liftIO . putMVar mapLibreMVar . MapLibre
 #ifndef javascript_HOST_ARCH
     new (maplibregl ! "Map") [cfg] >>= storeMapRef
