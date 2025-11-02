@@ -232,6 +232,7 @@ jobs:
         build-browser_wasi_shim,
         prerender,
         build-site-js,
+        build-css,
       ]
 
     steps:
