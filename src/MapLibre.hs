@@ -33,7 +33,7 @@ newtype Marker = Marker JSVal deriving newtype (ToJSVal, MakeObject)
 mapLibreComponent :: Component parent () Void
 mapLibreComponent =
   ( component () absurd $ \_ ->
-      div_ [] [div_ [id_ mapLibreId, class_ $ ms "self-stretch h-72"] []]
+      div_ [id_ $ ms "FIXME: need to wrap the div with id ${mapLibreId} to TEMP fix the 'conatianer not found' for maplibre", class_ $ ms "h-full"] [div_ [id_ mapLibreId, class_ $ ms "h-full"] []]
   )
     { scripts = [Src $ toJSString "https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"],
       styles = [Href $ toJSString "https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css"]
