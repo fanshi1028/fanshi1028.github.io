@@ -416,7 +416,14 @@ viewModel :: Model -> View Model Action
 viewModel (Model mELocation mTimeZone mCurrentWeatherReport mLocalWeatherForecast m9DayWeatherForecast) =
   div_
     [class_ "flex flex-col gap-8"]
-    [ div_ [key_ "mapLibreComponent", class_ "h-72", onMounted InitMapLibre] +> mapLibreComponent,
+    [ div_
+        [ key_ "mapLibreComponent",
+          case mELocation of
+            Just (Right _) -> class_ "h-72"
+            _ -> class_ "",
+          onMounted InitMapLibre
+        ]
+        +> mapLibreComponent,
       -- case  errCode of
       --   PERMISSION_DENIED -> _
       --   POSITION_UNAVAILABLE -> _
