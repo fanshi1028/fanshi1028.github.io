@@ -54,7 +54,9 @@ data Model
     _timeZone :: Maybe TimeZone,
     _currentWeatherReport :: Maybe CurrentWeatherReport,
     _localWeatherForecast :: Maybe LocalWeatherForecast,
-    _9DayWeatherForecast :: Maybe NineDayWeatherForecast
+    _9DayWeatherForecast :: Maybe NineDayWeatherForecast,
+    _displayRainfall :: Bool,
+    _displayTemperature :: Bool
   }
   deriving (Eq)
 
@@ -73,6 +75,10 @@ localWeatherForecast = lens _localWeatherForecast $ \record x -> record {_localW
 nineDayWeatherForecast :: Lens Model (Maybe NineDayWeatherForecast)
 nineDayWeatherForecast = lens _9DayWeatherForecast $ \record x -> record {_9DayWeatherForecast = x}
 
+displayTemperature, displayRainfall :: Lens Model Bool
+displayTemperature = lens _displayTemperature $ \record x -> record {_displayTemperature = x}
+displayRainfall = lens _displayRainfall $ \record x -> record {_displayRainfall = x}
+
 data Action
   = InitAction
   | FetchWeatherData
@@ -82,10 +88,12 @@ data Action
   | SetCurrentWeatherReport CurrentWeatherReport
   | SetLocalWeatherForecast LocalWeatherForecast
   | Set9DayWeatherForecast NineDayWeatherForecast
+  | SetDisplayTemperature Bool
+  | SetDisplayRainfall Bool
   deriving stock (Eq, Show)
 
 defaultModel :: Model
-defaultModel = Model Nothing Nothing Nothing Nothing Nothing
+defaultModel = Model Nothing Nothing Nothing Nothing Nothing False False
 
 fetchData :: Sink Action -> JSM ()
 fetchData sink = do
@@ -138,10 +146,14 @@ updateModel = \case
   SetLocalWeatherForecast w -> localWeatherForecast .= Just w
   SetCurrentWeatherReport w -> currentWeatherReport .= Just w
   Set9DayWeatherForecast w -> nineDayWeatherForecast .= Just w
+  SetDisplayTemperature b -> displayTemperature .= b
+  SetDisplayRainfall b -> displayRainfall .= b
 
-viewCurrentWeatherReport :: Maybe TimeZone -> CurrentWeatherReport -> View Model Action
+viewCurrentWeatherReport :: Maybe TimeZone -> Bool -> Bool -> CurrentWeatherReport -> View Model Action
 viewCurrentWeatherReport
   (fromMaybe utc -> timeZone')
+  ifDisplayRainfall
+  ifDisplayTemperature
   ( CurrentWeatherReport
       mLightning
       rainfall
@@ -269,7 +281,12 @@ viewCurrentWeatherReport
       viewTemperature (DataWithRecordTime recordTime _data) =
         div_ [] $
           [ h3_ [class_ "sr-only"] ["Temperature"],
-            div_ [] $
+            button_
+              [ onClick . SetDisplayRainfall $ not ifDisplayTemperature,
+                class_ "hover:animate-wiggle border px-4 py-2"
+              ]
+              $ [p_ [] [text $ (if ifDisplayTemperature then "Hide" else "Show") <> " Temperature"]],
+            div_ [class_ $ if ifDisplayTemperature then "" else "hidden"] $
               [ div_ [] [text . ms . show $ utcToLocalTime timeZone' recordTime],
                 ul_ [class_ "flex flex-col gap-2"] $
                   foldl'
@@ -288,7 +305,12 @@ viewCurrentWeatherReport
       viewRainfall (DataWithInterval timeInterval _data) =
         div_ [] $
           [ h3_ [class_ "sr-only"] ["Rainfall"],
-            div_ [] $
+            button_
+              [ onClick . SetDisplayRainfall $ not ifDisplayRainfall,
+                class_ "hover:animate-wiggle border px-4 py-2"
+              ]
+              $ [p_ [] [text $ (if ifDisplayRainfall then "Hide" else "Show") <> " Rainfall"]],
+            div_ [class_ $ if ifDisplayRainfall then "" else "hidden"] $
               [ div_ [] $
                   [ text . ms $ case (lowerBound timeInterval, upperBound timeInterval) of
                       (Finite lb, Finite ub) -> show (utcToLocalTime timeZone' lb) <> " - " <> show (utcToLocalTime timeZone' ub)
@@ -413,7 +435,7 @@ view9DayWeatherForecast
         p_ [class_ "prose"] [text . ms $ "Soil temperature is " <> show (toDegreeCelsiusAbsolute value) <> " °C at " <> pack (showIn meter depth) <> " in " <> place <> " at " <> show (utcToLocalTime timeZone' recordTime)]
 
 viewModel :: Model -> View Model Action
-viewModel (Model mELocation mTimeZone mCurrentWeatherReport mLocalWeatherForecast m9DayWeatherForecast) =
+viewModel (Model mELocation mTimeZone mCurrentWeatherReport mLocalWeatherForecast m9DayWeatherForecast ifDisplayRainfall ifDisplayTemperature) =
   div_
     [class_ "flex flex-col gap-8"]
     [ div_
@@ -428,7 +450,7 @@ viewModel (Model mELocation mTimeZone mCurrentWeatherReport mLocalWeatherForecas
       --   PERMISSION_DENIED -> _
       --   POSITION_UNAVAILABLE -> _
       --   TIMEOUT -> "timeout while getting your location"
-      maybe (div_ [] ["CurrentWeatherReport loading"]) (viewCurrentWeatherReport mTimeZone) mCurrentWeatherReport,
+      maybe (div_ [] ["CurrentWeatherReport loading"]) (viewCurrentWeatherReport mTimeZone ifDisplayRainfall ifDisplayTemperature) mCurrentWeatherReport,
       maybe (div_ [] ["LocalWeatherForecast loading"]) (viewLocalWeatherForecast mTimeZone) mLocalWeatherForecast,
       maybe (div_ [] ["NineDayWeatherForecast loading"]) (view9DayWeatherForecast mTimeZone) m9DayWeatherForecast,
       div_
