@@ -165,10 +165,10 @@ viewCurrentWeatherReport
       rainstormReminder
       specialWxTips
       tcmessage
-      mintempFrom00To09
-      rainfallFrom00To12
-      rainfallLastMonth
-      rainfallJanuaryToLastMonth
+      _mintempFrom00To09
+      _rainfallFrom00To12
+      _rainfallLastMonth
+      _rainfallJanuaryToLastMonth
       temperature
       humidity
     ) =
@@ -212,22 +212,6 @@ viewCurrentWeatherReport
             case foldl' (\acc msg -> li_ [] [text (ms msg)] : acc) [] tcmessage of
               [] -> div_ [class_ "hidden"] []
               lis -> div_ [] $ [h3_ [class_ "sr-only"] ["TC Message"], ul_ [class_ "flex flex-col gap-2"] lis],
-            case mintempFrom00To09 of
-              Nothing -> div_ [class_ "hidden"] []
-              Just "" -> div_ [class_ "hidden"] []
-              Just msg -> div_ [] $ [h3_ [class_ "sr-only"] ["Min Temp From 00 To 09"], div_ [] [text $ ms msg]],
-            case rainfallFrom00To12 of
-              Nothing -> div_ [class_ "hidden"] []
-              Just "" -> div_ [class_ "hidden"] []
-              Just msg -> div_ [] $ [h3_ [class_ "sr-only"] ["Rainfall From 00 To 12"], div_ [] [text $ ms msg]],
-            case rainfallLastMonth of
-              Nothing -> div_ [class_ "hidden"] []
-              Just "" -> div_ [class_ "hidden"] []
-              Just msg -> div_ [] $ [h3_ [class_ "sr-only"] ["Rainfall Last Month"], div_ [] [text $ ms msg]],
-            case rainfallJanuaryToLastMonth of
-              Nothing -> div_ [class_ "hidden"] []
-              Just "" -> div_ [class_ "hidden"] []
-              Just msg -> div_ [] $ [h3_ [class_ "sr-only"] ["Rainfall January To Last Month"], div_ [] [text $ ms msg]],
             viewTemperature temperature,
             viewHumidity humidity
           ]
