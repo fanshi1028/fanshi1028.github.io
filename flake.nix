@@ -154,13 +154,7 @@
                   (enableCabalFlag "check-unchecked")
                 ]
               );
-              hashtables = pkgs.lib.pipe hsuper.hashtables_1_4_2 (
-                with pkgs.haskell.lib.compose;
-                [
-                  (enableCabalFlag "bounds-checking")
-                  (enableCabalFlag "debug")
-                ]
-              );
+              hashtables = hsuper.hashtables_1_4_2;
             };
             modifier =
               drv:
