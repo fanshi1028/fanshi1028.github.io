@@ -30,7 +30,7 @@ dashboardPRD =
     ( SolutionAlignment
         "Just a fixable and continuously evolving layout for a bunch of useful information" --
         [ "User can expand item into details after glimping the most important information",
-          "Display curent/forecasted UV Index"
+          "Display weather info/forecast, on a map (w.r.t location) and a timeline (w.r.t time)"
         ]
         [ OpenIssues "Find some UV API to use" $
             "At first I just found a random free api: https://currentuvindex.com but 1. its api use latitude and longitude but no city option to specify location which is not good for caching (and it has daily call limit). 2. and it works globally and I base in HK mostly currently"
