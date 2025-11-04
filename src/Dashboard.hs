@@ -6,6 +6,7 @@
 
 module Dashboard (dashboardComponent) where
 
+import Control.Monad
 import Control.Monad.IO.Class
 import Dashboard.DataSource.BrowserGeolocationAPI
 import Dashboard.DataSource.HongKongObservatoryWeatherAPI
@@ -19,9 +20,9 @@ import Data.Text hiding (foldl')
 import Data.Time
 import Haxl.Core
 import Haxl.DataSource.ConcurrentIO
-import Language.Javascript.JSaddle hiding (catch)
+import Language.Javascript.JSaddle
 import MapLibre
-import Miso hiding (URI, getLocalStorage, setLocalStorage)
+import Miso
 import Miso.Html.Element
 import Miso.Html.Event
 import Miso.Html.Property hiding (label_)
@@ -98,42 +99,49 @@ defaultModel = Model Nothing Nothing Nothing Nothing Nothing False False
 fetchData :: Sink Action -> JSM ()
 fetchData sink = do
   jscontext <- askJSM
-  liftIO $ do
-    ioState <- mkConcurrentIOState
-    let st =
-          stateEmpty
-            & stateSet (MisoRunActionState jscontext sink)
-            & stateSet (MisoRunJSMState jscontext)
-            & stateSet (LocationReqState jscontext)
-            & stateSet (HKOWeatherInformationReqState jscontext)
-            & stateSet (LocalStorageReqState jscontext)
-            & stateSet ioState
 
-    env' <- initEnv @() st jscontext
+  ioState <- liftIO mkConcurrentIOState
+  let st =
+        stateEmpty
+          & stateSet (MisoRunActionState jscontext sink)
+          & stateSet (MisoRunJSMState jscontext)
+          & stateSet (LocationReqState jscontext)
+          & stateSet (HKOWeatherInformationReqState jscontext)
+          & stateSet ioState
 
-    runHaxl (env' {flags = haxlEnvflags}) $ do
-      t <- dataFetch GetCurrentTime
+  env' <- liftIO $ initEnv @() st jscontext
 
-      dataFetch GetCurrentTimeZone >>= misoRunAction . SetTimeZone
+  t <- liftIO $ getCurrentTime
+  loadCachesFromLocalStorage <-
+    sequence
+      <$> sequence
+        [ cacheResultWithLocalStorage GetLocalWeatherForecast $ \r -> t `diffUTCTime` r.updateTime <= 60 * 15,
+          cacheResultWithLocalStorage Get9DayWeatherForecast $ \r -> t `diffUTCTime` r.updateTime <= 60 * 60 * 12,
+          cacheResultWithLocalStorage GetCurrentWeatherReport $ \r -> t `diffUTCTime` r.updateTime <= 60 * 15,
+          cacheResultWithLocalStorage GetWeatherWarningSummary $ const True,
+          cacheResultWithLocalStorage GetWeatherWarningInfo $ const True,
+          cacheResultWithLocalStorage GetSpecialWeatherTips $ const True
+        ]
 
-      fromLocalStorageOrDatafetch GetLocalWeatherForecast (\r -> t `diffUTCTime` r.updateTime <= 60 * 15)
-        >>= misoRunAction . SetLocalWeatherForecast
+  _ <- liftIO . runHaxl (env' {flags = haxlEnvflags}) $ do
+    loadCachesFromLocalStorage
+    uncachedRequest GetCurrentTimeZone >>= misoRunAction . SetTimeZone
 
-      fromLocalStorageOrDatafetch Get9DayWeatherForecast (\r -> t `diffUTCTime` r.updateTime <= 60 * 60 * 12)
-        >>= misoRunAction . Set9DayWeatherForecast
+    dataFetchWithSerialise GetLocalWeatherForecast >>= misoRunAction . SetLocalWeatherForecast
 
-      location' <- uncachedRequest GetCurrentPosition
-      misoRunAction $ SetLocation location'
-      misoRunJSM $ mapLibreEaseTo location'
-      misoRunJSM $ mapLibreAddMarker location'
+    dataFetchWithSerialise Get9DayWeatherForecast >>= misoRunAction . Set9DayWeatherForecast
 
-      fromLocalStorageOrDatafetch GetCurrentWeatherReport (\r -> t `diffUTCTime` r.updateTime <= 60 * 15)
-        >>= misoRunAction . SetCurrentWeatherReport
+    location' <- uncachedRequest GetCurrentPosition
+    misoRunAction $ SetLocation location'
+    misoRunJSM $ mapLibreEaseTo location'
+    misoRunJSM $ mapLibreAddMarker location'
 
-      fromLocalStorageOrDatafetch GetWeatherWarningSummary $ const True
-      fromLocalStorageOrDatafetch GetWeatherWarningInfo $ const True
-      fromLocalStorageOrDatafetch GetSpecialWeatherTips $ const True
-      pure ()
+    dataFetchWithSerialise GetCurrentWeatherReport >>= misoRunAction . SetCurrentWeatherReport
+    dataFetchWithSerialise GetWeatherWarningSummary
+    dataFetchWithSerialise GetWeatherWarningInfo
+    dataFetchWithSerialise GetSpecialWeatherTips
+
+  saveCacheToLocalStorage $ dataCache env'
 
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case

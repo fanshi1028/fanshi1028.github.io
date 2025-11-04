@@ -1,9 +1,10 @@
-{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
 
 module Dashboard.DataSource.LocalStorage where
 
 import Codec.Serialise
+import Control.Monad
+import Control.Monad.IO.Class
 import Data.Base64.Types
 import Data.ByteString.Base64
 import Data.ByteString.Lazy hiding (pack, unpack)
@@ -14,84 +15,64 @@ import Data.Text.Encoding.Base64.Error
 import Data.Typeable
 import Data.Void
 import Haxl.Core
-import Haxl.Prelude (catchAny)
+import Haxl.Core.DataCache
+import Haxl.Core.Fetch
+import Haxl.Core.Monad
 import Language.Javascript.JSaddle
-import UnliftIO.Exception hiding (catchAny)
+import Miso (ms)
+import Miso.FFI (consoleLog)
+import UnliftIO.Exception
+import UnliftIO.IORef
 
-data LocalStorage a where
-  GetLocalStorage :: forall item. (Serialise item) => Text -> LocalStorage item
-  SetLocalStorage :: forall item. (Serialise item) => Text -> item -> LocalStorage ()
-  RemoveLocalStorage :: Text -> LocalStorage ()
+makeReqLocalStorageKey :: (Typeable req, Show req) => req -> String
+makeReqLocalStorageKey req = show (typeOf req) <> ":" <> show req
 
-instance Eq (LocalStorage a) where
-  (==) (RemoveLocalStorage key1) (RemoveLocalStorage key2) = key1 == key2
-  (==) _ _ = False
+showReqResultSerialised :: (Show (r a), Serialise a) => ShowReq r a
+showReqResultSerialised = (show, unpack . extractBase64 . encodeBase64 . toStrict . serialise)
 
-instance Show (LocalStorage item) where
-  show = \case
-    GetLocalStorage key -> "GetLocalStorage " <> unpack key
-    SetLocalStorage key _ -> "SetLocalStorage " <> unpack key
-    RemoveLocalStorage key -> "RemoveLocalStorage " <> unpack key
+dataFetchWithSerialise :: forall u r a w. (DataSource u r, Eq (r a), Hashable (r a), Typeable (r a), Show (r a), Serialise a) => r a -> GenHaxl u w a
+dataFetchWithSerialise = dataFetchWithShow showReqResultSerialised
 
-instance ShowP LocalStorage where showp = show
+cacheResultWithLocalStorage ::
+  ( Eq (r a),
+    Show (r a),
+    Hashable (r a),
+    Typeable (r a),
+    Serialise a
+  ) =>
+  r a -> (a -> Bool) -> JSM (GenHaxl u w ())
+cacheResultWithLocalStorage req validateCache = do
+  localStorage <- jsg "window" ! "localStorage"
+  let key = makeReqLocalStorageKey req
+  v <- localStorage # "getItem" $ [pack key]
+  eCacheReulst <-
+    valIsNull v >>= \case
+      True -> pure . Left $ key <> ": not found in localStorage"
+      False -> do
+        txt <- fromJSValUnchecked v
+        pure $ case decodeBase64Untyped $ encodeUtf8 txt of
+          Left err -> Left . displayException @(Base64Error Void) $ DecodeError err
+          Right r -> case deserialiseOrFail $ fromStrict r of
+            Left err -> Left $ displayException err
+            Right r' -> Right r'
+  case eCacheReulst of
+    Left err -> pure () <$ consoleLog (ms err)
+    Right r
+      | validateCache r -> pure . void $ cacheResultWithShow showReqResultSerialised req (pure r)
+      | otherwise -> pure () <$ consoleLog (ms $ "LocalStorage Cache Invalidate: " <> key)
 
-instance StateKey LocalStorage where
-  newtype State LocalStorage = LocalStorageReqState JSContextRef
-
-instance DataSourceName LocalStorage where
-  dataSourceName _ = pack "localStorage"
-
-instance DataSource u LocalStorage where
-  fetch state@(LocalStorageReqState jscontext) =
-    syncFetch
-      ($ jsg "window" ! "localStorage")
-      (const $ pure ())
-      ( \localStorage req -> pure . flip runJSM jscontext $ case req of
-          GetLocalStorage key -> do
-            v <- localStorage # "getItem" $ [key]
-            valIsNull v >>= \case
-              True -> pure . Left . toException . NotFound $ key <> pack ": not found in localStorage"
-              False -> do
-                txt <- fromJSValUnchecked v
-                case decodeBase64Untyped $ encodeUtf8 txt of
-                  Left err -> fail . displayException @(Base64Error Void) $ DecodeError err
-                  Right r -> case deserialiseOrFail $ fromStrict r of
-                    Left err -> fail $ displayException err
-                    Right r' -> pure $ Right r'
-          SetLocalStorage key item ->
-            Right () <$ do
-              localStorage # "setItem" $ (key, extractBase64 . encodeBase64 . toStrict $ serialise item)
-          RemoveLocalStorage key -> Right () <$ (localStorage # "removeItem" $ [key])
-      )
-      state
-
--- HACK: we don't care about the Hashable instance here, because we won't cache the result
-instance Hashable (LocalStorage a) where
-  hashWithSalt s _ = hashWithSalt s (1 :: Int)
-
-getLocalStorage :: (Eq item, Typeable item, Show item, Serialise item) => Text -> GenHaxl JSContextRef w item
-getLocalStorage k = uncachedRequest $ GetLocalStorage k
-
-setLocalStorage :: (Serialise item) => Text -> item -> GenHaxl JSContextRef w ()
-setLocalStorage k v = uncachedRequest $ SetLocalStorage k v
-
-removeLocalStorage :: Text -> GenHaxl JSContextRef w ()
-removeLocalStorage k = uncachedRequest $ RemoveLocalStorage k
-
-makeReqStorageKey :: (Typeable req, Show req) => req -> Text
-makeReqStorageKey req@(typeRepTyCon . typeOf -> tyCon) = pack $ tyConName tyCon <> ":" <> show req
-
-loadCacheFromLocalStorage :: (Serialise a, Typeable a, Eq a, Show a) => Text -> (a -> Bool) -> GenHaxl JSContextRef w a
-loadCacheFromLocalStorage key validateCache =
-  getLocalStorage key >>= \case
-    res
-      | validateCache res -> pure res
-      | otherwise -> fail $ "LocalStorage Cache Invalidated: " <> unpack key
-
-fromLocalStorageOrDatafetch :: (Eq a, Typeable a, Serialise a, Request req a, DataSource JSContextRef req) => req a -> (a -> Bool) -> GenHaxl JSContextRef w a
-fromLocalStorageOrDatafetch req@(makeReqStorageKey -> key) validateCache =
-  loadCacheFromLocalStorage key validateCache
-    `catchAny` do
-      r <- dataFetch req
-      setLocalStorage key r
-      pure r
+saveCacheToLocalStorage :: HaxlDataCache u w -> JSM ()
+saveCacheToLocalStorage cache = do
+  cacheShown <- liftIO $ showCache cache $ \(DataCacheItem IVar {ivarRef = !ref} _) ->
+    readIORef ref >>= \case
+      IVarFull (Ok a _) -> return (Just (Right a))
+      IVarFull (ThrowHaxl e _) -> return (Just (Left e))
+      IVarFull (ThrowIO e) -> return (Just (Left e))
+      IVarEmpty _ -> return Nothing
+  forM_ cacheShown $ \(showsTypeRep -> mkTypeRepStr, subCacheShown) ->
+    forM_ subCacheShown $ \case
+      (reqStr, Left err) -> consoleLog . ms $ reqStr <> ":" <> displayException err
+      (reqStr, Right r) ->
+        () <$ do
+          localStorage <- jsg "window" ! "localStorage"
+          localStorage # "setItem" $ ((mkTypeRepStr "" <> ":" <> reqStr), r)
