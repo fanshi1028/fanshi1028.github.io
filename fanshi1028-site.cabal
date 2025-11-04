@@ -70,8 +70,8 @@ common lib
       Dashboard.DataSource.BrowserGeolocationAPI
       Dashboard.DataSource.HongKongObservatoryWeatherAPI
       Dashboard.DataSource.IO
-      Dashboard.DataSource.LocalStorage
       Dashboard.DataSource.MisoRun
+      Haxl.LocalStorage
       Home
       MapLibre
       Pomodoro
@@ -91,8 +91,8 @@ library
     Dashboard.DataSource.BrowserGeolocationAPI
     Dashboard.DataSource.HongKongObservatoryWeatherAPI
     Dashboard.DataSource.IO
-    Dashboard.DataSource.LocalStorage
     Dashboard.DataSource.MisoRun
+    Haxl.LocalStorage
     Home
     MapLibre
     Pomodoro

@@ -1,6 +1,6 @@
 {-# LANGUAGE ViewPatterns #-}
 
-module Dashboard.DataSource.LocalStorage where
+module Haxl.LocalStorage where
 
 import Codec.Serialise
 import Control.Monad
