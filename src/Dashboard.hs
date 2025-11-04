@@ -11,7 +11,6 @@ import Control.Monad.IO.Class
 import Dashboard.DataSource.BrowserGeolocationAPI
 import Dashboard.DataSource.HongKongObservatoryWeatherAPI
 import Dashboard.DataSource.IO
-import Dashboard.DataSource.LocalStorage
 import Dashboard.DataSource.MisoRun
 import Data.Function
 import Data.Interval
@@ -20,6 +19,7 @@ import Data.Text hiding (foldl')
 import Data.Time
 import Haxl.Core
 import Haxl.DataSource.ConcurrentIO
+import Haxl.LocalStorage
 import Language.Javascript.JSaddle
 import MapLibre
 import Miso
