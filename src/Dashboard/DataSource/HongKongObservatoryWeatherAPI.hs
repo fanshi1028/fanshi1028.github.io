@@ -116,7 +116,7 @@ decodeScientific =
     _ -> fail "invalid Scientic encoding"
 
 instance Serialise SoilTemp where
-  encode (SoilTemp place value recordTime depth) = encodeListLen 5 <> encodeWord 0 <> encode place <> encodeScientific (unQuantity value) <> encode recordTime <> encodeScientific (unQuantity depth)
+  encode (SoilTemp place value recordTime depth) = encodeListLen 5 <> encodeWord 0 <> encode place <> encodeScientific (value /~ degreeCelsius) <> encode recordTime <> encodeScientific (depth /~ meter)
   decode =
     (,) <$> decodeListLen <*> decodeWord >>= \case
       (5, 0) -> SoilTemp <$> decode <*> ((*~ degreeCelsius) <$> decodeScientific) <*> decode <*> ((*~ meter) <$> decodeScientific)
@@ -154,7 +154,7 @@ data SeaTemp = SeaTemp
   deriving stock (Eq, Show)
 
 instance Serialise SeaTemp where
-  encode (SeaTemp place value recordTime) = encodeListLen 4 <> encodeWord 0 <> encode place <> encodeScientific (unQuantity value) <> encode recordTime
+  encode (SeaTemp place value recordTime) = encodeListLen 4 <> encodeWord 0 <> encode place <> encodeScientific (value /~ degreeCelsius) <> encode recordTime
   decode =
     (,) <$> decodeListLen <*> decodeWord >>= \case
       (4, 0) -> SeaTemp <$> decode <*> ((*~ degreeCelsius) <$> decodeScientific) <*> decode
@@ -239,8 +239,8 @@ instance Serialise WeatherForecast where
       <> encode (fromEnum week)
       <> encode forecastWind
       <> encode forecastWeather
-      <> encodeInterval (encodeScientific . unQuantity) forecastTempInterval
-      <> encodeInterval (encodeScientific . unQuantity) forecastRHInterval
+      <> encodeInterval (encodeScientific . (/~ degreeCelsius)) forecastTempInterval
+      <> encodeInterval (encodeScientific . (/~ percent)) forecastRHInterval
       <> encode psr
       <> encode forecastIcon
   decode = do
@@ -362,7 +362,7 @@ data Rainfall = Rainfall
   deriving stock (Eq, Show)
 
 instance Serialise Rainfall where
-  encode (Rainfall interval' place main) = encodeListLen 4 <> encodeWord 0 <> encodeInterval (encodeScientific . unQuantity) interval' <> encode place <> encode main
+  encode (Rainfall interval' place main) = encodeListLen 4 <> encodeWord 0 <> encodeInterval (encodeScientific . (/~ milli meter)) interval' <> encode place <> encode main
   decode =
     (,) <$> decodeListLen <*> decodeWord >>= \case
       (4, 0) -> Rainfall <$> decodeInterval ((*~ milli meter) <$> decodeScientific) <*> decode <*> decode
@@ -478,7 +478,7 @@ data Temperature = Temperature
   deriving stock (Eq, Show)
 
 instance Serialise Temperature where
-  encode (Temperature place value) = encodeListLen 3 <> encodeWord 0 <> encode place <> encodeScientific (unQuantity value)
+  encode (Temperature place value) = encodeListLen 3 <> encodeWord 0 <> encode place <> encodeScientific (value /~ degreeCelsius)
   decode =
     (,) <$> decodeListLen <*> decodeWord >>= \case
       (3, 0) -> Temperature <$> decode <*> ((*~ degreeCelsius) <$> decodeScientific)
@@ -502,7 +502,7 @@ data Humidity = Humidity
   deriving stock (Eq, Show)
 
 instance Serialise Humidity where
-  encode (Humidity place value) = encodeListLen 3 <> encodeWord 0 <> encode place <> encodeScientific (unQuantity value)
+  encode (Humidity place value) = encodeListLen 3 <> encodeWord 0 <> encode place <> encodeScientific (value /~ percent)
   decode =
     (,) <$> decodeListLen <*> decodeWord >>= \case
       (3, 0) -> Humidity <$> decode <*> ((*~ percent) <$> decodeScientific)

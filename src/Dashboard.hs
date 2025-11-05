@@ -416,7 +416,7 @@ view9DayWeatherForecast
                 ],
               div_ [] $
                 [ text . ms $ case (lowerBound forecastRHInterval, upperBound forecastRHInterval) of
-                    (Finite lb, Finite ub) -> show (unQuantity lb * 100) <> " - " <> pack (showIn percent ub)
+                    (Finite lb, Finite ub) -> show (lb /~ percent) <> " - " <> pack (showIn percent ub)
                     _ -> "impossible: unexpected relative humidity interval for forecast data"
                 ],
               case psr of
