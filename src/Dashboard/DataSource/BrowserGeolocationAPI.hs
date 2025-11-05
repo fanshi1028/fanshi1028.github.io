@@ -2,9 +2,9 @@
 
 module Dashboard.DataSource.BrowserGeolocationAPI where
 
+import Control.Concurrent
 import Control.Monad
 import Control.Monad.IO.Class
-import Data.Foldable
 import Data.Functor
 import Data.Hashable
 import Data.Text (pack)
@@ -33,33 +33,36 @@ instance DataSourceName LocationReq where
   dataSourceName _ = pack "browser geolocation api"
 
 instance DataSource u LocationReq where
-  fetch (LocationReqState jscontext) _ _ = AsyncFetch $ \reqs inner -> do
-    let results = [r | BlockedFetch GetCurrentPosition r <- reqs]
-    case results of
-      [] -> pure ()
-      _ : _ -> flip runJSM jscontext $ do
-        options <- create
-        (options <# "enableHighAccuracy") jsTrue
-        successCB <-
-          asyncCallback1 $ \v -> do
-            result <-
-              fromJSVal v >>= \case
-                Nothing ->
-                  (jsg "JSON" # "stringify" $ [v])
-                    >>= fromJSValUnchecked
-                    <&> \stringified -> Left . toException . JSONError $ pack "Impossible! succeeded but failed to be parsed as Geolocation: " <> stringified
-                Just r -> pure $ Right r
-            liftIO $ for_ results (flip putResult result)
-        failCB <-
-          asyncCallback1 $ \v -> do
-            result <-
-              fromJSVal @GeolocationError v >>= \case
-                Nothing ->
-                  (jsg "JSON" # "stringify" $ [v])
-                    >>= fromJSValUnchecked
-                    <&> \stringified ->
-                      Left . toException . JSONError $ pack "Impossible! failed with unexpected error: " <> stringified
-                Just err -> pure . Left . toException . FetchError . pack $ show err
-            liftIO $ for_ results (flip putResult result)
-        void $ jsg "navigator" ! "geolocation" # "getCurrentPosition" $ (successCB, failCB, options)
-    inner
+  fetch state@(LocationReqState jscontext) =
+    asyncFetchAcquireRelease
+      newEmptyMVar
+      (const $ pure ())
+      ( \resultMVar -> flip runJSM jscontext $ do
+          options <- create
+          (options <# "enableHighAccuracy") jsTrue
+          successCB <-
+            asyncCallback1 $ \v -> do
+              result <-
+                fromJSVal v >>= \case
+                  Nothing ->
+                    (jsg "JSON" # "stringify" $ [v])
+                      >>= fromJSValUnchecked
+                      <&> \stringified -> Left . toException . JSONError $ pack "Impossible! succeeded but failed to be parsed as Geolocation: " <> stringified
+                  Just r -> pure $ Right r
+              liftIO $ putMVar resultMVar result
+          failCB <-
+            asyncCallback1 $ \v -> do
+              result <-
+                fromJSVal @GeolocationError v >>= \case
+                  Nothing ->
+                    (jsg "JSON" # "stringify" $ [v])
+                      >>= fromJSValUnchecked
+                      <&> \stringified ->
+                        Left . toException . JSONError $ pack "Impossible! failed with unexpected error: " <> stringified
+                  Just err -> pure . Left . toException . FetchError . pack $ show err
+              liftIO $ putMVar resultMVar result
+          void $ jsg "navigator" ! "geolocation" # "getCurrentPosition" $ (successCB, failCB, options)
+      )
+      (const $ pure ())
+      (\resultMVar GetCurrentPosition -> pure $ readMVar resultMVar)
+      state
