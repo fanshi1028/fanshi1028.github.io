@@ -629,14 +629,23 @@ instance DataSource u HKOWeatherInformationReq where
         let url = ms $ uriToString id (hkoWeatherInformationReqToURI req) ""
             successCB = \(Response _ _ _ v) -> liftIO $ putMVar successMVar v
             failCB =
-              liftIO . putMVar failMVar . toException . \case
-                Response Nothing _ _ _ -> FetchError "CORS or Network Error"
+              liftIO . putMVar failMVar . \case
+                Response Nothing headers mErrMsg _ -> toException . FetchError $ "CORS or Network Error" <> intercalate ", " [T.show headers, T.show mErrMsg]
                 Response (Just code) headers mErrMsg (v :: Value)
-                  | code < 300 -> do
-                      FetchError $ "TEMP FIXME ?????: " <> intercalate ", " [T.show code, T.show headers, T.show mErrMsg, T.show v]
-                  | code < 400 -> FetchError $ "TEMP FIXME Redirect: " <> intercalate ", " [T.show code, T.show headers, T.show mErrMsg, T.show v]
-                  | code < 500 -> FetchError $ "TEMP FIXME Client Error: " <> intercalate ", " [T.show code, T.show headers, T.show mErrMsg, T.show v]
-                  | otherwise -> FetchError $ "Server Error: " <> intercalate ", " [T.show code, T.show headers, T.show mErrMsg, T.show v]
+                  | code == 400 -> toException . InvalidParameter $ "InvalidParameter: " <> errorDetails
+                  | code == 404 -> toException . NotFound $ "Not Found: " <> errorDetails
+                  | code == 408 -> toException . FetchError $ "TEMP FIXME Request Timeout: " <> errorDetails
+                  | code == 425 -> toException . FetchError $ "TEMP FIXME To Early: " <> errorDetails
+                  | code == 429 -> toException . FetchError $ "TEMP FIXME Too Many Requests: " <> errorDetails
+                  | code == 500 -> toException . FetchError $ "TEMP FIXME Internal Server Error: " <> errorDetails
+                  | code == 502 -> toException . FetchError $ "TEMP FIXME Bad Gateway: " <> errorDetails
+                  | code == 503 -> toException . FetchError $ "TEMP FIXME Service Unavailable: " <> errorDetails
+                  | code == 504 -> toException . FetchError $ "TEMP FIXME Gateway Timeout: " <> errorDetails
+                  | otherwise -> toException . MonadFail $ "Error: " <> errorDetails
+                  where
+                    errorDetails = intercalate ", " $ case mErrMsg of
+                      Nothing -> [T.show code, T.show headers, T.show v]
+                      Just msg -> [T.show code, T.show msg, T.show headers, T.show v]
         runJSM (FFI.fetch url "GET" Nothing [] successCB failCB JSON) jscontext
         race (readMVar failMVar) (readMVar successMVar)
 
