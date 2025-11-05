@@ -147,8 +147,7 @@ updateModel :: Action -> Effect parent Model Action
 updateModel = \case
   InitAction -> issue FetchWeatherData
   InitMapLibre -> io_ $ runMapLibre createMap
-  FetchWeatherData -> do
-    withSink fetchData
+  FetchWeatherData -> withSink fetchData
   SetLocation loc -> location .= Just (Right loc)
   SetTimeZone tz -> timeZone .= Just tz
   SetLocalWeatherForecast w -> localWeatherForecast .= Just w

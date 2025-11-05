@@ -51,7 +51,7 @@ cacheResultWithLocalStorage req validateCache = do
       False -> do
         txt <- fromJSValUnchecked v
         pure $ case decodeBase64Untyped $ encodeUtf8 txt of
-          Left err -> Left . displayException @(Base64Error Void) $ DecodeError err
+          Left err -> Left . displayException $ DecodeError @Void err
           Right r -> case deserialiseOrFail $ fromStrict r of
             Left err -> Left $ displayException err
             Right r' -> Right r'
