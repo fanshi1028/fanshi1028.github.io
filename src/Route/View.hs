@@ -31,9 +31,8 @@ routeToView = \case
   Pomodoro -> Right $ div_ [key_ @MisoString "pomodoro"] +> pomodoroComponent
   Dashboard -> Right $ div_ [key_ @MisoString "dashboard"] +> dashboardComponent
 
-homeButton :: Route -> View model Action
-homeButton Index = div_ [] []
-homeButton _ =
+homeButton :: View model Action
+homeButton =
   a_
     [ onClickWithOptions preventDefault $ GotoRoute Index,
       Router.href_ Index,
@@ -52,9 +51,9 @@ homeButton _ =
     ]
 
 prdButton :: Bool -> View model Action
-prdButton open =
+prdButton setOpen =
   button_
-    [ onClick $ SetPRDOpen $ not open,
+    [ onClick $ SetPRDOpen setOpen,
       class_ "hover:animate-wiggle hover:[animation-delay:0.25s]"
     ]
     [ svg_
@@ -69,24 +68,24 @@ prdButton open =
         [path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"]]
     ]
 
+topRightClss :: [MisoString]
+topRightClss =
+  [ "top-2 sm:top-4 md:top-6 lg:top-8 xl:top-12 2xl:top-16",
+    "right-2 sm:right-4 md:right-6 lg:right-8 xl:right-12 2xl:right-16"
+  ]
+
 navView :: Model -> View Model Action
 navView = \case
-  Model route open ->
-    let navCls =
-          classes_
-            [ "fixed flex flex-col z-50",
-              "gap-2 md:gap-4 xl:gap-6",
-              "top-2 sm:top-4 md:top-6 lg:top-8 xl:top-12 2xl:top-16",
-              "right-2 sm:right-4 md:right-6 lg:right-8 xl:right-12 2xl:right-16"
-            ]
+  Model route ->
+    let navCls = classes_ $ "fixed flex flex-col z-50 gap-2 md:gap-4 xl:gap-6" : topRightClss
+        dialogButtonClss = classes_ $ "sticky self-end z-50" : topRightClss
      in div_ [] $ case routeToView route of
-          Left _ ->
-            [ nav_ [navCls] [homeButton route],
-              prdView True $ routeToPRD route
-            ]
+          Left UnderConstruction -> [prdView False (div_ [dialogButtonClss] [homeButton]) $ routeToPRD route]
           Right vw ->
-            [ nav_ [navCls] [homeButton route, prdButton open],
-              prdView open $ routeToPRD route,
+            [ nav_ [navCls] $ case route of
+                Index -> [prdButton True]
+                _ -> [homeButton, prdButton True],
+              prdView True (div_ [dialogButtonClss] [prdButton False]) $ routeToPRD route,
               vw
             ]
   RoutingError err' -> view500 err'

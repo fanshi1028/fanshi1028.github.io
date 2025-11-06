@@ -16,6 +16,7 @@ module ProductRequirementDocument
     Reference (Reference),
     -- NOTE: View
     prdView,
+    prdDialogueId,
   )
 where
 
@@ -29,7 +30,7 @@ import Miso hiding (URI)
 import Miso.Html.Element
 import Miso.Html.Property
 import Miso.Svg.Element
-import Miso.Svg.Property hiding (path_)
+import Miso.Svg.Property hiding (id_, path_)
 import Network.URI
 
 data ProductRequirementDocument = ProductRequirementDocument
@@ -99,22 +100,28 @@ data KeyMilestone = KeyMilestone
   }
   deriving (Eq, Generic, FromJSON, ToJSON)
 
-prdView :: Bool -> ProductRequirementDocument -> View model action
-prdView open prd =
-  div_
-    [class_ $ if open then "absolute left-0 top-0 h-full w-full overflow-auto z-40" else "hidden"]
-    [ div_
-        [ classes_
-            [ "flex flex-col container mx-auto bg-neutral-100 relative",
-              "gap-12 md:gap-20 lg:gap-24 xl:gap-28",
-              "p-6 sm:p-12 md:p-16 lg:p-20 xl:p-24 2xl:p-28"
-            ]
-        ]
-        $ [ problemAlignmentView,
-            solutionAlignmentView,
-            launchReadinessView
-          ]
+prdDialogueId :: MisoString
+prdDialogueId = "prdDialogue-LZZ2CwjFRCd24oOi"
+
+prdView :: Bool -> View model action -> ProductRequirementDocument -> View model action
+prdView modal button prd =
+  dialog_
+    [ id_ prdDialogueId,
+      if modal then textProp "closedby" "any" else textProp "open" "true"
     ]
+    $ [ div_
+          [ classes_
+              [ "relative flex flex-col bg-neutral-100",
+                "gap-12 md:gap-20 lg:gap-24 xl:gap-28",
+                "p-6 sm:p-12 md:p-16 lg:p-20 xl:p-24 2xl:p-28"
+              ]
+          ]
+          $ [ button,
+              problemAlignmentView,
+              solutionAlignmentView,
+              launchReadinessView
+            ]
+      ]
   where
     h3Cls = "font-bold text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl 2xl:text-5xl text-neutral-400 font-serif"
     sectionView title extraCls inner =

@@ -1,9 +1,12 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
 
 module Route (Route (..), Action (GotoRoute, SetPRDOpen), Model (..), routerComponent, routeToPRD) where
 
+import Control.Monad
 import GHC.Generics
+import Language.Javascript.JSaddle
 import Miso
 import Miso.Lens
 import Miso.Router
@@ -27,10 +30,7 @@ data Action
 
 data Model
   = RoutingError MisoString
-  | Model
-      { _currentRoute :: Route,
-        _prdOpen :: Bool
-      }
+  | Model Route
   deriving (Eq)
 
 routeToPRD :: Route -> ProductRequirementDocument
@@ -45,15 +45,20 @@ updateModel = \case
   GotoRoute uri -> do
     io_ . pushURI $ toURI uri
     issue $ SetURI uri
-  SetURI Index -> this .= Model Index False
-  SetURI uri ->
-    this %= Model uri . \case
-      RoutingError _ -> False
-      Model _ open -> open
-  SetPRDOpen open ->
-    this %= \case
-      err@(RoutingError _) -> err
-      Model uri _ -> Model uri open
+  SetURI uri -> this .= Model uri
+  SetPRDOpen setOpen -> io_ . void $ do
+    prdDialgoue <- getElementById prdDialogueId
+
+-- TEMP FIX for jsaddle
+#ifndef javascript_HOST_ARCH
+    prdDialgoue # (if setOpen then "showModal" else "close") $ ()
+#endif
+#ifdef javascript_HOST_ARCH
+    jsSetDialogueOpen prdDialgoue setOpen
+
+foreign import javascript unsafe "((dialogue, open) =>  open ? dialogue.showModal() : dialogue.close())"
+  jsSetDialogueOpen :: JSVal -> Bool ->  IO ()
+#endif
 
 routerComponent :: (Model -> View Model Action) -> Model -> Component parent Model Action
 routerComponent routerView uri =

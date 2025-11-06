@@ -29,7 +29,7 @@ main = run $ miso $ \(first (ms . show) . route @Route -> uri) ->
       navView
       ( case uri of
           Left err -> RoutingError err
-          Right uri' -> Model uri' False
+          Right uri' -> Model uri'
       )
   )
 #ifndef PRODUCTION
