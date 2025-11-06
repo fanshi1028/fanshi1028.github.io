@@ -25,7 +25,7 @@ main =
         file <- (<.>) <$> encodeUtf (toLower <$> show route) <*> encodeUtf ".html"
         withRunInIO $ \runInIO -> do
           IO.withFile file WriteMode $ \h ->
-            runInIO . BS.hPutStr h . toHtml . wrapHtml . navView $ Model route False
+            runInIO . BS.hPutStr h . toHtml . wrapHtml . navView $ Model route
     )
     $ boundedEnumFrom minBound
 
