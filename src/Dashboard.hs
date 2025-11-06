@@ -83,6 +83,7 @@ data Action
   = InitAction
   | FetchWeatherData
   | InitMapLibre
+  | CleanUpMapLibre
   | SetLocation Geolocation
   | SetTimeZone TimeZone
   | SetCurrentWeatherReport CurrentWeatherReport
@@ -142,6 +143,7 @@ updateModel :: Action -> Effect parent Model Action
 updateModel = \case
   InitAction -> issue FetchWeatherData
   InitMapLibre -> io_ $ runMapLibre createMap
+  CleanUpMapLibre -> io_ cleanUpMap
   FetchWeatherData -> withSink fetchData
   SetLocation loc -> do
     io_ $ do
@@ -436,7 +438,8 @@ viewModel (Model mELocation mTimeZone mCurrentWeatherReport mLocalWeatherForecas
           case mELocation of
             Just (Right _) -> class_ "h-72"
             _ -> class_ "",
-          onMounted InitMapLibre
+          onMounted InitMapLibre,
+          onBeforeUnmounted CleanUpMapLibre
         ]
         +> mapLibreComponent,
       -- case  errCode of
