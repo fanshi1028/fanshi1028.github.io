@@ -43,7 +43,6 @@ import Network.URI
 import Network.URI.Lens
 import Numeric.Natural
 import Numeric.Units.Dimensional
-import Numeric.Units.Dimensional.Coercion
 import Numeric.Units.Dimensional.NonSI
 import Numeric.Units.Dimensional.SIUnits hiding (fromDegreeCelsiusAbsolute)
 import UnliftIO.Exception

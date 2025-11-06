@@ -29,7 +29,6 @@ import Miso.Html.Property hiding (label_)
 import Miso.Lens hiding ((*~))
 import Miso.Navigator
 import Numeric.Units.Dimensional hiding ((*))
-import Numeric.Units.Dimensional.Coercion
 import Numeric.Units.Dimensional.NonSI
 import Numeric.Units.Dimensional.SIUnits hiding (toDegreeCelsiusAbsolute)
 import Prelude hiding (show, (-))
