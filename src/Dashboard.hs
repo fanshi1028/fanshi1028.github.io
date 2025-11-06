@@ -449,10 +449,7 @@ viewModel (Model mELocation mTimeZone mCurrentWeatherReport mLocalWeatherForecas
       maybe (div_ [] ["CurrentWeatherReport loading"]) (viewCurrentWeatherReport mTimeZone ifDisplayRainfall ifDisplayTemperature) mCurrentWeatherReport,
       maybe (div_ [] ["LocalWeatherForecast loading"]) (viewLocalWeatherForecast mTimeZone) mLocalWeatherForecast,
       maybe (div_ [] ["NineDayWeatherForecast loading"]) (view9DayWeatherForecast mTimeZone) m9DayWeatherForecast,
-      div_
-        []
-        [ button_ [onClick FetchWeatherData] [text "TEMP FIXME Test: refetch"]
-        ]
+      div_ [] $ [button_ [onClick FetchWeatherData] [text "TEMP FIXME Test: refetch"]]
     ]
 
 dashboardComponent :: Component parent Model Action
