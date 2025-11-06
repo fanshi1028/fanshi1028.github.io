@@ -97,7 +97,11 @@ createMap = do
     cfg <# "container" $ mapLibreId
     cfg <# "style" $ "https://tiles.openfreemap.org/styles/liberty"
     cfg <# "zoom" $ 12
-    let storeMapRef = liftIO . putMVar mapLibreMVar . MapLibre
+    let storeMapRef r = do
+          liftIO (tryTakeMVar mapLibreMVar) >>= \case
+            Nothing -> pure ()
+            Just _ -> consoleWarn $ ms "mapLibreMVar is not empty, gonna replace it anywary."
+          liftIO . putMVar mapLibreMVar $ MapLibre r
 #ifndef javascript_HOST_ARCH
     new (maplibregl ! "Map") [cfg] >>= storeMapRef
 #endif
