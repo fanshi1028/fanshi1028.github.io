@@ -103,7 +103,6 @@ fetchData sink = do
   let st =
         stateEmpty
           & stateSet (MisoRunActionState jscontext sink)
-          & stateSet (MisoRunJSMState jscontext)
           & stateSet (LocationReqState jscontext)
           & stateSet (HKOWeatherInformationReqState jscontext)
           & stateSet ioState
@@ -130,10 +129,7 @@ fetchData sink = do
 
     dataFetchWithSerialise Get9DayWeatherForecast >>= misoRunAction . Set9DayWeatherForecast
 
-    location' <- uncachedRequest GetCurrentPosition
-    misoRunAction $ SetLocation location'
-    misoRunJSM $ mapLibreEaseTo location'
-    misoRunJSM $ mapLibreAddMarker location'
+    uncachedRequest GetCurrentPosition >>= misoRunAction . SetLocation
 
     dataFetchWithSerialise GetCurrentWeatherReport >>= misoRunAction . SetCurrentWeatherReport
     dataFetchWithSerialise GetWeatherWarningSummary
@@ -147,7 +143,11 @@ updateModel = \case
   InitAction -> issue FetchWeatherData
   InitMapLibre -> io_ $ runMapLibre createMap
   FetchWeatherData -> withSink fetchData
-  SetLocation loc -> location .= Just (Right loc)
+  SetLocation loc -> do
+    io_ $ do
+      mapLibreAddMarker loc
+      mapLibreEaseTo loc
+    location .= Just (Right loc)
   SetTimeZone tz -> timeZone .= Just tz
   SetLocalWeatherForecast w -> localWeatherForecast .= Just w
   SetCurrentWeatherReport w -> currentWeatherReport .= Just w
