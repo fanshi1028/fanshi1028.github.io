@@ -108,3 +108,6 @@ createMap = do
 foreign import javascript unsafe "((maplibregl, cfg) => new maplibregl.Map(cfg))"
    constructMap  :: MapLibreLib -> Object -> IO JSVal
 #endif
+
+cleanUpMap :: JSM ()
+cleanUpMap = () <$ liftIO (takeMVar mapLibreMVar)
