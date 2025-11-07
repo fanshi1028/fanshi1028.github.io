@@ -29,7 +29,8 @@ homePRD =
         "WorldCloudOfTag -> Features/Tools/BlogPost"
         [ "Tag Word Cloud navigation, users could click on their interested tag on the word cloud to the corresponding content",
           "Modular design, enable me to increasementally add new features with ease",
-          "Every new feature will be started with a PRD(Product Requirement Document), and the PRDs will be avaliable to users, users could see the PRD of a feature on this site if they want and switch back to the feature as they wish"
+          "Every new feature will be started with a PRD(Product Requirement Document), and the PRDs will be avaliable to users, users could see the PRD of a feature on this site if they want and switch back to the feature as they wish",
+          "IN-PROGRESS indicators to mark which feature is not ready, and the tag will only take you to its PRD when clicked. And those IN-PROGRESS PRD will have a overlay to indicate they are IN-PROGRESS too."
         ]
         [ OpenIssues "Tech Stack" $
             "Use Miso and Tailwind, as I want to explore Miso, which makes powered by Web-Assembly(compiled from Haskell of course), later may turn it into apps via miso-lynx. tailwind is no brainer"
