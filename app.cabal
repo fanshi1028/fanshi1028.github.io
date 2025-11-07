@@ -1,0 +1,39 @@
+cabal-version:      3.0
+name:               app
+version:            0.1.0.0
+synopsis:           fanshi1028's personal site
+description:        fanshi1028's personal site
+license:            MIT
+license-file:       LICENSE
+author:             fanshi1028
+maintainer:         fanshi1028
+copyright:          fanshi1028 @ 2025
+category:           Web
+build-type:         Simple
+extra-doc-files:    CHANGELOG.md
+
+common warnings
+  ghc-options:
+    -funbox-strict-fields -O2 -ferror-spans -fspecialise-aggressively -Wall
+
+common wasm
+  if arch(wasm32)
+    ghc-options:
+      -no-hs-main -optl-mexec-model=reactor "-optl-Wl,--export=hs_start"
+    cpp-options:
+      -DWASM
+
+executable app
+  import:
+    wasm, warnings
+  other-modules:
+    Clock
+    Pomodoro
+  main-is:
+    Main.hs
+  build-depends:
+    base < 5, file-embed, miso, text, time
+  hs-source-dirs:
+    app
+  default-language:
+    Haskell2010
