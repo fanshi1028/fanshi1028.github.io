@@ -43,18 +43,9 @@ mapLibreAddMarker :: Geolocation -> JSM ()
 mapLibreAddMarker (Geolocation lat lon acc) = do
   mapLibre <- liftIO $ readMVar mapLibreMVar
   mapLibreLib <- liftIO (readMVar mapLibreLibMVar)
-#ifndef javascript_HOST_ARCH
   marker <- Marker <$> new (mapLibreLib ! "Marker") ()
   void $ marker # "setLngLat" $ [[lon, lat]]
   void $ marker # "addTo" $ [mapLibre]
-#endif
--- TEMP FIX for jsaddle's 'new' FIXME
-#ifdef javascript_HOST_ARCH
-  void . liftIO $ constructMarker mapLibreLib mapLibre lon lat
-
-foreign import javascript unsafe "((maplibregl, maplibre, lon, lat) => new maplibregl.Marker().setLngLat([lon, lat]).addTo(maplibre))"
-   constructMarker  :: MapLibreLib -> MapLibre -> Double -> Double -> IO JSVal
-#endif
 
 mapLibreEaseTo :: Geolocation -> JSM ()
 mapLibreEaseTo (Geolocation lat lon acc) = void $ do
@@ -88,17 +79,8 @@ createMap = do
     cfg <# "container" $ mapLibreId
     cfg <# "style" $ "https://tiles.openfreemap.org/styles/liberty"
     cfg <# "zoom" $ 12
-    let storeMapRef = liftIO . putMVar mapLibreMVar . MapLibre
-#ifndef javascript_HOST_ARCH
-    new (maplibregl ! "Map") [cfg] >>= storeMapRef
-#endif
--- TEMP FIX for jsaddle's 'new' FIXME
-#ifdef javascript_HOST_ARCH
-    liftIO (constructMap maplibregl cfg) >>= storeMapRef
-
-foreign import javascript unsafe "((maplibregl, cfg) => new maplibregl.Map(cfg))"
-   constructMap  :: MapLibreLib -> Object -> IO JSVal
-#endif
+    new (maplibregl ! "Map") [cfg]
+      >>= liftIO . putMVar mapLibreMVar . MapLibre
 
 cleanUpMap :: JSM ()
 cleanUpMap = () <$ liftIO (takeMVar mapLibreMVar)

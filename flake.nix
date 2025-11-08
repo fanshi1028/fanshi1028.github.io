@@ -112,6 +112,16 @@
           fanshi1028-site-js = mkDefaultPackage pkgsWithMisoOverlays.pkgsCross.ghcjs {
             overrides = hself: hsuper: ({
               hashtables = pkgs.haskell.lib.enableCabalFlag hsuper.hashtables_1_4_2 "portable";
+              jsaddle =
+                let
+                  patch = pkgs.fetchpatch {
+                    url = "https://patch-diff.githubusercontent.com/raw/ghcjs/jsaddle/pull/162.patch";
+                    hash = "015alajcmk4jdcfvy62hqb6dy5g6483fl9xn6n7zplq13a16dh7k";
+                  };
+                in
+                pkgs.haskell.lib.overrideCabal hsuper.jsaddle (drv: {
+                  patches = (drv.patches or [ ]) ++ [ patch ];
+                });
             });
             modifier =
               drv:
