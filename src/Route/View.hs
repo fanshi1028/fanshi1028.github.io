@@ -34,7 +34,7 @@ routeToView = \case
 homeButton :: View model Action
 homeButton =
   a_
-    [ onClickWithOptions (preventDefault {_stopPropagation = True}) $ GotoRoute Index,
+    [ onClickWithOptions preventDefault $ GotoRoute Index,
       Router.href_ Index,
       class_ "hover:animate-wiggle hover:[animation-delay:0.25s]"
     ]
