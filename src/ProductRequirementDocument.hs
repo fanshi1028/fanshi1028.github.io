@@ -107,11 +107,13 @@ prdView :: Bool -> View model action -> ProductRequirementDocument -> View model
 prdView modal button prd =
   dialog_
     [ id_ prdDialogueId,
-      if modal then textProp "closedby" "any" else textProp "open" "true"
+      if modal then textProp "closedby" "any" else textProp "open" "true",
+      class_ "backdrop:bg-neutral-900/50"
     ]
     $ [ div_
           [ classes_
-              [ "relative flex flex-col bg-neutral-100",
+              [ "relative flex flex-col",
+                "bg-neutral-100 w-full h-full",
                 "gap-12 md:gap-20 lg:gap-24 xl:gap-28",
                 "p-6 sm:p-12 md:p-16 lg:p-20 xl:p-24 2xl:p-28"
               ]
