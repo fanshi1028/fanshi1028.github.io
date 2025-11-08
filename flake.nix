@@ -115,8 +115,8 @@
               jsaddle = pkgs.haskell.lib.appendPatch hsuper.jsaddle (
                 pkgs.fetchpatch {
                   url = "https://patch-diff.githubusercontent.com/raw/ghcjs/jsaddle/pull/162.patch";
-                  hash = "sha256-ShnYVO6VUVfANPhMtBALK97I30wY562nVUT6X1bIBzA=";
-                  stripLen = 2;
+                  hash = "";
+                  stripLen = 1;
                 }
               );
             });
