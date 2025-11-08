@@ -147,7 +147,9 @@ updateModel = \case
     consoleLog "start cleanupMap"
     cleanUpMap
     consoleLog "end cleanUpMap"
-  FetchWeatherData -> withSink fetchData
+  FetchWeatherData -> do
+    withSink fetchData
+    io_ $ consoleLog "end FetchWeatherData"
   SetLocation loc -> do
     io_ $ do
       mapLibreAddMarker loc
