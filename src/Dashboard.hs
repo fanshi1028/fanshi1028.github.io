@@ -143,13 +143,8 @@ updateModel :: Action -> Effect parent Model Action
 updateModel = \case
   InitAction -> issue FetchWeatherData
   InitMapLibre -> io_ $ runMapLibre createMap
-  CleanUpMapLibre -> io_ $ do
-    consoleLog "start cleanupMap"
-    cleanUpMap
-    consoleLog "end cleanUpMap"
-  FetchWeatherData -> do
-    withSink fetchData
-    io_ $ consoleLog "end FetchWeatherData"
+  CleanUpMapLibre -> io_ cleanUpMap
+  FetchWeatherData -> withSink fetchData
   SetLocation loc -> do
     io_ $ do
       mapLibreAddMarker loc
