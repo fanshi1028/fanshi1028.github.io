@@ -43,15 +43,9 @@ updateModel :: Action -> Effect parent Model Action
 updateModel = \case
   ServerError err -> this .= RoutingError err
   GotoRoute uri -> do
-    io_ . consoleLog . ms $ "1: " <> show uri
     io_ . pushURI $ toURI uri
-    io_ . consoleLog . ms $ "2: " <> show uri
     issue $ SetURI uri
-    io_ . consoleLog . ms $ "3: " <> show uri
-  SetURI uri -> do
-    io_ . consoleLog . ms $ "4: " <> show uri
-    this .= Model uri
-    io_ . consoleLog . ms $ "5: " <> show uri
+  SetURI uri -> this .= Model uri
   SetPRDOpen setOpen -> io_ . void $ do
     prdDialgoue <- getElementById prdDialogueId
     prdDialgoue # (if setOpen then "showModal" else "close") $ ()
