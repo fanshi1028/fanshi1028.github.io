@@ -52,7 +52,16 @@ mapLibreEaseTo (Geolocation lat lon acc) = void $ do
   mapLibre <- liftIO $ readMVar mapLibreMVar
   cfg <- obj
   cfg <# "center" $ [lon, lat]
+#ifndef javascript_HOST_ARCH
   void $ mapLibre # "easeTo" $ [cfg]
+#endif
+-- TEMP fix for jsaddle FIXME
+#ifdef javascript_HOST_ARCH
+  liftIO $ jsMapLibreEaseTo mapLibre cfg
+
+foreign import javascript unsafe "((map, cfg) => map.easeTo(cfg))"
+  jsMapLibreEaseTo :: MapLibre -> Object ->  IO ()
+#endif
 
 -- mapLibre # "cameraForBounds" $ [[lon - acc, lat - acc, lon + acc, lat + acc]]
 

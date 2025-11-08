@@ -48,7 +48,17 @@ updateModel = \case
   SetURI uri -> this .= Model uri
   SetPRDOpen setOpen -> io_ . void $ do
     prdDialgoue <- getElementById prdDialogueId
+
+-- TEMP FIX for jsaddle
+#ifndef javascript_HOST_ARCH
     prdDialgoue # (if setOpen then "showModal" else "close") $ ()
+#endif
+#ifdef javascript_HOST_ARCH
+    jsSetDialogueOpen prdDialgoue setOpen
+
+foreign import javascript unsafe "((dialogue, open) =>  open ? dialogue.showModal() : dialogue.close())"
+  jsSetDialogueOpen :: JSVal -> Bool ->  IO ()
+#endif
 
 routerComponent :: (Model -> View Model Action) -> Model -> Component parent Model Action
 routerComponent routerView uri =
