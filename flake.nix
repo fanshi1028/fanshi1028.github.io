@@ -117,7 +117,7 @@
                   patch = pkgs.fetchpatch {
                     url = "https://patch-diff.githubusercontent.com/raw/ghcjs/jsaddle/pull/162.patch";
                     hash = "sha256-ShnYVO6VUVfANPhMtBALK97I30wY562nVUT6X1bIBzA=";
-                    stripLen = 1;
+                    stripLen = 2;
                   };
                 in
                 pkgs.haskell.lib.overrideCabal hsuper.jsaddle (drv: {
