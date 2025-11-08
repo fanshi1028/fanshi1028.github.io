@@ -113,6 +113,10 @@ library
     js-sources: temp-fix.js
   ghc-options: -Wall
 
+  if flag(production)
+    cpp-options:
+      -DPRODUCTION
+
 executable fanshi1028-site
   import:
     wasm
