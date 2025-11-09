@@ -334,5 +334,5 @@ pomodoroComponent =
   (component defaultModel updateModel viewModel)
     { mailbox = \v -> case fromJSON v of
         Error _ -> Nothing
-        Aeson.Success Clock.ClockDoneMessage -> Just Pomodoro.Next
+        Aeson.Success Clock.ClockDoneMessage -> Just Next
     }
