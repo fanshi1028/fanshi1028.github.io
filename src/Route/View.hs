@@ -29,7 +29,7 @@ routeToView :: Route -> Either UnderConstruction (View model Action)
 routeToView = \case
   Index -> Right home
   Pomodoro -> Right $ div_ [key_ @MisoString "pomodoro"] +> pomodoroComponent
-  Dashboard -> Left UnderConstruction
+  Dashboard -> Right $ div_ [key_ @MisoString "dashboard"] +> dashboardComponent
 
 homeButton :: View model Action
 homeButton =
