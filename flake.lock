@@ -76,11 +76,11 @@
     "miso": {
       "flake": false,
       "locked": {
-        "lastModified": 1757975677,
-        "narHash": "sha256-rXi0JBngEIpVVYd/NnFs6g7fjL2DyYjTGtpsSUY1PH0=",
+        "lastModified": 1762671351,
+        "narHash": "sha256-JsxFNgYITtPV4fCIsmhjz9aAMp0RP8ECuUdCUn3NkfU=",
         "owner": "dmjio",
         "repo": "miso",
-        "rev": "e6798ccb6776352e506dfb47bed6f2c1ff77a859",
+        "rev": "af221db695f7df4191f182a9458f708a4e6020ae",
         "type": "github"
       },
       "original": {
