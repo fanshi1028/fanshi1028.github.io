@@ -47,8 +47,7 @@ updateModel :: Action -> Effect parent Model Action
 updateModel = \case
   End -> do
     stopSub StopWatchTickSub
-    -- TEMP FIXME: replace mailParent with broadcase for now, as it seems the parentId si wrong when compiling to JS, maybe report the bug to miso later
-    broadcast ClockDoneMessage
+    mailParent ClockDoneMessage
   Tick t ->
     use timeLeft >>= \case
       0 -> issue End
