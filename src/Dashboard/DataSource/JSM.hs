@@ -21,6 +21,8 @@ import Utils.Serialise
 
 data JSMAction a where
   FetchURI :: URI -> JSMAction SerialisableValue -- NOTE: assume we always fetch in GET, other method don't makes much sense in Haxl context, right?
+  ConsoleLog :: MisoString -> JSMAction ()
+  ConsoleLog' :: SerialisableValue -> JSMAction ()
 
 deriving instance Eq (JSMAction a)
 
@@ -35,6 +37,8 @@ instance Hashable (JSMAction a) where
   hashWithSalt s =
     hashWithSalt @Int s . \case
       FetchURI uri -> s `hashWithSalt` (0 :: Int) `hashWithSalt` uriToString id uri ""
+      ConsoleLog str -> s `hashWithSalt` (1 :: Int) `hashWithSalt` fromMisoString @StrictText str
+      ConsoleLog' v -> s `hashWithSalt` (2 :: Int) `hashWithSalt` v
 
 instance DataSourceName JSMAction where
   dataSourceName _ = T.show . typeRepTyCon . typeRep $ Proxy @JSMAction
@@ -45,6 +49,8 @@ instance DataSource u JSMAction where
       performJSM :: JSMAction a -> JSM (Either SomeException a)
       performJSM = \case
         FetchURI uri -> fetchGetJSM Proxy uri
+        ConsoleLog str -> Right <$> consoleLog str
+        ConsoleLog' v -> Right <$> ((jsg "JSON" # "stringify") [v] >>= consoleLog')
 
 fetchJSM :: (forall a. (FromJSVal a) => Proxy a -> StdMethod -> URI -> JSM (Either SomeException a))
 fetchJSM _ method req = do
