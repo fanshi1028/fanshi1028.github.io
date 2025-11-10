@@ -81,6 +81,7 @@ common lib
       ProductRequirementDocument.Pomodoro
       Route
       Route.View
+      Utils.Serialise
 
 library
   import: lib
@@ -102,6 +103,7 @@ library
     ProductRequirementDocument.Pomodoro
     Route
     Route.View
+    Utils.Serialise
 
   default-language:
     GHC2024
