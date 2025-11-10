@@ -44,7 +44,7 @@ instance DataSource u JSMAction where
     where
       performJSM :: JSMAction a -> JSM (Either SomeException a)
       performJSM = \case
-        FetchURL uri -> fetchGetJSM Proxy uri
+        FetchURI uri -> fetchGetJSM Proxy uri
 
 fetchJSM :: (forall a. (FromJSVal a) => Proxy a -> StdMethod -> URI -> JSM (Either SomeException a))
 fetchJSM _ method req = do
