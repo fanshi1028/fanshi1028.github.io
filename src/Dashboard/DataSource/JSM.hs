@@ -20,7 +20,7 @@ import UnliftIO.Exception
 import Utils.Serialise
 
 data JSMAction a where
-  FetchURL :: URI -> JSMAction SerialisableValue -- NOTE: assume we always fetch in GET, other method don't makes much sense in Haxl context, right?
+  FetchURI :: URI -> JSMAction SerialisableValue -- NOTE: assume we always fetch in GET, other method don't makes much sense in Haxl context, right?
 
 deriving instance Eq (JSMAction a)
 
@@ -34,7 +34,7 @@ instance StateKey JSMAction where
 instance Hashable (JSMAction a) where
   hashWithSalt s =
     hashWithSalt @Int s . \case
-      FetchURL uri -> s `hashWithSalt` (0 :: Int) `hashWithSalt` uriToString id uri ""
+      FetchURI uri -> s `hashWithSalt` (0 :: Int) `hashWithSalt` uriToString id uri ""
 
 instance DataSourceName JSMAction where
   dataSourceName _ = T.show . typeRepTyCon . typeRep $ Proxy @JSMAction
