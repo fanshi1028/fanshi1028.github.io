@@ -46,6 +46,7 @@ common lib
     dimensional,
     hashable,
     haxl,
+    http-types,
     jsaddle,
     lens,
     miso,
@@ -70,6 +71,7 @@ common lib
       Dashboard.DataSource.BrowserGeolocationAPI
       Dashboard.DataSource.HongKongObservatoryWeatherAPI
       Dashboard.DataSource.IO
+      Dashboard.DataSource.JSM
       Dashboard.DataSource.MisoRun
       Haxl.LocalStorage
       Home
@@ -92,6 +94,7 @@ library
     Dashboard.DataSource.BrowserGeolocationAPI
     Dashboard.DataSource.HongKongObservatoryWeatherAPI
     Dashboard.DataSource.IO
+    Dashboard.DataSource.JSM
     Dashboard.DataSource.MisoRun
     Haxl.LocalStorage
     Home

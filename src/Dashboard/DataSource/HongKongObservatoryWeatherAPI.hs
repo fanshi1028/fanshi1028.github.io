@@ -13,11 +13,9 @@ import Codec.Serialise
 import Codec.Serialise.Decoding
 import Codec.Serialise.Encoding
 import Control.Applicative
-import Control.Concurrent
-import Control.Concurrent.Async
 import Control.Exception (throw)
 import Control.Lens.Setter hiding ((*~), (.=))
-import Control.Monad.IO.Class
+import Dashboard.DataSource.JSM
 import Data.Aeson hiding (Encoding, decode, encode)
 import Data.Aeson.Key
 import Data.Aeson.KeyMap qualified as AKM
@@ -36,15 +34,12 @@ import Data.Void
 import GHC.Generics
 import Haxl.Core hiding (throw)
 import Language.Javascript.JSaddle hiding (Object, Success)
-import Miso hiding (Decoder, URI, defaultOptions, on)
-import Miso.FFI qualified as FFI
 import Network.URI
 import Network.URI.Lens
 import Numeric.Natural
 import Numeric.Units.Dimensional
 import Numeric.Units.Dimensional.NonSI
 import Numeric.Units.Dimensional.SIUnits hiding (fromDegreeCelsiusAbsolute)
-import UnliftIO.Exception
 import Utils.Serialise
 import Prelude hiding ((+))
 
@@ -543,42 +538,15 @@ instance DataSource u HKOWeatherInformationReq where
   fetch reqState@(HKOWeatherInformationReqState jscontext) =
     backgroundFetchPar
       ( -- NOTE: sad boilerplate
-        \req -> case req of
-          GetLocalWeatherForecast -> handler req
-          Get9DayWeatherForecast -> handler req
-          GetCurrentWeatherReport -> handler req
-          GetWeatherWarningSummary -> handler req
-          GetWeatherWarningInfo -> handler req
-          GetSpecialWeatherTips -> handler req
+        \req -> flip runJSM jscontext $ case req of
+          GetLocalWeatherForecast -> fetchGetJSM Proxy $ hkoWeatherInformationReqToURI req
+          Get9DayWeatherForecast -> fetchGetJSM Proxy $ hkoWeatherInformationReqToURI req
+          GetCurrentWeatherReport -> fetchGetJSM Proxy $ hkoWeatherInformationReqToURI req
+          GetWeatherWarningSummary -> fetchGetJSM Proxy $ hkoWeatherInformationReqToURI req
+          GetWeatherWarningInfo -> fetchGetJSM Proxy $ hkoWeatherInformationReqToURI req
+          GetSpecialWeatherTips -> fetchGetJSM Proxy $ hkoWeatherInformationReqToURI req
       )
       reqState
-    where
-      handler :: (forall a. (FromJSVal a) => HKOWeatherInformationReq a -> IO (Either SomeException a))
-      handler req = do
-        successMVar <- newEmptyMVar
-        failMVar <- newEmptyMVar
-        let url = ms $ uriToString id (hkoWeatherInformationReqToURI req) ""
-            successCB = \(Response _ _ _ v) -> liftIO $ putMVar successMVar v
-            failCB =
-              liftIO . putMVar failMVar . \case
-                Response Nothing headers mErrMsg _ -> toException . FetchError $ "CORS or Network Error" <> intercalate ", " [T.show headers, T.show mErrMsg]
-                Response (Just code) headers mErrMsg (v :: Value)
-                  | code == 400 -> toException . InvalidParameter $ "InvalidParameter: " <> errorDetails
-                  | code == 404 -> toException . NotFound $ "Not Found: " <> errorDetails
-                  | code == 408 -> toException . FetchError $ "TEMP FIXME Request Timeout: " <> errorDetails
-                  | code == 425 -> toException . FetchError $ "TEMP FIXME To Early: " <> errorDetails
-                  | code == 429 -> toException . FetchError $ "TEMP FIXME Too Many Requests: " <> errorDetails
-                  | code == 500 -> toException . FetchError $ "TEMP FIXME Internal Server Error: " <> errorDetails
-                  | code == 502 -> toException . FetchError $ "TEMP FIXME Bad Gateway: " <> errorDetails
-                  | code == 503 -> toException . FetchError $ "TEMP FIXME Service Unavailable: " <> errorDetails
-                  | code == 504 -> toException . FetchError $ "TEMP FIXME Gateway Timeout: " <> errorDetails
-                  | otherwise -> toException . MonadFail $ "Error: " <> errorDetails
-                  where
-                    errorDetails = intercalate ", " $ case mErrMsg of
-                      Nothing -> [T.show code, T.show headers, T.show v]
-                      Just msg -> [T.show code, T.show msg, T.show headers, T.show v]
-        runJSM (FFI.fetch url "GET" Nothing [] successCB failCB JSON) jscontext
-        race (readMVar failMVar) (readMVar successMVar)
 
 -- NOTE: Earthquake Information API
 data HKOEarthquakeInformationReq a where
