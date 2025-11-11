@@ -10,13 +10,14 @@ import Control.Applicative
 import Data.Aeson hiding (Encoding, decode, encode)
 import Data.Function
 import Data.Functor
+import Data.Hashable
 import Data.Interval
 import Data.Maybe
 import Data.Scientific
 import Language.Javascript.JSaddle hiding (Object, Success)
 import Prelude hiding ((+))
 
-newtype SerialisableValue = SerialisableValue Value deriving newtype (Eq, Show, FromJSON)
+newtype SerialisableValue = SerialisableValue Value deriving newtype (Eq, Show, FromJSON, ToJSVal, Hashable)
 
 instance FromJSVal SerialisableValue where
   fromJSVal v = fmap SerialisableValue <$> fromJSVal v
