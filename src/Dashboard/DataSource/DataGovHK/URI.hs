@@ -42,7 +42,7 @@ fmtDayYmd = pack . formatTime defaultTimeLocale "%Y%m%d"
 --                                                                                       --
 -- 每次最多有max數目的結果返回，首skip數目的結果會被略去。利用這兩個參數可達到分頁用途。 --
 -------------------------------------------------------------------------------------------
-appDataGovlistFilesURI :: Maybe StrictText -> Maybe StrictText -> Maybe StrictText -> Mabye StrictText -> Day -> Day -> Paging -> URI
+appDataGovlistFilesURI :: Maybe StrictText -> Maybe StrictText -> Maybe StrictText -> Maybe StrictText -> Day -> Day -> Paging -> URI
 appDataGovlistFilesURI mCategory mProvider mFormat mKeyword start end (Paging itemPerPage page) =
   [uri|https://app.data.gov.hk/v1/historical-archive/list-files|]
     { uriQuery =
