@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 
 -- NOTE: http://data.gov.hk/tc/help/api-spec
@@ -7,12 +8,18 @@ module Dashboard.DataSource.DataGovHK.URI
     appDataGovGetFileURI,
     appDataGovGetSchemaURI,
     appDataGovGetDataDictionaryURI,
+    appDataGovGetDataV2,
+    V2_Query (..),
     withDefaultPaging,
   )
 where
 
+import Data.Aeson
+import Data.ByteString qualified as BS
 import Data.ByteString.Builder
 import Data.Text (StrictText, pack, show)
+import Data.Text qualified as T (unpack)
+import Data.Text.Encoding qualified as T (decodeUtf8)
 import Data.Text.Lazy (unpack)
 import Data.Text.Lazy.Encoding
 import Data.Time.Calendar
@@ -120,4 +127,39 @@ appDataGovGetDataDictionaryURI url start =
             (pack "url", Just url),
             (pack "date", Just $ fmtDayYmd start)
           ]
+    }
+
+data DataFormat = CSV | JSON | XML
+
+data V2_Query = V2_Query
+  { _resource :: URI,
+    _section :: Maybe Natural, -- NOTE: Positive Integer
+    -- filter :: [Void], -- TEMP FIXME
+    -- sorts :: [Void], -- TEMP FIXME
+    _format :: Maybe DataFormat
+  }
+
+formatToText :: DataFormat -> StrictText
+formatToText = \case
+  CSV -> "CSV"
+  JSON -> "json"
+  XML -> "xml"
+
+instance ToJSON V2_Query where
+  toEncoding (V2_Query resource section format) =
+    pairs $
+      "resource" .= resource
+        <> "section" .= section
+        <> "format" .= (formatToText <$> format)
+  toJSON (V2_Query resource section format) =
+    object
+      [ "resource" .= resource,
+        "section" .= section,
+        "format" .= (formatToText <$> format)
+      ]
+
+appDataGovGetDataV2 :: V2_Query -> URI
+appDataGovGetDataV2 query' =
+  [uri|https://api.data.gov.hk/v2/filter|]
+    { uriQuery = T.unpack . T.decodeUtf8 $ renderSimpleQuery True [("q", BS.toStrict $ encode query')]
     }
