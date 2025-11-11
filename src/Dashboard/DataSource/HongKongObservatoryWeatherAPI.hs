@@ -538,7 +538,7 @@ instance DataSource u HKOWeatherInformationReq where
   fetch reqState@(HKOWeatherInformationReqState jscontext) =
     backgroundFetchPar
       ( -- NOTE: sad boilerplate
-        \req -> flip runJSM jscontext $ case req of
+        \req -> runJSaddle jscontext $ case req of
           GetLocalWeatherForecast -> fetchGetJSM Proxy $ hkoWeatherInformationReqToURI req
           Get9DayWeatherForecast -> fetchGetJSM Proxy $ hkoWeatherInformationReqToURI req
           GetCurrentWeatherReport -> fetchGetJSM Proxy $ hkoWeatherInformationReqToURI req

@@ -35,7 +35,7 @@ instance (Typeable action) => StateKey (MisoRunAction action) where
 instance (Typeable action, Show action, Eq action) => DataSource u (MisoRunAction action) where
   fetch (MisoRunActionState jscontext sink) _ _ =
     SyncFetch $ \reqs ->
-      flip runJSM jscontext $
+      runJSaddle jscontext $
         foldlM
           ( \() (BlockedFetch (MisoRunAction action) r) -> do
               sink action

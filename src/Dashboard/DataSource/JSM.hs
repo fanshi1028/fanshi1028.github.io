@@ -44,7 +44,7 @@ instance DataSourceName JSMAction where
   dataSourceName _ = T.show . typeRepTyCon . typeRep $ Proxy @JSMAction
 
 instance DataSource u JSMAction where
-  fetch _state@(JSMActionState jsContext) = backgroundFetchPar (flip runJSM jsContext . performJSM) _state
+  fetch _state@(JSMActionState jsContext) = backgroundFetchPar (runJSaddle jsContext . performJSM) _state
     where
       performJSM :: JSMAction a -> JSM (Either SomeException a)
       performJSM = \case

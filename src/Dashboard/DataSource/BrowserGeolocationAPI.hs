@@ -37,7 +37,7 @@ instance DataSource u LocationReq where
     asyncFetchAcquireRelease
       newEmptyMVar
       (const $ pure ())
-      ( \resultMVar -> flip runJSM jscontext $ do
+      ( \resultMVar -> runJSaddle jscontext $ do
           options <- create
           (options <# "enableHighAccuracy") jsTrue
           successCB <-
