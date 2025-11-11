@@ -41,27 +41,8 @@ import Numeric.Units.Dimensional
 import Numeric.Units.Dimensional.NonSI
 import Numeric.Units.Dimensional.SIUnits hiding (fromDegreeCelsiusAbsolute)
 import Utils.Dimensional
+import Utils.JS
 import Utils.Serialise
-
-
-{-# WARNING fromJSValViaValue "partial, throw error when JSON assumption is wrong" #-}
-fromJSValViaValue :: (FromJSON a, Typeable a) => Proxy a -> JSVal -> JSM (Maybe a)
-fromJSValViaValue (typeRepTyCon . typeRep -> tyCon) a =
-  fromJSVal a <&> \mv ->
-    ifromJSON <$> mv >>= \case
-      ISuccess r -> Just r
-      IError path' err ->
-        -- HACK
-        throw . JSONError . T.pack $
-          concat
-            [ "Error in ",
-              tyConModule tyCon,
-              "(",
-              tyConName tyCon,
-              formatRelativePath path',
-              "):",
-              err
-            ]
 
 data LocalWeatherForecast = LocalWeatherForecast
   { generalSituation :: StrictText, -- General Situation

@@ -85,6 +85,7 @@ common lib
       Route
       Route.View
       Utils.Dimensional
+      Utils.JS
       Utils.Serialise
 
 library
@@ -110,6 +111,7 @@ library
     Route
     Route.View
     Utils.Dimensional
+    Utils.JS
     Utils.Serialise
 
   default-language:
