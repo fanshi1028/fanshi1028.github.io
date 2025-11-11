@@ -3,12 +3,12 @@
 
 -- NOTE: http://data.gov.hk/tc/help/api-spec
 module Dashboard.DataSource.DataGovHK.URI
-  ( appDataGovlistFilesURI,
-    appDataGovlistFilesVersionsURI,
-    appDataGovGetFileURI,
-    appDataGovGetSchemaURI,
-    appDataGovGetDataDictionaryURI,
-    appDataGovGetDataV2,
+  ( appDataHKGovlistFilesURI,
+    appDataGovHKlistFilesVersionsURI,
+    appDataGovHKGetFileURI,
+    appDataGovHKGetSchemaURI,
+    appDataGovHKGetDataDictionaryURI,
+    appDataGovHKGetDataV2,
     V2_Query (..),
     withDefaultPaging,
   )
@@ -49,8 +49,8 @@ fmtDayYmd = pack . formatTime defaultTimeLocale "%Y%m%d"
 --                                                                                       --
 -- 每次最多有max數目的結果返回，首skip數目的結果會被略去。利用這兩個參數可達到分頁用途。 --
 -------------------------------------------------------------------------------------------
-appDataGovlistFilesURI :: Maybe StrictText -> Maybe StrictText -> Maybe StrictText -> Maybe StrictText -> Day -> Day -> Paging -> URI
-appDataGovlistFilesURI mCategory mProvider mFormat mKeyword start end (Paging itemPerPage page) =
+appDataHKGovlistFilesURI :: Maybe StrictText -> Maybe StrictText -> Maybe StrictText -> Maybe StrictText -> Day -> Day -> Paging -> URI
+appDataHKGovlistFilesURI mCategory mProvider mFormat mKeyword start end (Paging itemPerPage page) =
   [uri|https://app.data.gov.hk/v1/historical-archive/list-files|]
     { uriQuery =
         renderQueryTextAsString
@@ -75,8 +75,8 @@ appDataGovlistFilesURI mCategory mProvider mFormat mKeyword start end (Paging it
 -- 取回在日期（start 和 end中提供）以內的檔案（url中提供）的歷史版本清單。 --
 -- 只有首10,000個結果將會返回。                                            --
 -----------------------------------------------------------------------------
-appDataGovlistFilesVersionsURI :: StrictText -> Day -> Day -> URI
-appDataGovlistFilesVersionsURI url start end =
+appDataGovHKlistFilesVersionsURI :: StrictText -> Day -> Day -> URI
+appDataGovHKlistFilesVersionsURI url start end =
   [uri|https://app.data.gov.hk/v1/historical-archive/list-files-versions|]
     { uriQuery =
         renderQueryTextAsString
@@ -90,8 +90,8 @@ appDataGovlistFilesVersionsURI url start end =
 -----------------------------------------------
 -- 取回基於time的檔案（url中提供）歷史版本。 --
 -----------------------------------------------
-appDataGovGetFileURI :: StrictText -> Day -> URI
-appDataGovGetFileURI url start =
+appDataGovHKGetFileURI :: StrictText -> Day -> URI
+appDataGovHKGetFileURI url start =
   [uri|https://app.data.gov.hk/v1/historical-archive/get-file|]
     { uriQuery =
         renderQueryTextAsString
@@ -104,8 +104,8 @@ appDataGovGetFileURI url start =
 --------------------------------------------------------------
 -- https://app.data.gov.hk/v1/historical-archive/get-schema --
 --------------------------------------------------------------
-appDataGovGetSchemaURI :: StrictText -> Day -> URI
-appDataGovGetSchemaURI url start =
+appDataGovHKGetSchemaURI :: StrictText -> Day -> URI
+appDataGovHKGetSchemaURI url start =
   [uri|https://app.data.gov.hk/v1/historical-archive/get-schema|]
     { uriQuery =
         renderQueryTextAsString
@@ -118,8 +118,8 @@ appDataGovGetSchemaURI url start =
 ---------------------------------------------------
 -- 取回基於date的數據字典（url中提供）歷史版本。 --
 ---------------------------------------------------
-appDataGovGetDataDictionaryURI :: StrictText -> Day -> URI
-appDataGovGetDataDictionaryURI url start =
+appDataGovHKGetDataDictionaryURI :: StrictText -> Day -> URI
+appDataGovHKGetDataDictionaryURI url start =
   [uri|https://app.data.gov.hk/v1/historical-archive/get-data-dictionary|]
     { uriQuery =
         renderQueryTextAsString
@@ -158,8 +158,8 @@ instance ToJSON V2_Query where
         "format" .= (formatToText <$> format)
       ]
 
-appDataGovGetDataV2 :: V2_Query -> URI
-appDataGovGetDataV2 query' =
+appDataGovHKGetDataV2 :: V2_Query -> URI
+appDataGovHKGetDataV2 query' =
   [uri|https://api.data.gov.hk/v2/filter|]
     { uriQuery = T.unpack . T.decodeUtf8 $ renderSimpleQuery True [("q", BS.toStrict $ encode query')]
     }
