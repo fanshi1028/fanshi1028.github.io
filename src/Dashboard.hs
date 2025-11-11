@@ -2,6 +2,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
 
 module Dashboard (dashboardComponent) where
@@ -9,8 +10,10 @@ module Dashboard (dashboardComponent) where
 import Control.Monad
 import Control.Monad.IO.Class
 import Dashboard.DataSource.BrowserGeolocationAPI
+import Dashboard.DataSource.DataGovHK.URI
 import Dashboard.DataSource.HongKongObservatoryWeatherAPI
 import Dashboard.DataSource.IO
+import Dashboard.DataSource.JSM
 import Dashboard.DataSource.MisoRun
 import Data.Function
 import Data.Interval
@@ -28,6 +31,7 @@ import Miso.Html.Event
 import Miso.Html.Property hiding (label_)
 import Miso.Lens
 import Miso.Navigator
+import Network.URI.Static
 import Numeric.Units.Dimensional hiding ((*), (-))
 import Numeric.Units.Dimensional.NonSI
 import Numeric.Units.Dimensional.SIUnits hiding (toDegreeCelsiusAbsolute)
@@ -106,6 +110,8 @@ fetchData sink = do
   env' <- liftIO $ initEnv @() st jscontext
 
   t <- liftIO $ getCurrentTime
+
+  let fetchRadiation = FetchURI . appDataGovHKGetDataV2 $ V2_Query [uri|https://portal.csdi.gov.hk/geoportal/?datasetId=hko_rcd_1634955430532_53971&lang=zh-hk|] Nothing
   loadCachesFromLocalStorage <-
     sequence
       <$> sequence
@@ -114,16 +120,19 @@ fetchData sink = do
           cacheResultWithLocalStorage GetCurrentWeatherReport $ \r -> t `diffUTCTime` r.updateTime <= 60 * 15,
           cacheResultWithLocalStorage GetWeatherWarningSummary $ const True,
           cacheResultWithLocalStorage GetWeatherWarningInfo $ const True,
-          cacheResultWithLocalStorage GetSpecialWeatherTips $ const True
+          cacheResultWithLocalStorage GetSpecialWeatherTips $ const True,
+          cacheResultWithLocalStorage fetchRadiation $ const True
         ]
 
   _ <- liftIO . runHaxl (env' {flags = haxlEnvflags}) $ do
     loadCachesFromLocalStorage
     uncachedRequest GetCurrentTimeZone >>= misoRunAction . SetTimeZone
-
+    dataFetchWithSerialise $ FetchURI . appDataGovHKGetDataV2 $ V2_Query [uri|https://portal.csdi.gov.hk/geoportal/?datasetId=hko_rcd_1634955430532_53971&lang=zh-hk|] Nothing
     dataFetchWithSerialise GetLocalWeatherForecast >>= misoRunAction . SetLocalWeatherForecast
 
     dataFetchWithSerialise Get9DayWeatherForecast >>= misoRunAction . Set9DayWeatherForecast
+
+    dataFetchWithSerialise fetchRadiation >>= uncachedRequest . ConsoleLog . ms . show
 
     uncachedRequest GetCurrentPosition >>= misoRunAction . SetLocation
 
