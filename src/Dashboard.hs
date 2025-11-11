@@ -20,6 +20,7 @@ import Data.Interval
 import Data.Maybe
 import Data.Text hiding (foldl')
 import Data.Time
+import Data.Time.Calendar
 import Haxl.Core
 import Haxl.DataSource.ConcurrentIO
 import Haxl.LocalStorage
@@ -105,13 +106,15 @@ fetchData sink = do
           & stateSet (MisoRunActionState jscontext sink)
           & stateSet (LocationReqState jscontext)
           & stateSet (HKOWeatherInformationReqState jscontext)
+          & stateSet (JSMActionState jscontext)
           & stateSet ioState
 
   env' <- liftIO $ initEnv @() st jscontext
 
   t <- liftIO $ getCurrentTime
+  let ytd = pred $ utctDay t
 
-  let fetchRadiation = FetchURI . appDataGovHKGetDataV2 $ V2_Query [uri|https://portal.csdi.gov.hk/geoportal/?datasetId=hko_rcd_1634955430532_53971&lang=zh-hk|] Nothing
+  let getUVDataFileList = FetchURI $ appDataHKGovlistFilesURI (Just "climate-and-weather") (Just "hk-hko") Nothing (Just "uv") (periodFirstDay $ dayPeriod @Year ytd) ytd (withDefaultPaging 0)
   loadCachesFromLocalStorage <-
     sequence
       <$> sequence
@@ -121,18 +124,17 @@ fetchData sink = do
           cacheResultWithLocalStorage GetWeatherWarningSummary $ const True,
           cacheResultWithLocalStorage GetWeatherWarningInfo $ const True,
           cacheResultWithLocalStorage GetSpecialWeatherTips $ const True,
-          cacheResultWithLocalStorage fetchRadiation $ const True
+          cacheResultWithLocalStorage getUVDataFileList $ const True
         ]
 
   _ <- liftIO . runHaxl (env' {flags = haxlEnvflags}) $ do
     loadCachesFromLocalStorage
     uncachedRequest GetCurrentTimeZone >>= misoRunAction . SetTimeZone
-    dataFetchWithSerialise $ FetchURI . appDataGovHKGetDataV2 $ V2_Query [uri|https://portal.csdi.gov.hk/geoportal/?datasetId=hko_rcd_1634955430532_53971&lang=zh-hk|] Nothing
     dataFetchWithSerialise GetLocalWeatherForecast >>= misoRunAction . SetLocalWeatherForecast
 
     dataFetchWithSerialise Get9DayWeatherForecast >>= misoRunAction . Set9DayWeatherForecast
 
-    dataFetchWithSerialise fetchRadiation >>= uncachedRequest . ConsoleLog . ms . show
+    dataFetchWithSerialise getUVDataFileList >>= uncachedRequest . ConsoleLog'
 
     uncachedRequest GetCurrentPosition >>= misoRunAction . SetLocation
 
