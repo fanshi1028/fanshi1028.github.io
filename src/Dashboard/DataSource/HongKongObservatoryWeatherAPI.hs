@@ -40,14 +40,9 @@ import Numeric.Natural
 import Numeric.Units.Dimensional
 import Numeric.Units.Dimensional.NonSI
 import Numeric.Units.Dimensional.SIUnits hiding (fromDegreeCelsiusAbsolute)
+import Utils.Dimensional
 import Utils.Serialise
-import Prelude hiding ((+))
 
-----------------------------------------------------------------------------------------
--- NOTE: copied from Numeric.Units.Dimensional.SIUnits but weaken Float -> Fractional --
-----------------------------------------------------------------------------------------
-fromDegreeCelsiusAbsolute :: (Fractional a) => a -> ThermodynamicTemperature a
-fromDegreeCelsiusAbsolute x = x *~ degreeCelsius + 273.15 *~ degreeCelsius
 
 {-# WARNING fromJSValViaValue "partial, throw error when JSON assumption is wrong" #-}
 fromJSValViaValue :: (FromJSON a, Typeable a) => Proxy a -> JSVal -> JSM (Maybe a)
