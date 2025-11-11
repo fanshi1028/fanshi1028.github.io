@@ -42,8 +42,8 @@ fmtDayYmd = pack . formatTime defaultTimeLocale "%Y%m%d"
 --                                                                                       --
 -- 每次最多有max數目的結果返回，首skip數目的結果會被略去。利用這兩個參數可達到分頁用途。 --
 -------------------------------------------------------------------------------------------
-appDataGovlistFilesURI :: Maybe StrictText -> Maybe StrictText -> Maybe StrictText -> Day -> Day -> Paging -> URI
-appDataGovlistFilesURI mCategory mProvider mFormat start end (Paging itemPerPage page) =
+appDataGovlistFilesURI :: Maybe StrictText -> Maybe StrictText -> Maybe StrictText -> Mabye StrictText -> Day -> Day -> Paging -> URI
+appDataGovlistFilesURI mCategory mProvider mFormat mKeyword start end (Paging itemPerPage page) =
   [uri|https://app.data.gov.hk/v1/historical-archive/list-files|]
     { uriQuery =
         renderQueryTextAsString
@@ -58,7 +58,7 @@ appDataGovlistFilesURI mCategory mProvider mFormat start end (Paging itemPerPage
             -- NOTE: 檔案格式，以檔案的副檔名，例如: xls。
             (pack "format", mFormat)
             -- NOTE: 關鍵詞搜尋。只有與數據集／資源名稱匹配的結果會返回。
-            -- (pack "search", Nothing),
+            (pack "search", mKeyword),
             -- NOTE: 排序。 有效選項為: dataset-en，dataset-tc，dataset-sc，resource-en，resource-tc，resource-sc 和 url。預設排序為url。.
             -- (pack "order", Nothing)
           ]
