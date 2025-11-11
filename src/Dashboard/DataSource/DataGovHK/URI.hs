@@ -56,9 +56,9 @@ appDataGovlistFilesURI mCategory mProvider mFormat mKeyword start end (Paging it
             -- NOTE: 數據提供機構識別碼, 例如: hk-dpo。
             (pack "provider", mProvider),
             -- NOTE: 檔案格式，以檔案的副檔名，例如: xls。
-            (pack "format", mFormat)
+            (pack "format", mFormat),
             -- NOTE: 關鍵詞搜尋。只有與數據集／資源名稱匹配的結果會返回。
-            (pack "search", mKeyword),
+            (pack "search", mKeyword)
             -- NOTE: 排序。 有效選項為: dataset-en，dataset-tc，dataset-sc，resource-en，resource-tc，resource-sc 和 url。預設排序為url。.
             -- (pack "order", Nothing)
           ]
