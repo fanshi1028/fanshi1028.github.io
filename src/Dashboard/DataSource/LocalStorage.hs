@@ -1,11 +1,10 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE UndecidableInstances #-}
 
 module Dashboard.DataSource.LocalStorage where
 
 import Codec.Serialise
 import Data.Hashable
+import Data.Text
 import Data.Typeable
 import Haxl.Core
 import Haxl.LocalStorage
@@ -29,7 +28,7 @@ instance (Typeable req) => StateKey (LocalStorage req) where
   data State (LocalStorage req) = LocalStorageReqState JSContextRef
 
 instance (DataSourceName req) => DataSourceName (LocalStorage req) where
-  dataSourceName _ = "localStorage:" <> dataSourceName (Proxy @req)
+  dataSourceName _ = pack "localStorage:" <> dataSourceName (Proxy @req)
 
 instance (DataSource u req) => DataSource u (LocalStorage req) where
   fetch state@(LocalStorageReqState jscontext) =

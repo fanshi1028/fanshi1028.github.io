@@ -73,6 +73,7 @@ common lib
       Dashboard.DataSource.HongKongObservatoryWeatherAPI
       Dashboard.DataSource.IO
       Dashboard.DataSource.JSM
+      Dashboard.DataSource.LocalStorage
       Dashboard.DataSource.MisoRun
       Haxl.LocalStorage
       Home
@@ -99,6 +100,7 @@ library
     Dashboard.DataSource.HongKongObservatoryWeatherAPI
     Dashboard.DataSource.IO
     Dashboard.DataSource.JSM
+    Dashboard.DataSource.LocalStorage
     Dashboard.DataSource.MisoRun
     Haxl.LocalStorage
     Home
