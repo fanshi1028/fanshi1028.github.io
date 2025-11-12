@@ -66,10 +66,10 @@ saveCacheToLocalStorage cache = do
       IVarFull (ThrowHaxl e _) -> return (Just (Left e))
       IVarFull (ThrowIO e) -> return (Just (Left e))
       IVarEmpty _ -> return Nothing
-  forM_ cacheShown $ \(showsTypeRep -> mkTypeRepStr, subCacheShown) ->
+  forM_ cacheShown $ \(_, subCacheShown) ->
     forM_ subCacheShown $ \case
       (reqStr, Left err) -> consoleLog . ms $ reqStr <> ":" <> displayException err
       (reqStr, Right r) ->
         () <$ do
           localStorage <- jsg "window" ! "localStorage"
-          localStorage # "setItem" $ ((mkTypeRepStr "" <> ":" <> reqStr), r)
+          localStorage # "setItem" $ (reqStr, r)
