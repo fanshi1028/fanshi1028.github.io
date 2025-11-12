@@ -24,18 +24,15 @@ import Miso.FFI (consoleLog)
 import UnliftIO.Exception
 import UnliftIO.IORef
 
-makeReqLocalStorageKey :: (Typeable req, Show req) => req -> String
-makeReqLocalStorageKey req = show (typeOf req) <> ":" <> show req
+showReqResultSerialised :: (ShowP r, Serialise a) => ShowReq r a
+showReqResultSerialised = (showp, unpack . extractBase64 . encodeBase64 . toStrict . serialise)
 
-showReqResultSerialised :: (Show (r a), Serialise a) => ShowReq r a
-showReqResultSerialised = (show, unpack . extractBase64 . encodeBase64 . toStrict . serialise)
-
-dataFetchWithSerialise :: forall u r a w. (DataSource u r, Eq (r a), Hashable (r a), Typeable (r a), Show (r a), Serialise a) => r a -> GenHaxl u w a
+dataFetchWithSerialise :: forall u r a w. (DataSource u r, Hashable (r a), Typeable (r a), ShowP r, Serialise a) => r a -> GenHaxl u w a
 dataFetchWithSerialise = dataFetchWithShow showReqResultSerialised
 
 cacheResultWithLocalStorage ::
   ( Eq (r a),
-    Show (r a),
+    ShowP r,
     Hashable (r a),
     Typeable (r a),
     Serialise a
