@@ -90,6 +90,16 @@
                     ver = "0.3.3.6";
                     sha256 = "sha256-4/O93bE21wTxN/LNWpDmr17o3bo+Xhq1qoB8qG6cq+E=";
                   } { };
+                  granite = hself.callHackageDirect {
+                    pkg = "granite";
+                    ver = "0.3.0.5";
+                    sha256 = "sha256-QLxahMrjQ2tbXeQ0CBn2k5o0tRUgjyFy6EDJFon4T0Y=";
+                  } { };
+                  snappy-hs = hself.callHackageDirect {
+                    pkg = "snappy-hs";
+                    ver = "0.1.0.4";
+                    sha256 = "sha256-c9kgHvHYTcMI8Y2jeF2Emazm2lbqDIw+OABjd2VmXJM=";
+                  } { };
                 }
                 // (if args ? overrides then args.overrides hself hsuper else { })
               );
