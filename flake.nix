@@ -85,6 +85,11 @@
                     ver = "0.16.4.0";
                     sha256 = "sha256-BmFcx40Dvazu3fdbZJXLGyB3eNSZ0EZzSkK3cQKdSKo=";
                   } { };
+                  dataframe = hself.callHackageDirect {
+                    pkg = "dataframe";
+                    ver = "0.3.3.6";
+                    sha256 = "sha256-4/O93bE21wTxN/LNWpDmr17o3bo+Xhq1qoB8qG6cq+E=";
+                  } { };
                 }
                 // (if args ? overrides then args.overrides hself hsuper else { })
               );
