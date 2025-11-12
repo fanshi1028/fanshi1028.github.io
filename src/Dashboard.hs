@@ -42,7 +42,7 @@ haxlEnvflags :: Flags
 haxlEnvflags =
   defaultFlags
 #ifndef PRODUCTION
-    { trace = 3,
+    { trace = 0,
       report = profilingReportFlags
     }
 #endif
