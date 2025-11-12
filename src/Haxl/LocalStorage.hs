@@ -40,26 +40,26 @@ cacheResultWithLocalStorage ::
     Typeable (r a),
     Serialise a
   ) =>
-  r a -> (a -> Bool) -> JSM (GenHaxl u w ())
-cacheResultWithLocalStorage req validateCache = do
+  r a -> JSM (GenHaxl u w ())
+cacheResultWithLocalStorage req =
+  cacheResultWithLocalStorage' req >>= \case
+    Left err -> pure () <$ consoleLog (ms . displayException $ err)
+    Right r -> pure . void $ cacheResultWithShow showReqResultSerialised req (pure r)
+
+cacheResultWithLocalStorage' :: (ShowP r, Serialise a) => r a -> JSM (Either SomeException a)
+cacheResultWithLocalStorage' req = do
   localStorage <- jsg "window" ! "localStorage"
-  let key = makeReqLocalStorageKey req
+  let key = showp req
   v <- localStorage # "getItem" $ [pack key]
-  eCacheReulst <-
-    valIsNull v >>= \case
-      True -> pure . Left $ key <> ": not found in localStorage"
-      False -> do
-        txt <- fromJSValUnchecked v
-        pure $ case decodeBase64Untyped $ encodeUtf8 txt of
-          Left err -> Left . displayException $ DecodeError @Void err
-          Right r -> case deserialiseOrFail $ fromStrict r of
-            Left err -> Left $ displayException err
-            Right r' -> Right r'
-  case eCacheReulst of
-    Left err -> pure () <$ consoleLog (ms err)
-    Right r
-      | validateCache r -> pure . void $ cacheResultWithShow showReqResultSerialised req (pure r)
-      | otherwise -> pure () <$ consoleLog (ms $ "LocalStorage Cache Invalidate: " <> key)
+  valIsNull v >>= \case
+    True -> pure . Left . toException . NotFound . pack $ key <> ": not found in localStorage"
+    False -> do
+      txt <- fromJSValUnchecked v
+      pure $ case decodeBase64Untyped $ encodeUtf8 txt of
+        Left err -> Left . logicErrorToException $ DecodeError @Void err
+        Right r -> case deserialiseOrFail $ fromStrict r of
+          Left err -> Left $ logicErrorToException err
+          Right r' -> Right r'
 
 saveCacheToLocalStorage :: HaxlDataCache u w -> JSM ()
 saveCacheToLocalStorage cache = do
