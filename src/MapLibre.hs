@@ -3,6 +3,7 @@
 module MapLibre (mapLibreComponent, createMap, cleanUpMap, runMapLibre, mapLibreEaseTo, mapLibreAddMarker) where
 
 import Control.Concurrent
+import Control.Concurrent.Async
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Reader
@@ -13,7 +14,6 @@ import Miso.Html.Element
 import Miso.Html.Property
 import Miso.Navigator
 import System.IO.Unsafe (unsafePerformIO)
-import UnliftIO.Async
 
 mapLibreId :: MisoString
 mapLibreId = ms "mapLibreId-14yMVNtDA3GBoGwMHBcDu5bhKUHu/9gcFx41dNF+2Zg="

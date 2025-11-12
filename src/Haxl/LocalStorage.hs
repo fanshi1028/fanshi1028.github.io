@@ -3,12 +3,14 @@
 module Haxl.LocalStorage where
 
 import Codec.Serialise
+import Control.Exception (Exception (displayException, toException), SomeException)
 import Control.Monad
 import Control.Monad.IO.Class
 import Data.Base64.Types
 import Data.ByteString.Base64
 import Data.ByteString.Lazy hiding (pack, unpack)
 import Data.Hashable
+import Data.IORef
 import Data.Text hiding (show)
 import Data.Text.Encoding
 import Data.Text.Encoding.Base64.Error
@@ -21,8 +23,6 @@ import Haxl.Core.Monad
 import Language.Javascript.JSaddle
 import Miso (ms)
 import Miso.FFI (consoleLog)
-import UnliftIO.Exception
-import UnliftIO.IORef
 
 showReqResultSerialised :: (ShowP r, Serialise a) => ShowReq r a
 showReqResultSerialised = (showp, unpack . extractBase64 . encodeBase64 . toStrict . serialise)

@@ -4,6 +4,7 @@ module Dashboard.DataSource.JSM where
 
 import Control.Concurrent
 import Control.Concurrent.Async
+import Control.Exception (Exception (toException), SomeException)
 import Control.Monad.IO.Class
 import Data.Aeson
 import Data.Hashable
@@ -16,7 +17,6 @@ import Miso hiding (Decoder, URI, defaultOptions, on)
 import Miso.FFI qualified as FFI
 import Network.HTTP.Types
 import Network.URI
-import UnliftIO.Exception
 import Utils.Serialise
 
 data JSMAction a where

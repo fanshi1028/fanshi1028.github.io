@@ -3,6 +3,7 @@
 module Dashboard.DataSource.BrowserGeolocationAPI where
 
 import Control.Concurrent
+import Control.Exception (Exception (toException))
 import Control.Monad
 import Control.Monad.IO.Class
 import Data.Functor
@@ -12,7 +13,6 @@ import Haxl.Core
 import Language.Javascript.JSaddle
 import Miso hiding ((<#))
 import Miso.Navigator hiding (geolocation)
-import UnliftIO.Exception
 
 data LocationReq a where
   GetCurrentPosition :: LocationReq Geolocation
