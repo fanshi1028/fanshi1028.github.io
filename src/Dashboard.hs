@@ -14,13 +14,13 @@ import Dashboard.DataSource.DataGovHK.URI
 import Dashboard.DataSource.HongKongObservatoryWeatherAPI
 import Dashboard.DataSource.IO
 import Dashboard.DataSource.JSM
+import Dashboard.DataSource.LocalStorage
 import Dashboard.DataSource.MisoRun
 import Data.Function
 import Data.Interval
 import Data.Maybe
 import Data.Text hiding (foldl')
 import Data.Time
-import Data.Time.Calendar
 import Haxl.Core
 import Haxl.DataSource.ConcurrentIO
 import Haxl.LocalStorage
@@ -32,7 +32,6 @@ import Miso.Html.Event
 import Miso.Html.Property hiding (label_)
 import Miso.Lens
 import Miso.Navigator
-import Network.URI.Static
 import Numeric.Units.Dimensional hiding ((*), (-))
 import Numeric.Units.Dimensional.NonSI
 import Numeric.Units.Dimensional.SIUnits hiding (toDegreeCelsiusAbsolute)
@@ -107,39 +106,34 @@ fetchData sink = do
           & stateSet (LocationReqState jscontext)
           & stateSet (HKOWeatherInformationReqState jscontext)
           & stateSet (JSMActionState jscontext)
+          & stateSet (LocalStorageReqState @HKOWeatherInformationReq jscontext)
+          -- TEMP FIXME JSMActin in general should not be cached, but only when we fetch url, and that is exactly how we are abusing it.
+          & stateSet (LocalStorageReqState @JSMAction jscontext)
           & stateSet ioState
 
   env' <- liftIO $ initEnv @() st jscontext
 
   tdy@(pred -> ytd) <- liftIO $ utctDay <$> getCurrentTime
   let getUVDataFileList = FetchURI $ appDataHKGovlistFilesURI (Just "climate-and-weather") (Just "hk-hko") Nothing (Just "uv") (periodFirstDay $ dayPeriod @Year ytd) ytd (withDefaultPaging 0)
-  loadCachesFromLocalStorage <-
-    sequence
-      <$> sequence
-        [ cacheResultWithLocalStorage $ GetLocalWeatherForecast tdy,
-          cacheResultWithLocalStorage $ Get9DayWeatherForecast tdy,
-          cacheResultWithLocalStorage $ GetCurrentWeatherReport tdy,
-          cacheResultWithLocalStorage $ GetWeatherWarningSummary tdy,
-          cacheResultWithLocalStorage $ GetWeatherWarningInfo tdy,
-          cacheResultWithLocalStorage $ GetSpecialWeatherTips tdy,
-          cacheResultWithLocalStorage getUVDataFileList
-        ]
 
   _ <- liftIO . runHaxl (env' {flags = haxlEnvflags}) $ do
-    loadCachesFromLocalStorage
     uncachedRequest GetCurrentTimeZone >>= misoRunAction . SetTimeZone
-    dataFetchWithSerialise (GetLocalWeatherForecast tdy) >>= misoRunAction . SetLocalWeatherForecast
 
-    dataFetchWithSerialise (Get9DayWeatherForecast tdy) >>= misoRunAction . Set9DayWeatherForecast
+    fetchCacheable (GetLocalWeatherForecast tdy) >>= misoRunAction . SetLocalWeatherForecast
 
-    dataFetchWithSerialise getUVDataFileList >>= uncachedRequest . ConsoleLog'
+    fetchCacheable (Get9DayWeatherForecast tdy) >>= misoRunAction . Set9DayWeatherForecast
+
+    fetchCacheable getUVDataFileList >>= uncachedRequest . ConsoleLog'
 
     uncachedRequest GetCurrentPosition >>= misoRunAction . SetLocation
 
-    dataFetchWithSerialise (GetCurrentWeatherReport tdy) >>= misoRunAction . SetCurrentWeatherReport
-    dataFetchWithSerialise $ GetWeatherWarningSummary tdy
-    dataFetchWithSerialise $ GetWeatherWarningInfo tdy
-    dataFetchWithSerialise $ GetSpecialWeatherTips tdy
+    fetchCacheable (GetCurrentWeatherReport tdy) >>= misoRunAction . SetCurrentWeatherReport
+
+    fetchCacheable $ GetWeatherWarningSummary tdy
+
+    fetchCacheable $ GetWeatherWarningInfo tdy
+
+    fetchCacheable $ GetSpecialWeatherTips tdy
 
   saveCacheToLocalStorage $ dataCache env'
 

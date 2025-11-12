@@ -13,7 +13,6 @@ import Codec.Serialise
 import Codec.Serialise.Decoding
 import Codec.Serialise.Encoding
 import Control.Applicative
-import Control.Exception (throw)
 import Control.Lens.Setter hiding ((*~), (.=))
 import Dashboard.DataSource.JSM
 import Data.Aeson hiding (Encoding, decode, encode)
@@ -24,7 +23,6 @@ import Data.Function
 import Data.Functor
 import Data.Hashable
 import Data.Interval
-import Data.Maybe
 import Data.Scientific
 import Data.Text hiding (concat, elem, foldl', foldr, reverse, show)
 import Data.Text qualified as T
