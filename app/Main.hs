@@ -34,7 +34,8 @@ main = run $ miso $ \(first (ms . show) . route @Route -> uri) ->
   )
 #ifndef PRODUCTION
     {
-      styles = [Style $ ms $(embedFileRelative "static/output.css")]
+      scripts = [Src "https://cdn.tailwindcss.com"],
+      styles = [Style $ ms $(embedFileRelative "static/input.css")]
      , logLevel = DebugAll
     }
 #endif
