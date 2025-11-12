@@ -1,5 +1,3 @@
-{-# LANGUAGE CPP #-}
-
 module MapLibre (mapLibreComponent, createMap, cleanUpMap, runMapLibre, mapLibreEaseTo, mapLibreAddMarker) where
 
 import Control.Concurrent
@@ -53,8 +51,6 @@ mapLibreEaseTo (Geolocation lat lon acc) = void $ do
   cfg <- obj
   cfg <# "center" $ [lon, lat]
   void $ mapLibre # "easeTo" $ [cfg]
-
--- mapLibre # "cameraForBounds" $ [[lon - acc, lat - acc, lon + acc, lat + acc]]
 
 runMapLibre :: ReaderT MapLibreLib JSM a -> JSM a
 runMapLibre m = do
