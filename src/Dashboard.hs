@@ -111,37 +111,35 @@ fetchData sink = do
 
   env' <- liftIO $ initEnv @() st jscontext
 
-  t <- liftIO $ getCurrentTime
-  let ytd = pred $ utctDay t
-
+  tdy@(pred -> ytd) <- liftIO $ utctDay <$> getCurrentTime
   let getUVDataFileList = FetchURI $ appDataHKGovlistFilesURI (Just "climate-and-weather") (Just "hk-hko") Nothing (Just "uv") (periodFirstDay $ dayPeriod @Year ytd) ytd (withDefaultPaging 0)
   loadCachesFromLocalStorage <-
     sequence
       <$> sequence
-        [ cacheResultWithLocalStorage GetLocalWeatherForecast $ \r -> t `diffUTCTime` r.updateTime <= 60 * 15,
-          cacheResultWithLocalStorage Get9DayWeatherForecast $ \r -> t `diffUTCTime` r.updateTime <= 60 * 60 * 12,
-          cacheResultWithLocalStorage GetCurrentWeatherReport $ \r -> t `diffUTCTime` r.updateTime <= 60 * 15,
-          cacheResultWithLocalStorage GetWeatherWarningSummary $ const True,
-          cacheResultWithLocalStorage GetWeatherWarningInfo $ const True,
-          cacheResultWithLocalStorage GetSpecialWeatherTips $ const True,
-          cacheResultWithLocalStorage getUVDataFileList $ const True
+        [ cacheResultWithLocalStorage $ GetLocalWeatherForecast tdy,
+          cacheResultWithLocalStorage $ Get9DayWeatherForecast tdy,
+          cacheResultWithLocalStorage $ GetCurrentWeatherReport tdy,
+          cacheResultWithLocalStorage $ GetWeatherWarningSummary tdy,
+          cacheResultWithLocalStorage $ GetWeatherWarningInfo tdy,
+          cacheResultWithLocalStorage $ GetSpecialWeatherTips tdy,
+          cacheResultWithLocalStorage getUVDataFileList
         ]
 
   _ <- liftIO . runHaxl (env' {flags = haxlEnvflags}) $ do
     loadCachesFromLocalStorage
     uncachedRequest GetCurrentTimeZone >>= misoRunAction . SetTimeZone
-    dataFetchWithSerialise GetLocalWeatherForecast >>= misoRunAction . SetLocalWeatherForecast
+    dataFetchWithSerialise (GetLocalWeatherForecast tdy) >>= misoRunAction . SetLocalWeatherForecast
 
-    dataFetchWithSerialise Get9DayWeatherForecast >>= misoRunAction . Set9DayWeatherForecast
+    dataFetchWithSerialise (Get9DayWeatherForecast tdy) >>= misoRunAction . Set9DayWeatherForecast
 
     dataFetchWithSerialise getUVDataFileList >>= uncachedRequest . ConsoleLog'
 
     uncachedRequest GetCurrentPosition >>= misoRunAction . SetLocation
 
-    dataFetchWithSerialise GetCurrentWeatherReport >>= misoRunAction . SetCurrentWeatherReport
-    dataFetchWithSerialise GetWeatherWarningSummary
-    dataFetchWithSerialise GetWeatherWarningInfo
-    dataFetchWithSerialise GetSpecialWeatherTips
+    dataFetchWithSerialise (GetCurrentWeatherReport tdy) >>= misoRunAction . SetCurrentWeatherReport
+    dataFetchWithSerialise $ GetWeatherWarningSummary tdy
+    dataFetchWithSerialise $ GetWeatherWarningInfo tdy
+    dataFetchWithSerialise $ GetSpecialWeatherTips tdy
 
   saveCacheToLocalStorage $ dataCache env'
 

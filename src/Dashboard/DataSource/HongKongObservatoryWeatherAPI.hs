@@ -466,23 +466,23 @@ instance FromJSVal CurrentWeatherReport where
 
 -- NOTE: Weather Information API
 data HKOWeatherInformationReq a where
-  GetLocalWeatherForecast :: HKOWeatherInformationReq LocalWeatherForecast
-  Get9DayWeatherForecast :: HKOWeatherInformationReq NineDayWeatherForecast
-  GetCurrentWeatherReport :: HKOWeatherInformationReq CurrentWeatherReport
-  GetWeatherWarningSummary :: HKOWeatherInformationReq SerialisableValue
-  GetWeatherWarningInfo :: HKOWeatherInformationReq SerialisableValue
-  GetSpecialWeatherTips :: HKOWeatherInformationReq SerialisableValue
+  GetLocalWeatherForecast :: Day -> HKOWeatherInformationReq LocalWeatherForecast
+  Get9DayWeatherForecast :: Day -> HKOWeatherInformationReq NineDayWeatherForecast
+  GetCurrentWeatherReport :: Day -> HKOWeatherInformationReq CurrentWeatherReport
+  GetWeatherWarningSummary :: Day -> HKOWeatherInformationReq SerialisableValue
+  GetWeatherWarningInfo :: Day -> HKOWeatherInformationReq SerialisableValue
+  GetSpecialWeatherTips :: Day -> HKOWeatherInformationReq SerialisableValue
 
 deriving instance Eq (HKOWeatherInformationReq a)
 
 instance Hashable (HKOWeatherInformationReq a) where
   hashWithSalt s req = hashWithSalt @Int s $ case req of
-    GetLocalWeatherForecast -> 0
-    Get9DayWeatherForecast -> 1
-    GetCurrentWeatherReport -> 2
-    GetWeatherWarningSummary -> 3
-    GetWeatherWarningInfo -> 4
-    GetSpecialWeatherTips -> 5
+    GetLocalWeatherForecast day' -> 0 `hashWithSalt` day'
+    Get9DayWeatherForecast day' -> 1 `hashWithSalt` day'
+    GetCurrentWeatherReport day' -> 2 `hashWithSalt` day'
+    GetWeatherWarningSummary day' -> 3 `hashWithSalt` day'
+    GetWeatherWarningInfo day' -> 4 `hashWithSalt` day'
+    GetSpecialWeatherTips day' -> 5 `hashWithSalt` day'
 
 deriving instance Show (HKOWeatherInformationReq a)
 
@@ -501,12 +501,12 @@ hkoWeatherInformationReqToURI req =
     (Just $ nullURIAuth & uriRegNameLens .~ "data.weather.gov.hk")
     "/weatherAPI/opendata/weather.php"
     ( "?dataType=" <> case req of
-        GetLocalWeatherForecast -> "flw"
-        Get9DayWeatherForecast -> "fnd"
-        GetCurrentWeatherReport -> "rhrread"
-        GetWeatherWarningSummary -> "warnsum"
-        GetWeatherWarningInfo -> "warninginfo"
-        GetSpecialWeatherTips -> "swt"
+        GetLocalWeatherForecast _ -> "flw"
+        Get9DayWeatherForecast _ -> "fnd"
+        GetCurrentWeatherReport _ -> "rhrread"
+        GetWeatherWarningSummary _ -> "warnsum"
+        GetWeatherWarningInfo _ -> "warninginfo"
+        GetSpecialWeatherTips _ -> "swt"
     )
     ""
 
@@ -515,12 +515,12 @@ instance DataSource u HKOWeatherInformationReq where
     backgroundFetchPar
       ( -- NOTE: sad boilerplate
         \req -> runJSaddle jscontext $ case req of
-          GetLocalWeatherForecast -> fetchGetJSM Proxy $ hkoWeatherInformationReqToURI req
-          Get9DayWeatherForecast -> fetchGetJSM Proxy $ hkoWeatherInformationReqToURI req
-          GetCurrentWeatherReport -> fetchGetJSM Proxy $ hkoWeatherInformationReqToURI req
-          GetWeatherWarningSummary -> fetchGetJSM Proxy $ hkoWeatherInformationReqToURI req
-          GetWeatherWarningInfo -> fetchGetJSM Proxy $ hkoWeatherInformationReqToURI req
-          GetSpecialWeatherTips -> fetchGetJSM Proxy $ hkoWeatherInformationReqToURI req
+          GetLocalWeatherForecast _ -> fetchGetJSM Proxy $ hkoWeatherInformationReqToURI req
+          Get9DayWeatherForecast _ -> fetchGetJSM Proxy $ hkoWeatherInformationReqToURI req
+          GetCurrentWeatherReport _ -> fetchGetJSM Proxy $ hkoWeatherInformationReqToURI req
+          GetWeatherWarningSummary _ -> fetchGetJSM Proxy $ hkoWeatherInformationReqToURI req
+          GetWeatherWarningInfo _ -> fetchGetJSM Proxy $ hkoWeatherInformationReqToURI req
+          GetSpecialWeatherTips _ -> fetchGetJSM Proxy $ hkoWeatherInformationReqToURI req
       )
       reqState
 
