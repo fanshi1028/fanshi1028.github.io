@@ -80,6 +80,11 @@
                   haxl = applyFixToHaxl pkgs hsuper.haxl;
                   hashtables = hsuper.hashtables_1_4_2;
                   cborg = applyFixToCborg pkgs hsuper.cborg;
+                  statistics = hself.callHackageDirect {
+                    pkg = "statistics";
+                    ver = "0.16.4.0";
+                    sha256 = "sha256-BmFcx40Dvazu3fdbZJXLGyB3eNSZ0EZzSkK3cQKdSKo=";
+                  } { };
                 }
                 // (if args ? overrides then args.overrides hself hsuper else { })
               );
