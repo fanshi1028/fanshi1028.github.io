@@ -39,6 +39,7 @@ import Numeric.Units.Dimensional
 import Numeric.Units.Dimensional.NonSI
 import Numeric.Units.Dimensional.SIUnits hiding (fromDegreeCelsiusAbsolute)
 import Utils.Dimensional
+import Utils.Fetch
 import Utils.JS
 import Utils.Serialise
 
@@ -513,12 +514,12 @@ instance DataSource u HKOWeatherInformationReq where
     backgroundFetchPar
       ( -- NOTE: sad boilerplate
         \req -> runJSaddle jscontext $ case req of
-          GetLocalWeatherForecast _ -> fetchGetJSM Proxy $ hkoWeatherInformationReqToURI req
-          Get9DayWeatherForecast _ -> fetchGetJSM Proxy $ hkoWeatherInformationReqToURI req
-          GetCurrentWeatherReport _ -> fetchGetJSM Proxy $ hkoWeatherInformationReqToURI req
-          GetWeatherWarningSummary _ -> fetchGetJSM Proxy $ hkoWeatherInformationReqToURI req
-          GetWeatherWarningInfo _ -> fetchGetJSM Proxy $ hkoWeatherInformationReqToURI req
-          GetSpecialWeatherTips _ -> fetchGetJSM Proxy $ hkoWeatherInformationReqToURI req
+          GetLocalWeatherForecast _ -> fetchGetJSON Proxy $ hkoWeatherInformationReqToURI req
+          Get9DayWeatherForecast _ -> fetchGetJSON Proxy $ hkoWeatherInformationReqToURI req
+          GetCurrentWeatherReport _ -> fetchGetJSON Proxy $ hkoWeatherInformationReqToURI req
+          GetWeatherWarningSummary _ -> fetchGetJSON Proxy $ hkoWeatherInformationReqToURI req
+          GetWeatherWarningInfo _ -> fetchGetJSON Proxy $ hkoWeatherInformationReqToURI req
+          GetSpecialWeatherTips _ -> fetchGetJSON Proxy $ hkoWeatherInformationReqToURI req
       )
       reqState
 

@@ -88,6 +88,7 @@ common lib
       Route
       Route.View
       Utils.Dimensional
+      Utils.Fetch
       Utils.JS
       Utils.Serialise
 
@@ -115,6 +116,7 @@ library
     Route
     Route.View
     Utils.Dimensional
+    Utils.Fetch
     Utils.JS
     Utils.Serialise
 
