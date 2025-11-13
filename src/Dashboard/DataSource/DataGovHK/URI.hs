@@ -44,6 +44,9 @@ renderQueryTextAsString = unpack . decodeUtf8 . toLazyByteString . renderQueryTe
 fmtDayYmd :: Day -> StrictText
 fmtDayYmd = pack . formatTime defaultTimeLocale "%Y%m%d"
 
+uriToText :: URI -> StrictText
+uriToText url = pack . uriToString id url $ ""
+
 -------------------------------------------------------------------------------------------
 -- 取回在start和end指定日期以內並符合category，provider和 format參數的檔案清單。         --
 --                                                                                       --
@@ -75,13 +78,13 @@ appDataHKGovlistFilesURI mCategory mProvider mFormat mKeyword start end (Paging 
 -- 取回在日期（start 和 end中提供）以內的檔案（url中提供）的歷史版本清單。 --
 -- 只有首10,000個結果將會返回。                                            --
 -----------------------------------------------------------------------------
-appDataGovHKlistFilesVersionsURI :: StrictText -> Day -> Day -> URI
+appDataGovHKlistFilesVersionsURI :: URI -> Day -> Day -> URI
 appDataGovHKlistFilesVersionsURI url start end =
   [uri|https://app.data.gov.hk/v1/historical-archive/list-files-versions|]
     { uriQuery =
         renderQueryTextAsString
           [ -- NOTE: 檔案網址，網址可從歷史檔案文件列表應用程式介面結果中找到。
-            (pack "url", Just url),
+            (pack "url", Just $ uriToText url),
             (pack "start", Just $ fmtDayYmd start),
             (pack "end", Just $ fmtDayYmd end)
           ]
@@ -90,13 +93,13 @@ appDataGovHKlistFilesVersionsURI url start end =
 -----------------------------------------------
 -- 取回基於time的檔案（url中提供）歷史版本。 --
 -----------------------------------------------
-appDataGovHKGetFileURI :: StrictText -> Day -> URI
+appDataGovHKGetFileURI :: URI -> Day -> URI
 appDataGovHKGetFileURI url start =
   [uri|https://app.data.gov.hk/v1/historical-archive/get-file|]
     { uriQuery =
         renderQueryTextAsString
           [ -- NOTE: 檔案網址，網址可從歷史檔案文件列表應用程式介面結果中找到。
-            (pack "url", Just url),
+            (pack "url", Just $ uriToText url),
             (pack "time", Just $ fmtDayYmd start)
           ]
     }
