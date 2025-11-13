@@ -46,3 +46,6 @@ fetchJSM _ headers contentType' method req = do
 
 fetchGetJSON :: (forall a. (FromJSVal a) => Proxy a -> URI -> JSM (Either SomeException a))
 fetchGetJSON proxy = fetchJSM proxy [accept =: applicationJSON] JSON GET
+
+fetchGetText :: URI -> JSM (Either SomeException StrictText)
+fetchGetText = fetchJSM Proxy [accept =: textPlain] TEXT GET

@@ -61,6 +61,7 @@ common lib
     time,
     unliftio,
     validation-selective,
+    vector,
 
   hs-source-dirs:
     src
@@ -89,6 +90,7 @@ common lib
       Route.View
       Utils.Dimensional
       Utils.Fetch
+      Utils.Fetch.CSV
       Utils.JS
       Utils.Serialise
 
@@ -117,6 +119,7 @@ library
     Route.View
     Utils.Dimensional
     Utils.Fetch
+    Utils.Fetch.CSV
     Utils.JS
     Utils.Serialise
 
