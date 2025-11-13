@@ -136,30 +136,39 @@ data DataFormat = CSV | JSON | XML
 
 data V2_Query = V2_Query
   { _resource :: URI,
-    _section :: Maybe Natural -- NOTE: Positive Integer
+    _section :: Maybe Natural, -- NOTE: Positive Integer
     -- filter :: [Void], -- TEMP FIXME
     -- sorts :: [Void], -- TEMP FIXME
-    -- _format :: Maybe DataFormat
+    _format :: Maybe DataFormat
   }
 
--- formatToText :: DataFormat -> StrictText
--- formatToText = \case
---   CSV -> "CSV"
---   JSON -> "json"
---   XML -> "xml"
+formatToText :: DataFormat -> StrictText
+formatToText = \case
+  CSV -> "CSV"
+  JSON -> "json"
+  XML -> "xml"
 
 instance ToJSON V2_Query where
-  toEncoding (V2_Query resource section) =
+  toEncoding (V2_Query resource mSection mFormat) =
     pairs $
       "resource" .= resource
-        <> "section" .= section
-        <> "format" .= ("json" :: StrictText)
-  toJSON (V2_Query resource section) =
+        <> case mSection of
+          Just section -> "section" .= section
+          Nothing -> mempty
+        <> case mFormat of
+          Just format -> "format" .= formatToText format
+          Nothing -> mempty
+  toJSON (V2_Query resource mSection mFormat) =
     object
-      [ "resource" .= resource,
-        "section" .= section,
-        "format" .= ("json" :: StrictText)
-      ]
+      . ( case mFormat of
+            Just format -> (("format" .= formatToText format) :)
+            Nothing -> id
+        )
+      . ( case mSection of
+            Just section -> (("section" .= section) :)
+            Nothing -> id
+        )
+      $ ["resource" .= resource]
 
 appDataGovHKGetDataV2 :: V2_Query -> URI
 appDataGovHKGetDataV2 query' =
