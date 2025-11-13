@@ -1,21 +1,14 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ViewPatterns #-}
-#ifndef PRODUCTION
-{-# LANGUAGE TemplateHaskell #-}
-#endif
 
 module Main where
 
-#ifndef PRODUCTION
-import Data.FileEmbed
-#endif
 import Data.Bifunctor
 import Miso
 import Miso.Router as Router
 import Route
 import Route.View
-import Prelude hiding (rem, unlines)
 
 -----------------------------------------------------------------------------
 #ifdef WASM
@@ -34,8 +27,8 @@ main = run $ miso $ \(first (ms . show) . route @Route -> uri) ->
   )
 #ifndef PRODUCTION
     {
-      scripts = [Src "https://cdn.tailwindcss.com"],
-      styles = [Style $ ms $(embedFileRelative "static/input.css")]
+       scripts = [Src "https://cdn.tailwindcss.com"]
+     , styles = [Href "static/input.css"]
      , logLevel = DebugAll
     }
 #endif
