@@ -10,7 +10,6 @@ module Dashboard (dashboardComponent) where
 import Control.Monad
 import Control.Monad.IO.Class
 import Dashboard.DataSource.BrowserGeolocationAPI
-import Dashboard.DataSource.DataGovHK.URI
 import Dashboard.DataSource.HongKongObservatoryWeatherAPI
 import Dashboard.DataSource.IO
 import Dashboard.DataSource.JSM
