@@ -73,6 +73,7 @@ common lib
       Dashboard
       Dashboard.DataSource.BrowserGeolocationAPI
       Dashboard.DataSource.HongKongObservatoryWeatherAPI
+      Dashboard.DataSource.HongKongObservatoryWeatherAPI.Types
       Dashboard.DataSource.IO
       Dashboard.DataSource.JSM
       Dashboard.DataSource.LocalStorage
@@ -101,6 +102,7 @@ library
     Dashboard
     Dashboard.DataSource.BrowserGeolocationAPI
     Dashboard.DataSource.HongKongObservatoryWeatherAPI
+    Dashboard.DataSource.HongKongObservatoryWeatherAPI.Types
     Dashboard.DataSource.IO
     Dashboard.DataSource.JSM
     Dashboard.DataSource.LocalStorage
