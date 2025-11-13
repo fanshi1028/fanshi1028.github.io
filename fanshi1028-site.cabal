@@ -36,6 +36,7 @@ common wasm
 common lib
   build-depends:
     aeson,
+    aeson-pretty,
     async,
     base <5,
     base64,

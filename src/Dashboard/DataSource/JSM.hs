@@ -3,9 +3,11 @@
 module Dashboard.DataSource.JSM where
 
 import Control.Exception (SomeException)
+import Data.Aeson.Encode.Pretty
 import Data.Hashable
 import Data.Text hiding (concat, elem, foldl', foldr, reverse, show)
 import Data.Text qualified as T
+import Data.Text.Lazy.Builder
 import Data.Typeable
 import Haxl.Core
 import Language.Javascript.JSaddle
@@ -44,5 +46,11 @@ instance DataSource u JSMAction where
       performJSM :: JSMAction a -> JSM (Either SomeException a)
       performJSM = \case
         FetchURI uri -> fetchGetJSON Proxy uri
-        ConsoleLog str -> Right <$> consoleLog str
-        ConsoleLog' v -> Right <$> ((jsg "JSON" # "stringify") [v] >>= consoleLog')
+        ConsoleLog str -> Right <$> Miso.consoleLog str
+        ConsoleLog' v -> Right <$> (Miso.consoleLog . ms . toLazyText $ encodePrettyToTextBuilder v)
+
+consoleLog :: MisoString -> GenHaxl u w ()
+consoleLog = uncachedRequest . ConsoleLog
+
+consoleLog' :: SerialisableValue -> GenHaxl u w ()
+consoleLog' = uncachedRequest . ConsoleLog'

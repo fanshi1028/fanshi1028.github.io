@@ -17,7 +17,7 @@ import Data.Scientific
 import Language.Javascript.JSaddle hiding (Object, Success)
 import Prelude hiding ((+))
 
-newtype SerialisableValue = SerialisableValue Value deriving newtype (Eq, Show, FromJSON, ToJSVal, Hashable)
+newtype SerialisableValue = SerialisableValue Value deriving newtype (Eq, Show, FromJSON, ToJSON, ToJSVal, Hashable)
 
 instance FromJSVal SerialisableValue where
   fromJSVal v = fmap SerialisableValue <$> fromJSVal v
