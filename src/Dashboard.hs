@@ -117,12 +117,15 @@ fetchData sink = do
   _ <- liftIO . runHaxl (env' {flags = haxlEnvflags}) $ do
     tdy@(pred -> ytd) <- utctDay <$> uncachedRequest GetCurrentTime
 
+    let getUVDataFileList = FetchURI $ appDataHKGovlistFilesURI (Just "climate-and-weather") (Just "hk-hko") Nothing (Just "uv") (periodFirstDay $ dayPeriod @Year ytd) ytd (withDefaultPaging 0)
 
     uncachedRequest GetCurrentTimeZone >>= misoRunAction . SetTimeZone
 
     fetchCacheable (GetLocalWeatherForecast tdy) >>= misoRunAction . SetLocalWeatherForecast
 
     fetchCacheable (Get9DayWeatherForecast tdy) >>= misoRunAction . Set9DayWeatherForecast
+
+    fetchCacheable getUVDataFileList >>= uncachedRequest . ConsoleLog'
 
     uncachedRequest GetCurrentPosition >>= misoRunAction . SetLocation
 

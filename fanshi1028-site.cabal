@@ -73,6 +73,7 @@ common lib
       Clock
       Dashboard
       Dashboard.DataSource.BrowserGeolocationAPI
+      Dashboard.DataSource.DataGovHK.URI
       Dashboard.DataSource.HongKongObservatoryWeatherAPI
       Dashboard.DataSource.HongKongObservatoryWeatherAPI.Types
       Dashboard.DataSource.IO
@@ -102,6 +103,7 @@ library
     Clock
     Dashboard
     Dashboard.DataSource.BrowserGeolocationAPI
+    Dashboard.DataSource.DataGovHK.URI
     Dashboard.DataSource.HongKongObservatoryWeatherAPI
     Dashboard.DataSource.HongKongObservatoryWeatherAPI.Types
     Dashboard.DataSource.IO
