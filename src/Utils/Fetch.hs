@@ -1,7 +1,6 @@
 module Utils.Fetch where
 
 import Control.Concurrent
-import Control.Concurrent.Async
 import Control.Exception (Exception (toException), SomeException)
 import Control.Monad.IO.Class
 import Data.Aeson
@@ -36,13 +35,12 @@ failedResponseToException = \case
 
 fetchJSM :: (forall a. (FromJSVal a) => Proxy a -> [(MisoString, MisoString)] -> CONTENT_TYPE -> StdMethod -> URI -> JSM (Either SomeException a))
 fetchJSM _ headers contentType' method req = do
-  successMVar <- liftIO newEmptyMVar
-  failMVar <- liftIO newEmptyMVar
+  resultMVar <- liftIO newEmptyMVar
   let url = ms $ uriToString id req ""
-      successCB = \(Response _ _ _ v) -> liftIO $ putMVar successMVar v
-      failCB = liftIO . putMVar failMVar . failedResponseToException
+      successCB = \(Response _ _ _ v) -> liftIO . putMVar resultMVar $ Right v
+      failCB = liftIO . putMVar resultMVar . Left . failedResponseToException
   FFI.fetch url (ms $ renderStdMethod method) Nothing headers successCB failCB contentType'
-  liftIO $ race (readMVar failMVar) (readMVar successMVar)
+  liftIO $ readMVar resultMVar
 
 fetchGetJSON :: (forall a. (FromJSVal a) => Proxy a -> URI -> JSM (Either SomeException a))
 fetchGetJSON proxy = fetchJSM proxy [accept =: applicationJSON] JSON GET
