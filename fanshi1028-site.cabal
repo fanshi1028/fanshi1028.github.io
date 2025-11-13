@@ -157,10 +157,6 @@ executable fanshi1028-site
   if flag(production)
     cpp-options:
       -DPRODUCTION
-  else
-    build-depends:
-      file-embed
-
   hs-source-dirs:
     app
 
