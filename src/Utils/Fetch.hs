@@ -47,3 +47,6 @@ fetchGetJSON proxy = fetchJSM proxy [accept =: applicationJSON] JSON GET
 
 fetchGetText :: URI -> JSM (Either SomeException StrictText)
 fetchGetText = fetchJSM Proxy [accept =: textPlain] TEXT GET
+
+fetchGetBlob :: URI -> JSM (Either SomeException Blob)
+fetchGetBlob = fetchJSM Proxy [accept =: ms "application/octect-stream"] BLOB GET

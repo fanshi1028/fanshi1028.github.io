@@ -2,24 +2,29 @@
 
 module Dashboard.DataSource.JSM where
 
-import Control.Exception (SomeException)
+import Control.Exception (SomeException, toException)
 import Data.Aeson
 import Data.Aeson.Encode.Pretty
+import Data.Csv
 import Data.Hashable
 import Data.Text hiding (concat, elem, foldl', foldr, reverse, show)
 import Data.Text qualified as T
 import Data.Text.Lazy.Builder
 import Data.Typeable
+import Data.Vector hiding ((!))
 import Haxl.Core
 import Language.Javascript.JSaddle
 import Miso hiding (Decoder, URI, defaultOptions, on)
 import Network.URI
 import Utils.Fetch
+import Utils.Fetch.CSV
 import Utils.Serialise
 
 data JSMAction a where
-  FetchURI :: URI -> JSMAction SerialisableValue -- NOTE: assume we always fetch in GET, other method don't makes much sense in Haxl context, right?
   ConsoleLog :: MisoString -> JSMAction ()
+  FetchJSON :: URI -> JSMAction SerialisableValue
+  FetchCSV :: forall a. (FromRecord a) => URI -> JSMAction (Vector a)
+  FetchText :: URI -> JSMAction StrictText
 
 deriving instance Eq (JSMAction a)
 
@@ -33,8 +38,10 @@ instance StateKey JSMAction where
 instance Hashable (JSMAction a) where
   hashWithSalt s =
     hashWithSalt @Int s . \case
-      FetchURI uri -> s `hashWithSalt` (0 :: Int) `hashWithSalt` uriToString id uri ""
-      ConsoleLog str -> s `hashWithSalt` (1 :: Int) `hashWithSalt` fromMisoString @StrictText str
+      ConsoleLog str -> s `hashWithSalt` (0 :: Int) `hashWithSalt` fromMisoString @StrictText str
+      FetchJSON uri -> s `hashWithSalt` (1 :: Int) `hashWithSalt` uriToString id uri ""
+      FetchCSV uri -> s `hashWithSalt` (2 :: Int) `hashWithSalt` uriToString id uri ""
+      FetchText uri -> s `hashWithSalt` (3 :: Int) `hashWithSalt` uriToString id uri ""
 
 instance DataSourceName JSMAction where
   dataSourceName _ = T.show . typeRepTyCon . typeRep $ Proxy @JSMAction
@@ -44,8 +51,10 @@ instance DataSource u JSMAction where
     where
       performJSM :: JSMAction a -> JSM (Either SomeException a)
       performJSM = \case
-        FetchURI uri -> fetchGetJSON Proxy uri
         ConsoleLog str -> Right <$> Miso.consoleLog str
+        FetchJSON uri -> fetchGetJSON Proxy uri
+        FetchCSV uri -> fetchGetCSV uri
+        FetchText uri -> fetchGetText uri
 
 consoleLog :: MisoString -> GenHaxl u w ()
 consoleLog = uncachedRequest . ConsoleLog
