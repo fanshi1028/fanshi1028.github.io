@@ -63,6 +63,7 @@ common lib
     unliftio,
     validation-selective,
     vector,
+    zip,
 
   hs-source-dirs:
     src
