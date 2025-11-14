@@ -80,13 +80,6 @@
                   haxl = applyFixToHaxl pkgs hsuper.haxl;
                   hashtables = hsuper.hashtables_1_4_2;
                   cborg = applyFixToCborg pkgs hsuper.cborg;
-                  zip = pkgs.lib.pipe hsuper.zip (
-                    with pkgs.haskell.lib.compose;
-                    [
-                      (enableCabalFlag "disable-bzip2")
-                      (enableCabalFlag "disable-zstd")
-                    ]
-                  );
                   statistics = hself.callHackageDirect {
                     pkg = "statistics";
                     ver = "0.16.4.0";
