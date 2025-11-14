@@ -107,27 +107,27 @@ appDataGovHKGetFileURI url start =
 --------------------------------------------------------------
 -- https://app.data.gov.hk/v1/historical-archive/get-schema --
 --------------------------------------------------------------
-appDataGovHKGetSchemaURI :: StrictText -> Day -> URI
+appDataGovHKGetSchemaURI :: URI -> Day -> URI
 appDataGovHKGetSchemaURI url start =
   [uri|https://app.data.gov.hk/v1/historical-archive/get-schema|]
     { uriQuery =
         renderQueryTextAsString
           [ -- NOTE: 檔案網址，網址可從歷史檔案文件列表應用程式介面結果中找到。
-            (pack "url", Just url),
-            (pack "time", Just $ fmtDayYmd start)
+            (pack "url", Just $ uriToText url),
+            (pack "date", Just $ fmtDayYmd start)
           ]
     }
 
 ---------------------------------------------------
 -- 取回基於date的數據字典（url中提供）歷史版本。 --
 ---------------------------------------------------
-appDataGovHKGetDataDictionaryURI :: StrictText -> Day -> URI
+appDataGovHKGetDataDictionaryURI :: URI -> Day -> URI
 appDataGovHKGetDataDictionaryURI url start =
   [uri|https://app.data.gov.hk/v1/historical-archive/get-data-dictionary|]
     { uriQuery =
         renderQueryTextAsString
           [ -- NOTE: 檔案網址，網址可從歷史檔案文件列表應用程式介面結果中找到。
-            (pack "url", Just url),
+            (pack "url", Just $ uriToText url),
             (pack "date", Just $ fmtDayYmd start)
           ]
     }
