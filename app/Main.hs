@@ -9,7 +9,7 @@ import Route
 import Route.View
 
 -----------------------------------------------------------------------------
-#ifdef WASM32_HOST_ARCH
+#ifdef wasm32_HOST_ARCH
 foreign export javascript "hs_start" main :: IO ()
 #endif
 -----------------------------------------------------------------------------

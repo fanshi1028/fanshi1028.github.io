@@ -20,11 +20,11 @@ data Route
   | Pomodoro
   | Dashboard
   deriving stock (Eq, Show, Enum, Bounded, Generic)
-#ifndef WASM32_HOST_ARCH
+#ifndef wasm32_HOST_ARCH
   deriving anyclass (Router)
 #endif
 
-#ifdef WASM32_HOST_ARCH
+#ifdef wasm32_HOST_ARCH
 instance Router Route where
   routeParser =
     routes
