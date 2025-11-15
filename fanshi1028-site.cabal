@@ -199,6 +199,3 @@ executable prerender
   ghc-options:
     -O0
     -Wall
-
-  if arch(wasm32)
-    buildable: False
