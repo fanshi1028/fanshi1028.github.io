@@ -32,7 +32,7 @@ instance Router Route where
         Index <$ path (ms "wasm")
       ]
   fromRoute = \case
-    Index -> toPath $ ms "wasm"
+    Index -> [ toPath $ ms "wasm" ]
     route' -> toPath (ms "wasm") : gFromRoute (from route')
 #endif
 
