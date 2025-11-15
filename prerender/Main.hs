@@ -44,7 +44,7 @@ wrapHtml useWasm vw =
             link_ [href_ $ if useWasm then "../output.css" else "output.css", rel_ "stylesheet", type_ "text/css"]
           ],
         body_ [] $
-          [ script_ [src_ $ if useWasm then "../index.js" else "all.js", type_ "module", defer_ "true"] "",
+          [ script_ [src_ $ if useWasm then "index.js" else "all.js", type_ "module", defer_ "true"] "",
             vw
           ]
       ]

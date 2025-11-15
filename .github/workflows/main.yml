@@ -206,12 +206,12 @@ jobs:
 
       - name: Link
         run: |
-          ${{env.ghcLibPath}}/post-link.mjs --input ${{env.wasmArtifactPath}} --output ghc_wasm_jsffi.js
+          ${{env.ghcLibPath}}/post-link.mjs --input ${{env.wasmArtifactPath}} --output wasm/ghc_wasm_jsffi.js
 
       - name: Optimise wasm
         run: |
           wasm-opt -all -O2 ${{env.wasmArtifactPath}} -o fanshi1028-site.wasm
-          wasm-tools strip -o fanshi1028-site.wasm fanshi1028-site.wasm
+          wasm-tools strip -o fanshi1028-site.wasm wasm/fanshi1028-site.wasm
 
       - name: Freeze cabal deps used
         run: |
@@ -220,9 +220,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: fanshi1028-site-wasm
-          path: |
-            fanshi1028-site.wasm
-            ghc_wasm_jsffi.js
+          path: wasm
           if-no-files-found: error
           retention-days: 1
 
@@ -273,7 +271,7 @@ jobs:
 
       - name: Prepare some static files
         run: |
-          cp -v static/index.js public/
+          cp -v static/wasm/index.js public/wasm/
           cp -v static/favicon.ico public/
 
       - name: Archive artifact
