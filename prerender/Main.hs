@@ -32,10 +32,8 @@ main =
 wrapHtml :: View model action -> [View model action]
 wrapHtml vw =
   [ doctype_,
-    html_
-      []
-      [ head_
-          []
+    html_ [] $
+      [ head_ [] $
           [ meta_ [charset_ "utf-8"],
             meta_ [name_ "viewport", content_ "width=device-width, initial-scale=1"],
             Html.title_ [] ["Fanshi1028's personal site"],
