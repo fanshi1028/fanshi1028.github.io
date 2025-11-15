@@ -9,7 +9,7 @@ import Route
 import Route.View
 
 -----------------------------------------------------------------------------
-#ifdef WASM
+#ifdef WASM_HOST_ARCH
 foreign export javascript "hs_start" main :: IO ()
 #endif
 -----------------------------------------------------------------------------
