@@ -1,5 +1,4 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
 
 module Route (Route (..), Action (GotoRoute, SetPRDOpen), Model (..), routerComponent, routeToPRD) where
@@ -20,7 +19,18 @@ data Route
   | Pomodoro
   | Dashboard
   deriving stock (Eq, Show, Enum, Bounded, Generic)
-  deriving anyclass (Router)
+
+#ifndef WASM
+instance Router Route where
+  routeParser = to <$> gRouteParser
+  fromRoute = gFromRoute . from
+#endif
+
+#ifdef WASM
+instance Router Route where
+  routeParser = path (ms "wasm") *> (to <$> gRouteParser)
+  fromRoute route' = toPath (ms "wasm") : gFromRoute (from route')
+#endif
 
 data Action
   = SetRoutingError RoutingError

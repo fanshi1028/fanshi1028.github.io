@@ -22,14 +22,15 @@ main =
   traverse_
     ( \route -> do
         file <- (<.>) <$> encodeUtf (toLower <$> show route) <*> encodeUtf ".html"
-        withRunInIO $ \runInIO -> do
-          IO.withFile file WriteMode $ \h ->
-            runInIO . BS.hPutStr h . toHtml . wrapHtml . navView $ Model route
+        withRunInIO $ \runInIO -> IO.withFile file WriteMode $ \h ->
+          runInIO . BS.hPutStr h . toHtml . wrapHtml False . navView $ Model route
+        withRunInIO $ \runInIO -> IO.withFile ([osp|wasm|] </> file) WriteMode $ \h ->
+          runInIO . BS.hPutStr h . toHtml . wrapHtml True . navView $ Model route
     )
     $ boundedEnumFrom minBound
 
-wrapHtml :: View model action -> [View model action]
-wrapHtml vw =
+wrapHtml :: Bool -> View model action -> [View model action]
+wrapHtml useWasm vw =
   [ doctype_,
     html_ [] $
       [ head_ [] $
@@ -39,8 +40,7 @@ wrapHtml vw =
             link_ [href_ "output.css", rel_ "stylesheet", type_ "text/css"]
           ],
         body_ [] $
-          [ script_ [src_ "index.js", type_ "module", defer_ "true"] "",
-            -- script_ [src_ "all.js", language_ "javascript", defer_ "true"] "",
+          [ script_ [src_ $ if useWasm then "index.js" else "all.js", type_ "module", defer_ "true"] "",
             vw
           ]
       ]

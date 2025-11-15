@@ -232,16 +232,17 @@ jobs:
         build-browser_wasi_shim,
         prerender,
         build-site-js,
+        build-site-wasm,
         build-css,
       ]
 
     steps:
       - uses: actions/checkout@v4
 
-      # - uses: actions/download-artifact@v5
-      #   with:
-      #     name: fanshi1028-site-wasm
-      #     path: public
+      - uses: actions/download-artifact@v5
+        with:
+          name: fanshi1028-site-wasm
+          path: public
 
       - uses: actions/download-artifact@v5
         with:
