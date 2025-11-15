@@ -15,6 +15,8 @@ import ProductRequirementDocument.Dashboard
 import ProductRequirementDocument.Home
 import ProductRequirementDocument.Pomodoro
 
+newtype ToggleWASM = ToggleWASM Route
+
 data Route
   = Index -- NOTE: Index must be the first one, code made assumpation base on its Enum being the first one.
   | Pomodoro
@@ -22,6 +24,16 @@ data Route
   deriving stock (Eq, Show, Enum, Bounded, Generic)
 #ifndef wasm32_HOST_ARCH
   deriving anyclass (Router)
+
+instance Router ToggleWASM where
+  routeParser =
+    routes
+      [ path (ms "wasm") *> (ToggleWASM . to <$> gRouteParser),
+        ToggleWASM Index <$ path (ms "wasm")
+      ]
+  fromRoute = \case
+    ToggleWASM Index -> [ toPath $ ms "wasm" ]
+    ToggleWASM route' -> toPath (ms "wasm") : gFromRoute (from route')
 #endif
 
 #ifdef wasm32_HOST_ARCH
@@ -34,23 +46,10 @@ instance Router Route where
   fromRoute = \case
     Index -> [ toPath $ ms "wasm" ]
     route' -> toPath (ms "wasm") : gFromRoute (from route')
-#endif
 
-newtype ToggleWASM = ToggleWASM Route
-#ifdef wasm32_HOST_ARCH
-  deriving newtype (Router)
-#endif
-
-#ifndef wasm32_HOST_ARCH
 instance Router ToggleWASM where
-  routeParser =
-    routes
-      [ path (ms "wasm") *> (ToggleWASM . to <$> gRouteParser),
-        ToggleWASM Index <$ path (ms "wasm")
-      ]
-  fromRoute = \case
-    ToggleWASM Index -> [ toPath $ ms "wasm" ]
-    ToggleWASM route' -> toPath (ms "wasm") : gFromRoute (from route')
+  routeParser = ToggleWASM . to <$> gRouteParser
+  fromRoute (ToggleWASM route') = gFromRoute $ from route'
 #endif
 
 data Action
