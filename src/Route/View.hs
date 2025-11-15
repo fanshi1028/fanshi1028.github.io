@@ -14,13 +14,13 @@ import Pomodoro
 import ProductRequirementDocument
 import Route
 
-view500 :: MisoString -> View model action
+view500 :: Router.RoutingError -> View model action
 view500 err =
   div_
     []
     [ text "TEMP FIXME: Internal Server Error 500",
       br_ [],
-      text err
+      text . ms $ show err
     ]
 
 data UnderConstruction = UnderConstruction
