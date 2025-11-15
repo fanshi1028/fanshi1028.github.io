@@ -20,7 +20,7 @@ const wasmFeaturesSupportedCheck = () =>
 
 if (await wasmFeaturesSupportedCheck()) {
   const browser_wasi_shim_imports = import('../browser_wasi_shim/dist/index.js')
-  const ghc_wasm_jsffi_imports = import('ghc_wasm_jsffi.js')
+  const ghc_wasm_jsffi_imports = import('./ghc_wasm_jsffi.js')
 
   const args = []
   const env = ['GHCRTS=-H64m']
