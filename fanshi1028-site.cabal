@@ -23,16 +23,6 @@ flag production
   default: False
   manual: True
 
-common wasm
-  if arch(wasm32)
-    ghc-options:
-      -no-hs-main
-      -optl-mexec-model=reactor
-      "-optl-Wl,--export=hs_start"
-
-    cpp-options:
-      -DWASM
-
 common lib
   build-depends:
     aeson,
@@ -95,6 +85,10 @@ common lib
       Utils.JS
       Utils.Serialise
 
+  if arch(wasm32)
+    cpp-options:
+      -DWASM
+
 library
   import: lib
   -- cabal-gild: discover src
@@ -139,9 +133,6 @@ library
       -DPRODUCTION
 
 executable fanshi1028-site
-  import:
-    wasm
-
   if flag(local-dev)
     import: lib
   else
@@ -170,6 +161,15 @@ executable fanshi1028-site
     -ferror-spans
     -fspecialise-aggressively
     -Wall
+
+  if arch(wasm32)
+    ghc-options:
+      -no-hs-main
+      -optl-mexec-model=reactor
+      "-optl-Wl,--export=hs_start"
+
+    cpp-options:
+      -DWASM
 
 executable prerender
   if flag(local-dev)
