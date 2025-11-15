@@ -212,7 +212,7 @@ jobs:
       - name: Optimise wasm
         run: |
           wasm-opt -all -O2 ${{env.wasmArtifactPath}} -o fanshi1028-site.wasm
-          wasm-tools strip -o fanshi1028-site.wasm wasm/fanshi1028-site.wasm
+          wasm-tools strip -o wasm/fanshi1028-site.wasm fanshi1028-site.wasm
 
       - name: Freeze cabal deps used
         run: |
