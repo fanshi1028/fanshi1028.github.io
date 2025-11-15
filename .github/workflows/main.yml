@@ -206,6 +206,7 @@ jobs:
 
       - name: Link
         run: |
+          mkdir wasm
           ${{env.ghcLibPath}}/post-link.mjs --input ${{env.wasmArtifactPath}} --output wasm/ghc_wasm_jsffi.js
 
       - name: Optimise wasm
