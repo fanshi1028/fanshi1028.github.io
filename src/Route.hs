@@ -2,7 +2,7 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
 
-module Route (Route (..), Action (GotoRoute, SetPRDOpen), Model (..), routerComponent, routeToPRD) where
+module Route (Route (..), ToggleWASM (..), Action (GotoRoute, SetPRDOpen), Model (..), routerComponent, routeToPRD) where
 
 import Control.Monad
 import GHC.Generics
@@ -34,6 +34,23 @@ instance Router Route where
   fromRoute = \case
     Index -> [ toPath $ ms "wasm" ]
     route' -> toPath (ms "wasm") : gFromRoute (from route')
+#endif
+
+newtype ToggleWASM = ToggleWASM Route
+#ifdef wasm32_HOST_ARCH
+  deriving newtype (Router)
+#endif
+
+#ifndef wasm32_HOST_ARCH
+instance Router ToggleWASM where
+  routeParser =
+    routes
+      [ path (ms "wasm") *> (ToggleWASM . to <$> gRouteParser),
+        ToggleWASM Index <$ path (ms "wasm")
+      ]
+  fromRoute = \case
+    ToggleWASM Index -> [ toPath $ ms "wasm" ]
+    ToggleWASM route' -> toPath (ms "wasm") : gFromRoute (from route')
 #endif
 
 data Action
