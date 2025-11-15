@@ -13,18 +13,22 @@ import Miso.Html.Property
 import Miso.Html.Render
 import Route
 import Route.View
+import System.Directory.OsPath
 import System.File.OsPath as IO
 import System.OsPath
 import UnliftIO
 
 main :: IO ()
-main =
+main = do
+  let wasmDir = [osp|wasm|]
+  createDirectoryIfMissing False wasmDir
   traverse_
     ( \route -> do
         file <- (<.>) <$> encodeUtf (toLower <$> show route) <*> encodeUtf ".html"
         withRunInIO $ \runInIO -> IO.withFile file WriteMode $ \h ->
           runInIO . BS.hPutStr h . toHtml . wrapHtml False . navView $ Model route
-        withRunInIO $ \runInIO -> IO.withFile ([osp|wasm|] </> file) WriteMode $ \h ->
+
+        withRunInIO $ \runInIO -> IO.withFile (wasmDir </> file) WriteMode $ \h ->
           runInIO . BS.hPutStr h . toHtml . wrapHtml True . navView $ Model route
     )
     $ boundedEnumFrom minBound
