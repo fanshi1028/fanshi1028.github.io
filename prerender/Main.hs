@@ -41,10 +41,10 @@ wrapHtml useWasm vw =
           [ meta_ [charset_ "utf-8"],
             meta_ [name_ "viewport", content_ "width=device-width, initial-scale=1"],
             Html.title_ [] ["Fanshi1028's personal site"],
-            link_ [href_ "output.css", rel_ "stylesheet", type_ "text/css"]
+            link_ [href_ $ if useWasm then "../output.css" else "output.css", rel_ "stylesheet", type_ "text/css"]
           ],
         body_ [] $
-          [ script_ [src_ $ if useWasm then "index.js" else "all.js", type_ "module", defer_ "true"] "",
+          [ script_ [src_ $ if useWasm then "../index.js" else "all.js", type_ "module", defer_ "true"] "",
             vw
           ]
       ]
