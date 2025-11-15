@@ -1,12 +1,10 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ViewPatterns #-}
 
 module Main where
 
-import Data.Bifunctor
 import Miso
-import Miso.Router as Router
+import Miso.Router
 import Route
 import Route.View
 
@@ -17,13 +15,10 @@ foreign export javascript "hs_start" main :: IO ()
 -----------------------------------------------------------------------------
 
 main :: IO ()
-main = run $ miso $ \(first (ms . show) . route @Route -> uri) ->
-  ( routerComponent
-      navView
-      ( case uri of
-          Left err -> RoutingError err
-          Right uri' -> Model uri'
-      )
+main = run $ miso $ \route' ->
+  ( routerComponent navView $ case route route' of
+      Left err -> RoutingError err
+      Right uri' -> Model uri'
   )
 #ifndef PRODUCTION
     {

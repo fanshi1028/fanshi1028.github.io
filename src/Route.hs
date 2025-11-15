@@ -23,13 +23,13 @@ data Route
   deriving anyclass (Router)
 
 data Action
-  = ServerError MisoString
+  = SetRoutingError RoutingError
   | GotoRoute Route
   | SetURI Route
   | SetPRDOpen Bool
 
 data Model
-  = RoutingError MisoString
+  = RoutingError RoutingError
   | Model Route
   deriving (Eq)
 
@@ -41,7 +41,7 @@ routeToPRD = \case
 
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
-  ServerError err -> this .= RoutingError err
+  SetRoutingError err -> this .= RoutingError err
   GotoRoute uri -> do
     io_ . pushURI $ toURI uri
     issue $ SetURI uri
@@ -55,7 +55,7 @@ routerComponent routerView uri =
   (component uri updateModel routerView)
     { subs =
         [ routerSub $ \case
-            Left err -> ServerError . ms $ show err
+            Left err -> SetRoutingError err
             Right uri' -> SetURI uri'
         ]
     }
