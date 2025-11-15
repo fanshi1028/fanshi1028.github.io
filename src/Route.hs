@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Route (Route (..), Action (GotoRoute, SetPRDOpen), Model (..), routerComponent, routeToPRD) where
 
@@ -26,8 +26,14 @@ data Route
 
 #ifdef WASM
 instance Router Route where
-  routeParser = path (ms "wasm") *> (to <$> gRouteParser)
-  fromRoute route' = toPath (ms "wasm") : gFromRoute (from route')
+  routeParser =
+    routes
+      [ path (ms "wasm") *> (to <$> gRouteParser),
+        Index <$ path (ms "wasm")
+      ]
+  fromRoute = \case
+    Index -> toPath $ ms "wasm"
+    route' -> toPath (ms "wasm") : gFromRoute (from route')
 #endif
 
 data Action
