@@ -83,6 +83,7 @@ common lib
       Utils.Fetch
       Utils.Fetch.CSV
       Utils.JS
+      Utils.SVG.ToggleLangButton
       Utils.Serialise
 
 library
@@ -112,6 +113,7 @@ library
     Utils.Fetch
     Utils.Fetch.CSV
     Utils.JS
+    Utils.SVG.ToggleLangButton
     Utils.Serialise
 
   default-language:
