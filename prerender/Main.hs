@@ -26,10 +26,10 @@ main = do
     ( \route -> do
         file <- (<.>) <$> encodeUtf (toLower <$> show route) <*> encodeUtf ".html"
         withRunInIO $ \runInIO -> IO.withFile file WriteMode $ \h ->
-          runInIO . BS.hPutStr h . toHtml . wrapHtml False . navView $ Model route
+          runInIO . BS.hPutStr h . toHtml . wrapHtml False . navView $ Model route True
 
         withRunInIO $ \runInIO -> IO.withFile (wasmDir </> file) WriteMode $ \h ->
-          runInIO . BS.hPutStr h . toHtml . wrapHtml True . navView $ Model route
+          runInIO . BS.hPutStr h . toHtml . wrapHtml True . navView $ Model route True
     )
     $ boundedEnumFrom minBound
 
