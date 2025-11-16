@@ -15,7 +15,7 @@ import Pomodoro
 import ProductRequirementDocument
 import Route
 
-view500 :: Router.RoutingError -> View model action
+view500 :: Router.RoutingError -> View Model action
 view500 err =
   div_
     []
@@ -26,14 +26,14 @@ view500 err =
 
 data UnderConstruction = UnderConstruction
 
-routeToView :: Route -> Either UnderConstruction (View model Action)
+routeToView :: Route -> Either UnderConstruction (View Model Action)
 routeToView = \case
   Index -> Right home
   Pomodoro -> Right $ div_ [key_ @MisoString "pomodoro"] +> pomodoroComponent
   Dashboard -> Right $ div_ [key_ @MisoString "dashboard"] +> dashboardComponent
 
-homeButton :: View model Action
-homeButton =
+homeButton :: Bool -> View model Action
+homeButton loading =
   a_
     [ onClickWithOptions preventDefault $ GotoRoute Index,
       Router.href_ Index,
@@ -51,8 +51,8 @@ homeButton =
         [path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5V10.75M2.25 21h1.5m18 0h-18M2.25 9l4.5-1.636M18.75 3l-1.5.545m0 6.205 3 1m1.5.5-1.5-.5M6.75 7.364V3h-3v18m3-13.636 10.5-3.819"]]
     ]
 
-prdButton :: Bool -> View model Action
-prdButton setOpen =
+prdButton :: Bool -> Bool -> View model Action
+prdButton loading setOpen =
   button_
     [ onClick $ SetPRDOpen setOpen,
       class_ "hover:animate-wiggle hover:[animation-delay:0.25s]"
@@ -69,8 +69,8 @@ prdButton setOpen =
         [path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"]]
     ]
 
-toggleWASMButton :: Route -> View model Action
-toggleWASMButton route =
+toggleWASMButton :: Bool -> Route -> View model Action
+toggleWASMButton loading route =
   a_
     [ Router.href_ $ ToggleWASM route,
       class_ "hover:animate-wiggle hover:[animation-delay:0.25s]"
@@ -124,16 +124,16 @@ topRightClss =
 
 navView :: Model -> View Model Action
 navView = \case
-  Model route ->
+  Model route loading ->
     let navCls = classes_ $ "fixed flex flex-col z-50 gap-2 md:gap-4 xl:gap-6" : topRightClss
         dialogButtonClss = classes_ $ "sticky self-end z-50" : topRightClss
      in div_ [] $ case routeToView route of
-          Left UnderConstruction -> [prdView False (div_ [dialogButtonClss] [homeButton]) $ routeToPRD route]
+          Left UnderConstruction -> [prdView False (div_ [dialogButtonClss] [homeButton loading]) $ routeToPRD route]
           Right vw ->
             [ nav_ [navCls] $ case route of
-                Index -> [toggleWASMButton route, prdButton True]
-                _ -> [homeButton, toggleWASMButton route, prdButton True],
-              prdView True (div_ [dialogButtonClss] [prdButton False]) $ routeToPRD route,
+                Index -> [toggleWASMButton loading route, prdButton loading True]
+                _ -> [homeButton loading, toggleWASMButton loading route, prdButton loading True],
+              prdView True (div_ [dialogButtonClss] [prdButton loading False]) $ routeToPRD route,
               vw
             ]
   RoutingError err' -> view500 err'

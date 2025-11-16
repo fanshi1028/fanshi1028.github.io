@@ -2,7 +2,7 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
 
-module Route (Route (..), ToggleWASM (..), Action (GotoRoute, SetPRDOpen), Model (..), routerComponent, routeToPRD) where
+module Route (Route (..), ToggleWASM (..), Action (GotoRoute, SetPRDOpen, AfterLoaded), Model (..), routerComponent, routeToPRD) where
 
 import Control.Monad
 import GHC.Generics
@@ -57,10 +57,14 @@ data Action
   | GotoRoute Route
   | SetURI Route
   | SetPRDOpen Bool
+  | AfterLoaded
 
 data Model
   = RoutingError RoutingError
-  | Model Route
+  | Model
+      { _route :: Route,
+        _loading :: Bool
+      }
   deriving (Eq)
 
 routeToPRD :: Route -> ProductRequirementDocument
@@ -75,10 +79,14 @@ updateModel = \case
   GotoRoute uri -> do
     io_ . pushURI $ toURI uri
     issue $ SetURI uri
-  SetURI uri -> this .= Model uri
+  SetURI uri -> this .= Model uri True
   SetPRDOpen setOpen -> io_ . void $ do
     prdDialgoue <- getElementById prdDialogueId
     prdDialgoue # (if setOpen then "showModal" else "close") $ ()
+  AfterLoaded ->
+    get >>= \case
+      RoutingError err -> pure ()
+      Model uri _ -> put $ Model uri False
 
 routerComponent :: (Model -> View Model Action) -> Model -> Component parent Model Action
 routerComponent routerView uri =

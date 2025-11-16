@@ -18,12 +18,13 @@ main :: IO ()
 main = run $ miso $ \route' ->
   ( routerComponent navView $ case route route' of
       Left err -> RoutingError err
-      Right uri' -> Model uri'
+      Right uri' -> Model uri' True
   )
-#ifndef PRODUCTION
     {
-       scripts = [Src "https://cdn.tailwindcss.com"]
+       initialAction = Just AfterLoaded
+#ifndef PRODUCTION
+     , scripts = [Src "https://cdn.tailwindcss.com"]
      , styles = [Href "static/input.css"]
      , logLevel = DebugAll
-    }
 #endif
+    }
