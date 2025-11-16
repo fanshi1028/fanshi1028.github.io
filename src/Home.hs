@@ -3,13 +3,13 @@
 
 module Home (home) where
 
+import App.Types
 import Data.Char
 import GHC.Enum
 import Miso
 import Miso.Html.Element
 import Miso.Html.Event
 import Miso.Html.Property
-import Route
 
 home :: Bool -> View model Action
 home loading =

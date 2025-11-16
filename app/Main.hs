@@ -1,12 +1,9 @@
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE OverloadedStrings #-}
 
 module Main where
 
+import App
 import Miso
-import Miso.Router
-import Route
-import Route.View
 
 -----------------------------------------------------------------------------
 #ifdef wasm32_HOST_ARCH
@@ -15,16 +12,4 @@ foreign export javascript "hs_start" main :: IO ()
 -----------------------------------------------------------------------------
 
 main :: IO ()
-main = run $ miso $ \route' ->
-  ( routerComponent navView $ case route route' of
-      Left err -> RoutingError err
-      Right uri' -> Model uri' True
-  )
-    {
-       initialAction = Just AfterLoaded
-#ifndef PRODUCTION
-     , scripts = [Src "https://cdn.tailwindcss.com"]
-     , styles = [Href "static/input.css"]
-     , logLevel = DebugAll
-#endif
-    }
+main = run $ miso app

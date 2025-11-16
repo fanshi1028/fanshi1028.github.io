@@ -1,19 +1,49 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Route.View (navView) where
+module App (app, viewModel) where
 
+import Control.Monad
 import Dashboard
 import Home
+import Language.Javascript.JSaddle
 import Miso
 import Miso.Html
 import Miso.Html.Property
+import Miso.Lens
+import Miso.Router
 import Miso.Router qualified as Router
 import Miso.Svg.Element
 import Miso.Svg.Property hiding (path_)
 import Pomodoro
 import ProductRequirementDocument
-import Route
+import ProductRequirementDocument.Dashboard
+import ProductRequirementDocument.Home
+import ProductRequirementDocument.Pomodoro
+import App.Types
+
+routeToPRD :: Route -> ProductRequirementDocument
+routeToPRD = \case
+  Index -> homePRD
+  Pomodoro -> pomodoroPRD
+  Dashboard -> dashboardPRD
+
+updateModel :: Action -> Effect parent Model Action
+updateModel = \case
+  SetRoutingError err -> this .= RoutingError err
+  GotoRoute uri -> do
+    io_ . pushURI $ toURI uri
+    issue $ SetURI uri
+  SetURI uri -> this .= Model uri True
+  SetPRDOpen setOpen -> io_ . void $ do
+    prdDialgoue <- getElementById prdDialogueId
+    prdDialgoue # (if setOpen then "showModal" else "close") $ ()
+  AfterLoaded ->
+    get >>= \case
+      RoutingError err -> pure ()
+      Model uri _ -> put $ Model uri False
+
+-- Model uri _ -> pure () -- TEMP FIXME
 
 view500 :: Router.RoutingError -> View Model action
 view500 err =
@@ -70,9 +100,9 @@ prdButton loading setOpen =
     ]
 
 toggleWASMButton :: Bool -> Route -> View model Action
-toggleWASMButton loading route =
+toggleWASMButton loading route' =
   a_
-    [ Router.href_ $ ToggleWASM route,
+    [ Router.href_ $ ToggleWASM route',
       class_ "hover:animate-wiggle hover:[animation-delay:0.25s]"
     ]
     [ svg_
@@ -122,18 +152,39 @@ topRightClss =
     "right-2 sm:right-4 md:right-6 lg:right-8 xl:right-12 2xl:right-16"
   ]
 
-navView :: Model -> View Model Action
-navView = \case
-  Model route loading ->
+viewModel :: Model -> View Model Action
+viewModel = \case
+  Model route' loading ->
     let navCls = classes_ $ "fixed flex flex-col z-50 gap-2 md:gap-4 xl:gap-6" : topRightClss
         dialogButtonClss = classes_ $ "sticky self-end z-50" : topRightClss
-     in div_ [] $ case routeToView route of
-          Left UnderConstruction -> [prdView False (div_ [dialogButtonClss] [homeButton loading]) $ routeToPRD route]
+     in div_ [] $ case routeToView route' of
+          Left UnderConstruction -> [prdView False (div_ [dialogButtonClss] [homeButton loading]) $ routeToPRD route']
           Right vw ->
-            [ nav_ [navCls] $ case route of
-                Index -> [toggleWASMButton loading route, prdButton loading True]
-                _ -> [homeButton loading, toggleWASMButton loading route, prdButton loading True],
-              prdView True (div_ [dialogButtonClss] [prdButton loading False]) $ routeToPRD route,
+            [ nav_ [navCls] $ case route' of
+                Index -> [toggleWASMButton loading route', prdButton loading True]
+                _ -> [homeButton loading, toggleWASMButton loading route', prdButton loading True],
+              prdView True (div_ [dialogButtonClss] [prdButton loading False]) $ routeToPRD route',
               vw
             ]
   RoutingError err' -> view500 err'
+
+app :: URI -> Component parent Model Action
+app route' =
+  (component model updateModel viewModel)
+    { 
+#ifndef PRODUCTION
+      scripts = [Src "https://cdn.tailwindcss.com"],
+      styles = [Href "static/input.css"],
+      logLevel = DebugAll,
+#endif
+      subs =
+        [ routerSub $ \case
+            Left err -> SetRoutingError err
+            Right uri' -> SetURI uri'
+        ],
+      initialAction = Just AfterLoaded
+    }
+  where
+    model = case route route' of
+      Left err -> RoutingError err
+      Right uri' -> Model uri' True

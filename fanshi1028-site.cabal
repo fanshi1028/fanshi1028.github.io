@@ -60,6 +60,8 @@ common lib
   if flag(local-dev)
     -- cabal-gild: discover src
     other-modules:
+      App
+      App.Types
       Clock
       Dashboard
       Dashboard.DataSource.BrowserGeolocationAPI
@@ -77,8 +79,6 @@ common lib
       ProductRequirementDocument.Dashboard
       ProductRequirementDocument.Home
       ProductRequirementDocument.Pomodoro
-      Route
-      Route.View
       Utils.Dimensional
       Utils.Fetch
       Utils.Fetch.CSV
@@ -89,6 +89,8 @@ library
   import: lib
   -- cabal-gild: discover src
   exposed-modules:
+    App
+    App.Types
     Clock
     Dashboard
     Dashboard.DataSource.BrowserGeolocationAPI
@@ -106,8 +108,6 @@ library
     ProductRequirementDocument.Dashboard
     ProductRequirementDocument.Home
     ProductRequirementDocument.Pomodoro
-    Route
-    Route.View
     Utils.Dimensional
     Utils.Fetch
     Utils.Fetch.CSV

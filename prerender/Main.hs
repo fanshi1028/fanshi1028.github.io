@@ -3,6 +3,8 @@
 
 module Main where
 
+import App
+import App.Types
 import Data.ByteString.Lazy as BS
 import Data.Char
 import Data.Foldable
@@ -11,8 +13,6 @@ import Miso
 import Miso.Html.Element as Html
 import Miso.Html.Property
 import Miso.Html.Render
-import Route
-import Route.View
 import System.Directory.OsPath
 import System.File.OsPath as IO
 import System.OsPath
@@ -26,10 +26,10 @@ main = do
     ( \route -> do
         file <- (<.>) <$> encodeUtf (toLower <$> show route) <*> encodeUtf ".html"
         withRunInIO $ \runInIO -> IO.withFile file WriteMode $ \h ->
-          runInIO . BS.hPutStr h . toHtml . wrapHtml False . navView $ Model route True
+          runInIO . BS.hPutStr h . toHtml . wrapHtml False . viewModel $ Model route True
 
         withRunInIO $ \runInIO -> IO.withFile (wasmDir </> file) WriteMode $ \h ->
-          runInIO . BS.hPutStr h . toHtml . wrapHtml True . navView $ Model route True
+          runInIO . BS.hPutStr h . toHtml . wrapHtml True . viewModel $ Model route True
     )
     $ boundedEnumFrom minBound
 
