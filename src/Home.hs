@@ -11,8 +11,8 @@ import Miso.Html.Element
 import Miso.Html.Event
 import Miso.Html.Property
 
-home :: Bool -> View model Action
-home loading =
+home :: View model Action
+home =
   div_
     [class_ "flex flex-col items-center justify-center min-h-dvh bg-neutral-200"]
     [ h1_ [class_ "sr-only"] [text "Tools"],
