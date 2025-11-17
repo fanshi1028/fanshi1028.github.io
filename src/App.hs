@@ -132,7 +132,7 @@ prdButton :: Bool -> Bool -> View model Action
 prdButton loading setOpen =
   button_
     [ onClick $ SetPRDOpen setOpen,
-      class_ "hover:animate-wiggle hover:[animation-delay:0.25s]"
+      class_ $ if loading then "pointer-events-none animate-pulse" else "hover:animate-wiggle hover:[animation-delay:0.25s]"
     ]
     [ svg_
         [ classes_
