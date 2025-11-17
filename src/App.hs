@@ -57,9 +57,9 @@ view500 err =
 
 data UnderConstruction = UnderConstruction
 
-routeToView :: Route -> Either UnderConstruction (View Model Action)
-routeToView = \case
-  Index -> Right home
+routeToView :: Bool -> Route -> Either UnderConstruction (View Model Action)
+routeToView loading = \case
+  Index -> Right $ home loading
   Pomodoro -> Right $ div_ [key_ @MisoString "pomodoro"] +> pomodoroComponent
   Dashboard -> Right $ div_ [key_ @MisoString "dashboard"] +> dashboardComponent
 
@@ -119,7 +119,7 @@ viewModel = \case
   Model route' loading ->
     let navCls = classes_ $ "fixed flex flex-col z-50 gap-2 md:gap-4 xl:gap-6" : topRightClss
         dialogButtonClss = classes_ $ "sticky self-end z-50" : topRightClss
-     in div_ [] $ case routeToView route' of
+     in div_ [] $ case routeToView loading route' of
           Left UnderConstruction -> [prdView False (div_ [dialogButtonClss] [homeButton loading]) $ routeToPRD route']
           Right vw ->
             [ nav_ [navCls] $ case route' of
