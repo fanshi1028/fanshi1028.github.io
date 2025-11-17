@@ -91,7 +91,7 @@ updateModel = \case
   GotoRoute uri -> do
     io_ . pushURI $ toURI uri
     issue $ SetURI uri
-  SetURI uri -> this .= Model uri True
+  SetURI uri -> this .= Model uri False
   SetPRDOpen setOpen -> io_ . void $ do
     prdDialgoue <- getElementById prdDialogueId
     prdDialgoue # (if setOpen then "showModal" else "close") $ ()
