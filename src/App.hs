@@ -114,7 +114,11 @@ homeButton =
   a_
     [ onClickWithOptions preventDefault $ GotoRoute Index,
       Router.href_ Index,
-      class_ "hover:animate-wiggle hover:[animation-delay:0.25s]"
+      classes_
+        [ "flex items-center justify-center",
+          "hover:animate-wiggle hover:[animation-delay:0.25s]",
+          "size-8 sm:size-10 md:size-12 lg:size-16 xl:size-20 2xl:size-24"
+        ]
     ]
     [ svg_
         [ xmlns_ "http://www.w3.org/2000/svg",
@@ -132,7 +136,11 @@ prdButton :: Bool -> Bool -> View model Action
 prdButton loading setOpen =
   button_
     [ onClick $ SetPRDOpen setOpen,
-      class_ $ if loading then "pointer-events-none animate-pulse" else "hover:animate-wiggle hover:[animation-delay:0.25s]"
+      classes_ $
+        (if loading then "pointer-events-none animate-pulse" else "hover:animate-wiggle hover:[animation-delay:0.25s]")
+          : [ "flex items-center justify-center",
+              "size-8 sm:size-10 md:size-12 lg:size-16 xl:size-20 2xl:size-24"
+            ]
     ]
     [ svg_
         [ classes_
@@ -150,7 +158,11 @@ toggleWASMButton :: Bool -> Route -> View model Action
 toggleWASMButton loading route' =
   a_
     [ Router.href_ $ ToggleWASM route',
-      class_ "hover:animate-wiggle hover:[animation-delay:0.25s]"
+      classes_
+        [ "flex items-center",
+          "hover:animate-wiggle hover:[animation-delay:0.25s]",
+          "size-8 sm:size-10 md:size-12 lg:size-16 xl:size-20 2xl:size-24"
+        ]
     ]
     [toggleLangButtonSVG]
 
@@ -161,7 +173,7 @@ viewModel = \case
     | route' `elem` underConstruction -> div_ [] [prdView False (div_ [dialogButtonClss] [homeButton]) $ routeToPRD route']
     | otherwise ->
         div_ [] $
-          [ nav_ [classes_ $ "fixed flex flex-col z-50 gap-2 md:gap-4 xl:gap-6" : topRightClss] $ case route' of
+          [ nav_ [classes_ $ "fixed flex flex-col z-50 md:gap-2 xl:gap-4" : topRightClss] $ case route' of
               Index -> [toggleWASMButton loading route', prdButton loading True]
               _ -> [homeButton, toggleWASMButton loading route', prdButton loading True],
             prdView True (div_ [dialogButtonClss] [prdButton loading False]) $ routeToPRD route',
