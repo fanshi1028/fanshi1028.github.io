@@ -25,15 +25,15 @@ main = do
     ( \route -> do
         file <- (<.>) <$> encodeUtf (toLower <$> show route) <*> encodeUtf ".html"
         withRunInIO $ \runInIO -> IO.withFile file WriteMode $ \h ->
-          runInIO . BS.hPutStr h . toHtml . wrapHtml False . viewModel $ Model route True
+          runInIO . BS.hPutStr h . toHtml . modelToViews False $ Model route True
 
         withRunInIO $ \runInIO -> IO.withFile (wasmDir </> file) WriteMode $ \h ->
-          runInIO . BS.hPutStr h . toHtml . wrapHtml True . viewModel $ Model route True
+          runInIO . BS.hPutStr h . toHtml . modelToViews True $ Model route True
     )
     $ boundedEnumFrom minBound
 
-wrapHtml :: Bool -> View model action -> [View model action]
-wrapHtml useWasm vw =
+modelToViews :: Bool -> Model -> [View Model Action]
+modelToViews useWasm model =
   [ doctype_,
     html_ [] $
       [ head_ [] $
@@ -44,7 +44,7 @@ wrapHtml useWasm vw =
           ],
         body_ [] $
           [ script_ [src_ $ if useWasm then "index.js" else "all.js", type_ "module", defer_ "true"] "",
-            vw
+            viewModel useWasm model
           ]
       ]
   ]
