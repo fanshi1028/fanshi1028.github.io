@@ -1,12 +1,15 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module App (app, viewModel) where
+module App (app, viewModel, Model (..)) where
 
-import App.Types
 import Control.Monad
 import Dashboard
-import Home
+import Data.Char
+import GHC.Enum
+import GHC.Generics
 import Language.Javascript.JSaddle
 import Miso
 import Miso.Html
@@ -21,7 +24,60 @@ import ProductRequirementDocument
 import ProductRequirementDocument.Dashboard
 import ProductRequirementDocument.Home
 import ProductRequirementDocument.Pomodoro
+import Utils.SVG.LoadSpinner
 import Utils.SVG.ToggleLangButton
+
+newtype ToggleWASM = ToggleWASM Route
+
+data Route
+  = Index -- NOTE: Index must be the first one, code made assumpation base on its Enum being the first one.
+  | Pomodoro
+  | Dashboard
+  deriving stock (Eq, Show, Enum, Bounded, Generic)
+#ifndef wasm32_HOST_ARCH
+  deriving anyclass (Router)
+
+instance Router ToggleWASM where
+  routeParser =
+    routes
+      [ path (ms "wasm") *> (ToggleWASM . to <$> gRouteParser),
+        ToggleWASM Index <$ path (ms "wasm")
+      ]
+  fromRoute = \case
+    ToggleWASM Index -> [ toPath $ ms "wasm" ]
+    ToggleWASM route' -> toPath (ms "wasm") : gFromRoute (from route')
+#endif
+
+#ifdef wasm32_HOST_ARCH
+instance Router Route where
+  routeParser =
+    routes
+      [ path (ms "wasm") *> (to <$> gRouteParser),
+        Index <$ path (ms "wasm")
+      ]
+  fromRoute = \case
+    Index -> [ toPath $ ms "wasm" ]
+    route' -> toPath (ms "wasm") : gFromRoute (from route')
+
+instance Router ToggleWASM where
+  routeParser = ToggleWASM . to <$> gRouteParser
+  fromRoute (ToggleWASM route') = gFromRoute $ from route'
+#endif
+
+data Action
+  = SetRoutingError RoutingError
+  | GotoRoute Route
+  | SetURI Route
+  | SetPRDOpen Bool
+  | AfterLoaded
+
+data Model
+  = RoutingError RoutingError
+  | Model
+      { _route :: Route,
+        _loading :: Bool
+      }
+  deriving (Eq)
 
 routeToPRD :: Route -> ProductRequirementDocument
 routeToPRD = \case
@@ -44,8 +100,6 @@ updateModel = \case
       RoutingError err -> pure ()
       Model uri _ -> put $ Model uri False
 
--- Model uri _ -> pure () -- TEMP FIXME
-
 view500 :: Router.RoutingError -> View Model action
 view500 err =
   div_
@@ -54,14 +108,6 @@ view500 err =
       br_ [],
       text . ms $ show err
     ]
-
-data UnderConstruction = UnderConstruction
-
-routeToView :: Bool -> Route -> Either UnderConstruction (View Model Action)
-routeToView loading = \case
-  Index -> Right $ home loading
-  Pomodoro -> Right $ div_ [key_ @MisoString "pomodoro"] +> pomodoroComponent
-  Dashboard -> Right $ div_ [key_ @MisoString "dashboard"] +> dashboardComponent
 
 homeButton :: Bool -> View model Action
 homeButton loading =
@@ -116,34 +162,69 @@ topRightClss =
 
 viewModel :: Model -> View Model Action
 viewModel = \case
-  Model route' loading ->
-    let navCls = classes_ $ "fixed flex flex-col z-50 gap-2 md:gap-4 xl:gap-6" : topRightClss
-        dialogButtonClss = classes_ $ "sticky self-end z-50" : topRightClss
-     in div_ [] $ case routeToView loading route' of
-          Left UnderConstruction -> [prdView False (div_ [dialogButtonClss] [homeButton loading]) $ routeToPRD route']
-          Right vw ->
-            [ nav_ [navCls] $ case route' of
-                Index -> [toggleWASMButton loading route', prdButton loading True]
-                _ -> [homeButton loading, toggleWASMButton loading route', prdButton loading True],
-              prdView True (div_ [dialogButtonClss] [prdButton loading False]) $ routeToPRD route',
-              vw
-            ]
   RoutingError err' -> view500 err'
+  Model route' loading
+    | route' `elem` underConstruction -> div_ [] [prdView False (div_ [dialogButtonClss] [homeButton loading]) $ routeToPRD route']
+    | otherwise ->
+        div_ [] $
+          [ nav_ [navCls] $ case route' of
+              Index -> [toggleWASMButton loading route', prdButton loading True]
+              _ -> [homeButton loading, toggleWASMButton loading route', prdButton loading True],
+            prdView True (div_ [dialogButtonClss] [prdButton loading False]) $ routeToPRD route',
+            case route' of
+              Index ->
+                div_
+                  [class_ "flex flex-col items-center justify-center min-h-dvh bg-neutral-200"]
+                  [ h1_ [class_ "sr-only"] [text $ if loading then "Tools (loading)" else "Tools"],
+                    ul_
+                      [ classes_
+                          [ "flex flex-col",
+                            "gap-4 sm:gap-5 md:gap-6 lg:gap-8 xl:gap-10 2xl:gap-12"
+                          ]
+                      ]
+                      $ ( \nonHomeRoute ->
+                            button_
+                              [ onClick $ GotoRoute nonHomeRoute,
+                                classes_
+                                  [ if loading then "pointer-events-none animate-pulse relative" else " hover:animate-wiggle",
+                                    "font-bold text-neutral-700 bg-neutral-400 shadow-md shadow-neutral-600 rounded-lg",
+                                    "text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl 2xl:text-5xl",
+                                    "px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 2xl:px-14"
+                                  ]
+                              ]
+                              [ if loading
+                                  then
+                                    loadSpinner
+                                      [ "size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20",
+                                        "absolute inset-y-2.5 sm:inset-y-3 md:inset-y-3.5 lg:inset-y-5 xl:inset-y-5.5 2xl:inset-y-6"
+                                      ]
+                                  else div_ [class_ "hidden"] [],
+                                div_ [classes_ ["my-2 sm:my-3 md:my-4 lg:my-6 xl:my-8 2xl:my-10"]] [text . ms $ toUpper <$> show nonHomeRoute]
+                              ]
+                        )
+                        <$> boundedEnumFrom (succ minBound) -- NOTE: exclude Index
+                  ]
+              Pomodoro -> div_ [key_ @MisoString "pomodoro"] +> pomodoroComponent
+              Dashboard -> div_ [key_ @MisoString "dashboard"] +> dashboardComponent
+          ]
+  where
+    navCls = classes_ $ "fixed flex flex-col z-50 gap-2 md:gap-4 xl:gap-6" : topRightClss
+    dialogButtonClss = classes_ $ "sticky self-end z-50" : topRightClss
+    underConstruction = []
 
 app :: URI -> Component parent Model Action
 app route' =
   (component model updateModel viewModel)
-    { 
+    { subs =
+        [ routerSub $ \case
+            Left err -> SetRoutingError err
+            Right uri' -> SetURI uri'
+        ],
 #ifndef PRODUCTION
       scripts = [Src "https://cdn.tailwindcss.com"],
       styles = [Href "static/input.css"],
       logLevel = DebugAll,
 #endif
-      subs =
-        [ routerSub $ \case
-            Left err -> SetRoutingError err
-            Right uri' -> SetURI uri'
-        ],
       initialAction = Just AfterLoaded
     }
   where

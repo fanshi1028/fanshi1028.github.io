@@ -4,7 +4,6 @@
 module Main where
 
 import App
-import App.Types
 import Data.ByteString.Lazy as BS
 import Data.Char
 import Data.Foldable
