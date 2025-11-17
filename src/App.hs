@@ -109,8 +109,8 @@ view500 err =
       text . ms $ show err
     ]
 
-homeButton :: Bool -> View model Action
-homeButton loading =
+homeButton :: View model Action
+homeButton =
   a_
     [ onClickWithOptions preventDefault $ GotoRoute Index,
       Router.href_ Index,
@@ -164,12 +164,12 @@ viewModel :: Model -> View Model Action
 viewModel = \case
   RoutingError err' -> view500 err'
   Model route' loading
-    | route' `elem` underConstruction -> div_ [] [prdView False (div_ [dialogButtonClss] [homeButton loading]) $ routeToPRD route']
+    | route' `elem` underConstruction -> div_ [] [prdView False (div_ [dialogButtonClss] [homeButton]) $ routeToPRD route']
     | otherwise ->
         div_ [] $
           [ nav_ [navCls] $ case route' of
               Index -> [toggleWASMButton loading route', prdButton loading True]
-              _ -> [homeButton loading, toggleWASMButton loading route', prdButton loading True],
+              _ -> [homeButton, toggleWASMButton loading route', prdButton loading True],
             prdView True (div_ [dialogButtonClss] [prdButton loading False]) $ routeToPRD route',
             case route' of
               Index ->
