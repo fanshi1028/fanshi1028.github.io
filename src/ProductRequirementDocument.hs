@@ -113,7 +113,7 @@ prdView modal button prd =
     $ [ div_
           [ classes_
               [ "relative flex flex-col",
-                "bg-neutral-100 w-full h-full",
+                "bg-neutral-100 w-full min-h-screen",
                 "gap-12 md:gap-20 lg:gap-24 xl:gap-28",
                 "p-6 sm:p-12 md:p-16 lg:p-20 xl:p-24 2xl:p-28"
               ]
