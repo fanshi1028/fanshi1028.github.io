@@ -154,12 +154,6 @@ toggleWASMButton loading route' =
     ]
     [toggleLangButtonSVG]
 
-topRightClss :: [MisoString]
-topRightClss =
-  [ "top-2 sm:top-4 md:top-6 lg:top-8 xl:top-12 2xl:top-16",
-    "right-2 sm:right-4 md:right-6 lg:right-8 xl:right-12 2xl:right-16"
-  ]
-
 viewModel :: Model -> View Model Action
 viewModel = \case
   RoutingError err' -> view500 err'
@@ -167,7 +161,7 @@ viewModel = \case
     | route' `elem` underConstruction -> div_ [] [prdView False (div_ [dialogButtonClss] [homeButton]) $ routeToPRD route']
     | otherwise ->
         div_ [] $
-          [ nav_ [navCls] $ case route' of
+          [ nav_ [classes_ $ "fixed flex flex-col z-50 gap-2 md:gap-4 xl:gap-6" : topRightClss] $ case route' of
               Index -> [toggleWASMButton loading route', prdButton loading True]
               _ -> [homeButton, toggleWASMButton loading route', prdButton loading True],
             prdView True (div_ [dialogButtonClss] [prdButton loading False]) $ routeToPRD route',
@@ -208,7 +202,10 @@ viewModel = \case
               Dashboard -> div_ [key_ @MisoString "dashboard"] +> dashboardComponent
           ]
   where
-    navCls = classes_ $ "fixed flex flex-col z-50 gap-2 md:gap-4 xl:gap-6" : topRightClss
+    topRightClss =
+      [ "top-2 sm:top-4 md:top-6 lg:top-8 xl:top-12 2xl:top-16",
+        "right-2 sm:right-4 md:right-6 lg:right-8 xl:right-12 2xl:right-16"
+      ]
     dialogButtonClss = classes_ $ "sticky self-end z-50" : topRightClss
     underConstruction = []
 
