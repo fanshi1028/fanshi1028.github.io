@@ -35,10 +35,10 @@ switchToLangLogoSVGPath =
 
 switchToLangButtonBackgroundColor :: MisoString
 #ifndef wasm32_HOST_ARCH
-switchToLangButtonBackgroundColor = "stroke-purple-400"
+switchToLangButtonBackgroundColor = "bg-neutral-300"
 #endif
 #ifdef wasm32_HOST_ARCH
-switchToLangButtonBackgroundColor = "stroke-orange-600"
+switchToLangButtonBackgroundColor = "bg-neutral-600"
 #endif
 
 toggleLangButtonSVG :: View model action
