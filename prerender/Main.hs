@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 
@@ -25,26 +26,39 @@ main = do
     ( \route -> do
         file <- (<.>) <$> encodeUtf (toLower <$> show route) <*> encodeUtf ".html"
         withRunInIO $ \runInIO -> IO.withFile file WriteMode $ \h ->
-          runInIO . BS.hPutStr h . toHtml . modelToViews False $ Model route True
-
-        withRunInIO $ \runInIO -> IO.withFile (wasmDir </> file) WriteMode $ \h ->
-          runInIO . BS.hPutStr h . toHtml . modelToViews True $ Model route True
+          runInIO . BS.hPutStr h . toHtml . modelToViews $ Model route True
     )
     $ boundedEnumFrom minBound
 
-modelToViews :: Bool -> Model -> [View Model Action]
-modelToViews useWasm model =
+outputCSSPath :: MisoString
+#ifdef wasm32_HOST_ARCH
+outputCSSPath = "../output.css"
+#endif
+#ifndef wasm32_HOST_ARCH
+outputCSSPath = "output.css"
+#endif
+
+indexJSPath :: MisoString
+#ifdef wasm32_HOST_ARCH
+indexJSPath = "index.js"
+#endif
+#ifndef wasm32_HOST_ARCH
+indexJSPath = "all.js"
+#endif
+
+modelToViews :: Model -> [View Model Action]
+modelToViews model =
   [ doctype_,
     html_ [] $
       [ head_ [] $
           [ meta_ [charset_ "utf-8"],
             meta_ [name_ "viewport", content_ "width=device-width, initial-scale=1"],
             Html.title_ [] ["Fanshi1028's personal site"],
-            link_ [href_ $ if useWasm then "../output.css" else "output.css", rel_ "stylesheet", type_ "text/css"]
+            link_ [href_ outputCSSPath, rel_ "stylesheet", type_ "text/css"]
           ],
         body_ [] $
-          [ script_ [src_ $ if useWasm then "index.js" else "all.js", type_ "module", defer_ "true"] "",
-            viewModel useWasm model
+          [ script_ [src_ indexJSPath, type_ "module", defer_ "true"] "",
+            viewModel model
           ]
       ]
   ]

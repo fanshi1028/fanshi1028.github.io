@@ -119,13 +119,25 @@
           haxl = applyFixToHaxl pkgs pkgsWithMisoOverlays.haskell.packages."ghc${ghcVersion}".haxl;
           cborg = applyFixToCborg pkgs pkgsWithMisoOverlays.haskell.packages."ghc${ghcVersion}".cborg;
 
-          prerender = mkDefaultPackage pkgsWithMisoOverlays {
+          prerender-js = mkDefaultPackage pkgsWithMisoOverlays {
             modifier =
               drv:
               pkgs.lib.pipe drv [
                 (pkgs.haskell.lib.compose.setBuildTargets [ "prerender" ])
                 (pkgs.haskell.lib.compose.overrideCabal (_: {
-                  pname = "prerender";
+                  pname = "prerender-js";
+                }))
+              ];
+          };
+
+          prerender-wasm = mkDefaultPackage pkgsWithMisoOverlays {
+            modifier =
+              drv:
+              pkgs.lib.pipe drv [
+                (pkgs.haskell.lib.compose.setBuildTargets [ "prerender" ])
+                (pkgs.haskell.lib.compose.enableCabalFlag [ "prerender-wasm" ])
+                (pkgs.haskell.lib.compose.overrideCabal (_: {
+                  pname = "prerender-wasm";
                 }))
               ];
           };

@@ -154,8 +154,8 @@ prdButton loading setOpen =
         [path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"]]
     ]
 
-toggleLangButton :: Bool -> Bool -> Route -> View model Action
-toggleLangButton useWASM' loading route' =
+toggleLangButton :: Bool -> Route -> View model Action
+toggleLangButton loading route' =
   a_
     [ Router.href_ $ RouteForTheOtherLang route',
       classes_
@@ -164,18 +164,18 @@ toggleLangButton useWASM' loading route' =
           "size-8 sm:size-10 md:size-12 lg:size-16 xl:size-20 2xl:size-24"
         ]
     ]
-    [if useWASM' then toJsButtonSVG else toWasmButtonSVG]
+    [toggleLangButtonSVG]
 
-viewModel :: Bool -> Model -> View Model Action
-viewModel useWASM' = \case
+viewModel :: Model -> View Model Action
+viewModel = \case
   RoutingError err' -> view500 err'
   Model route' loading
     | route' `elem` underConstruction -> div_ [] [prdView False (div_ [dialogButtonClss] [homeButton]) $ routeToPRD route']
     | otherwise ->
         div_ [] $
           [ nav_ [classes_ $ "fixed flex flex-col z-50 md:gap-2 xl:gap-4" : topRightClss] $ case route' of
-              Index -> [toggleLangButton useWASM' loading route', prdButton loading True]
-              _ -> [homeButton, toggleLangButton useWASM' loading route', prdButton loading True],
+              Index -> [toggleLangButton loading route', prdButton loading True]
+              _ -> [homeButton, toggleLangButton loading route', prdButton loading True],
             prdView True (div_ [dialogButtonClss] [prdButton loading False]) $ routeToPRD route',
             case route' of
               Index ->
@@ -221,17 +221,9 @@ viewModel useWASM' = \case
     dialogButtonClss = classes_ $ "sticky self-end z-50" : topRightClss
     underConstruction = []
 
-useWASM :: Bool
-#ifdef wasm32_HOST_ARCH
-useWASM = True
-#endif
-#ifndef wasm32_HOST_ARCH
-useWASM = False
-#endif
-
 app :: URI -> Component parent Model Action
 app route' =
-  (component model updateModel $ viewModel useWASM)
+  (component model updateModel viewModel)
     { subs =
         [ routerSub $ \case
             Left err -> SetRoutingError err
