@@ -25,6 +25,7 @@ toWasmButtonSVG =
   svg_
     [ classes_
         [ "bg-neutral-300",
+          "rounded md:rounded-lg xl:rounded-xl",
           "size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20",
           "hover:size-8 sm:hover:size-10 md:hover:size-12 lg:hover:size-16 xl:hover:size-20 2xl:hover:size-24"
         ],
@@ -46,6 +47,7 @@ toJsButtonSVG =
   svg_
     [ classes_
         [ "bg-neutral-600",
+          "rounded md:rounded-lg xl:rounded-xl",
           "size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20",
           "hover:size-8 sm:hover:size-10 md:hover:size-12 lg:hover:size-16 xl:hover:size-20 2xl:hover:size-24"
         ],
