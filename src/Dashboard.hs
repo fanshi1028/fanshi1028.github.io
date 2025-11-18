@@ -116,13 +116,11 @@ fetchData sink = do
   _ <- liftIO . runHaxl (env' {flags = haxlEnvflags}) $ do
     tdy@(pred -> ytd) <- utctDay <$> uncachedRequest GetCurrentTime
 
-
     uncachedRequest GetCurrentTimeZone >>= misoRunAction . SetTimeZone
 
     fetchCacheable (GetLocalWeatherForecast tdy) >>= misoRunAction . SetLocalWeatherForecast
 
     fetchCacheable (Get9DayWeatherForecast tdy) >>= misoRunAction . Set9DayWeatherForecast
-
 
     uncachedRequest GetCurrentPosition >>= misoRunAction . SetLocation
 

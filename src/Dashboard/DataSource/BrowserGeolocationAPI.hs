@@ -39,7 +39,7 @@ instance DataSource u LocationReq where
       (const $ pure ())
       ( \resultMVar -> runJSaddle jscontext $ do
           options <- create
-          (options <# "enableHighAccuracy") jsTrue
+          options <# "enableHighAccuracy" $ jsTrue
           successCB <-
             asyncCallback1 $ \v -> do
               result <-
