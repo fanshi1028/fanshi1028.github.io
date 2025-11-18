@@ -150,9 +150,6 @@ executable fanshi1028-site
     base <5,
     miso,
 
-  if flag(production)
-    cpp-options:
-      -DPRODUCTION
   hs-source-dirs:
     app
 
