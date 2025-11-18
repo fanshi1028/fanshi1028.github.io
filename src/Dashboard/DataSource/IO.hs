@@ -1,18 +1,29 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Dashboard.DataSource.IO where
+module Dashboard.DataSource.IO (ConcurrentIOReq (..)) where
 
+import Control.Concurrent
 import Data.Hashable
 import Data.Time
 import Haxl.Core
 import Haxl.DataSource.ConcurrentIO
-import Control.Concurrent
 import Numeric.Units.Dimensional
 import Numeric.Units.Dimensional.SIUnits
 
 #ifdef javascript_HOST_ARCH
 import Data.Time.LocalTime (minutesToTimeZone)
+#endif
+
+handleGetCurrentTimeZone :: IO TimeZone
+#ifndef javascript_HOST_ARCH
+handleGetCurrentTimeZone = getCurrentTimeZone
+#endif
+#ifdef javascript_HOST_ARCH
+handleGetCurrentTimeZone = minutesToTimeZone <$> getTimezoneOffset
+
+foreign import javascript unsafe "(() => new Date().getTimezoneOffset())"
+  getTimezoneOffset :: IO Int
 #endif
 
 data IOAction
@@ -27,16 +38,8 @@ instance ConcurrentIO IOAction where
     Sleep n -> threadDelay . floor $ n /~ micro second
     GetCurrentTime -> getCurrentTime
     GetCurrentTimeZone ->
-       -- TEMP FIXME:  getCurrentTimeZone support JS with time-1.15, remove this when we upgraded
-#ifndef javascript_HOST_ARCH
-       getCurrentTimeZone
-#endif
-#ifdef javascript_HOST_ARCH
-       minutesToTimeZone <$> getTimezoneOffset
-
-foreign import javascript unsafe "(() => new Date().getTimezoneOffset())"
-  getTimezoneOffset :: IO Int
-#endif
+      -- TEMP FIXME:  getCurrentTimeZone support JS with time-1.15, remove this when we upgraded
+      handleGetCurrentTimeZone
 
 deriving instance Eq (ConcurrentIOReq IOAction a)
 
