@@ -40,8 +40,8 @@ main = do
         let file =
               dropDrive prettiedRoute
                 & if route' == minBound
-                  then (</> [osp|"index.html"|])
-                  else (<.> [osp|"html"|])
+                  then (</> [osp|index.html|])
+                  else (<.> [osp|html|])
         withRunInIO $ \runInIO -> IO.withFile file WriteMode $ \h -> do
           putStrLn $ "prerendering: " <> show file
           runInIO . BS.hPutStr h . toHtml . modelToViews $ Model route' True
