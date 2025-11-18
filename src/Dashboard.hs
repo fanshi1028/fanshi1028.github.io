@@ -36,6 +36,7 @@ import Numeric.Units.Dimensional hiding ((*), (-))
 import Numeric.Units.Dimensional.NonSI
 import Numeric.Units.Dimensional.SIUnits hiding (toDegreeCelsiusAbsolute)
 import Utils.Dimensional
+import Utils.SVG.LoadSpinner
 import Prelude hiding (show)
 
 haxlEnvflags :: Flags
@@ -441,9 +442,33 @@ viewModel (Model mELocation mTimeZone mCurrentWeatherReport mLocalWeatherForecas
       --   PERMISSION_DENIED -> _
       --   POSITION_UNAVAILABLE -> _
       --   TIMEOUT -> "timeout while getting your location"
-      maybe (div_ [] ["CurrentWeatherReport loading"]) (viewCurrentWeatherReport mTimeZone ifDisplayRainfall ifDisplayTemperature) mCurrentWeatherReport,
-      maybe (div_ [] ["LocalWeatherForecast loading"]) (viewLocalWeatherForecast mTimeZone) mLocalWeatherForecast,
-      maybe (div_ [] ["NineDayWeatherForecast loading"]) (view9DayWeatherForecast mTimeZone) m9DayWeatherForecast,
+      maybe
+        ( div_
+            [class_ "flex gap-2 justify-center"]
+            [ loadSpinner ["size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
+              "CurrentWeatherReport"
+            ]
+        )
+        (viewCurrentWeatherReport mTimeZone ifDisplayRainfall ifDisplayTemperature)
+        mCurrentWeatherReport,
+      maybe
+        ( div_
+            [class_ "flex gap-2 justify-center"]
+            [ loadSpinner ["size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
+              "LocalWeatherForecast"
+            ]
+        )
+        (viewLocalWeatherForecast mTimeZone)
+        mLocalWeatherForecast,
+      maybe
+        ( div_
+            [class_ "flex gap-2 justify-center"]
+            [ loadSpinner ["size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
+              "NineDayWeatherForecast"
+            ]
+        )
+        (view9DayWeatherForecast mTimeZone)
+        m9DayWeatherForecast,
       div_ [] $ [button_ [onClick FetchWeatherData] [text "TEMP FIXME Test: refetch"]]
     ]
 
