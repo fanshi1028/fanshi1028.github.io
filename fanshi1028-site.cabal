@@ -24,7 +24,7 @@ flag production
   manual: True
 
 flag prerender-wasm
-  description: prerender for wasm version of the site, this flag is only meaning for the executable prerender
+  description: prerender for wasm version of the site
   default: False
   manual: True
 
@@ -169,6 +169,9 @@ executable fanshi1028-site
       -optl-mexec-model=reactor
       "-optl-Wl,--export=hs_start"
 
+  if arch(wasm32) || flag(prerender-wasm)
+    cpp-options: -DWASM
+
 executable prerender
   if flag(local-dev)
     import: lib
@@ -198,6 +201,5 @@ executable prerender
     -O0
     -Wall
 
-  -- HACK: abusing wasm32_HOST_ARCH
   if flag(prerender-wasm)
-    cpp-options: -Dwasm32_HOST_ARCH
+    cpp-options: -DWASM

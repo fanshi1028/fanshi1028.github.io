@@ -66,9 +66,9 @@ toJsButtonSVG =
     ]
 
 toggleLangButtonSVG :: View model action
-#ifdef wasm32_HOST_ARCH
+#ifdef WASM
 toggleLangButtonSVG = toJsButtonSVG
 #endif
-#ifndef wasm32_HOST_ARCH
+#ifndef WASM
 toggleLangButtonSVG = toWasmButtonSVG
 #endif

@@ -30,20 +30,14 @@ main = do
     )
     $ boundedEnumFrom minBound
 
-outputCSSPath :: MisoString
-#ifdef wasm32_HOST_ARCH
+outputCSSPath, indexJSPath :: MisoString
+#ifdef WASM
+indexJSPath = "index.js"
 outputCSSPath = "../output.css"
 #endif
-#ifndef wasm32_HOST_ARCH
-outputCSSPath = "output.css"
-#endif
-
-indexJSPath :: MisoString
-#ifdef wasm32_HOST_ARCH
-indexJSPath = "index.js"
-#endif
-#ifndef wasm32_HOST_ARCH
+#ifndef WASM
 indexJSPath = "all.js"
+outputCSSPath = "output.css"
 #endif
 
 modelToViews :: Model -> [View Model Action]

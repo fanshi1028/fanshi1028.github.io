@@ -34,7 +34,7 @@ data Route
   | Pomodoro
   | Dashboard
   deriving stock (Eq, Show, Enum, Bounded, Generic)
-#ifndef wasm32_HOST_ARCH
+#ifndef WASM
   deriving anyclass (Router)
 
 instance Router RouteForTheOtherLang where
@@ -48,7 +48,7 @@ instance Router RouteForTheOtherLang where
     RouteForTheOtherLang route' -> toPath (ms "wasm") : gFromRoute (from route')
 #endif
 
-#ifdef wasm32_HOST_ARCH
+#ifdef WASM
 instance Router Route where
   routeParser =
     routes
