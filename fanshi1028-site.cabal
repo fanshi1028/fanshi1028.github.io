@@ -133,6 +133,9 @@ library
     cpp-options:
       -DPRODUCTION
 
+  if arch(wasm32) || flag(prerender-wasm)
+    cpp-options: -DWASM
+
 executable fanshi1028-site
   if flag(local-dev)
     import: lib
@@ -168,9 +171,6 @@ executable fanshi1028-site
       -no-hs-main
       -optl-mexec-model=reactor
       "-optl-Wl,--export=hs_start"
-
-  if arch(wasm32) || flag(prerender-wasm)
-    cpp-options: -DWASM
 
 executable prerender
   if flag(local-dev)
