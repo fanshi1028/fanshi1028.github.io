@@ -135,7 +135,7 @@ jobs:
         # NOTE: https://discourse.haskell.org/t/ghc-js-backend-improve-compiled-size/12098/17
         # NOTE: https://github.com/ghcjs/ghcjs/wiki/Deployment
         run: |
-          closure-compiler --debug --language_in UNSTABLE --compilation_level SIMPLE_OPTIMIZATIONS --warning_level QUIET \
+          closure-compiler --language_in UNSTABLE --compilation_level SIMPLE_OPTIMIZATIONS --warning_level QUIET \
             --isolation_mode IIFE --assume_function_wrapper --emit_use_strict \
             --externs=result/bin/fanshi1028-site.jsexe/all.externs.js \
             result/bin/fanshi1028-site.jsexe/all.js \
