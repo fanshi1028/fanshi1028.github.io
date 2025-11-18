@@ -125,7 +125,7 @@
               pkgs.lib.pipe drv [
                 (pkgs.haskell.lib.compose.setBuildTargets [ "prerender" ])
                 (pkgs.haskell.lib.compose.overrideCabal (_: {
-                  pname = "prerender-js";
+                  pname = "prerender";
                 }))
               ];
           };
@@ -137,7 +137,7 @@
                 (pkgs.haskell.lib.compose.setBuildTargets [ "prerender" ])
                 (pkgs.haskell.lib.compose.enableCabalFlag [ "prerender-wasm" ])
                 (pkgs.haskell.lib.compose.overrideCabal (_: {
-                  pname = "prerender-wasm";
+                  pname = "prerender";
                 }))
               ];
           };
