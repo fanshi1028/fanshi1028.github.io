@@ -36,7 +36,7 @@ main = do
   createWasmDirIfMissing
   traverse_
     ( \route' -> do
-        prettiedRoute <- encodeUtf . fmap toLower . fromMisoString $ prettyRoute route'
+        prettiedRoute <- encodeUtf . fromMisoString $ prettyRoute route'
         let file =
               dropDrive prettiedRoute
                 & if route' == minBound
