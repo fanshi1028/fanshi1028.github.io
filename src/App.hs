@@ -27,7 +27,7 @@ import ProductRequirementDocument.Pomodoro
 import Utils.SVG.LoadSpinner
 import Utils.SVG.ToggleLangButton
 
-newtype ToggleWASM = ToggleWASM Route
+newtype RouteForTheOtherLang = RouteForTheOtherLang Route
 
 data Route
   = Index -- NOTE: Index must be the first one, code made assumpation base on its Enum being the first one.
@@ -37,15 +37,15 @@ data Route
 #ifndef wasm32_HOST_ARCH
   deriving anyclass (Router)
 
-instance Router ToggleWASM where
+instance Router RouteForTheOtherLang where
   routeParser =
     routes
-      [ path (ms "wasm") *> (ToggleWASM . to <$> gRouteParser),
-        ToggleWASM Index <$ path (ms "wasm")
+      [ path (ms "wasm") *> (RouteForTheOtherLang . to <$> gRouteParser),
+        RouteForTheOtherLang Index <$ path (ms "wasm")
       ]
   fromRoute = \case
-    ToggleWASM Index -> [ toPath $ ms "wasm" ]
-    ToggleWASM route' -> toPath (ms "wasm") : gFromRoute (from route')
+    RouteForTheOtherLang Index -> [ toPath $ ms "wasm" ]
+    RouteForTheOtherLang route' -> toPath (ms "wasm") : gFromRoute (from route')
 #endif
 
 #ifdef wasm32_HOST_ARCH
@@ -59,9 +59,9 @@ instance Router Route where
     Index -> [ toPath $ ms "wasm" ]
     route' -> toPath (ms "wasm") : gFromRoute (from route')
 
-instance Router ToggleWASM where
-  routeParser = ToggleWASM . to <$> gRouteParser
-  fromRoute (ToggleWASM route') = gFromRoute $ from route'
+instance Router RouteForTheOtherLang where
+  routeParser = RouteForTheOtherLang . to <$> gRouteParser
+  fromRoute (RouteForTheOtherLang route') = gFromRoute $ from route'
 #endif
 
 data Action
@@ -157,7 +157,7 @@ prdButton loading setOpen =
 toggleLangButton :: Bool -> Bool -> Route -> View model Action
 toggleLangButton useWASM' loading route' =
   a_
-    [ Router.href_ $ ToggleWASM route',
+    [ Router.href_ $ RouteForTheOtherLang route',
       classes_
         [ "flex items-center",
           "hover:animate-wiggle hover:[animation-delay:0.25s]",
