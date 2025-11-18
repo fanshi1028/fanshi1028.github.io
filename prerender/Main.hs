@@ -1,9 +1,6 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
-
-#ifdef WASM
 {-# LANGUAGE QuasiQuotes #-}
-#endif
 
 module Main where
 
@@ -11,11 +8,13 @@ import App
 import Data.ByteString.Lazy as BS
 import Data.Char
 import Data.Foldable
+import Data.Function
 import GHC.Enum
 import Miso
 import Miso.Html.Element as Html
 import Miso.Html.Property
 import Miso.Html.Render
+import Miso.Router hiding (href_)
 import System.File.OsPath as IO
 import System.OsPath
 import UnliftIO
@@ -36,10 +35,15 @@ main :: IO ()
 main = do
   createWasmDirIfMissing
   traverse_
-    ( \route -> do
-        file <- (<.>) <$> encodeUtf (toLower <$> show route) <*> encodeUtf ".html"
+    ( \route' -> do
+        prettiedRoute <- encodeUtf . fmap toLower . fromMisoString $ prettyRoute route'
+        let file =
+              dropDrive prettiedRoute
+                & if route' == minBound
+                  then (</> [osp|"index.html"|])
+                  else (<.> [osp|"html"|])
         withRunInIO $ \runInIO -> IO.withFile file WriteMode $ \h ->
-          runInIO . BS.hPutStr h . toHtml . modelToViews $ Model route True
+          runInIO . BS.hPutStr h . toHtml . modelToViews $ Model route' True
     )
     $ boundedEnumFrom minBound
 
