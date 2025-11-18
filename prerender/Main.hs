@@ -43,7 +43,7 @@ main = do
                   then (</> [osp|"index.html"|])
                   else (<.> [osp|"html"|])
         withRunInIO $ \runInIO -> IO.withFile file WriteMode $ \h -> do
-          print file
+          putStrLn $ "prerendering: " <> show file
           runInIO . BS.hPutStr h . toHtml . modelToViews $ Model route' True
     )
     $ boundedEnumFrom minBound
