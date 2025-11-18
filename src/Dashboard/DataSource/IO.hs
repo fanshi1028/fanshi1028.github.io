@@ -7,6 +7,9 @@ import Data.Hashable
 import Data.Time
 import Haxl.Core
 import Haxl.DataSource.ConcurrentIO
+import Control.Concurrent
+import Numeric.Units.Dimensional
+import Numeric.Units.Dimensional.SIUnits
 
 #ifdef javascript_HOST_ARCH
 import Data.Time.LocalTime (minutesToTimeZone)
@@ -16,10 +19,12 @@ data IOAction
 
 instance ConcurrentIO IOAction where
   data ConcurrentIOReq IOAction a where
+    Sleep :: Time Double -> ConcurrentIOReq IOAction ()
     GetCurrentTime :: ConcurrentIOReq IOAction UTCTime
     GetCurrentTimeZone :: ConcurrentIOReq IOAction TimeZone
 
   performIO = \case
+    Sleep n -> threadDelay . floor $ n /~ micro second
     GetCurrentTime -> getCurrentTime
     GetCurrentTimeZone ->
        -- TEMP FIXME:  getCurrentTimeZone support JS with time-1.15, remove this when we upgraded
@@ -42,5 +47,6 @@ instance ShowP (ConcurrentIOReq IOAction) where showp = show
 instance Hashable (ConcurrentIOReq IOAction a) where
   hashWithSalt s =
     hashWithSalt @Int s . \case
-      GetCurrentTime -> 0
-      GetCurrentTimeZone -> 1
+      Sleep n -> 0 `hashWithSalt` (n /~ micro second)
+      GetCurrentTime -> 1
+      GetCurrentTimeZone -> 2
