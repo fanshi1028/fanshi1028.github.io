@@ -1,6 +1,9 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
+
+#ifdef WASM
 {-# LANGUAGE QuasiQuotes #-}
+#endif
 
 module Main where
 
@@ -13,15 +16,25 @@ import Miso
 import Miso.Html.Element as Html
 import Miso.Html.Property
 import Miso.Html.Render
-import System.Directory.OsPath
 import System.File.OsPath as IO
 import System.OsPath
 import UnliftIO
 
+#ifdef WASM
+import System.Directory.OsPath
+#endif
+
+createWasmDirIfMissing :: IO ()
+#ifdef WASM
+createWasmDirIfMissing = createDirectoryIfMissing False [osp|wasm|]
+#endif
+#ifndef WASM
+createWasmDirIfMissing = pure ()
+#endif
+
 main :: IO ()
 main = do
-  let wasmDir = [osp|wasm|]
-  createDirectoryIfMissing False wasmDir
+  createWasmDirIfMissing
   traverse_
     ( \route -> do
         file <- (<.>) <$> encodeUtf (toLower <$> show route) <*> encodeUtf ".html"
