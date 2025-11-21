@@ -6,7 +6,6 @@ module Main where
 
 import App
 import Data.ByteString.Lazy as BS
-import Data.Char
 import Data.Foldable
 import Data.Function
 import GHC.Enum
