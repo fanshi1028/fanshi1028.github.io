@@ -229,14 +229,22 @@ app route' =
             Left err -> SetRoutingError err
             Right uri' -> SetURI uri'
         ],
-#ifndef PRODUCTION
-      scripts = [Src "https://cdn.tailwindcss.com"],
-      styles = [Href "static/input.css"],
-      logLevel = DebugAll,
-#endif
-      initialAction = Just AfterLoaded
+      initialAction = Just AfterLoaded,
+      scripts,
+      styles,
+      logLevel
     }
   where
     model = case route route' of
       Left err -> RoutingError err
       Right uri' -> Model uri' True
+#ifdef PRODUCTION
+    scripts = []
+    styles = []
+    logLevel = Off
+#endif
+#ifndef PRODUCTION
+    scripts = [Src "https://cdn.tailwindcss.com"]
+    styles = [Href "static/input.css"]
+    logLevel = DebugAll
+#endif
