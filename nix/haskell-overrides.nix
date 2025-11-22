@@ -20,7 +20,7 @@ hself: hsuper: {
     ]
   );
 
-  cborg = pipe hsuper.cborg [
+  cborg = lib.pipe hsuper.cborg [
     (haskell.lib.compose.overrideCabal (drv: {
       patches = [ ];
     }))
