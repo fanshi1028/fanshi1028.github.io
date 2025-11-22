@@ -181,6 +181,7 @@
                 importNpmLock.hooks.linkNodeModulesHook
                 typescript
                 typescript-language-server
+                bun
                 emacs-lsp-booster
                 prettier
               ]);

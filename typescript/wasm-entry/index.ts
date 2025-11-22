@@ -37,7 +37,7 @@ if (await wasmFeaturesSupportedCheck()) {
 
   const instance_exports = {}
   const { instance } = await WebAssembly.instantiateStreaming(
-    fetch('fanshi1028-site.wasm'),
+    fetch('./fanshi1028-site.wasm'),
     {
       wasi_snapshot_preview1: wasi.wasiImport,
       ghc_wasm_jsffi: (await ghc_wasm_jsffi_imports)
@@ -52,5 +52,6 @@ if (await wasmFeaturesSupportedCheck()) {
   // @ts-ignore
   await instance.exports.hs_start()
 } else {
-  await import('./all.js')
+  // @ts-ignore: external as bun fail to consume ghc js backend output as they contain conditional code for nodejs
+  await import('../all.js')
 }
