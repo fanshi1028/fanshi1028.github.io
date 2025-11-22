@@ -59,11 +59,13 @@
           // args
           // {
             overrides =
-              hself: hsuper:
-              (
-                make-haskell-overrides pkgs hself hsuper
-                // (if args ? overrides then args.overrides hself hsuper else { })
-              );
+              if args ? overrides then
+                lib.composeManyExtensions [
+                  (make-haskell-overrides pkgs)
+                  args.overrides
+                ]
+              else
+                make-haskell-overrides pkgs;
           }
         );
     in
