@@ -24,28 +24,30 @@
           inherit (pkgs.haskell.lib) compose;
         };
 
+      source-overrides = {
+        miso = nixpkgs.fetchFromGitHub {
+          owner = "dmjio";
+          repo = "miso";
+          rev = "af221db695f7df4191f182a9458f708a4e6020ae";
+          sha256 = "sha256-JsxFNgYITtPV4fCIsmhjz9aAMp0RP8ECuUdCUn3NkfU=";
+        };
+        cborg = "${
+          nixpkgs.fetchFromGitHub {
+            owner = "well-typed";
+            repo = "cborg";
+            rev = "36eb23049ba4d0e33a8487420eb3b270899d64a7";
+            sha256 = "sha256-RKOmhcxj8HZ9NbvoYjclVKwvQcDxeRkEkvYdVyXJOH0=";
+          }
+        }/cborg";
+        hashtables = "1.4.2";
+      };
+
       mkDefaultPackage =
         pkgs: args:
         pkgs.haskell.packages."ghc${ghcVersion}".developPackage (
           {
             root = ./.;
-            source-overrides = {
-              miso = pkgs.fetchFromGitHub {
-                owner = "dmjio";
-                repo = "miso";
-                rev = "af221db695f7df4191f182a9458f708a4e6020ae";
-                sha256 = "sha256-JsxFNgYITtPV4fCIsmhjz9aAMp0RP8ECuUdCUn3NkfU=";
-              };
-              cborg = "${
-                pkgs.fetchFromGitHub {
-                  owner = "well-typed";
-                  repo = "cborg";
-                  rev = "36eb23049ba4d0e33a8487420eb3b270899d64a7";
-                  sha256 = "sha256-RKOmhcxj8HZ9NbvoYjclVKwvQcDxeRkEkvYdVyXJOH0=";
-                }
-              }/cborg";
-              hashtables = "1.4.2";
-            };
+            inherit source-overrides;
           }
           // args
           // {
@@ -65,11 +67,11 @@
         inherit (pkgs) tailwindcss closurecompiler;
         inherit
           (pkgs.haskell.packages."ghc${ghcVersion}".override {
-            overrides = make-haskell-overrides pkgs;
+            overrides = pkgs.lib.composeExtensions source-overrides (make-haskell-overrides pkgs);
           })
-          miso # TEMP FIXME
+          miso
           haxl
-          cborg # TEMP FIXME
+          cborg
           ;
 
         prerender-js = mkDefaultPackage pkgs {
@@ -130,7 +132,6 @@
                 (enableCabalFlag "check-unchecked")
               ]
             );
-            hashtables = hsuper.hashtables_1_4_2;
           };
           modifier =
             drv:
