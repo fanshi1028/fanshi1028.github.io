@@ -54,6 +54,7 @@
                   sha256 = "sha256-RKOmhcxj8HZ9NbvoYjclVKwvQcDxeRkEkvYdVyXJOH0=";
                 }
               }/cborg";
+              hashtables = "1.4.2";
             };
           }
           // args
@@ -105,7 +106,7 @@
         };
         fanshi1028-site-js = mkDefaultPackage pkgs.pkgsCross.ghcjs {
           overrides = hself: hsuper: ({
-            hashtables = pkgs.haskell.lib.enableCabalFlag hsuper.hashtables_1_4_2 "portable";
+            hashtables = pkgs.haskell.lib.enableCabalFlag hsuper.hashtables "portable";
             # NOTE: https://github.com/ghcjs/jsaddle/pull/162
             jsaddle = pkgs.haskell.lib.appendPatch hsuper.jsaddle (
               pkgs.fetchpatch {

@@ -20,8 +20,6 @@ hself: hsuper: {
     ]
   );
 
-  hashtables = hsuper.hashtables_1_4_2;
-
   cborg = pipe hsuper.cborg [
     (compose.overrideCabal (drv: {
       patches = [ ];
