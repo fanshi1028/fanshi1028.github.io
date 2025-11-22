@@ -205,7 +205,7 @@ jobs:
           path: typescript/wasm-entry
 
       - name: bun build wasm
-        shell: nix shell ../..#npm.wasm-entry --command bash -e {0}
+        shell: nix develop ../..#npm.wasm-entry --command bash -e {0}
         working-directory: ./typescript/wasm-entry
         run: |
           bun build ./index.ts --outdir ../../public/wasm \
