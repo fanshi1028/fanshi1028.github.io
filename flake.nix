@@ -35,7 +35,6 @@
       make-haskell-overrides =
         pkgs:
         import ./nix/haskell-overrides.nix {
-          inherit (pkgs) fetchFromGitHub;
           inherit (pkgs.lib) pipe;
           inherit (pkgs.haskell.lib) compose;
         };
@@ -45,6 +44,14 @@
         pkgs.haskell.packages."ghc${ghcVersion}".developPackage (
           {
             root = ./.;
+            source-overrides = {
+              miso = pkgs.fetchFromGitHub {
+                owner = "dmjio";
+                repo = "miso";
+                rev = "af221db695f7df4191f182a9458f708a4e6020ae";
+                sha256 = "sha256-JsxFNgYITtPV4fCIsmhjz9aAMp0RP8ECuUdCUn3NkfU=";
+              };
+            };
           }
           // args
           // {
@@ -64,7 +71,7 @@
           (pkgs.haskell.packages."ghc${ghcVersion}".override {
             overrides = make-haskell-overrides pkgs;
           })
-          miso
+          miso # TEMP FIXME
           haxl
           cborg
           ;

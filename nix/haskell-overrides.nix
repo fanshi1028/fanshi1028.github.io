@@ -1,16 +1,10 @@
 {
   pipe,
   compose,
-  fetchFromGitHub,
 }:
 hself: hsuper: {
 
-  miso = hself.callCabal2nixWithOptions "miso" (fetchFromGitHub {
-    owner = "dmjio";
-    repo = "miso";
-    rev = "af221db695f7df4191f182a9458f708a4e6020ae";
-    sha256 = "sha256-JsxFNgYITtPV4fCIsmhjz9aAMp0RP8ECuUdCUn3NkfU=";
-  }) "-ftemplate-haskell" { };
+  miso = pipe hsuper.miso [ (compose.enableCabalFlag "template-haskell") ];
 
   haxl = pipe hsuper.haxl (
     with compose;
