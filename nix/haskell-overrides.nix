@@ -1,11 +1,19 @@
-{ pkgs, miso }:
+{
+  pipe,
+  compose,
+  fetchFromGitHub,
+}:
 hself: hsuper: {
-  miso =
-    hself.callCabal2nixWithOptions "miso" (import "${miso}/nix/source.nix" pkgs).miso
-      "-ftemplate-haskell"
-      { };
-  haxl = pkgs.lib.pipe hsuper.haxl (
-    with pkgs.haskell.lib.compose;
+
+  miso = hself.callCabal2nixWithOptions "miso" (fetchFromGitHub {
+    owner = "dmjio";
+    repo = "miso";
+    rev = "af221db695f7df4191f182a9458f708a4e6020ae";
+    sha256 = "sha256-JsxFNgYITtPV4fCIsmhjz9aAMp0RP8ECuUdCUn3NkfU=";
+  }) "-ftemplate-haskell" { };
+
+  haxl = pipe hsuper.haxl (
+    with compose;
     [
       unmarkBroken
       (overrideCabal (drv: {
@@ -17,9 +25,11 @@ hself: hsuper: {
       }))
     ]
   );
+
   hashtables = hsuper.hashtables_1_4_2;
-  cborg = pkgs.lib.pipe hsuper.cborg (
-    with pkgs.haskell.lib.compose;
+
+  cborg = pipe hsuper.cborg (
+    with compose;
     [
       (overrideSrc { src = "${cborg}/cborg"; })
       (overrideCabal (drv: {
@@ -27,21 +37,25 @@ hself: hsuper: {
       }))
     ]
   );
+
   statistics = hself.callHackageDirect {
     pkg = "statistics";
     ver = "0.16.4.0";
     sha256 = "sha256-BmFcx40Dvazu3fdbZJXLGyB3eNSZ0EZzSkK3cQKdSKo=";
   } { };
+
   dataframe = hself.callHackageDirect {
     pkg = "dataframe";
     ver = "0.3.3.6";
     sha256 = "sha256-4/O93bE21wTxN/LNWpDmr17o3bo+Xhq1qoB8qG6cq+E=";
   } { };
+
   granite = hself.callHackageDirect {
     pkg = "granite";
     ver = "0.3.0.5";
     sha256 = "sha256-QLxahMrjQ2tbXeQ0CBn2k5o0tRUgjyFy6EDJFon4T0Y=";
   } { };
+
   snappy-hs = hself.callHackageDirect {
     pkg = "snappy-hs";
     ver = "0.1.0.4";

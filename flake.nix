@@ -4,10 +4,6 @@
   ];
 
   inputs = {
-    miso = {
-      url = "github:dmjio/miso";
-      flake = false;
-    };
     cborg = {
       url = "github:well-typed/cborg?rev=36eb23049ba4d0e33a8487420eb3b270899d64a7";
       flake = false;
@@ -28,7 +24,6 @@
   outputs =
     {
       self,
-      miso,
       cborg,
       nixpkgs,
       ghc-wasm,
@@ -37,7 +32,13 @@
     }:
     let
       ghcVersion = "9122";
-      make-haskell-overrides = pkgs: import ./nix/haskell-overrides.nix { inherit pkgs miso; };
+      make-haskell-overrides =
+        pkgs:
+        import ./nix/haskell-overrides.nix {
+          inherit (pkgs) fetchFromGitHub;
+          inherit (pkgs.lib) pipe;
+          inherit (pkgs.haskell.lib) compose;
+        };
 
       mkDefaultPackage =
         pkgs: args:

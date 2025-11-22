@@ -73,22 +73,6 @@
         "type": "gitlab"
       }
     },
-    "miso": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1762671351,
-        "narHash": "sha256-JsxFNgYITtPV4fCIsmhjz9aAMp0RP8ECuUdCUn3NkfU=",
-        "owner": "dmjio",
-        "repo": "miso",
-        "rev": "af221db695f7df4191f182a9458f708a4e6020ae",
-        "type": "github"
-      },
-      "original": {
-        "owner": "dmjio",
-        "repo": "miso",
-        "type": "github"
-      }
-    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1758589230,
@@ -126,7 +110,6 @@
         "browser_wasi_shim": "browser_wasi_shim",
         "cborg": "cborg",
         "ghc-wasm": "ghc-wasm",
-        "miso": "miso",
         "nixpkgs": "nixpkgs_2",
         "wasm-feature-detect": "wasm-feature-detect"
       }
