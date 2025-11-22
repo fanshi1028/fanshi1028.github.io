@@ -4,10 +4,6 @@
   ];
 
   inputs = {
-    cborg = {
-      url = "github:well-typed/cborg?rev=36eb23049ba4d0e33a8487420eb3b270899d64a7";
-      flake = false;
-    };
     # copied from miso's flake
     nixpkgs.url = "github:nixos/nixpkgs?rev=9e2e8a7878573d312db421d69e071690ec34e98c";
     ghc-wasm.url = "gitlab:haskell-wasm/ghc-wasm-meta?host=gitlab.haskell.org";
@@ -24,7 +20,6 @@
   outputs =
     {
       self,
-      cborg,
       nixpkgs,
       ghc-wasm,
       browser_wasi_shim,
@@ -51,6 +46,14 @@
                 rev = "af221db695f7df4191f182a9458f708a4e6020ae";
                 sha256 = "sha256-JsxFNgYITtPV4fCIsmhjz9aAMp0RP8ECuUdCUn3NkfU=";
               };
+              cborg = "${
+                pkgs.fetchFromGitHub {
+                  owner = "well-typed";
+                  repo = "cborg";
+                  rev = "36eb23049ba4d0e33a8487420eb3b270899d64a7";
+                  sha256 = "sha256-RKOmhcxj8HZ9NbvoYjclVKwvQcDxeRkEkvYdVyXJOH0=";
+                }
+              }/cborg";
             };
           }
           // args
@@ -73,7 +76,7 @@
           })
           miso # TEMP FIXME
           haxl
-          cborg
+          cborg # TEMP FIXME
           ;
 
         prerender-js = mkDefaultPackage pkgs {

@@ -22,15 +22,11 @@ hself: hsuper: {
 
   hashtables = hsuper.hashtables_1_4_2;
 
-  cborg = pipe hsuper.cborg (
-    with compose;
-    [
-      (overrideSrc { src = "${cborg}/cborg"; })
-      (overrideCabal (drv: {
-        patches = [ ];
-      }))
-    ]
-  );
+  cborg = pipe hsuper.cborg [
+    (compose.overrideCabal (drv: {
+      patches = [ ];
+    }))
+  ];
 
   statistics = hself.callHackageDirect {
     pkg = "statistics";
