@@ -53,10 +53,7 @@
           // {
             overrides =
               if args ? overrides then
-                pkgs.lib.composeManyExtensions [
-                  (make-haskell-overrides pkgs)
-                  args.overrides
-                ]
+                pkgs.lib.composeExtensions (make-haskell-overrides pkgs) args.overrides
               else
                 make-haskell-overrides pkgs;
           }
