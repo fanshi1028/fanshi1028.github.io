@@ -230,6 +230,7 @@ jobs:
       - name: Prepare some static files
         run: |
           cp -v static/favicon.ico public/
+          cp -v typescript/wasm-entry/fanshi1028-site.wasm public/wasm/
 
       - name: Archive artifact
         shell: sh
