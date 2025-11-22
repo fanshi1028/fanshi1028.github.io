@@ -57,11 +57,16 @@
       packages = builtins.mapAttrs (system: pkgs: {
         inherit (pkgs) tailwindcss closurecompiler;
         inherit
-          (pkgs.haskell.packages."ghc${ghcVersion}".override {
-            overrides = pkgs.lib.composeExtensions (make-source-overrides pkgs) (
-              pkgs.callPackage ./nix/haskell-overrides.nix { }
-            );
-          })
+          (
+            let
+              hsPkgs = pkgs.haskell.packages."ghc${ghcVersion}";
+            in
+            hsPkgs.override {
+              overrides = pkgs.lib.composeExtensions (hsPkgs.packageSourceOverrides (
+                make-source-overrides pkgs
+              )) (pkgs.callPackage ./nix/haskell-overrides.nix { });
+            }
+          )
           miso
           haxl
           cborg
