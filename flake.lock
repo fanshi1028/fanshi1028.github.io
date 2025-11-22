@@ -1,22 +1,5 @@
 {
   "nodes": {
-    "browser_wasi_shim": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1750602838,
-        "narHash": "sha256-okP2bT4rcqtwTk7eOdyC+DqoLACTS9srANgSEkjb06A=",
-        "owner": "bjorn3",
-        "repo": "browser_wasi_shim",
-        "rev": "4a55f2a519d0ddfa7e4609c42e0c9769c37c9ae8",
-        "type": "github"
-      },
-      "original": {
-        "owner": "bjorn3",
-        "ref": "v0.4.2",
-        "repo": "browser_wasi_shim",
-        "type": "github"
-      }
-    },
     "flake-utils": {
       "inputs": {
         "systems": "systems"
@@ -90,10 +73,8 @@
     },
     "root": {
       "inputs": {
-        "browser_wasi_shim": "browser_wasi_shim",
         "ghc-wasm": "ghc-wasm",
-        "nixpkgs": "nixpkgs_2",
-        "wasm-feature-detect": "wasm-feature-detect"
+        "nixpkgs": "nixpkgs_2"
       }
     },
     "systems": {
@@ -108,23 +89,6 @@
       "original": {
         "owner": "nix-systems",
         "repo": "default",
-        "type": "github"
-      }
-    },
-    "wasm-feature-detect": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1726679964,
-        "narHash": "sha256-14OZNnu6kPVfKgxa3ARnmuwgrkwpCFhK2YdK/cvW5vw=",
-        "owner": "GoogleChromeLabs",
-        "repo": "wasm-feature-detect",
-        "rev": "8bfe6691b0749b53d605f3220f15e68751c4b5b6",
-        "type": "github"
-      },
-      "original": {
-        "owner": "GoogleChromeLabs",
-        "ref": "v1.8.0",
-        "repo": "wasm-feature-detect",
         "type": "github"
       }
     }
