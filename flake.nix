@@ -17,12 +17,6 @@
     }:
     let
       ghcVersion = "9122";
-      make-haskell-overrides =
-        pkgs:
-        import ./nix/haskell-overrides.nix {
-          inherit (pkgs.lib) pipe;
-          inherit (pkgs.haskell.lib) compose;
-        };
 
       make-source-overrides = pkgs: {
         miso = pkgs.fetchFromGitHub {
@@ -53,9 +47,9 @@
           // {
             overrides =
               if args ? overrides then
-                pkgs.lib.composeExtensions (make-haskell-overrides pkgs) args.overrides
+                pkgs.lib.composeExtensions (pkgs.callPackage ./nix/haskell-overrides.nix { }) args.overrides
               else
-                make-haskell-overrides pkgs;
+                pkgs.callPackage ./nix/haskell-overrides.nix { };
           }
         );
     in
@@ -64,7 +58,9 @@
         inherit (pkgs) tailwindcss closurecompiler;
         inherit
           (pkgs.haskell.packages."ghc${ghcVersion}".override {
-            overrides = pkgs.lib.composeExtensions (make-source-overrides pkgs) (make-haskell-overrides pkgs);
+            overrides = pkgs.lib.composeExtensions (make-source-overrides pkgs) (
+              pkgs.callPackage ./nix/haskell-overrides.nix { }
+            );
           })
           miso
           haxl

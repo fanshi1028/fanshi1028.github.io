@@ -1,13 +1,13 @@
 {
-  pipe,
-  compose,
+  lib,
+  haskell,
 }:
 hself: hsuper: {
 
-  miso = pipe hsuper.miso [ (compose.enableCabalFlag "template-haskell") ];
+  miso = lib.pipe hsuper.miso [ (haskell.lib.compose.enableCabalFlag "template-haskell") ];
 
-  haxl = pipe hsuper.haxl (
-    with compose;
+  haxl = lib.pipe hsuper.haxl (
+    with haskell.lib.compose;
     [
       unmarkBroken
       (overrideCabal (drv: {
@@ -21,7 +21,7 @@ hself: hsuper: {
   );
 
   cborg = pipe hsuper.cborg [
-    (compose.overrideCabal (drv: {
+    (haskell.lib.compose.overrideCabal (drv: {
       patches = [ ];
     }))
   ];
