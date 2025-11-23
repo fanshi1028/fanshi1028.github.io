@@ -17,23 +17,6 @@
     }:
     let
       ghcVersion = "9122";
-
-      mkDefaultPackage =
-        pkgs: args:
-        pkgs.haskell.packages."ghc${ghcVersion}".developPackage (
-          {
-            root = ./.;
-            source-overrides = pkgs.callPackage ./nix/haskell-source-overrides.nix { };
-          }
-          // args
-          // {
-            overrides =
-              if args ? overrides then
-                pkgs.lib.composeExtensions (pkgs.callPackage ./nix/haskell-overrides.nix { }) args.overrides
-              else
-                pkgs.callPackage ./nix/haskell-overrides.nix { };
-          }
-        );
     in
     {
       packages = builtins.mapAttrs (system: pkgs: {
@@ -54,56 +37,34 @@
           cborg
           ;
 
-        prerender-js = mkDefaultPackage pkgs {
-          modifier =
-            drv:
-            pkgs.lib.pipe drv [
-              (pkgs.haskell.lib.compose.setBuildTargets [ "prerender" ])
-              (pkgs.haskell.lib.compose.overrideCabal (_: {
-                pname = "prerender";
-              }))
-            ];
+        prerender-js = pkgs.callPackages ./nix/fanshi1028-site.nix { } {
+          inherit ghcVersion;
+          root = ./.;
+          prerender = true;
         };
 
-        prerender-wasm = mkDefaultPackage pkgs {
-          modifier =
-            drv:
-            pkgs.lib.pipe drv [
-              (pkgs.haskell.lib.compose.setBuildTargets [ "prerender" ])
-              (pkgs.haskell.lib.compose.enableCabalFlag "prerender-wasm")
-              (pkgs.haskell.lib.compose.overrideCabal (_: {
-                pname = "prerender";
-              }))
-            ];
+        prerender-wasm = pkgs.callPackages ./nix/fanshi1028-site.nix { } {
+          inherit ghcVersion;
+          root = ./.;
+          prerender = true;
+          wasm = true;
         };
 
-        fanshi1028-site-js = mkDefaultPackage pkgs.pkgsCross.ghcjs {
-          overrides = hself: hsuper: ({
-            hashtables = pkgs.haskell.lib.enableCabalFlag hsuper.hashtables "portable";
-            # NOTE: https://github.com/ghcjs/jsaddle/pull/162
-            jsaddle = pkgs.haskell.lib.appendPatch hsuper.jsaddle (
-              pkgs.fetchpatch {
-                url = "https://patch-diff.githubusercontent.com/raw/ghcjs/jsaddle/pull/162.patch";
-                hash = "sha256-jVaHy+7y4O6/jVx9CLIp/QHKRnL922ueLIGjP+Jd6b8=";
-                stripLen = 1;
-              }
-            );
-          });
-          modifier =
-            drv:
-            pkgs.lib.pipe drv (
-              with pkgs.haskell.lib.compose;
-              [
-                (enableCabalFlag "production")
-                (setBuildTargets [ "exe:fanshi1028-site" ])
-              ]
-            );
+        fanshi1028-site-js = pkgs.pkgsCross.ghcjs.callPackages ./nix/fanshi1028-site.nix { } {
+          inherit ghcVersion;
+          root = ./.;
         };
       }) nixpkgs.legacyPackages;
 
       devShells = builtins.mapAttrs (system: pkgs: {
-        without-build-tools = mkDefaultPackage pkgs { returnShellEnv = true; };
-        default = mkDefaultPackage pkgs {
+        without-build-tools = pkgs.callPackages ./nix/fanshi1028-site.nix { } {
+          inherit ghcVersion;
+          root = ./.;
+          returnShellEnv = true;
+        };
+        default = pkgs.callPackages ./nix/fanshi1028-site.nix { } {
+          inherit ghcVersion;
+          root = ./.;
           overrides = hself: hsuper: {
             jsaddle = pkgs.lib.pipe hsuper.jsaddle (
               with pkgs.haskell.lib.compose;
