@@ -111,27 +111,9 @@
           packages = [ ghc-wasm.packages.${system}.all_9_12 ];
         };
         npm = {
-          wasm-entry =
-            let
-              nodejs = pkgs.nodejs_24;
-            in
-            pkgs.mkShell {
-              packages = [
-                nodejs
-              ]
-              ++ (with pkgs; [
-                importNpmLock.hooks.linkNodeModulesHook
-                typescript
-                typescript-language-server
-                bun
-                emacs-lsp-booster
-                prettier
-              ]);
-              npmDeps = pkgs.importNpmLock.buildNodeModules {
-                npmRoot = ./typescript/wasm-entry;
-                inherit nodejs;
-              };
-            };
+          wasm-entry = pkgs.callPackage ./nix/npm-shell.nix { nodejs = pkgs.nodejs_24; } {
+            npmRoot = ./typescript/wasm-entry;
+          };
         };
       }) nixpkgs.legacyPackages;
     };
