@@ -12,6 +12,7 @@
   overrides ? hself: hsuper: { },
   prerender ? false,
   wasm ? false,
+  ...
 }@args:
 if wasm && !prerender then
   lib.abort "nix build for wasm site is not supported yet"
