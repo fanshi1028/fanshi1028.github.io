@@ -37,32 +37,32 @@
           cborg
           ;
 
-        prerender-js = pkgs.callPackages ./nix/fanshi1028-site.nix { } {
+        prerender-js = pkgs.callPackage ./nix/fanshi1028-site.nix { } {
           inherit ghcVersion;
           root = ./.;
           prerender = true;
         };
 
-        prerender-wasm = pkgs.callPackages ./nix/fanshi1028-site.nix { } {
+        prerender-wasm = pkgs.callPackage ./nix/fanshi1028-site.nix { } {
           inherit ghcVersion;
           root = ./.;
           prerender = true;
           wasm = true;
         };
 
-        fanshi1028-site-js = pkgs.pkgsCross.ghcjs.callPackages ./nix/fanshi1028-site.nix { } {
+        fanshi1028-site-js = pkgs.pkgsCross.ghcjs.callPackage ./nix/fanshi1028-site.nix { } {
           inherit ghcVersion;
           root = ./.;
         };
       }) nixpkgs.legacyPackages;
 
       devShells = builtins.mapAttrs (system: pkgs: {
-        without-build-tools = pkgs.callPackages ./nix/fanshi1028-site.nix { } {
+        without-build-tools = pkgs.callPackage ./nix/fanshi1028-site.nix { } {
           inherit ghcVersion;
           root = ./.;
           returnShellEnv = true;
         };
-        default = pkgs.callPackages ./nix/fanshi1028-site.nix { } {
+        default = pkgs.callPackage ./nix/fanshi1028-site.nix { } {
           inherit ghcVersion;
           root = ./.;
           overrides = hself: hsuper: {
