@@ -21,7 +21,7 @@ else
       source-overrides = callPackage ./haskell-source-overrides.nix { };
     }
     // (builtins.removeAttrs args [
-      "ghcVertsion"
+      "ghcVersion"
       "prerender"
       "wasm"
     ])
