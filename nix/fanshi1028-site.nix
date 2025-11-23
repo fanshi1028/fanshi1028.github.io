@@ -1,5 +1,5 @@
 {
-  callPacakge,
+  callPackage,
   lib,
   haskell,
   fetchpatch,
