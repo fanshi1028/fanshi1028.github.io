@@ -110,11 +110,15 @@
           name = "The miso ${system} GHC WASM ${ghcVersion} shell";
           packages = [ ghc-wasm.packages.${system}.all_9_12 ];
         };
-        npm = {
-          wasm-entry = pkgs.callPackage ./nix/npm-shell.nix { nodejs = pkgs.nodejs_24; } {
-            npmRoot = ./typescript/wasm-entry;
-          };
-        };
+        npm = pkgs.lib.attrsets.mapAttrs (
+          path: type:
+          if type != "directory" then
+            null
+          else
+            pkgs.callPackage ./nix/npm-shell.nix { nodejs = pkgs.nodejs_24; } {
+              npmRoot = ./typescript/${path};
+            }
+        ) (builtins.readDir ./typescript);
       }) nixpkgs.legacyPackages;
     };
 }
