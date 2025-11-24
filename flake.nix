@@ -103,6 +103,9 @@
                 cabal-gild_1_6_0_0
                 ormolu_0_8_0_0
               ])
+              ++ (lib.attrVals [ "ghciwatch-fanshi1028-site" "ghciwatch-prerender" ] (
+                callPackage ./nix/ghciwatch-commands.nix { }
+              ))
             );
           returnShellEnv = true;
         };
