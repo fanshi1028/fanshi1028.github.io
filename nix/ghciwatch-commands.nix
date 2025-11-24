@@ -2,6 +2,7 @@
   lib,
   writeShellApplication,
   cabal-install,
+  bun,
   ghciwatch,
 }:
 let
@@ -34,6 +35,11 @@ lib.mapAttrs' make-ghciwatch-script {
   fanshi1028-site = {
     # flags = ''--watch app --before-reload-shell "tailwindcss -i static/input.css -o static/output.css"'';
     # runtimeInputs = [ tailwindcss ];
-    flags = ''--watch app --test-ghci Main.main'';
+    flags = ''
+      --watch app \
+      --before-reload-shell "bun build typescript/maplibre-gl-ffi/index.ts --root typescript/maplibre-gl-ffi --outdir js-src --format iife --target browser" \
+      --test-ghci Main.main
+    '';
+    runtimeInputs = [ bun ];
   };
 }
