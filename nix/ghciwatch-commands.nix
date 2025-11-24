@@ -21,6 +21,7 @@ let
       text = ''
         ghciwatch \
          --command "cabal repl exe:${exe-name} --flags=\"+local-dev\"" \
+         --clear \
          --watch src \
          ${flags} \
          "$@" 
