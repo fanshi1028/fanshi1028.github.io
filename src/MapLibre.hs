@@ -1,4 +1,6 @@
-module MapLibre (mapLibreComponent, createMap, cleanUpMap, runMapLibre, mapLibreEaseTo, mapLibreAddMarker) where
+{-# LANGUAGE CPP #-}
+
+module MapLibre (mapLibreComponent, createMap, cleanUpMap, runMapLibre, addMarkerAndEaseToLocation) where
 
 import Control.Concurrent
 import Control.Monad
@@ -33,24 +35,30 @@ mapLibreComponent =
   ( component () absurd $ \_ ->
       div_ [id_ $ ms "FIXME: need to wrap the div with id ${mapLibreId} to TEMP fix the 'conatianer not found' for maplibre", class_ $ ms "h-full"] [div_ [id_ mapLibreId, class_ $ ms "h-full"] []]
   )
-    { scripts = [Src $ toJSString "https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"],
+    { scripts,
       styles = [Href $ toJSString "https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css"]
     }
+  where
+#ifndef PRODUCTION
+    scripts = [Src $ toJSString "./js-src/index.js"]
+#endif
+#ifdef PRODUCTION
+    scripts = []
+#endif
 
-mapLibreAddMarker :: Geolocation -> JSM ()
-mapLibreAddMarker (Geolocation lat lon acc) = do
+addMarkerAndEaseToLocation :: Geolocation -> JSM ()
+addMarkerAndEaseToLocation (Geolocation lat lon acc) = do
   mapLibre <- liftIO $ readMVar mapLibreMVar
+#ifndef PRODUCTION
   mapLibreLib <- liftIO (readMVar mapLibreLibMVar)
-  marker <- Marker <$> new (mapLibreLib ! "Marker") ()
-  void $ marker # "setLngLat" $ [[lon, lat]]
-  void $ marker # "addTo" $ [mapLibre]
+  void $ (mapLibreLib # "addMarkerAndEaseToLocation") (lon, lat, mapLibre)
+#endif
+#ifdef PRODUCTION
+  toJSVal mapLibre >>= liftIO . addMarkerAndEaseToLocationJs lon lat
 
-mapLibreEaseTo :: Geolocation -> JSM ()
-mapLibreEaseTo (Geolocation lat lon acc) = void $ do
-  mapLibre <- liftIO $ readMVar mapLibreMVar
-  cfg <- obj
-  cfg <# "center" $ [lon, lat]
-  void $ mapLibre # "easeTo" $ [cfg]
+foreign import javascript unsafe "addMarkerAndEaseToLocation"
+  addMarkerAndEaseToLocationJs :: Double -> Double -> JSVal -> IO ()
+#endif
 
 runMapLibre :: ReaderT MapLibreLib JSM a -> JSM a
 runMapLibre m = do
@@ -69,14 +77,20 @@ runMapLibre m = do
 
 createMap :: ReaderT MapLibreLib JSM ()
 createMap = do
-  maplibregl <- ask
-  liftJSM $ do
-    cfg <- obj
-    cfg <# "container" $ mapLibreId
-    cfg <# "style" $ "https://tiles.openfreemap.org/styles/liberty"
-    cfg <# "zoom" $ 12
-    new (maplibregl ! "Map") [cfg]
-      >>= liftIO . putMVar mapLibreMVar . MapLibre
+  map' <- makeMap
+  liftIO . putMVar mapLibreMVar $ MapLibre map'
+  where
+#ifndef javascript_HOST_ARCH
+    makeMap = do
+      maplibregl <- ask
+      liftJSM $ maplibregl # "createMap" $ mapLibreId
+#endif
+#ifdef javascript_HOST_ARCH
+    makeMap = liftJSM (toJSVal mapLibreId) >>= liftIO . createMapJS
+
+foreign import javascript unsafe "createMap"
+  createMapJS :: JSVal -> IO ()
+#endif
 
 cleanUpMap :: JSM ()
 cleanUpMap = () <$ liftIO (takeMVar mapLibreMVar)

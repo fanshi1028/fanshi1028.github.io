@@ -142,9 +142,7 @@ updateModel = \case
   CleanUpMapLibre -> io_ cleanUpMap
   FetchWeatherData -> withSink fetchData
   SetLocation loc -> do
-    io_ $ do
-      mapLibreAddMarker loc
-      mapLibreEaseTo loc
+    io_ $ addMarkerAndEaseToLocation loc
     location .= Just (Right loc)
   SetTimeZone tz -> timeZone .= Just tz
   SetLocalWeatherForecast w -> localWeatherForecast .= Just w
