@@ -126,7 +126,7 @@ library
     buildable: False
 
   if arch(javascript)
-    js-sources: temp-fix.js
+    js-sources: js-src/**/*.js
   ghc-options: -Wall
 
   if flag(production)
