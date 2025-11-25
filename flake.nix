@@ -83,7 +83,7 @@
                 nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ maplibre-gl-ffi ];
                 postPatch = ''
                   ${old.postPatch or ""}
-                  cp ${maplibre-gl-ffi}/index.js js-src/
+                  cp ${maplibre-gl-ffi}/index.js js-src/maplibre-gl-ffi.js
                 '';
               }
             );
