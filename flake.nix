@@ -73,22 +73,7 @@
             inherit ghcVersion;
             root = ./.;
           }
-        )
-        # .overrideAttrs
-        # (
-        #   old:
-        #   let
-        #     maplibre-gl-ffi = self.packages.${system}.maplibre-gl-ffi;
-        #   in
-        #   {
-        #     nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ maplibre-gl-ffi ];
-        #     postPatch = ''
-        #       ${old.postPatch or ""}
-        #       cp ${maplibre-gl-ffi}/index.js js-src/maplibre-gl-ffi.js
-        #     '';
-        #   }
-        # )
-        ;
+        );
       }) nixpkgs.legacyPackages;
 
       devShells = builtins.mapAttrs (system: pkgs: {
