@@ -82,9 +82,9 @@
               {
                 nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ maplibre-gl-ffi ];
                 preBuild = ''
-                  mkdir -p $out/js-src
-                  cp -v ${maplibre-gl-ffi}/index.js $out/js-src/maplibre-gl-ffi.js
                   ${old.preBuild or ""}
+                  ls .
+                  cp -v ${maplibre-gl-ffi}/index.js ./js-src/maplibre-gl-ffi.js
                 '';
               }
             );
