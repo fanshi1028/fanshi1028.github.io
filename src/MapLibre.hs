@@ -74,12 +74,9 @@ runMapLibre m = do
 
 createMap :: ReaderT MapLibreLib JSM ()
 createMap = do
-  map' <- makeMap
+  mapLibreLib <- ask
+  map' <- liftJSM $ mapLibreLib # "createMap" $ mapLibreId
   liftIO . putMVar mapLibreMVar $ MapLibre map'
-  where
-    makeMap = do
-      maplibregl <- ask
-      liftJSM $ maplibregl # "createMap" $ mapLibreId
 
 cleanUpMap :: JSM ()
 cleanUpMap = () <$ liftIO (takeMVar mapLibreMVar)
