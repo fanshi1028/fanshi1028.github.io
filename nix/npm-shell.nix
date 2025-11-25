@@ -23,7 +23,7 @@ mkShell (
       emacs-lsp-booster
       prettier
     ]
-    ++ (lib.optional (noPackageJSON == false) importNpmLock.hooks.linkNodeModulesHook);
+    ++ (lib.optional (noPackageJSON == false) importNpmLock.linkNodeModulesHook);
   }
   // (lib.optionalAttrs (noPackageJSON == false) {
     npmDeps = importNpmLock.buildNodeModules { inherit npmRoot nodejs; };
