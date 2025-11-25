@@ -22,7 +22,7 @@ handleGetCurrentTimeZone = getCurrentTimeZone
 #ifdef javascript_HOST_ARCH
 handleGetCurrentTimeZone = minutesToTimeZone <$> getTimezoneOffset
 
-foreign import javascript unsafe "(() => new Date().getTimezoneOffset())"
+foreign import javascript "(() => new Date().getTimezoneOffset())"
   getTimezoneOffset :: IO Int
 #endif
 
