@@ -56,7 +56,7 @@ addMarkerAndEaseToLocation (Geolocation lat lon acc) = do
 #ifdef javascript_HOST_ARCH
   toJSVal mapLibre >>= liftIO . addMarkerAndEaseToLocationJs lon lat
 
-foreign import javascript unsafe "addMarkerAndEaseToLocation"
+foreign import javascript unsafe "((lng, lat, map) => addMarkerAndEaseToLocation(lng, lat, map))"
   addMarkerAndEaseToLocationJs :: Double -> Double -> JSVal -> IO ()
 #endif
 
@@ -88,7 +88,7 @@ createMap = do
 #ifdef javascript_HOST_ARCH
     makeMap = liftJSM (toJSVal mapLibreId) >>= liftIO . createMapJS
 
-foreign import javascript unsafe "createMap"
+foreign import javascript unsafe "((cid) => createMap(cid))"
   createMapJS :: JSVal -> IO ()
 #endif
 
