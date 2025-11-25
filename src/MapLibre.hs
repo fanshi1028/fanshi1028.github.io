@@ -54,7 +54,7 @@ mapLibreComponent =
 addMarkerAndEaseToLocation :: Geolocation -> JSM ()
 addMarkerAndEaseToLocation (Geolocation lat lon acc) = do
   mapLibre <- liftIO $ readMVar mapLibreMVar
-  mapLibreLib <- liftIO (readMVar mapLibreLibMVar)
+  mapLibreLib <- liftIO $ readMVar mapLibreLibMVar
   void $ (mapLibreLib # "addMarkerAndEaseToLocation") (lon, lat, mapLibre)
 
 runMapLibre :: ReaderT MapLibreLib JSM a -> JSM a
