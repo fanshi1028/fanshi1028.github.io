@@ -58,7 +58,7 @@
             }
             ''
               mkdir $out
-              bun build index.ts --outdir $out \
+              bun build $src/index.ts --outdir $out \
                 --format iife --target browser \ 
                 --minify
             '';
