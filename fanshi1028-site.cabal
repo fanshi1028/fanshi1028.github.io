@@ -126,10 +126,7 @@ library
     buildable: False
 
   if arch(javascript)
-    -- cabal-gild: discover js-src
-    js-sources:
-      js-src/index.js
-      js-src/temp-fix.js
+    js-sources: jsbits/temp-fix.js
   ghc-options: -Wall
 
   if flag(production)
