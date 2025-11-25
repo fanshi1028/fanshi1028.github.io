@@ -17,4 +17,5 @@ declare global {
   var maplibregl_ffi: unknown
 }
 
-globalThis.maplibregl_ffi = { createMap, addMarkerAndEaseToLocation }
+if (globalThis !== undefined)
+  globalThis.maplibregl_ffi = { createMap, addMarkerAndEaseToLocation }
