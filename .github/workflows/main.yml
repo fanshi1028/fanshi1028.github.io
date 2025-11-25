@@ -222,6 +222,7 @@ jobs:
       - name: Prepare some static files
         run: |
           cp -v static/favicon.ico public/
+          cp -v js-src/index.js public/maplibregl_ffi.js
 
       - name: Archive artifact
         shell: sh

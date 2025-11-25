@@ -43,22 +43,14 @@ mapLibreComponent =
     scripts = [Src $ toJSString "./typescript/maplibre-gl-ffi/index.js"]
 #endif
 #ifdef PRODUCTION
-    scripts = []
+    scripts = [Src $ toJSString "./maplibregl_ffi.js"]
 #endif
 
 addMarkerAndEaseToLocation :: Geolocation -> JSM ()
 addMarkerAndEaseToLocation (Geolocation lat lon acc) = do
   mapLibre <- liftIO $ readMVar mapLibreMVar
-#ifndef javascript_HOST_ARCH
   mapLibreLib <- liftIO (readMVar mapLibreLibMVar)
   void $ (mapLibreLib # "addMarkerAndEaseToLocation") (lon, lat, mapLibre)
-#endif
-#ifdef javascript_HOST_ARCH
-  toJSVal mapLibre >>= liftIO . addMarkerAndEaseToLocationJs lon lat
-
-foreign import javascript unsafe "((lng, lat, map) => addMarkerAndEaseToLocation(lng, lat, map))"
-  addMarkerAndEaseToLocationJs :: Double -> Double -> JSVal -> IO ()
-#endif
 
 runMapLibre :: ReaderT MapLibreLib JSM a -> JSM a
 runMapLibre m = do
@@ -80,17 +72,9 @@ createMap = do
   map' <- makeMap
   liftIO . putMVar mapLibreMVar $ MapLibre map'
   where
-#ifndef javascript_HOST_ARCH
     makeMap = do
       maplibregl <- ask
       liftJSM $ maplibregl # "createMap" $ mapLibreId
-#endif
-#ifdef javascript_HOST_ARCH
-    makeMap = liftJSM (toJSVal mapLibreId) >>= liftIO . createMapJS
-
-foreign import javascript unsafe "((cid) => createMap(cid))"
-  createMapJS :: JSVal -> IO ()
-#endif
 
 cleanUpMap :: JSM ()
 cleanUpMap = () <$ liftIO (takeMVar mapLibreMVar)
