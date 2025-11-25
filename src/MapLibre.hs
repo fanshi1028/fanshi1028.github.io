@@ -43,7 +43,12 @@ mapLibreComponent =
     scripts = [Src $ toJSString "./typescript/maplibre-gl-ffi/index.js"]
 #endif
 #ifdef PRODUCTION
+#ifdef WASM
+    scripts = [Src $ toJSString "../maplibregl_ffi.js"]
+#endif
+#ifndef WASM
     scripts = [Src $ toJSString "./maplibregl_ffi.js"]
+#endif
 #endif
 
 addMarkerAndEaseToLocation :: Geolocation -> JSM ()
