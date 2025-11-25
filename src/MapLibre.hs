@@ -39,10 +39,10 @@ mapLibreComponent =
       styles = [Href $ toJSString "https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css"]
     }
   where
-#ifndef javascript_HOST_ARCH
+#ifndef PRODUCTION
     scripts = [Src $ toJSString "./typescript/maplibre-gl-ffi/index.js"]
 #endif
-#ifdef javascript_HOST_ARCH
+#ifdef PRODUCTION
     scripts = []
 #endif
 
