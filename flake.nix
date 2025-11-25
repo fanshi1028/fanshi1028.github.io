@@ -58,7 +58,7 @@
             }
             ''
               mkdir $out
-              bun build index.tex --outdir $out \
+              bun build index.ts --outdir $out \
                 --format iife --target browser \ 
                 --minify
             '';
