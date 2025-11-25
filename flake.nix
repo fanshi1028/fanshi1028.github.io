@@ -50,10 +50,37 @@
           wasm = true;
         };
 
-        fanshi1028-site-js = pkgs.pkgsCross.ghcjs.callPackage ./nix/fanshi1028-site.nix { } {
-          inherit ghcVersion;
-          root = ./.;
-        };
+        maplibre-gl-ffi =
+          pkgs.runCommandLocal "bun-build-maplibre-gl-ffi"
+            {
+              nativeBuildInputs = [ pkgs.bun ];
+              src = ./typescript/maplibre-gl-ffi;
+            }
+            ''
+              mkdir $out
+              bun build index.tex --outdir $out \
+                --format iife --target browser \ 
+                --minify
+            '';
+
+        fanshi1028-site-js =
+          (pkgs.pkgsCross.ghcjs.callPackage ./nix/fanshi1028-site.nix { } {
+            inherit ghcVersion;
+            root = ./.;
+          }).overrideAttrs
+            (
+              old:
+              let
+                maplibre-gl-ffi = self.packages.${system}.maplibre-gl-ffi;
+              in
+              {
+                nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ maplibre-gl-ffi ];
+                preBuild = ''
+                  cp -v ${maplibre-gl-ffi}/index.js $src/js-src/maplibre-gl-ffi.js
+                  ${old.preBuild or ""}
+                '';
+              }
+            );
       }) nixpkgs.legacyPackages;
 
       devShells = builtins.mapAttrs (system: pkgs: {
