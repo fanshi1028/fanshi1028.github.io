@@ -180,8 +180,7 @@ jobs:
         working-directory: ./typescript/wasm-entry
         run: |
           bun build ./index.ts --outdir ../.. \
-            --minify-whitespace --minify-identifiers --minify-syntax \
-            --external ../all.js
+            --minify --external ../all.js
 
       - uses: actions/upload-artifact@v4
         with:
