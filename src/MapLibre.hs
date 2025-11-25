@@ -44,10 +44,10 @@ mapLibreComponent =
 #endif
 #ifdef PRODUCTION
 #ifdef WASM
-    scripts = [Src $ toJSString "../maplibregl_ffi.js"]
+    scripts = [Src $ toJSString "../maplibre-gl-ffi.js"]
 #endif
 #ifndef WASM
-    scripts = [Src $ toJSString "./maplibregl_ffi.js"]
+    scripts = [Src $ toJSString "./maplibre-gl-ffi.js"]
 #endif
 #endif
 
