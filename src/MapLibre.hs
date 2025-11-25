@@ -40,7 +40,7 @@ mapLibreComponent =
     }
   where
 #ifndef PRODUCTION
-    scripts = [Src $ toJSString "./js-src/index.js"]
+    scripts = [Src $ toJSString "./typescript/maplibre-gl-ffi/index.js"]
 #endif
 #ifdef PRODUCTION
     scripts = []
