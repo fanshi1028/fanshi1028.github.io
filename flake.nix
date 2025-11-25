@@ -50,30 +50,24 @@
           wasm = true;
         };
 
-        maplibre-gl-ffi =
-          let
-            src = ./typescript/maplibre-gl-ffi;
-            npmDeps = pkgs.importNpmLock.buildNodeModules {
-              npmRoot = src;
-              nodejs = pkgs.nodejs_24;
-            };
-          in
-          pkgs.runCommandLocal "bun-build-maplibre-gl-ffi"
-            {
-              nativeBuildInputs = [ pkgs.bun ];
-              inherit src npmDeps;
-            }
-            ''
-              mkdir $out
-              NODE_PATH=$npmDeps/node_modules bun build $src/index.ts --outdir $out --minify
-            '';
-
         fanshi1028-site-js = (
           pkgs.pkgsCross.ghcjs.callPackage ./nix/fanshi1028-site.nix { } {
             inherit ghcVersion;
             root = ./.;
           }
         );
+
+        bun-build = pkgs.lib.attrsets.mapAttrs (
+          path: type:
+          if type != "directory" then
+            null
+          else
+            pkgs.callPackage ./nix/bun-build.nix { nodejs = pkgs.nodejs_24; } {
+              name = path;
+              src = ./typescript/${path};
+            }
+        ) (builtins.readDir ./typescript);
+
       }) nixpkgs.legacyPackages;
 
       devShells = builtins.mapAttrs (system: pkgs: {
