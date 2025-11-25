@@ -39,21 +39,21 @@ mapLibreComponent =
       styles = [Href $ toJSString "https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css"]
     }
   where
-#ifndef PRODUCTION
+#ifndef javascript_HOST_ARCH
     scripts = [Src $ toJSString "./typescript/maplibre-gl-ffi/index.js"]
 #endif
-#ifdef PRODUCTION
+#ifdef javascript_HOST_ARCH
     scripts = []
 #endif
 
 addMarkerAndEaseToLocation :: Geolocation -> JSM ()
 addMarkerAndEaseToLocation (Geolocation lat lon acc) = do
   mapLibre <- liftIO $ readMVar mapLibreMVar
-#ifndef PRODUCTION
+#ifndef javascript_HOST_ARCH
   mapLibreLib <- liftIO (readMVar mapLibreLibMVar)
   void $ (mapLibreLib # "addMarkerAndEaseToLocation") (lon, lat, mapLibre)
 #endif
-#ifdef PRODUCTION
+#ifdef javascript_HOST_ARCH
   toJSVal mapLibre >>= liftIO . addMarkerAndEaseToLocationJs lon lat
 
 foreign import javascript unsafe "addMarkerAndEaseToLocation"
