@@ -65,8 +65,7 @@
             }
             ''
               mkdir $out
-              NODE_PATH=$npmDeps/node_modules \
-                bun build $src/index.ts --outdir $out --format iife --target browser --minify
+              NODE_PATH=$npmDeps/node_modules bun build $src/index.ts --outdir $out --minify
             '';
 
         fanshi1028-site-js =

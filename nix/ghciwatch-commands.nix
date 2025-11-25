@@ -38,7 +38,7 @@ lib.mapAttrs' make-ghciwatch-script {
     # runtimeInputs = [ tailwindcss ];
     flags = ''
       --watch app \
-      --before-reload-shell "bun build typescript/maplibre-gl-ffi/index.ts --root typescript/maplibre-gl-ffi --outdir ./typescript/maplibre-gl-ffi --format iife --target browser" \
+      --before-reload-shell "bun build typescript/maplibre-gl-ffi/index.ts --root typescript/maplibre-gl-ffi --outdir ./typescript/maplibre-gl-ffi" \
       --test-ghci Main.main
     '';
     runtimeInputs = [ bun ];
