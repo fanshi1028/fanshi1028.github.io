@@ -13,5 +13,8 @@ const addMarkerAndEaseToLocation = (lng: number, lat: number, mapLbre: Map) => {
   mapLbre.easeTo({ center: location })
 }
 
-// @ts-ignore: HACK provide a variance to check this file is loaded
-window.maplibregl = { createMap, addMarkerAndEaseToLocation }
+declare global {
+  var maplibregl_ffi: unknown;
+};
+
+globalThis.maplibregl_ffi = { createMap, addMarkerAndEaseToLocation }
