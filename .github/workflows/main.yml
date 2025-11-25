@@ -82,7 +82,7 @@ jobs:
 
       - name: Nix Build fanshi1028-site-js
         run: |
-          nix build .#fanshi1028-site-js
+          nix build .#fanshi1028-site-js -vvv
 
       - name: Optimise JS
         shell: nix shell .#closurecompiler --command bash -e {0}
