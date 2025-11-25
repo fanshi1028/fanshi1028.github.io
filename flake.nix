@@ -51,16 +51,22 @@
         };
 
         maplibre-gl-ffi =
+          let
+            src = ./typescript/maplibre-gl-ffi;
+            npmDeps = pkgs.importNpmLock.buildNodeModules {
+              npmRoot = src;
+              nodejs = pkgs.nodejs_24;
+            };
+          in
           pkgs.runCommandLocal "bun-build-maplibre-gl-ffi"
             {
               nativeBuildInputs = [ pkgs.bun ];
-              src = ./typescript/maplibre-gl-ffi;
+              inherit src npmDeps;
             }
             ''
               mkdir $out
-              bun build $src/index.ts --outdir $out \
-                --format iife --target browser \ 
-                --minify
+              NODE_PATH=$npmDeps/node_modules \
+                bun build $src/index.ts --outdir $out --format iife --target browser --minify
             '';
 
         fanshi1028-site-js =
