@@ -71,6 +71,7 @@ haskell.packages."ghc${ghcVersion}".developPackage (
             [
               (enableCabalFlag "production")
               (setBuildTargets [ "exe:fanshi1028-site" ])
+              (appendConfigureFlag "--ghc-options=-v2")
             ]
         )
       );
