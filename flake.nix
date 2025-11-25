@@ -69,27 +69,24 @@
                 bun build $src/index.ts --outdir $out --format iife --target browser --minify
             '';
 
-        fanshi1028-site-js = (
-          pkgs.pkgsCross.ghcjs.callPackage ./nix/fanshi1028-site.nix { } {
+        fanshi1028-site-js =
+          (pkgs.pkgsCross.ghcjs.callPackage ./nix/fanshi1028-site.nix { } {
             inherit ghcVersion;
             root = ./.;
-          }
-        )
-        # .overrideAttrs
-        # (
-        #   old:
-        #   let
-        #     maplibre-gl-ffi = self.packages.${system}.maplibre-gl-ffi;
-        #   in
-        #   {
-        #     nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ maplibre-gl-ffi ];
-        #     postPatch = ''
-        #       ${old.postPatch or ""}
-        #       cp ${maplibre-gl-ffi}/index.js js-src/maplibre-gl-ffi.js
-        #     '';
-        #   }
-        # )
-        ;
+          }).overrideAttrs
+            (
+              old:
+              let
+                maplibre-gl-ffi = self.packages.${system}.maplibre-gl-ffi;
+              in
+              {
+                nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ maplibre-gl-ffi ];
+                postPatch = ''
+                  ${old.postPatch or ""}
+                  cp ${maplibre-gl-ffi}/index.js js-src/maplibre-gl-ffi.js
+                '';
+              }
+            );
       }) nixpkgs.legacyPackages;
 
       devShells = builtins.mapAttrs (system: pkgs: {
