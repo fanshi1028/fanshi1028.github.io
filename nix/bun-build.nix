@@ -1,7 +1,7 @@
 {
   importNpmLock,
   runCommandLocal,
-  optionalString,
+  lib,
   nodejs,
   bun,
 }:
@@ -23,5 +23,5 @@ runCommandLocal "bun-build-${name}"
   }
   ''
     mkdir $out
-    NODE_PATH=$npmDeps/node_modules bun build $src/index.ts --outdir $out ${optionalString minify "--minify"} 
+    NODE_PATH=$npmDeps/node_modules bun build $src/index.ts --outdir $out ${lib.optionalString minify "--minify"}
   ''
