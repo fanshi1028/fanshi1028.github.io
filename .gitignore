@@ -2,3 +2,7 @@
 dist*
 result
 public
+/typescript/wasm-entry/fanshi1028-site.wasm
+/typescript/wasm-entry/ghc_wasm_jsffi.js
+/static/output.css
+/typescript/maplibre-gl-ffi/index.js
