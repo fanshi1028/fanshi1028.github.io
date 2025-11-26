@@ -15,8 +15,8 @@ import Miso.Html.Property
 import Miso.Html.Render
 import Miso.Router hiding (href_)
 import System.File.OsPath as IO
+import System.IO
 import System.OsPath
-import UnliftIO
 
 #ifdef WASM
 import System.Directory.OsPath
@@ -41,9 +41,9 @@ main = do
                 & if route' == minBound
                   then (</> [osp|index.html|])
                   else (<.> [osp|html|])
-        withRunInIO $ \runInIO -> IO.withFile file WriteMode $ \h -> do
-          putStrLn $ "prerendering: " <> show file
-          runInIO . BS.hPutStr h . toHtml . modelToViews $ Model route' True
+        putStrLn $ "prerendering: " <> show file
+        IO.withFile file WriteMode $ \h -> do
+          BS.hPutStr h . toHtml . modelToViews $ Model route' True
     )
     $ boundedEnumFrom minBound
 

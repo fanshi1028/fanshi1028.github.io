@@ -186,7 +186,6 @@ executable prerender
     file-io,
     filepath,
     miso,
-    unliftio,
 
   hs-source-dirs:
     prerender
