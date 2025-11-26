@@ -47,16 +47,6 @@ main = do
     )
     $ boundedEnumFrom minBound
 
-outputCSSPath, indexJSPath :: MisoString
-#ifdef WASM
-indexJSPath = "index.js"
-outputCSSPath = "../output.css"
-#endif
-#ifndef WASM
-indexJSPath = "all.js"
-outputCSSPath = "output.css"
-#endif
-
 modelToViews :: Model -> [View Model Action]
 modelToViews model =
   [ doctype_,
@@ -64,12 +54,8 @@ modelToViews model =
       [ head_ [] $
           [ meta_ [charset_ "utf-8"],
             meta_ [name_ "viewport", content_ "width=device-width, initial-scale=1"],
-            Html.title_ [] ["Fanshi1028's personal site"],
-            link_ [href_ outputCSSPath, rel_ "stylesheet", type_ "text/css"]
+            Html.title_ [] ["Fanshi1028's personal site"]
           ],
-        body_ [] $
-          [ script_ [src_ indexJSPath, type_ "module", defer_ "true"] "",
-            viewModel model
-          ]
+        body_ [] $ [viewModel model]
       ]
   ]
