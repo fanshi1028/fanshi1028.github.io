@@ -67,6 +67,7 @@ common lib
     other-modules:
       App
       Clock
+      Clock.View
       Dashboard
       Dashboard.DataSource.BrowserGeolocationAPI
       Dashboard.DataSource.HongKongObservatoryWeatherAPI
@@ -96,6 +97,7 @@ library
   exposed-modules:
     App
     Clock
+    Clock.View
     Dashboard
     Dashboard.DataSource.BrowserGeolocationAPI
     Dashboard.DataSource.HongKongObservatoryWeatherAPI
