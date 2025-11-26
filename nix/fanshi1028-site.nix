@@ -27,7 +27,7 @@ haskell.packages."ghc${ghcVersion}".developPackage (
   // {
     overrides = lib.composeManyExtensions [
       (
-        if stdenv.hostPlatform == "ghcjs" && !prerender then
+        if stdenv.hostPlatform.isGhcjs && !prerender then
           hself: hsuper: ({
             hashtables = haskell.lib.enableCabalFlag hsuper.hashtables "portable";
             # NOTE: https://github.com/ghcjs/jsaddle/pull/162
