@@ -79,6 +79,7 @@ common lib
       Haxl.LocalStorage
       MapLibre
       Pomodoro
+      Pomodoro.View
       ProductRequirementDocument
       ProductRequirementDocument.Dashboard
       ProductRequirementDocument.Home
@@ -109,6 +110,7 @@ library
     Haxl.LocalStorage
     MapLibre
     Pomodoro
+    Pomodoro.View
     ProductRequirementDocument
     ProductRequirementDocument.Dashboard
     ProductRequirementDocument.Home
