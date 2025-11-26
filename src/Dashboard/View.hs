@@ -329,9 +329,9 @@ viewModel (Model mELocation mTimeZone mCurrentWeatherReport mLocalWeatherForecas
     [class_ "flex flex-col gap-8 bg-neutral-600 text-neutral-200"]
     [ div_
         [ key_ @Key "mapLibreComponent",
-          case mELocation of
-            Just (Right _) -> class_ "h-72"
-            _ -> class_ "",
+          class_ $ case mELocation of
+            Just (Right _) -> "h-screen w-full"
+            _ -> "",
           onMounted InitMapLibre,
           onBeforeUnmounted CleanUpMapLibre
         ]
