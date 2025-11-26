@@ -76,6 +76,7 @@ common lib
       Dashboard.DataSource.JSM
       Dashboard.DataSource.LocalStorage
       Dashboard.DataSource.MisoRun
+      Dashboard.View
       Haxl.LocalStorage
       MapLibre
       Pomodoro
@@ -107,6 +108,7 @@ library
     Dashboard.DataSource.JSM
     Dashboard.DataSource.LocalStorage
     Dashboard.DataSource.MisoRun
+    Dashboard.View
     Haxl.LocalStorage
     MapLibre
     Pomodoro
