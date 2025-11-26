@@ -71,11 +71,6 @@
       }) nixpkgs.legacyPackages;
 
       devShells = builtins.mapAttrs (system: pkgs: {
-        without-build-tools = pkgs.callPackage ./nix/fanshi1028-site.nix { } {
-          inherit ghcVersion;
-          root = ./.;
-          returnShellEnv = true;
-        };
         default = pkgs.callPackage ./nix/fanshi1028-site.nix { } {
           inherit ghcVersion;
           root = ./.;
