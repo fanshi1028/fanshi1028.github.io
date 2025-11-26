@@ -66,6 +66,7 @@ common lib
     -- cabal-gild: discover src
     other-modules:
       App
+      App.View
       Clock
       Clock.View
       Dashboard
@@ -98,6 +99,7 @@ library
   -- cabal-gild: discover src
   exposed-modules:
     App
+    App.View
     Clock
     Clock.View
     Dashboard
