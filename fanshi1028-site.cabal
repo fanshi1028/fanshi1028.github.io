@@ -66,6 +66,7 @@ common lib
     -- cabal-gild: discover src
     other-modules:
       App
+      App.Update
       App.View
       Clock
       Clock.View
@@ -99,6 +100,7 @@ library
   -- cabal-gild: discover src
   exposed-modules:
     App
+    App.Update
     App.View
     Clock
     Clock.View
