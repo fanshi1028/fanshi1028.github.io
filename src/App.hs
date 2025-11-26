@@ -43,14 +43,8 @@ app route' =
       Left err -> RoutingError err
       Right uri' -> Model uri' True
 #ifdef PRODUCTION
-#ifdef WASM
-    scripts = [Module $ ms "index.js"]
-    styles = [Href $ ms "../output.css"]
-#endif
-#ifndef WASM
-    scripts = [Module $ ms "all.js"]
-    styles = [Href $ ms "output.css"]
-#endif
+    scripts = []
+    styles = []
     logLevel = Off
 #endif
 #ifndef PRODUCTION
