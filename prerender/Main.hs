@@ -4,7 +4,7 @@
 
 module Main where
 
-import App
+import App.View
 import Data.ByteString.Lazy as BS
 import Data.Foldable
 import Data.Function
