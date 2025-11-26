@@ -36,6 +36,7 @@ jobs:
         run: |
           nix build .#bun-build.maplibre-gl-ffi
           cp -v result/index.js maplibre-gl-ffi.js
+          cp -v result/maplibre-gl.css .
 
       - uses: actions/upload-artifact@v4
         with:
@@ -43,6 +44,7 @@ jobs:
           path: |
             ./output.css
             ./maplibre-gl-ffi.js
+            ./maplibre-gl.css
           if-no-files-found: error
           retention-days: 1
 

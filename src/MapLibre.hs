@@ -36,18 +36,21 @@ mapLibreComponent =
       div_ [id_ $ ms "FIXME: need to wrap the div with id ${mapLibreId} to TEMP fix the 'conatianer not found' for maplibre", class_ $ ms "h-full"] [div_ [id_ mapLibreId, class_ $ ms "h-full"] []]
   )
     { scripts,
-      styles = [Href $ toJSString "https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css"]
+      styles
     }
   where
 #ifndef PRODUCTION
     scripts = [Src $ toJSString "typescript/maplibre-gl-ffi/index.js"]
+    styles = [Href $ toJSString "typescript/maplibre-gl-ffi/node_modules/maplibre-gl/dist/maplibre-gl.css"]
 #endif
 #ifdef PRODUCTION
 #ifdef WASM
     scripts = [Src $ toJSString "../maplibre-gl-ffi.js"]
+    styles = [Href $ toJSString "../maplibre-gl.css"]
 #endif
 #ifndef WASM
     scripts = [Src $ toJSString "maplibre-gl-ffi.js"]
+    styles = [Href $ toJSString "maplibre-gl.css"]
 #endif
 #endif
 

@@ -24,4 +24,8 @@ runCommandLocal "bun-build-${name}"
   ''
     mkdir $out
     NODE_PATH=$npmDeps/node_modules bun build $src/index.ts --outdir $out ${lib.optionalString minify "--minify"}
+
+    ${lib.optionalString (
+      name == "maplibre-gl-ffi"
+    ) "cp -v $npmDeps/node_modules/maplibre-gl/dist/maplibre-gl.css $out/"}
   ''
