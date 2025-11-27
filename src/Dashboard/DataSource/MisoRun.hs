@@ -42,5 +42,5 @@ instance (Typeable action) => DataSource u (MisoRunAction action) where
           ()
           reqs
 
-misoRunAction :: (Typeable action, Show action, Eq action) => action -> GenHaxl JSContextRef w ()
+misoRunAction :: (Typeable action, Show action, Eq action) => action -> GenHaxl u w ()
 misoRunAction = uncachedRequest . MisoRunAction
