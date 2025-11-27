@@ -78,11 +78,6 @@ instance DataSource u HKOWeatherInformationReq where
       )
       reqState
 
--- NOTE: Earthquake Information API
-data HKOEarthquakeInformationReq a where
-  GetQuickEarthquakeMessages :: HKOEarthquakeInformationReq Void
-  GetLocallyFeltEarthTremor :: HKOEarthquakeInformationReq Void
-
 data HKOOpenDataReq a where
   -- NOTE: Open Data (Climate and Weather Information) API
   GetHourlyHeightsOfAstronomicalTides :: HKOOpenDataReq Void
@@ -96,10 +91,6 @@ data HKOOpenDataReq a where
   GetDailyMaximumTemperature :: HKOOpenDataReq Void
   GetDailyMinimumTemperature :: HKOOpenDataReq Void
   GetWeatherAndRadiationLevelReport :: HKOOpenDataReq Void
-
--- NOTE: Gregorian-Lunar Calendar Conversion API
-data HKOGregorianlLunarConversionReq a where
-  GetLunarDate :: HKOGregorianlLunarConversionReq Void
 
 -- NOTE: Rainfall in The Past Hour from Automatic Weather Station API
 data HKOHourlyRainFallReq a where
