@@ -59,7 +59,6 @@ fetchData sink = do
   ioState <- liftIO mkConcurrentIOState
   let st =
         stateEmpty
-          & stateSet (MisoRunActionState jscontext sink)
           & stateSet (LocationReqState jscontext)
           & stateSet (HKOWeatherInformationReqState jscontext)
           & stateSet (JSMActionState jscontext)
@@ -71,17 +70,18 @@ fetchData sink = do
   env' <- liftIO $ initEnv @() st jscontext
 
   _ <- liftIO . runHaxl (env' {flags = haxlEnvflags}) $ do
+    let misoRunAction' = misoRunAction jscontext sink
     tdy@(pred -> ytd) <- utctDay <$> uncachedRequest GetCurrentTime
 
-    uncachedRequest GetCurrentTimeZone >>= misoRunAction . SetTimeZone
+    uncachedRequest GetCurrentTimeZone >>= misoRunAction' . SetTimeZone
 
-    fetchCacheable (GetLocalWeatherForecast tdy) >>= misoRunAction . SetLocalWeatherForecast
+    fetchCacheable (GetLocalWeatherForecast tdy) >>= misoRunAction' . SetLocalWeatherForecast
 
-    fetchCacheable (Get9DayWeatherForecast tdy) >>= misoRunAction . Set9DayWeatherForecast
+    fetchCacheable (Get9DayWeatherForecast tdy) >>= misoRunAction' . Set9DayWeatherForecast
 
-    uncachedRequest GetCurrentPosition >>= misoRunAction . SetLocation
+    uncachedRequest GetCurrentPosition >>= misoRunAction' . SetLocation
 
-    fetchCacheable (GetCurrentWeatherReport tdy) >>= misoRunAction . SetCurrentWeatherReport
+    fetchCacheable (GetCurrentWeatherReport tdy) >>= misoRunAction' . SetCurrentWeatherReport
 
     fetchCacheable $ GetWeatherWarningSummary tdy
 
