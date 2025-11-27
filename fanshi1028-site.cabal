@@ -77,14 +77,14 @@ common lib
       DataSource.JSM
       DataSource.LocalStorage
       MapLibre
-      ProductRequirementDocument
-      ProductRequirementDocument.Dashboard
-      ProductRequirementDocument.Home
-      ProductRequirementDocument.Pomodoro
       Utils.Dimensional
       Utils.Haxl
       Utils.JS
       Utils.Serialise
+      View.ProductRequirementDocument
+      View.ProductRequirementDocument.Dashboard
+      View.ProductRequirementDocument.Home
+      View.ProductRequirementDocument.Pomodoro
       View.SVG.LoadSpinner
       View.SVG.ToggleLangButton
 
@@ -107,14 +107,14 @@ library
     DataSource.JSM
     DataSource.LocalStorage
     MapLibre
-    ProductRequirementDocument
-    ProductRequirementDocument.Dashboard
-    ProductRequirementDocument.Home
-    ProductRequirementDocument.Pomodoro
     Utils.Dimensional
     Utils.Haxl
     Utils.JS
     Utils.Serialise
+    View.ProductRequirementDocument
+    View.ProductRequirementDocument.Dashboard
+    View.ProductRequirementDocument.Home
+    View.ProductRequirementDocument.Pomodoro
     View.SVG.LoadSpinner
     View.SVG.ToggleLangButton
 

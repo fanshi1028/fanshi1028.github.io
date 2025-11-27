@@ -1,11 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module ProductRequirementDocument.Pomodoro (pomodoroPRD) where
+module View.ProductRequirementDocument.Pomodoro (pomodoroPRD) where
 
 import Data.List.NonEmpty
 import Network.URI.Static
-import ProductRequirementDocument
+import View.ProductRequirementDocument
 
 pomodoroPRD :: ProductRequirementDocument
 pomodoroPRD =

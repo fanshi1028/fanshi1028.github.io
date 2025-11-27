@@ -1,11 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module ProductRequirementDocument.Home (homePRD) where
+module View.ProductRequirementDocument.Home (homePRD) where
 
 import Data.List.NonEmpty
 import Network.URI.Static
-import ProductRequirementDocument
+import View.ProductRequirementDocument
 
 homePRD :: ProductRequirementDocument
 homePRD =

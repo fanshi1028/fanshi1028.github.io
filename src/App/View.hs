@@ -17,10 +17,10 @@ import Miso.Router
 import Miso.Router qualified as Router
 import Miso.Svg.Element
 import Miso.Svg.Property hiding (path_)
-import ProductRequirementDocument
-import ProductRequirementDocument.Dashboard
-import ProductRequirementDocument.Home
-import ProductRequirementDocument.Pomodoro
+import View.ProductRequirementDocument
+import View.ProductRequirementDocument.Dashboard
+import View.ProductRequirementDocument.Home
+import View.ProductRequirementDocument.Pomodoro
 import View.SVG.LoadSpinner
 import View.SVG.ToggleLangButton
 

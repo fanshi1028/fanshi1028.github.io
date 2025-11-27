@@ -8,7 +8,7 @@ import Language.Javascript.JSaddle
 import Miso
 import Miso.Lens
 import Miso.Router
-import ProductRequirementDocument
+import View.ProductRequirementDocument
 
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case

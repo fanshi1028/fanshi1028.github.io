@@ -6,7 +6,7 @@
 -- NOTE: reference - https://coda.io/@yuhki/figmas-approach-to-product-requirement-docs
 -- NOTE: reference - https://www.cycle.app/blog/how-figma-writes-product-requirements-document-prd
 
-module ProductRequirementDocument
+module View.ProductRequirementDocument
   ( -- NOTE: Types
     ProductRequirementDocument (ProductRequirementDocument),
     ProblemAlignment (ProblemAlignment),

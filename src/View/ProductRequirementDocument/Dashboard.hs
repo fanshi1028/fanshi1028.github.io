@@ -1,11 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module ProductRequirementDocument.Dashboard (dashboardPRD) where
+module View.ProductRequirementDocument.Dashboard (dashboardPRD) where
 
 import Data.List.NonEmpty
 import Network.URI.Static
-import ProductRequirementDocument
+import View.ProductRequirementDocument
 
 dashboardPRD :: ProductRequirementDocument
 dashboardPRD =
