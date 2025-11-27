@@ -70,13 +70,13 @@ common lib
       Clock
       Clock.View
       Dashboard
-      Dashboard.DataSource.BrowserGeolocationAPI
-      Dashboard.DataSource.HongKongObservatoryWeatherAPI
-      Dashboard.DataSource.HongKongObservatoryWeatherAPI.Types
-      Dashboard.DataSource.IO
-      Dashboard.DataSource.JSM
-      Dashboard.DataSource.LocalStorage
       Dashboard.View
+      DataSource.BrowserGeolocationAPI
+      DataSource.HongKongObservatoryWeatherAPI
+      DataSource.HongKongObservatoryWeatherAPI.Types
+      DataSource.IO
+      DataSource.JSM
+      DataSource.LocalStorage
       Haxl.LocalStorage
       MapLibre
       Pomodoro
@@ -102,13 +102,13 @@ library
     Clock
     Clock.View
     Dashboard
-    Dashboard.DataSource.BrowserGeolocationAPI
-    Dashboard.DataSource.HongKongObservatoryWeatherAPI
-    Dashboard.DataSource.HongKongObservatoryWeatherAPI.Types
-    Dashboard.DataSource.IO
-    Dashboard.DataSource.JSM
-    Dashboard.DataSource.LocalStorage
     Dashboard.View
+    DataSource.BrowserGeolocationAPI
+    DataSource.HongKongObservatoryWeatherAPI
+    DataSource.HongKongObservatoryWeatherAPI.Types
+    DataSource.IO
+    DataSource.JSM
+    DataSource.LocalStorage
     Haxl.LocalStorage
     MapLibre
     Pomodoro

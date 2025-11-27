@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeFamilies #-}
 
-module Dashboard.DataSource.JSM where
+module DataSource.JSM where
 
 import Control.Exception (SomeException)
 import Data.Csv

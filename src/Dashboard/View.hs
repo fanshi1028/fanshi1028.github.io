@@ -3,12 +3,12 @@
 
 module Dashboard.View where
 
-import Dashboard.DataSource.HongKongObservatoryWeatherAPI.Types
 import Data.Function
 import Data.Interval
 import Data.Maybe
 import Data.Text hiding (foldl')
 import Data.Time
+import DataSource.HongKongObservatoryWeatherAPI.Types
 import MapLibre
 import Miso
 import Miso.Html.Element

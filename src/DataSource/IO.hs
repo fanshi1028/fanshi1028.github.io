@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Dashboard.DataSource.IO (ConcurrentIOReq (..)) where
+module DataSource.IO (ConcurrentIOReq (..)) where
 
 import Control.Concurrent
 import Data.Hashable

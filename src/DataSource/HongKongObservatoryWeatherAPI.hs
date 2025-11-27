@@ -1,16 +1,16 @@
 {-# LANGUAGE TypeFamilies #-}
 
-module Dashboard.DataSource.HongKongObservatoryWeatherAPI where
+module DataSource.HongKongObservatoryWeatherAPI where
 
 import Control.Lens.Setter
-import Dashboard.DataSource.HongKongObservatoryWeatherAPI.Types
-import Dashboard.DataSource.JSM
 import Data.Function
 import Data.Hashable
 import Data.Text hiding (show)
 import Data.Time
 import Data.Typeable
 import Data.Void
+import DataSource.HongKongObservatoryWeatherAPI.Types
+import DataSource.JSM
 import Haxl.Core hiding (throw)
 import Language.Javascript.JSaddle hiding (Object, Success)
 import Network.URI

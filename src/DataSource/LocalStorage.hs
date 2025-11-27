@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeFamilies #-}
 
-module Dashboard.DataSource.LocalStorage where
+module DataSource.LocalStorage where
 
 import Codec.Serialise
 import Data.Hashable

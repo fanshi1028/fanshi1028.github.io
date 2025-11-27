@@ -5,15 +5,15 @@
 module Dashboard (dashboardComponent) where
 
 import Control.Monad.IO.Class
-import Dashboard.DataSource.BrowserGeolocationAPI
-import Dashboard.DataSource.HongKongObservatoryWeatherAPI
-import Dashboard.DataSource.HongKongObservatoryWeatherAPI.Types
-import Dashboard.DataSource.IO
-import Dashboard.DataSource.JSM
-import Dashboard.DataSource.LocalStorage
 import Dashboard.View
 import Data.Function
 import Data.Time
+import DataSource.BrowserGeolocationAPI
+import DataSource.HongKongObservatoryWeatherAPI
+import DataSource.HongKongObservatoryWeatherAPI.Types
+import DataSource.IO
+import DataSource.JSM
+import DataSource.LocalStorage
 import Haxl.Core
 import Haxl.DataSource.ConcurrentIO
 import Haxl.LocalStorage

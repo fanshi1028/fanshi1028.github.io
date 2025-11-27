@@ -3,7 +3,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoFieldSelectors #-}
 
-module Dashboard.DataSource.HongKongObservatoryWeatherAPI.Types where
+module DataSource.HongKongObservatoryWeatherAPI.Types where
 
 import Codec.Serialise
 import Codec.Serialise.Decoding
