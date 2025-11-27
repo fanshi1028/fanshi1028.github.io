@@ -93,6 +93,17 @@ fetchData sink = do
     let facility_hssp7 = [uri|https://www.lcsd.gov.hk/datagovhk/facility/facility-hssp7.json|]
     fetchCacheable (FetchJSON @SerialisableValue $ corsProxy facility_hssp7) >>= consoleLog' jscontext
 
+    let latest_15min_uvindex = [uri|https://data.weather.gov.hk/weatherAPI/hko_data/regional-weather/latest_15min_uvindex.csv|]
+    fetchCacheable
+      ( FetchCSV
+          @( String, -- TEMP FIXME
+             Double
+           )
+          True
+          $ corsProxy latest_15min_uvindex
+      )
+      >>= consoleLog' jscontext
+
     fetchCacheable $ GetSpecialWeatherTips tdy
 
   saveCacheToLocalStorage $ dataCache env'
