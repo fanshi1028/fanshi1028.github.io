@@ -64,10 +64,12 @@ common lib
     other-modules:
       App
       App.View
-      Clock
-      Clock.View
-      Dashboard
-      Dashboard.View
+      Component.Clock
+      Component.Clock.View
+      Component.Dashboard
+      Component.Dashboard.View
+      Component.Pomodoro
+      Component.Pomodoro.View
       DataSource.BrowserGeolocationAPI
       DataSource.HongKongObservatoryWeatherAPI
       DataSource.HongKongObservatoryWeatherAPI.Types
@@ -75,8 +77,6 @@ common lib
       DataSource.JSM
       DataSource.LocalStorage
       MapLibre
-      Pomodoro
-      Pomodoro.View
       ProductRequirementDocument
       ProductRequirementDocument.Dashboard
       ProductRequirementDocument.Home
@@ -84,9 +84,9 @@ common lib
       Utils.Dimensional
       Utils.Haxl
       Utils.JS
-      Utils.SVG.LoadSpinner
-      Utils.SVG.ToggleLangButton
       Utils.Serialise
+      View.SVG.LoadSpinner
+      View.SVG.ToggleLangButton
 
 library
   import: lib
@@ -94,10 +94,12 @@ library
   exposed-modules:
     App
     App.View
-    Clock
-    Clock.View
-    Dashboard
-    Dashboard.View
+    Component.Clock
+    Component.Clock.View
+    Component.Dashboard
+    Component.Dashboard.View
+    Component.Pomodoro
+    Component.Pomodoro.View
     DataSource.BrowserGeolocationAPI
     DataSource.HongKongObservatoryWeatherAPI
     DataSource.HongKongObservatoryWeatherAPI.Types
@@ -105,8 +107,6 @@ library
     DataSource.JSM
     DataSource.LocalStorage
     MapLibre
-    Pomodoro
-    Pomodoro.View
     ProductRequirementDocument
     ProductRequirementDocument.Dashboard
     ProductRequirementDocument.Home
@@ -114,9 +114,9 @@ library
     Utils.Dimensional
     Utils.Haxl
     Utils.JS
-    Utils.SVG.LoadSpinner
-    Utils.SVG.ToggleLangButton
     Utils.Serialise
+    View.SVG.LoadSpinner
+    View.SVG.ToggleLangButton
 
   default-language:
     GHC2024

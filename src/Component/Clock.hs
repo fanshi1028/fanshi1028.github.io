@@ -1,8 +1,8 @@
 {-# LANGUAGE DeriveAnyClass #-}
 
-module Clock (ClockDoneMessage (ClockDoneMessage), clockComponent) where
+module Component.Clock (ClockDoneMessage (ClockDoneMessage), clockComponent) where
 
-import Clock.View
+import Component.Clock.View
 import Control.Concurrent (threadDelay)
 import Control.Monad (forever)
 import Control.Monad.IO.Class (liftIO)

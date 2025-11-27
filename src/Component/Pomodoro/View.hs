@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module Pomodoro.View
+module Component.Pomodoro.View
   ( Model (..),
     Action (..),
     Pomodoro (..),
@@ -22,7 +22,7 @@ module Pomodoro.View
   )
 where
 
-import Clock
+import Component.Clock
 import Control.Applicative
 import Control.Category
 import Data.List.NonEmpty as NE

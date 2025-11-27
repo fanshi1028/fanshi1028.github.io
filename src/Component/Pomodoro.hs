@@ -3,9 +3,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module Pomodoro (pomodoroComponent) where
+module Component.Pomodoro (pomodoroComponent) where
 
-import Clock
+import Component.Clock
+import Component.Pomodoro.View
 import Control.Applicative
 import Control.Category
 import Control.Monad
@@ -19,7 +20,6 @@ import GHC.Natural
 import Miso hiding (Transition)
 import Miso.Lens
 import Miso.String hiding (foldl')
-import Pomodoro.View
 import Text.Read
 import Validation as Validation hiding (validation)
 import Prelude hiding ((.))
@@ -115,5 +115,5 @@ pomodoroComponent =
   (component defaultModel updateModel viewModel)
     { mailbox = \v -> case fromJSON v of
         Error _ -> Nothing
-        Aeson.Success Clock.ClockDoneMessage -> Just Next
+        Aeson.Success ClockDoneMessage -> Just Next
     }

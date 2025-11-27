@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Clock.View (viewModel, Model (..), Action (..)) where
+module Component.Clock.View (viewModel, Model (..), Action (..)) where
 
 import Data.Time
 import Miso

@@ -2,10 +2,10 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module Dashboard (dashboardComponent) where
+module Component.Dashboard (dashboardComponent) where
 
+import Component.Dashboard.View
 import Control.Monad.IO.Class
-import Dashboard.View
 import Data.Function
 import Data.Time
 import DataSource.BrowserGeolocationAPI

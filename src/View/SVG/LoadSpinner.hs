@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Utils.SVG.LoadSpinner where
+module View.SVG.LoadSpinner where
 
 import Miso
 import Miso.Html

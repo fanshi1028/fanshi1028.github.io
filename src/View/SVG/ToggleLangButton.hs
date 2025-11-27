@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Utils.SVG.ToggleLangButton (toggleLangButtonSVG) where
+module View.SVG.ToggleLangButton (toggleLangButtonSVG) where
 
 import Miso
 import Miso.Html

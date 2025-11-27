@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module Dashboard.View where
+module Component.Dashboard.View where
 
 import Data.Function
 import Data.Interval
@@ -19,7 +19,7 @@ import Numeric.Units.Dimensional hiding ((*), (-))
 import Numeric.Units.Dimensional.NonSI
 import Numeric.Units.Dimensional.SIUnits hiding (toDegreeCelsiusAbsolute)
 import Utils.Dimensional
-import Utils.SVG.LoadSpinner
+import View.SVG.LoadSpinner
 import Prelude hiding (show)
 
 data Model

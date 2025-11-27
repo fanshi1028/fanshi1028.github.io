@@ -5,7 +5,8 @@
 
 module App.View where
 
-import Dashboard
+import Component.Dashboard
+import Component.Pomodoro
 import Data.Char
 import GHC.Enum
 import GHC.Generics
@@ -16,13 +17,12 @@ import Miso.Router
 import Miso.Router qualified as Router
 import Miso.Svg.Element
 import Miso.Svg.Property hiding (path_)
-import Pomodoro
 import ProductRequirementDocument
 import ProductRequirementDocument.Dashboard
 import ProductRequirementDocument.Home
 import ProductRequirementDocument.Pomodoro
-import Utils.SVG.LoadSpinner
-import Utils.SVG.ToggleLangButton
+import View.SVG.LoadSpinner
+import View.SVG.ToggleLangButton
 
 newtype RouteForTheOtherLang = RouteForTheOtherLang Route
 
