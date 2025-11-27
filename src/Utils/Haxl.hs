@@ -5,10 +5,13 @@ import Control.Exception (Exception (toException), SomeException)
 import Control.Monad.IO.Class
 import Data.Aeson.Encode.Pretty
 import Data.Aeson.Types
+import Data.ByteString.Builder
 import Data.Functor
 import Data.Text hiding (concat, elem, foldl', foldr, reverse, show)
 import Data.Text qualified as T
+import Data.Text.Lazy (toStrict)
 import Data.Text.Lazy.Builder
+import Data.Text.Lazy.Encoding
 import Data.Typeable
 import Haxl.Core
 import Haxl.Core.Monad
@@ -63,3 +66,14 @@ fetchGetText = fetchJSM Proxy [accept =: textPlain] TEXT GET
 
 fetchGetBlob :: URI -> JSM (Either SomeException Blob)
 fetchGetBlob = fetchJSM Proxy [accept =: ms "application/octect-stream"] BLOB GET
+
+corsProxy :: URI -> URI
+corsProxy uri' =
+  nullURI
+    { uriScheme = "https:",
+      uriAuthority = Just $ nullURIAuth {uriRegName = "api.cors.lol"},
+      uriQuery = renderQueryTextToString [(pack "url", Just . pack $ uriToString id uri' "")]
+    }
+
+renderQueryTextToString :: QueryText -> String
+renderQueryTextToString = unpack . toStrict . decodeUtf8 . toLazyByteString . renderQueryText True
