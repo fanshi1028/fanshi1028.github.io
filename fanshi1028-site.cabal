@@ -36,11 +36,9 @@ common lib
     base <5,
     base64,
     bytestring,
-    cassava,
     cborg-json,
     containers,
     data-interval,
-    dataframe,
     dimensional,
     hashable,
     haxl,
@@ -57,7 +55,6 @@ common lib
     time,
     unliftio,
     validation-selective,
-    vector,
 
   hs-source-dirs:
     src
@@ -86,8 +83,7 @@ common lib
       ProductRequirementDocument.Home
       ProductRequirementDocument.Pomodoro
       Utils.Dimensional
-      Utils.Fetch
-      Utils.Fetch.CSV
+      Utils.Haxl
       Utils.JS
       Utils.SVG.LoadSpinner
       Utils.SVG.ToggleLangButton
@@ -118,8 +114,6 @@ library
     ProductRequirementDocument.Home
     ProductRequirementDocument.Pomodoro
     Utils.Dimensional
-    Utils.Fetch
-    Utils.Fetch.CSV
     Utils.Haxl
     Utils.JS
     Utils.SVG.LoadSpinner

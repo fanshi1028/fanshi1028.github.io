@@ -15,7 +15,7 @@ import Haxl.Core hiding (throw)
 import Language.Javascript.JSaddle hiding (Object, Success)
 import Network.URI
 import Network.URI.Lens
-import Utils.Fetch
+import Utils.Haxl
 import Utils.Serialise
 
 -- NOTE: Weather Information API
