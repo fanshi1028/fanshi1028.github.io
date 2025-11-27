@@ -3,20 +3,14 @@
 module Dashboard.DataSource.JSM where
 
 import Control.Exception (SomeException)
-import Data.Aeson
-import Data.Aeson.Encode.Pretty
 import Data.Csv
-import Data.Functor
 import Data.Hashable
 import Data.Text hiding (concat, elem, foldl', foldr, reverse, show)
 import Data.Text qualified as T
-import Data.Text.Lazy.Builder
 import Data.Typeable
 import Data.Vector hiding ((!))
 import Haxl.Core
-import Haxl.Core.Monad
 import Language.Javascript.JSaddle
-import Miso hiding (Decoder, URI, consoleLog, defaultOptions, on)
 import Network.URI
 import Utils.Fetch
 import Utils.Fetch.CSV
@@ -54,9 +48,3 @@ instance DataSource u JSMAction where
         FetchJSON uri -> fetchGetJSON Proxy uri
         FetchCSV uri -> fetchGetCSV uri
         FetchText uri -> fetchGetText uri
-
-consoleLog :: JSContextRef -> MisoString -> GenHaxl u w ()
-consoleLog jscontext = void . unsafeLiftIO . runJSaddle jscontext . (jsg "console" # "log")
-
-consoleLog' :: (ToJSON v) => JSContextRef -> v -> GenHaxl u w ()
-consoleLog' jscontext = consoleLog jscontext . ms . toLazyText . encodePrettyToTextBuilder

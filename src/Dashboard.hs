@@ -11,7 +11,6 @@ import Dashboard.DataSource.HongKongObservatoryWeatherAPI.Types
 import Dashboard.DataSource.IO
 import Dashboard.DataSource.JSM
 import Dashboard.DataSource.LocalStorage
-import Dashboard.DataSource.MisoRun
 import Dashboard.View
 import Data.Function
 import Data.Time
@@ -23,6 +22,7 @@ import MapLibre
 import Miso
 import Miso.Lens
 import Miso.Navigator
+import Utils.Haxl
 
 haxlEnvflags :: Flags
 haxlEnvflags =

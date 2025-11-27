@@ -76,7 +76,6 @@ common lib
       Dashboard.DataSource.IO
       Dashboard.DataSource.JSM
       Dashboard.DataSource.LocalStorage
-      Dashboard.DataSource.MisoRun
       Dashboard.View
       Haxl.LocalStorage
       MapLibre
@@ -109,7 +108,6 @@ library
     Dashboard.DataSource.IO
     Dashboard.DataSource.JSM
     Dashboard.DataSource.LocalStorage
-    Dashboard.DataSource.MisoRun
     Dashboard.View
     Haxl.LocalStorage
     MapLibre
@@ -122,6 +120,7 @@ library
     Utils.Dimensional
     Utils.Fetch
     Utils.Fetch.CSV
+    Utils.Haxl
     Utils.JS
     Utils.SVG.LoadSpinner
     Utils.SVG.ToggleLangButton
