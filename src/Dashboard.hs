@@ -16,7 +16,6 @@ import DataSource.JSM
 import DataSource.LocalStorage
 import Haxl.Core
 import Haxl.DataSource.ConcurrentIO
-import Haxl.LocalStorage
 import Language.Javascript.JSaddle
 import MapLibre
 import Miso

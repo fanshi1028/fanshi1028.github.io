@@ -74,7 +74,6 @@ common lib
       DataSource.IO
       DataSource.JSM
       DataSource.LocalStorage
-      Haxl.LocalStorage
       MapLibre
       Pomodoro
       Pomodoro.View
@@ -105,7 +104,6 @@ library
     DataSource.IO
     DataSource.JSM
     DataSource.LocalStorage
-    Haxl.LocalStorage
     MapLibre
     Pomodoro
     Pomodoro.View
