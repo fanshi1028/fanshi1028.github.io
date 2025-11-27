@@ -11,10 +11,9 @@ import Haxl.Core
 import Language.Javascript.JSaddle
 import Network.URI
 import Utils.Haxl
-import Utils.Serialise
 
 data JSMAction a where
-  FetchJSON :: URI -> JSMAction SerialisableValue
+  FetchJSON :: forall a. (FromJSVal a) => URI -> JSMAction a
   FetchText :: URI -> JSMAction StrictText
 
 deriving instance Eq (JSMAction a)
