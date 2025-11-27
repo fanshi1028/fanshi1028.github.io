@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeFamilies #-}
 
-module Dashboard.DataSource.MisoRun (misoRunAction, State (..)) where
+module DataSource.MisoRun (misoRunAction, State (..)) where
 
 import Control.Monad.IO.Class
 import Data.Foldable

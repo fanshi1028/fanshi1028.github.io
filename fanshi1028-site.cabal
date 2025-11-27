@@ -77,6 +77,7 @@ common lib
       DataSource.IO
       DataSource.JSM
       DataSource.LocalStorage
+      DataSource.MisoRun
       Utils.Dimensional
       Utils.Haxl
       Utils.JS
@@ -107,6 +108,7 @@ library
     DataSource.IO
     DataSource.JSM
     DataSource.LocalStorage
+    DataSource.MisoRun
     Utils.Dimensional
     Utils.Haxl
     Utils.JS

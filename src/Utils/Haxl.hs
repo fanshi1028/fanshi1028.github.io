@@ -27,9 +27,6 @@ consoleLog jscontext = void . unsafeLiftIO . runJSaddle jscontext . (jsg "consol
 consoleLog' :: (ToJSON v) => JSContextRef -> v -> GenHaxl u w ()
 consoleLog' jscontext = consoleLog jscontext . ms . toLazyText . encodePrettyToTextBuilder
 
-misoRunAction :: (Typeable action, Show action, Eq action) => JSContextRef -> (Sink action) -> action -> GenHaxl e w ()
-misoRunAction jscontext sink = unsafeLiftIO . runJSaddle jscontext . sink
-
 failedResponseToException :: Response Value -> SomeException
 failedResponseToException = \case
   Response Nothing headers mErrMsg _ -> toException . FetchError $ pack "CORS or Network Error" <> intercalate (pack ", ") [T.show headers, T.show mErrMsg]

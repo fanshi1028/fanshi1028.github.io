@@ -16,6 +16,7 @@ import DataSource.HongKongObservatoryWeatherAPI.Types
 import DataSource.IO
 import DataSource.JSM
 import DataSource.LocalStorage
+import DataSource.MisoRun
 import Haxl.Core
 import Haxl.DataSource.ConcurrentIO
 import Language.Javascript.JSaddle
