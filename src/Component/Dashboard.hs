@@ -1,5 +1,6 @@
 {-# LANGUAGE ApplicativeDo #-}
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
 
 module Component.Dashboard (dashboardComponent) where
@@ -18,10 +19,12 @@ import DataSource.LocalStorage
 import Haxl.Core
 import Haxl.DataSource.ConcurrentIO
 import Language.Javascript.JSaddle
-import Miso
-import Miso.Lens
+import Miso hiding (consoleLog, consoleLog')
+import Miso.Lens hiding ((*~))
 import Miso.Navigator
+import Network.URI.Static
 import Utils.Haxl
+import Utils.Serialise
 
 haxlEnvflags :: Flags
 haxlEnvflags =
@@ -85,6 +88,9 @@ fetchData sink = do
     fetchCacheable $ GetWeatherWarningSummary tdy
 
     fetchCacheable $ GetWeatherWarningInfo tdy
+
+    let facility_hssp7 = [uri|https://www.lcsd.gov.hk/datagovhk/facility/facility-hssp7.json|]
+    fetchCacheable (FetchJSON @SerialisableValue $ corsProxy facility_hssp7) >>= consoleLog' jscontext
 
     fetchCacheable $ GetSpecialWeatherTips tdy
 
