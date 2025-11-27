@@ -68,6 +68,7 @@ common lib
       Component.Clock.View
       Component.Dashboard
       Component.Dashboard.View
+      Component.Foreign.MapLibre
       Component.Pomodoro
       Component.Pomodoro.View
       DataSource.BrowserGeolocationAPI
@@ -76,7 +77,6 @@ common lib
       DataSource.IO
       DataSource.JSM
       DataSource.LocalStorage
-      MapLibre
       Utils.Dimensional
       Utils.Haxl
       Utils.JS
@@ -98,6 +98,7 @@ library
     Component.Clock.View
     Component.Dashboard
     Component.Dashboard.View
+    Component.Foreign.MapLibre
     Component.Pomodoro
     Component.Pomodoro.View
     DataSource.BrowserGeolocationAPI
@@ -106,7 +107,6 @@ library
     DataSource.IO
     DataSource.JSM
     DataSource.LocalStorage
-    MapLibre
     Utils.Dimensional
     Utils.Haxl
     Utils.JS

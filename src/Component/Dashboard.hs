@@ -5,6 +5,7 @@
 module Component.Dashboard (dashboardComponent) where
 
 import Component.Dashboard.View
+import Component.Foreign.MapLibre
 import Control.Monad.IO.Class
 import Data.Function
 import Data.Time
@@ -17,7 +18,6 @@ import DataSource.LocalStorage
 import Haxl.Core
 import Haxl.DataSource.ConcurrentIO
 import Language.Javascript.JSaddle
-import MapLibre
 import Miso
 import Miso.Lens
 import Miso.Navigator

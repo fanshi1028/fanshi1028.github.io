@@ -3,13 +3,13 @@
 
 module Component.Dashboard.View where
 
+import Component.Foreign.MapLibre
 import Data.Function
 import Data.Interval
 import Data.Maybe
 import Data.Text hiding (foldl')
 import Data.Time
 import DataSource.HongKongObservatoryWeatherAPI.Types
-import MapLibre
 import Miso
 import Miso.Html.Element
 import Miso.Html.Event

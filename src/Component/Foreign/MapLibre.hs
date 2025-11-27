@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP #-}
 
-module MapLibre (mapLibreComponent, createMap, cleanUpMap, runMapLibre, addMarkerAndEaseToLocation) where
+module Component.Foreign.MapLibre (mapLibreComponent, createMap, cleanUpMap, runMapLibre, addMarkerAndEaseToLocation) where
 
 import Control.Concurrent
 import Control.Monad
