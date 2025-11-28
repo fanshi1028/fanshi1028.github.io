@@ -3,8 +3,6 @@
 -- NOTE: https://www.hko.gov.hk/en/abouthko/opendata_intro.htm
 module DataSource.HongKongObservatoryWeatherAPI where
 
-import Control.Lens.Setter
-import Data.Function
 import Data.Hashable
 import Data.Text hiding (show)
 import Data.Time
@@ -16,7 +14,6 @@ import DataSource.LocalStorage
 import Haxl.Core hiding (throw)
 import Language.Javascript.JSaddle hiding (Object, Success)
 import Network.URI
-import Network.URI.Lens
 import Utils.Haxl
 import Utils.IntervalPeriod
 import Utils.Serialise
@@ -55,7 +52,7 @@ hkoWeatherInformationReqToURI :: HKOWeatherInformationReq a -> URI
 hkoWeatherInformationReqToURI req =
   URI
     "https:"
-    (Just $ nullURIAuth & uriRegNameLens .~ "data.weather.gov.hk")
+    (Just $ nullURIAuth {uriRegName = "data.weather.gov.hk"})
     "/weatherAPI/opendata/weather.php"
     ( "?dataType=" <> case req of
         GetLocalWeatherForecast _ -> "flw"
