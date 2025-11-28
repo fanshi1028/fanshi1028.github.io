@@ -46,10 +46,8 @@ cacheResultWithLocalStorage req =
     Right r -> pure . void $ cacheResultWithShow showReqResultSerialised req (pure r)
 
 cacheResultWithLocalStorage' :: (ShowP r, Serialise a) => r a -> JSM (Either SomeException a)
-cacheResultWithLocalStorage' req = do
-  localStorage <- jsg "window" ! "localStorage"
-  let key = showp req
-  v <- localStorage # "getItem" $ [pack key]
+cacheResultWithLocalStorage' (showp -> key) = do
+  v <- (jsg "window" ! "localStorage") # "getItem" $ [pack key]
   valIsNull v >>= \case
     True -> pure . Left . toException . NotFound . pack $ key <> ": not found in localStorage"
     False -> do
