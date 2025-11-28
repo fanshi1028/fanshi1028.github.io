@@ -82,6 +82,7 @@ common lib
       DataSource.MisoRun
       Utils.Dimensional
       Utils.Haxl
+      Utils.IntervalPeriod
       Utils.JS
       Utils.Serialise
       View.ProductRequirementDocument
@@ -113,6 +114,7 @@ library
     DataSource.MisoRun
     Utils.Dimensional
     Utils.Haxl
+    Utils.IntervalPeriod
     Utils.JS
     Utils.Serialise
     View.ProductRequirementDocument
