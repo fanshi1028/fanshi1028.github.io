@@ -78,20 +78,6 @@ instance DataSource u HKOWeatherInformationReq where
       )
       reqState
 
-data HKOOpenDataReq a where
-  -- NOTE: Open Data (Climate and Weather Information) API
-  GetHourlyHeightsOfAstronomicalTides :: HKOOpenDataReq Void
-  GetTimesAndHeightsOfAstronomicalHighAndLowTides :: HKOOpenDataReq Void
-  GetTimesOfSunriseSunTransitAndSunset :: HKOOpenDataReq Void
-  TimesOfMoonriseMoonTransitAndMoonset :: HKOOpenDataReq Void
-  GetGregorianLunarCalendarConversionTable :: HKOOpenDataReq Void
-  GetCloudToGroundAndCloudToCloudLightningCount :: HKOOpenDataReq Void
-  GetLatest10MinuteMeanVisibility :: HKOOpenDataReq Void
-  GetDailyMeanTemperature :: HKOOpenDataReq Void
-  GetDailyMaximumTemperature :: HKOOpenDataReq Void
-  GetDailyMinimumTemperature :: HKOOpenDataReq Void
-  GetWeatherAndRadiationLevelReport :: HKOOpenDataReq Void
-
 -- NOTE: Rainfall in The Past Hour from Automatic Weather Station API
 data HKOHourlyRainFallReq a where
   GetHourlyRainFall :: HKOHourlyRainFallReq Void
