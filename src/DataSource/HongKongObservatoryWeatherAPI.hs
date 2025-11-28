@@ -1,5 +1,6 @@
 {-# LANGUAGE TypeFamilies #-}
 
+-- NOTE: https://www.hko.gov.hk/en/abouthko/opendata_intro.htm
 module DataSource.HongKongObservatoryWeatherAPI where
 
 import Control.Lens.Setter
@@ -11,32 +12,34 @@ import Data.Typeable
 import Data.Void
 import DataSource.HongKongObservatoryWeatherAPI.Types
 import DataSource.JSM
+import DataSource.LocalStorage
 import Haxl.Core hiding (throw)
 import Language.Javascript.JSaddle hiding (Object, Success)
 import Network.URI
 import Network.URI.Lens
 import Utils.Haxl
+import Utils.IntervalPeriod
 import Utils.Serialise
 
 -- NOTE: Weather Information API
 data HKOWeatherInformationReq a where
-  GetLocalWeatherForecast :: Day -> HKOWeatherInformationReq LocalWeatherForecast
-  Get9DayWeatherForecast :: Day -> HKOWeatherInformationReq NineDayWeatherForecast
-  GetCurrentWeatherReport :: Day -> HKOWeatherInformationReq CurrentWeatherReport
-  GetWeatherWarningSummary :: Day -> HKOWeatherInformationReq SerialisableValue
-  GetWeatherWarningInfo :: Day -> HKOWeatherInformationReq SerialisableValue
-  GetSpecialWeatherTips :: Day -> HKOWeatherInformationReq SerialisableValue
+  GetLocalWeatherForecast :: IntervalPeriod 60 -> HKOWeatherInformationReq LocalWeatherForecast
+  Get9DayWeatherForecast :: TwiceADay -> HKOWeatherInformationReq NineDayWeatherForecast
+  GetCurrentWeatherReport :: IntervalPeriod 60 -> HKOWeatherInformationReq CurrentWeatherReport
+  GetWeatherWarningSummary :: UTCTime -> HKOWeatherInformationReq SerialisableValue
+  GetWeatherWarningInfo :: UTCTime -> HKOWeatherInformationReq SerialisableValue
+  GetSpecialWeatherTips :: UTCTime -> HKOWeatherInformationReq SerialisableValue
 
 deriving instance Eq (HKOWeatherInformationReq a)
 
 instance Hashable (HKOWeatherInformationReq a) where
   hashWithSalt s req = hashWithSalt @Int s $ case req of
-    GetLocalWeatherForecast day' -> 0 `hashWithSalt` day'
-    Get9DayWeatherForecast day' -> 1 `hashWithSalt` day'
-    GetCurrentWeatherReport day' -> 2 `hashWithSalt` day'
-    GetWeatherWarningSummary day' -> 3 `hashWithSalt` day'
-    GetWeatherWarningInfo day' -> 4 `hashWithSalt` day'
-    GetSpecialWeatherTips day' -> 5 `hashWithSalt` day'
+    GetLocalWeatherForecast p -> 0 `hashWithSalt` p
+    Get9DayWeatherForecast p -> 1 `hashWithSalt` p
+    GetCurrentWeatherReport p -> 2 `hashWithSalt` p
+    GetWeatherWarningSummary t -> 3 `hashWithSalt` t
+    GetWeatherWarningInfo t -> 4 `hashWithSalt` t
+    GetSpecialWeatherTips t -> 5 `hashWithSalt` t
 
 deriving instance Show (HKOWeatherInformationReq a)
 
@@ -81,3 +84,12 @@ instance DataSource u HKOWeatherInformationReq where
 -- NOTE: Rainfall in The Past Hour from Automatic Weather Station API
 data HKOHourlyRainFallReq a where
   GetHourlyRainFall :: HKOHourlyRainFallReq Void
+
+getLocalWeatherForecast :: UTCTime -> GenHaxl u w LocalWeatherForecast
+getLocalWeatherForecast = fetchCacheable . GetLocalWeatherForecast . utcTimeToIntervalPeriod Proxy
+
+get9DayWeatherForecast :: UTCTime -> GenHaxl u w NineDayWeatherForecast
+get9DayWeatherForecast = fetchCacheable . Get9DayWeatherForecast . utcTimeToIntervalPeriod Proxy
+
+getCurrentWeatherReport :: UTCTime -> GenHaxl u w CurrentWeatherReport
+getCurrentWeatherReport = fetchCacheable . GetCurrentWeatherReport . utcTimeToIntervalPeriod Proxy

@@ -74,21 +74,20 @@ fetchData sink = do
   env' <- liftIO $ initEnv @() st jscontext
 
   _ <- liftIO . runHaxl (env' {flags = haxlEnvflags}) $ do
-    tdy@(pred -> ytd) <- utctDay <$> uncachedRequest GetCurrentTime
+    t <- uncachedRequest GetCurrentTime
 
     uncachedRequest GetCurrentTimeZone >>= misoRunAction . SetTimeZone
 
-    fetchCacheable (GetLocalWeatherForecast tdy) >>= misoRunAction . SetLocalWeatherForecast
+    getLocalWeatherForecast t >>= misoRunAction . SetLocalWeatherForecast
 
-    fetchCacheable (Get9DayWeatherForecast tdy) >>= misoRunAction . Set9DayWeatherForecast
+    get9DayWeatherForecast t >>= misoRunAction . Set9DayWeatherForecast
 
     uncachedRequest GetCurrentPosition >>= misoRunAction . SetLocation
 
-    fetchCacheable (GetCurrentWeatherReport tdy) >>= misoRunAction . SetCurrentWeatherReport
+    getCurrentWeatherReport t >>= misoRunAction . SetCurrentWeatherReport
 
-    fetchCacheable $ GetWeatherWarningSummary tdy
-
-    fetchCacheable $ GetWeatherWarningInfo tdy
+    uncachedRequest $ GetWeatherWarningSummary t
+    uncachedRequest $ GetWeatherWarningInfo t
 
     let facility_hssp7 = [uri|https://www.lcsd.gov.hk/datagovhk/facility/facility-hssp7.json|]
     fetchCacheable (FetchJSON @SerialisableValue $ corsProxy facility_hssp7) >>= consoleLog' jscontext
@@ -104,7 +103,7 @@ fetchData sink = do
       )
       >>= consoleLog' jscontext
 
-    fetchCacheable $ GetSpecialWeatherTips tdy
+    uncachedRequest $ GetSpecialWeatherTips t
 
   saveCacheToLocalStorage $ dataCache env'
 
