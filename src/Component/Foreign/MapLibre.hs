@@ -82,4 +82,7 @@ createMap = do
   liftIO . putMVar mapLibreMVar $ MapLibre map'
 
 cleanUpMap :: JSM ()
-cleanUpMap = () <$ liftIO (takeMVar mapLibreMVar)
+cleanUpMap = do
+  liftIO (tryTakeMVar mapLibreMVar) >>= \case
+    Just mapLibre -> void $ mapLibre # "remove" $ ()
+    Nothing -> consoleWarn $ ms "cleanUpMap: no map to be cleaned up"
