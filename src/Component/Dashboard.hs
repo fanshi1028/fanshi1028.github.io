@@ -14,9 +14,9 @@ import DataSource.BrowserGeolocationAPI
 import DataSource.HongKongObservatoryWeatherAPI
 import DataSource.HongKongObservatoryWeatherAPI.Types
 import DataSource.IO
-import DataSource.JSM
 import DataSource.LocalStorage
 import DataSource.MisoRun
+import DataSource.SimpleFetch
 import Haxl.Core
 import Haxl.DataSource.ConcurrentIO
 import Language.Javascript.JSaddle
@@ -68,7 +68,7 @@ fetchData sink = do
           & stateSet (JSMActionState jscontext)
           & stateSet (LocalStorageReqState @HKOWeatherInformationReq jscontext)
           -- TEMP FIXME JSMActin in general should not be cached, but only when we fetch url, and that is exactly how we are abusing it.
-          & stateSet (LocalStorageReqState @JSMAction jscontext)
+          & stateSet (LocalStorageReqState @SimpleFetch jscontext)
           & stateSet ioState
 
   env' <- liftIO $ initEnv @() st jscontext

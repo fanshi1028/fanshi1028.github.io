@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeFamilies #-}
 
-module DataSource.JSM where
+module DataSource.SimpleFetch where
 
 import Control.Exception (SomeException)
 import Data.Csv
@@ -14,21 +14,21 @@ import Language.Javascript.JSaddle
 import Network.URI
 import Utils.Haxl
 
-data JSMAction a where
-  FetchJSON :: forall a. (FromJSVal a) => URI -> JSMAction a
-  FetchText :: URI -> JSMAction StrictText
-  FetchCSV :: forall a. (FromRecord a) => Bool -> URI -> JSMAction (Vector a)
+data SimpleFetch a where
+  FetchJSON :: forall a. (FromJSVal a) => URI -> SimpleFetch a
+  FetchText :: URI -> SimpleFetch StrictText
+  FetchCSV :: forall a. (FromRecord a) => Bool -> URI -> SimpleFetch (Vector a)
 
-deriving instance Eq (JSMAction a)
+deriving instance Eq (SimpleFetch a)
 
-deriving instance Show (JSMAction a)
+deriving instance Show (SimpleFetch a)
 
-instance ShowP JSMAction where showp = show
+instance ShowP SimpleFetch where showp = show
 
-instance StateKey JSMAction where
-  data State JSMAction = JSMActionState JSContextRef
+instance StateKey SimpleFetch where
+  data State SimpleFetch = JSMActionState JSContextRef
 
-instance Hashable (JSMAction a) where
+instance Hashable (SimpleFetch a) where
   hashWithSalt s =
     hashWithSalt @Int s . \case
       FetchJSON uri -> s `hashWithSalt` (0 :: Int) `hashWithSalt` uriToString id uri ""
@@ -39,13 +39,13 @@ instance Hashable (JSMAction a) where
           `hashWithSalt` hasHeader
           `hashWithSalt` uriToString id uri ""
 
-instance DataSourceName JSMAction where
-  dataSourceName _ = T.show . typeRepTyCon . typeRep $ Proxy @JSMAction
+instance DataSourceName SimpleFetch where
+  dataSourceName _ = T.show . typeRepTyCon . typeRep $ Proxy @SimpleFetch
 
-instance DataSource u JSMAction where
+instance DataSource u SimpleFetch where
   fetch _state@(JSMActionState jsContext) = backgroundFetchPar (runJSaddle jsContext . performJSM) _state
     where
-      performJSM :: JSMAction a -> JSM (Either SomeException a)
+      performJSM :: SimpleFetch a -> JSM (Either SomeException a)
       performJSM = \case
         FetchJSON uri -> fetchGetJSON Proxy uri
         FetchText uri -> fetchGetText uri

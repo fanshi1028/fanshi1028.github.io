@@ -77,9 +77,9 @@ common lib
       DataSource.HongKongObservatoryWeatherAPI
       DataSource.HongKongObservatoryWeatherAPI.Types
       DataSource.IO
-      DataSource.JSM
       DataSource.LocalStorage
       DataSource.MisoRun
+      DataSource.SimpleFetch
       Utils.Dimensional
       Utils.Haxl
       Utils.IntervalPeriod
@@ -109,9 +109,9 @@ library
     DataSource.HongKongObservatoryWeatherAPI
     DataSource.HongKongObservatoryWeatherAPI.Types
     DataSource.IO
-    DataSource.JSM
     DataSource.LocalStorage
     DataSource.MisoRun
+    DataSource.SimpleFetch
     Utils.Dimensional
     Utils.Haxl
     Utils.IntervalPeriod

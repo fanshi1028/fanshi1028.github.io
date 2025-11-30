@@ -9,7 +9,6 @@ import Data.Time
 import Data.Typeable
 import Data.Void
 import DataSource.HongKongObservatoryWeatherAPI.Types
-import DataSource.JSM
 import DataSource.LocalStorage
 import Haxl.Core hiding (throw)
 import Language.Javascript.JSaddle hiding (Object, Success)
