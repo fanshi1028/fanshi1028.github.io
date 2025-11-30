@@ -1,10 +1,19 @@
-import { Map, Marker, type LngLatLike } from 'maplibre-gl'
+import {
+  Map,
+  Marker,
+  type CameraUpdateTransformFunction,
+  type LngLatLike,
+} from 'maplibre-gl'
 
-const createMap = (cid: string) =>
+const createMap = (
+  cid: string,
+  transformCameraUpdate?: CameraUpdateTransformFunction
+) =>
   new Map({
     container: cid,
     style: 'https://tiles.openfreemap.org/styles/liberty',
     zoom: 12,
+    transformCameraUpdate,
   })
 
 const addMarkerAndEaseToLocation = (lng: number, lat: number, mapLbre: Map) => {
