@@ -1,6 +1,5 @@
 {-# LANGUAGE ApplicativeDo #-}
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
 
 module Component.Dashboard (dashboardComponent) where
@@ -23,7 +22,6 @@ import Language.Javascript.JSaddle
 import Miso hiding (consoleLog, consoleLog')
 import Miso.Lens hiding ((*~))
 import Miso.Navigator
-import Network.URI.Static
 import Utils.Haxl
 
 haxlEnvflags :: Flags
@@ -89,17 +87,7 @@ fetchData sink = do
     uncachedRequest $ GetWeatherWarningInfo t
 
     listHardSurfaceSoccerPitches7aSide >>= consoleLog jscontext . ms . show
-
-    let latest_15min_uvindex = [uri|https://data.weather.gov.hk/weatherAPI/hko_data/regional-weather/latest_15min_uvindex.csv|]
-    fetchCacheable
-      ( FetchCSV
-          @( String, -- TEMP FIXME
-             Double
-           )
-          True
-          $ corsProxy latest_15min_uvindex
-      )
-      >>= consoleLog' jscontext
+    getLatest15minUVIndex t >>= consoleLog jscontext . ms . show
 
     uncachedRequest $ GetSpecialWeatherTips t
 
