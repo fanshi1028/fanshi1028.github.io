@@ -54,7 +54,7 @@ instance DataSourceName HKOWeatherInformationReq where
   dataSourceName _ = pack "HKO Weather Information API"
 
 hkoWeatherInformationReqToURI :: HKOWeatherInformationReq a -> URI
-hkoWeatherInformationReqToURI (GetLatest15minUVIndex _) = URI "https:" (Just $ nullURIAuth {uriRegName = "data.weather.gov.hk"}) "weatherAPI/hko_data/regional-weather/latest_15min_uvindex.csv" "" ""
+hkoWeatherInformationReqToURI (GetLatest15minUVIndex _) = URI "https:" (Just $ nullURIAuth {uriRegName = "data.weather.gov.hk"}) "/weatherAPI/hko_data/regional-weather/latest_15min_uvindex.csv" "" ""
 hkoWeatherInformationReqToURI req =
   URI
     "https:"
