@@ -80,7 +80,8 @@ corsProxy :: URI -> URI
 corsProxy uri' =
   nullURI
     { uriScheme = "https:",
-      uriAuthority = Just $ nullURIAuth {uriRegName = "api.cors.lol"},
+      uriAuthority = Just $ nullURIAuth {uriRegName = "api.allorigins.win"},
+      uriPath = "/get",
       uriQuery = renderQueryTextToString [(pack "url", Just . pack $ uriToString id uri' "")]
     }
 
