@@ -4,13 +4,10 @@
 -- NOTE: https://www.hko.gov.hk/en/abouthko/opendata_intro.htm
 module DataSource.HongKongObservatoryWeatherAPI where
 
-import Control.Exception (toException)
-import Data.Csv
 import Data.Hashable
 import Data.Text hiding (show)
 import Data.Time
 import Data.Typeable
-import Data.Vector
 import Data.Void
 import DataSource.HongKongObservatoryWeatherAPI.Types
 import DataSource.LocalStorage
@@ -30,8 +27,6 @@ data HKOWeatherInformationReq a where
   GetWeatherWarningSummary :: UTCTime -> HKOWeatherInformationReq SerialisableValue
   GetWeatherWarningInfo :: UTCTime -> HKOWeatherInformationReq SerialisableValue
   GetSpecialWeatherTips :: UTCTime -> HKOWeatherInformationReq SerialisableValue
-  --
-  GetLatest15minUVIndex :: IntervalPeriod 15 -> HKOWeatherInformationReq (Vector (UTCTime, Double))
 
 deriving instance Eq (HKOWeatherInformationReq a)
 
@@ -43,7 +38,6 @@ instance Hashable (HKOWeatherInformationReq a) where
     GetWeatherWarningSummary t -> 3 `hashWithSalt` t
     GetWeatherWarningInfo t -> 4 `hashWithSalt` t
     GetSpecialWeatherTips t -> 5 `hashWithSalt` t
-    GetLatest15minUVIndex p -> 6 `hashWithSalt` p
 
 deriving instance Show (HKOWeatherInformationReq a)
 
@@ -56,7 +50,6 @@ instance DataSourceName HKOWeatherInformationReq where
   dataSourceName _ = pack "HKO Weather Information API"
 
 hkoWeatherInformationReqToURI :: HKOWeatherInformationReq a -> URI
-hkoWeatherInformationReqToURI (GetLatest15minUVIndex _) = [uri|https://data.weather.gov.hk/weatherAPI/hko_data/regional-weather/latest_15min_uvindex.csv|]
 hkoWeatherInformationReqToURI req =
   [uri|https://data.weather.gov.hk/weatherAPI/opendata/weather.php|]
     { uriQuery =
@@ -84,12 +77,6 @@ instance DataSource u HKOWeatherInformationReq where
           GetWeatherWarningSummary _ -> fetchGetJSON Proxy $ hkoWeatherInformationReqToURI req
           GetWeatherWarningInfo _ -> fetchGetJSON Proxy $ hkoWeatherInformationReqToURI req
           GetSpecialWeatherTips _ -> fetchGetJSON Proxy $ hkoWeatherInformationReqToURI req
-          GetLatest15minUVIndex _ -> do
-            fetchGetCSV Proxy HasHeader (corsProxy $ hkoWeatherInformationReqToURI req) >>= \case
-              Left err -> pure $ Left err
-              Right v -> case traverse (\(str, uvIdx) -> (,uvIdx) <$> parseTimeM False defaultTimeLocale "%Y%m%d%H%M" str) v of
-                Nothing -> pure . Left . toException $ MonadFail $ pack "TEMP FIXME: fail to parse time"
-                Just v' -> pure $ Right v'
       )
       reqState
 
@@ -105,6 +92,3 @@ get9DayWeatherForecast = fetchCacheable . Get9DayWeatherForecast . utcTimeToInte
 
 getCurrentWeatherReport :: UTCTime -> GenHaxl u w CurrentWeatherReport
 getCurrentWeatherReport = fetchCacheable . GetCurrentWeatherReport . utcTimeToIntervalPeriod Proxy
-
-getLatest15minUVIndex :: UTCTime -> GenHaxl u w (Vector (UTCTime, Double))
-getLatest15minUVIndex = fetchCacheable . GetLatest15minUVIndex . utcTimeToIntervalPeriod Proxy

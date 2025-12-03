@@ -57,6 +57,7 @@ common lib
     unliftio,
     validation-selective,
     vector,
+    xml,
 
   hs-source-dirs:
     src
@@ -74,6 +75,7 @@ common lib
       Component.Pomodoro
       Component.Pomodoro.View
       DataSource.BrowserGeolocationAPI
+      DataSource.CommonSpatialDataInfrastructurePortal
       DataSource.HongKongObservatoryWeatherAPI
       DataSource.HongKongObservatoryWeatherAPI.Types
       DataSource.IO
@@ -106,6 +108,7 @@ library
     Component.Pomodoro
     Component.Pomodoro.View
     DataSource.BrowserGeolocationAPI
+    DataSource.CommonSpatialDataInfrastructurePortal
     DataSource.HongKongObservatoryWeatherAPI
     DataSource.HongKongObservatoryWeatherAPI.Types
     DataSource.IO

@@ -10,6 +10,7 @@ import Control.Monad.IO.Class
 import Data.Function
 import Data.Time
 import DataSource.BrowserGeolocationAPI
+import DataSource.CommonSpatialDataInfrastructurePortal
 import DataSource.HongKongObservatoryWeatherAPI
 import DataSource.HongKongObservatoryWeatherAPI.Types
 import DataSource.IO
@@ -62,10 +63,12 @@ fetchData sink = do
           & stateSet (MisoRunActionState jscontext sink)
           & stateSet (LocationReqState jscontext)
           & stateSet (HKOWeatherInformationReqState jscontext)
+          & stateSet (CommonSpatialDataInfrastructurePortalReqState jscontext)
           & stateSet (JSMActionState jscontext)
           & stateSet (LocalStorageReqState @HKOWeatherInformationReq jscontext)
           -- TEMP FIXME JSMActin in general should not be cached, but only when we fetch url, and that is exactly how we are abusing it.
           & stateSet (LocalStorageReqState @SimpleFetch jscontext)
+          & stateSet (LocalStorageReqState @CommonSpatialDataInfrastructurePortalReq jscontext)
           & stateSet ioState
 
   env' <- liftIO $ initEnv @() st jscontext
@@ -87,7 +90,7 @@ fetchData sink = do
     uncachedRequest $ GetWeatherWarningInfo t
 
     listHardSurfaceSoccerPitches7aSide >>= consoleLog jscontext . ms . show
-    getLatest15minUVIndex t >>= consoleLog jscontext . ms . show
+    getLatest15minUVIndex t >>= consoleLog' jscontext
 
     uncachedRequest $ GetSpecialWeatherTips t
 
