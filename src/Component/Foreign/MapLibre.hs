@@ -28,8 +28,6 @@ newtype MapLibre = MapLibre JSVal deriving newtype (ToJSVal, MakeObject)
 mapLibreMVar :: MVar MapLibre
 mapLibreMVar = unsafePerformIO newEmptyMVar
 
-newtype Marker = Marker JSVal deriving newtype (ToJSVal, MakeObject)
-
 mapLibreComponent :: Component parent () Void
 mapLibreComponent =
   ( component () absurd $ \_ ->

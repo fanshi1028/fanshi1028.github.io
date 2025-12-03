@@ -66,7 +66,6 @@ fetchData sink = do
           & stateSet (CommonSpatialDataInfrastructurePortalReqState jscontext)
           & stateSet (JSMActionState jscontext)
           & stateSet (LocalStorageReqState @HKOWeatherInformationReq jscontext)
-          -- TEMP FIXME JSMActin in general should not be cached, but only when we fetch url, and that is exactly how we are abusing it.
           & stateSet (LocalStorageReqState @SimpleFetch jscontext)
           & stateSet (LocalStorageReqState @CommonSpatialDataInfrastructurePortalReq jscontext)
           & stateSet ioState
