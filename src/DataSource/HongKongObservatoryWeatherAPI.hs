@@ -1,3 +1,4 @@
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TypeFamilies #-}
 
 -- NOTE: https://www.hko.gov.hk/en/abouthko/opendata_intro.htm
@@ -16,6 +17,7 @@ import DataSource.LocalStorage
 import Haxl.Core hiding (throw)
 import Language.Javascript.JSaddle hiding (Object, Success)
 import Network.URI
+import Network.URI.Static
 import Utils.Haxl
 import Utils.IntervalPeriod
 import Utils.Serialise
@@ -54,21 +56,22 @@ instance DataSourceName HKOWeatherInformationReq where
   dataSourceName _ = pack "HKO Weather Information API"
 
 hkoWeatherInformationReqToURI :: HKOWeatherInformationReq a -> URI
-hkoWeatherInformationReqToURI (GetLatest15minUVIndex _) = URI "https:" (Just $ nullURIAuth {uriRegName = "data.weather.gov.hk"}) "/weatherAPI/hko_data/regional-weather/latest_15min_uvindex.csv" "" ""
+hkoWeatherInformationReqToURI (GetLatest15minUVIndex _) = [uri|https://data.weather.gov.hk/weatherAPI/hko_data/regional-weather/latest_15min_uvindex.csv|]
 hkoWeatherInformationReqToURI req =
-  URI
-    "https:"
-    (Just $ nullURIAuth {uriRegName = "data.weather.gov.hk"})
-    "/weatherAPI/opendata/weather.php"
-    ( "?dataType=" <> case req of
-        GetLocalWeatherForecast _ -> "flw"
-        Get9DayWeatherForecast _ -> "fnd"
-        GetCurrentWeatherReport _ -> "rhrread"
-        GetWeatherWarningSummary _ -> "warnsum"
-        GetWeatherWarningInfo _ -> "warninginfo"
-        GetSpecialWeatherTips _ -> "swt"
-    )
-    ""
+  [uri|https://data.weather.gov.hk/weatherAPI/opendata/weather.php|]
+    { uriQuery =
+        renderQueryTextToString
+          [ ( pack "dataType",
+              Just . pack $ case req of
+                GetLocalWeatherForecast _ -> "flw"
+                Get9DayWeatherForecast _ -> "fnd"
+                GetCurrentWeatherReport _ -> "rhrread"
+                GetWeatherWarningSummary _ -> "warnsum"
+                GetWeatherWarningInfo _ -> "warninginfo"
+                GetSpecialWeatherTips _ -> "swt"
+            )
+          ]
+    }
 
 instance DataSource u HKOWeatherInformationReq where
   fetch reqState@(HKOWeatherInformationReqState jscontext) =
