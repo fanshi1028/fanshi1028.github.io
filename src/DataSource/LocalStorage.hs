@@ -31,8 +31,8 @@ showReqResultSerialised = (showp, unpack . extractBase64 . encodeBase64 . toStri
 dataFetchWithSerialise :: forall u r a w. (DataSource u r, Hashable (r a), Typeable (r a), ShowP r, Serialise a) => r a -> GenHaxl u w a
 dataFetchWithSerialise = dataFetchWithShow showReqResultSerialised
 
-cacheResultWithLocalStorage' :: (ShowP r, Serialise a) => r a -> JSM (Either SomeException a)
-cacheResultWithLocalStorage' (showp -> key) = do
+cachedRequestWithLocalStorage :: (ShowP r, Serialise a) => r a -> JSM (Either SomeException a)
+cachedRequestWithLocalStorage (showp -> key) = do
   v <- (jsg "window" ! "localStorage") # "getItem" $ [pack key]
   valIsNull v >>= \case
     True -> pure . Left . toException . NotFound . pack $ key <> ": not found in localStorage"
@@ -84,7 +84,7 @@ instance (DataSourceName req) => DataSourceName (LocalStorage req) where
 instance (DataSource u req) => DataSource u (LocalStorage req) where
   fetch state@(LocalStorageReqState jscontext) =
     backgroundFetchPar
-      (\(FetchFromLocalStorage req) -> runJSaddle jscontext $ cacheResultWithLocalStorage' req)
+      (\(FetchFromLocalStorage req) -> runJSaddle jscontext $ cachedRequestWithLocalStorage req)
       state
 
 fetchCacheable :: (Typeable a, Serialise a, Request req a, DataSource u req, DataSource u (LocalStorage req)) => req a -> GenHaxl u w a
