@@ -19,6 +19,7 @@ import Numeric.Units.Dimensional hiding ((*), (-))
 import Numeric.Units.Dimensional.NonSI
 import Numeric.Units.Dimensional.SIUnits hiding (toDegreeCelsiusAbsolute)
 import Utils.Dimensional
+import Utils.Serialise
 import View.SVG.LoadSpinner
 import Prelude hiding (show)
 
@@ -44,6 +45,7 @@ data Action
   | SetCurrentWeatherReport CurrentWeatherReport
   | SetLocalWeatherForecast LocalWeatherForecast
   | Set9DayWeatherForecast NineDayWeatherForecast
+  | SetLatest15minUVIndex SerialisableValue
   | SetDisplayTemperature Bool
   | SetDisplayRainfall Bool
   deriving stock (Eq, Show)

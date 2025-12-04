@@ -89,7 +89,7 @@ fetchData sink = do
     uncachedRequest $ GetWeatherWarningInfo t
 
     listHardSurfaceSoccerPitches7aSide >>= consoleLog jscontext . ms . show
-    getLatest15minUVIndex t >>= consoleLog' jscontext
+    getLatest15minUVIndex t >>= misoRunAction . SetLatest15minUVIndex
 
     uncachedRequest $ GetSpecialWeatherTips t
 
@@ -110,6 +110,7 @@ updateModel = \case
   Set9DayWeatherForecast w -> nineDayWeatherForecast .= Just w
   SetDisplayTemperature b -> displayTemperature .= b
   SetDisplayRainfall b -> displayRainfall .= b
+  SetLatest15minUVIndex v -> io_ $ runMapLibre $ addGeoJSONSource (ms "latest15minUVIndex") v
 
 dashboardComponent :: Component parent Model Action
 dashboardComponent = (component defaultModel updateModel viewModel) {initialAction = Just InitAction}

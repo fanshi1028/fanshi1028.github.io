@@ -1,6 +1,7 @@
 import {
   Map,
   Marker,
+  type GeoJSONSourceSpecification,
   type CameraUpdateTransformFunction,
   type LngLatLike,
 } from 'maplibre-gl'
@@ -22,8 +23,25 @@ const addMarkerAndEaseToLocation = (lng: number, lat: number, mapLbre: Map) => {
   mapLbre.easeTo({ center: location })
 }
 
+const renderUVIndexGeoJSON = (
+  map: Map,
+  id: string,
+  data: GeoJSONSourceSpecification['data']
+) => {
+  map.addSource(id, { type: 'geojson', data }).addLayer({
+    id,
+    source: id,
+    type: 'line',
+    paint: { 'line-color': '#198EC8' },
+  })
+}
+
 declare global {
   var maplibregl_ffi: unknown
 }
 
-globalThis.maplibregl_ffi = { createMap, addMarkerAndEaseToLocation }
+globalThis.maplibregl_ffi = {
+  createMap,
+  addMarkerAndEaseToLocation,
+  renderUVIndexGeoJSON,
+}

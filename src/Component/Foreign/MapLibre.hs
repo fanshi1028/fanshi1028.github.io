@@ -1,6 +1,14 @@
 {-# LANGUAGE CPP #-}
 
-module Component.Foreign.MapLibre (mapLibreComponent, createMap, cleanUpMap, runMapLibre, addMarkerAndEaseToLocation) where
+module Component.Foreign.MapLibre
+  ( mapLibreComponent,
+    createMap,
+    cleanUpMap,
+    runMapLibre,
+    addMarkerAndEaseToLocation,
+    addGeoJSONSource,
+  )
+where
 
 import Control.Concurrent
 import Control.Monad
@@ -89,3 +97,9 @@ cleanUpMap = do
   liftIO (tryTakeMVar mapLibreMVar) >>= \case
     Just mapLibre -> void $ mapLibre # "remove" $ ()
     Nothing -> consoleWarn $ ms "cleanUpMap: no map to be cleaned up"
+
+addGeoJSONSource :: (ToJSVal a) => MisoString -> a -> ReaderT MapLibreLib JSM ()
+addGeoJSONSource sourceId v = do
+  mapLibreLib <- ask
+  mapLibre <- liftIO $ readMVar mapLibreMVar
+  void . liftJSM $ mapLibreLib # "renderUVIndexGeoJSON" $ (mapLibre, sourceId, v)
