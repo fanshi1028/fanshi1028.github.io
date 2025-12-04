@@ -31,19 +31,6 @@ showReqResultSerialised = (showp, unpack . extractBase64 . encodeBase64 . toStri
 dataFetchWithSerialise :: forall u r a w. (DataSource u r, Hashable (r a), Typeable (r a), ShowP r, Serialise a) => r a -> GenHaxl u w a
 dataFetchWithSerialise = dataFetchWithShow showReqResultSerialised
 
-cacheResultWithLocalStorage ::
-  ( Eq (r a),
-    ShowP r,
-    Hashable (r a),
-    Typeable (r a),
-    Serialise a
-  ) =>
-  r a -> JSM (GenHaxl u w ())
-cacheResultWithLocalStorage req =
-  cacheResultWithLocalStorage' req >>= \case
-    Left err -> pure () <$ consoleLog (ms . displayException $ err)
-    Right r -> pure . void $ cacheResultWithShow showReqResultSerialised req (pure r)
-
 cacheResultWithLocalStorage' :: (ShowP r, Serialise a) => r a -> JSM (Either SomeException a)
 cacheResultWithLocalStorage' (showp -> key) = do
   v <- (jsg "window" ! "localStorage") # "getItem" $ [pack key]
