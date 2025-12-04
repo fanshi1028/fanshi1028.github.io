@@ -20,9 +20,6 @@ mapLibreId = ms "mapLibreId-14yMVNtDA3GBoGwMHBcDu5bhKUHu/9gcFx41dNF+2Zg="
 
 newtype MapLibreLib = MapLibreLib JSVal deriving newtype (ToJSVal, MakeObject)
 
-mapLibreLibMVar :: MVar MapLibreLib
-mapLibreLibMVar = unsafePerformIO newEmptyMVar
-
 newtype MapLibre = MapLibre JSVal deriving newtype (ToJSVal, MakeObject)
 
 mapLibreMVar :: MVar MapLibre
@@ -52,14 +49,15 @@ mapLibreComponent =
 #endif
 #endif
 
-addMarkerAndEaseToLocation :: Geolocation -> JSM ()
+addMarkerAndEaseToLocation :: Geolocation -> ReaderT MapLibreLib JSM ()
 addMarkerAndEaseToLocation (Geolocation lat lon acc) = do
+  mapLibreLib <- ask
   mapLibre <- liftIO $ readMVar mapLibreMVar
-  mapLibreLib <- liftIO $ readMVar mapLibreLibMVar
-  void $ (mapLibreLib # "addMarkerAndEaseToLocation") (lon, lat, mapLibre)
+  void . liftJSM $ (mapLibreLib # "addMarkerAndEaseToLocation") (lon, lat, mapLibre)
 
 runMapLibre :: ReaderT MapLibreLib JSM a -> JSM a
 runMapLibre m = do
+  mapLibreLibMVar <- liftIO newEmptyMVar
   mapLibreLib <-
     liftIO (tryReadMVar mapLibreLibMVar) >>= \case
       Just r -> pure r
