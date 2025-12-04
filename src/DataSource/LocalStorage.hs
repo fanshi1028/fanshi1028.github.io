@@ -4,14 +4,13 @@
 module DataSource.LocalStorage where
 
 import Codec.Serialise
-import Control.Exception (Exception (displayException, toException), SomeException)
 import Control.Monad
 import Control.Monad.IO.Class
 import Data.Base64.Types
 import Data.ByteString.Base64
 import Data.ByteString.Lazy hiding (pack, unpack)
+import Data.HashTable.IO qualified as H
 import Data.Hashable
-import Data.IORef
 import Data.Text hiding (show)
 import Data.Text.Encoding
 import Data.Text.Encoding.Base64.Error
@@ -24,7 +23,7 @@ import Haxl.Core.Monad
 import Haxl.Prelude hiding (forM_)
 import Language.Javascript.JSaddle
 import Miso (ms)
-import Miso.FFI (consoleLog)
+import UnliftIO hiding (catchAny)
 
 showReqResultSerialised :: (ShowP r, Serialise a) => ShowReq r a
 showReqResultSerialised = (showp, unpack . extractBase64 . encodeBase64 . toStrict . serialise)
@@ -59,20 +58,22 @@ cacheResultWithLocalStorage' (showp -> key) = do
           Right r' -> Right r'
 
 saveCacheToLocalStorage :: HaxlDataCache u w -> JSM ()
-saveCacheToLocalStorage cache = do
-  cacheShown <- liftIO $ showCache cache $ \(DataCacheItem IVar {ivarRef = !ref} _) ->
-    readIORef ref >>= \case
-      IVarFull (Ok a _) -> return (Just (Right a))
-      IVarFull (ThrowHaxl e _) -> return (Just (Left e))
-      IVarFull (ThrowIO e) -> return (Just (Left e))
-      IVarEmpty _ -> return Nothing
-  forM_ cacheShown $ \(_, subCacheShown) ->
-    forM_ subCacheShown $ \case
-      (reqStr, Left err) -> consoleLog . ms $ reqStr <> ":" <> displayException err
-      (reqStr, Right r) ->
-        () <$ do
-          localStorage <- jsg "window" ! "localStorage"
-          localStorage # "setItem" $ (reqStr, r)
+saveCacheToLocalStorage (DataCache cache) = withRunInIO $ \runInIO -> H.mapM_ (runInIO . goSubCache) cache
+  where
+    goSubCache :: (TypeRep, SubCache (DataCacheItem u w)) -> JSM ()
+    goSubCache (_ty, SubCache showReq showRes hm) = withRunInIO $ \runInIO ->
+      H.mapM_
+        ( runInIO . \(showReq -> reqStr, (DataCacheItem IVar {ivarRef = !ref} _)) ->
+            let logError err = void $ (jsg "console" # "log") $ ms $ reqStr <> ":" <> displayException err
+             in liftIO (readIORef ref) >>= \case
+                  IVarEmpty _ -> pure ()
+                  IVarFull (Ok a _) -> void $ do
+                    localStorage <- jsg "window" ! "localStorage"
+                    localStorage # "setItem" $ (reqStr, showRes a)
+                  IVarFull (ThrowHaxl e _) -> logError e
+                  IVarFull (ThrowIO e) -> logError e
+        )
+        hm
 
 data LocalStorage req a where
   FetchFromLocalStorage :: forall req a. (Serialise a) => req a -> LocalStorage req a
