@@ -74,8 +74,15 @@ runMapLibre m = do
 createMap :: ReaderT MapLibreLib JSM ()
 createMap = do
   mapLibreLib <- ask
-  map' <- liftJSM $ mapLibreLib # "createMap" $ mapLibreId
-  liftIO . putMVar mapLibreMVar $ MapLibre map'
+  void . liftJSM $ do
+    map' <- mapLibreLib # "createMap" $ mapLibreId
+    withAsync
+      ( forever $ do
+          loaded <- (map' # "loaded") () >>= fromJSValUnchecked
+          when loaded $ liftIO . putMVar mapLibreMVar $ MapLibre map'
+          liftIO $ threadDelay 100000
+      )
+      $ \_ -> liftIO (readMVar mapLibreMVar)
 
 cleanUpMap :: JSM ()
 cleanUpMap = do
