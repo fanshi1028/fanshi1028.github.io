@@ -6,6 +6,8 @@ import {
   type LngLatLike,
 } from 'maplibre-gl'
 
+import hssp7 from './facility-hssp7.json'
+
 const createMap = (
   cid: string,
   transformCameraUpdate?: CameraUpdateTransformFunction
@@ -44,4 +46,5 @@ globalThis.maplibregl_ffi = {
   createMap,
   addMarkerAndEaseToLocation,
   renderUVIndexGeoJSON,
+  hssp7,
 }

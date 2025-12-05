@@ -8,6 +8,7 @@ import Component.Dashboard.View
 import Component.Foreign.MapLibre
 import Control.Monad.IO.Class
 import Data.Function
+import Data.Functor
 import Data.Time
 import DataSource.BrowserGeolocationAPI
 import DataSource.CommonSpatialDataInfrastructurePortal
@@ -23,7 +24,6 @@ import Language.Javascript.JSaddle
 import Miso hiding (consoleLog, consoleLog')
 import Miso.Lens hiding ((*~))
 import Miso.Navigator
-import Utils.Haxl
 
 haxlEnvflags :: Flags
 haxlEnvflags =
@@ -88,7 +88,6 @@ fetchData sink = do
     uncachedRequest $ GetWeatherWarningSummary t
     uncachedRequest $ GetWeatherWarningInfo t
 
-    listHardSurfaceSoccerPitches7aSide >>= consoleLog jscontext . ms . show
     getLatest15minUVIndex t >>= misoRunAction . SetLatest15minUVIndex
 
     uncachedRequest $ GetSpecialWeatherTips t
@@ -98,7 +97,12 @@ fetchData sink = do
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
   InitAction -> issue FetchWeatherData
-  InitMapLibre -> io_ $ runMapLibre createMap
+  InitMapLibre -> io_ $ do
+    -- TEMP FIXME
+    temp <- runMapLibre $ do
+      createMap
+      getHardSurfaceSoccerPitches7aSideInfo
+    void $ (jsg "console" # "log") [show temp]
   CleanUpMapLibre -> io_ cleanUpMap
   FetchWeatherData -> withSink fetchData
   SetLocation loc -> do
