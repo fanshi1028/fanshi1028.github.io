@@ -28,7 +28,9 @@ runCommandLocal "bun-build-${name}"
   }
   ''
     cp -rv $src/* ./
-    ${lib.optionalString (name == "maplibre-gl-ffi") "cp -v ${facility-hssp7-api-result} ./"}
+    ${lib.optionalString (
+      name == "maplibre-gl-ffi"
+    ) "cp -v ${facility-hssp7-api-result} ./facility-hssp7.json"}
 
     mkdir $out
 
