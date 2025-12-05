@@ -22,6 +22,7 @@ import Haxl.Core
 import Haxl.DataSource.ConcurrentIO
 import Language.Javascript.JSaddle
 import Miso hiding (consoleLog, consoleLog')
+import Miso qualified (consoleLog)
 import Miso.Lens hiding ((*~))
 import Miso.Navigator
 
@@ -88,7 +89,13 @@ fetchData sink = do
     uncachedRequest $ GetWeatherWarningSummary t
     uncachedRequest $ GetWeatherWarningInfo t
 
-    getLatest15minUVIndex t >>= misoRunAction . SetLatest15minUVIndex
+    geoJSON <- getLatest15minUVIndexGeoJSON t
+
+    misoRunAction $ SetLatest15minUVIndexGeoJSON geoJSON
+
+    getUVIndexDataUriJSMAction jscontext geoJSON
+      >>= getLatest15minUVIndex t
+      >>= misoRunAction . SetLatest15minUVIndex
 
     uncachedRequest $ GetSpecialWeatherTips t
 
@@ -114,7 +121,8 @@ updateModel = \case
   Set9DayWeatherForecast w -> nineDayWeatherForecast .= Just w
   SetDisplayTemperature b -> displayTemperature .= b
   SetDisplayRainfall b -> displayRainfall .= b
-  SetLatest15minUVIndex v -> io_ $ runMapLibre $ addGeoJSONSource (ms "latest15minUVIndex") v
+  SetLatest15minUVIndexGeoJSON geoJSON -> io_ . runMapLibre $ addGeoJSONSource (ms "latest15minUVIndex") geoJSON
+  SetLatest15minUVIndex d -> io_ $ Miso.consoleLog . ms $ show d -- TEMP FIXME
 
 dashboardComponent :: Component parent Model Action
 dashboardComponent = (component defaultModel updateModel viewModel) {initialAction = Just InitAction}

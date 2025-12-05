@@ -9,6 +9,8 @@ import Data.Interval
 import Data.Maybe
 import Data.Text hiding (foldl')
 import Data.Time
+import Data.Vector (Vector)
+import DataSource.CommonSpatialDataInfrastructurePortal
 import DataSource.HongKongObservatoryWeatherAPI.Types
 import Miso
 import Miso.Html.Element
@@ -45,7 +47,8 @@ data Action
   | SetCurrentWeatherReport CurrentWeatherReport
   | SetLocalWeatherForecast LocalWeatherForecast
   | Set9DayWeatherForecast NineDayWeatherForecast
-  | SetLatest15minUVIndex SerialisableValue
+  | SetLatest15minUVIndexGeoJSON SerialisableValue
+  | SetLatest15minUVIndex (Vector UVIndexRecord)
   | SetDisplayTemperature Bool
   | SetDisplayRainfall Bool
   deriving stock (Eq, Show)
