@@ -80,8 +80,8 @@ corsProxy :: URI -> URI
 corsProxy uri' =
   nullURI
     { uriScheme = "https:",
-      uriAuthority = Just $ nullURIAuth {uriRegName = "api.cors.lol"},
-      uriQuery = renderQueryTextToString [(pack "url", Just . pack $ uriToString id uri' "")]
+      uriAuthority = Just $ nullURIAuth {uriRegName = "cors-anywhere.com"},
+      uriPath = "/" <> uriToString id uri' ""
     }
 
 renderQueryTextToString :: QueryText -> String
