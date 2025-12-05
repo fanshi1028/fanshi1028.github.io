@@ -16,13 +16,13 @@ import Data.Text.Lazy (toStrict)
 import Data.Text.Lazy.Builder
 import Data.Text.Lazy.Encoding as TL
 import Data.Typeable
-import Data.Vector
+import Data.Vector hiding ((!))
 import Haxl.Core
 import Haxl.Core.Monad
 import Language.Javascript.JSaddle
-import Miso hiding (Decoder, URI, consoleLog, defaultOptions, on)
+import Miso hiding (Decoder, URI, consoleLog, defaultOptions, go, on)
 import Miso.FFI qualified as FFI
-import Network.HTTP.Types
+import Network.HTTP.Types hiding (Header)
 import Network.URI
 
 consoleLog :: JSContextRef -> MisoString -> GenHaxl u w ()
@@ -70,6 +70,14 @@ fetchGetCSV _ hasHeader uri =
   fetchJSM Proxy [accept =: ms "text/csv"] TEXT GET uri <&> \case
     Left err -> Left err
     Right txt -> case decode hasHeader . BSL.fromStrict $ T.encodeUtf8 txt of
+      Left err -> Left . toException . MonadFail $ pack err
+      Right r -> Right r
+
+fetchGetCSVNamed :: (FromNamedRecord a) => Proxy a -> URI -> JSM (Either SomeException (Header, Vector a))
+fetchGetCSVNamed _ uri =
+  fetchJSM Proxy [accept =: ms "text/csv"] TEXT GET uri <&> \case
+    Left err -> Left err
+    Right txt -> case decodeByName . BSL.fromStrict $ T.encodeUtf8 txt of
       Left err -> Left . toException . MonadFail $ pack err
       Right r -> Right r
 
