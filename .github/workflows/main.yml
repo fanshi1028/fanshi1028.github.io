@@ -111,6 +111,15 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fanshi1028-site-js-raw
+          path: |
+            result/bin/fanshi1028-site.jsexe/all.externs.js
+            result/bin/fanshi1028-site.jsexe/all.js
+          if-no-files-found: error
+          retention-days: 1
+
   build-site-wasm:
     runs-on: ubuntu-latest
     defaults:
