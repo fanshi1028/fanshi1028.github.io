@@ -84,7 +84,7 @@ instance DataSource u CommonSpatialDataInfrastructurePortalReq where
       ( -- NOTE: sad boilerplate
         \req -> runJSaddle jscontext $ case req of
           GetLatest15minUVIndexGeoJSON _ -> fetchGetJSON Proxy $ csdiPortalReqToURI req
-          GetLatest15minUVIndex _ _ -> fmap snd <$> fetchGetCSVNamed Proxy (corsProxy $ csdiPortalReqToURI req)
+          GetLatest15minUVIndex _ _ -> fetchGetCSV Proxy HasHeader (corsProxy $ csdiPortalReqToURI req)
       )
       reqState
 
@@ -115,6 +115,27 @@ instance FromNamedRecord UVIndexRecord where
               Right (i', "") -> pure $ hoursToTimeZone i'
               Right (_, leftover) -> fail $ "unexpected suffix for " <> unpack leftover <> " 'Date time (Time Zone)'"
         idx <- m .: "past 15-minute mean UV Index"
+        pure $ UVIndexRecord (zonedTimeToUTC $ ZonedTime (LocalTime day timeOfDay) tz) idx
+
+instance FromRecord UVIndexRecord where
+  parseRecord m =
+    fromJulianValid <$> m .! 0 <*> m .! 1 <*> m .! 2 >>= \case
+      Nothing -> fail "Invalid Day"
+      Just day -> do
+        timeOfDay <-
+          TimeOfDay
+            <$> m .! 3
+            <*> m .! 4
+            -- sec <- m .! 5
+            <*> pure 0
+        tz <-
+          stripPrefix "UTC+" <$> m .! 6 >>= \case
+            Nothing -> fail "expected prefix: 'UTC+' for 'Date time (Time Zone)'"
+            Just i -> case decimal i of
+              Left err -> fail err
+              Right (i', "") -> pure $ hoursToTimeZone i'
+              Right (_, leftover) -> fail $ "unexpected suffix for " <> unpack leftover <> " 'Date time (Time Zone)'"
+        idx <- m .! 7
         pure $ UVIndexRecord (zonedTimeToUTC $ ZonedTime (LocalTime day timeOfDay) tz) idx
 
 instance Serialise UVIndexRecord where
