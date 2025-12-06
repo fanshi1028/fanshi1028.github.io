@@ -103,14 +103,10 @@ fetchData sink = do
 
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
-  InitAction -> issue FetchWeatherData
-  InitMapLibre -> io_ $ do
-    -- TEMP FIXME
-    temp <- runMapLibre $ do
-      createMap
-      getHardSurfaceSoccerPitches7aSideInfo
-      render_hssp7
-    void $ (jsg "console" # "log") [show temp]
+  InitAction -> do
+    issue FetchWeatherData
+    io_ $ runMapLibre render_hssp7
+  InitMapLibre -> io_ $ runMapLibre createMap
   CleanUpMapLibre -> io_ cleanUpMap
   FetchWeatherData -> withSink fetchData
   SetLocation loc -> do
