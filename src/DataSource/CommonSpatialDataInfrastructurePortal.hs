@@ -21,7 +21,6 @@ import Haxl.Core hiding (throw)
 import Language.Javascript.JSaddle hiding (Object, Success)
 import Network.URI
 import Network.URI.Static
-import Numeric.Natural
 import Text.XML.Light
 import Utils.Haxl
 import Utils.IntervalPeriod
@@ -95,7 +94,7 @@ getLatest15minUVIndexGeoJSON = fetchCacheable . GetLatest15minUVIndexGeoJSON . u
 getLatest15minUVIndex :: UTCTime -> URI -> GenHaxl u w (Vector UVIndexRecord)
 getLatest15minUVIndex t uri' = fetchCacheable $ GetLatest15minUVIndex (utcTimeToIntervalPeriod Proxy t) uri'
 
-data UVIndexRecord = UVIndexRecord UTCTime Natural deriving (Show, Eq)
+data UVIndexRecord = UVIndexRecord UTCTime Double deriving (Show, Eq)
 
 instance FromNamedRecord UVIndexRecord where
   parseNamedRecord m = do
