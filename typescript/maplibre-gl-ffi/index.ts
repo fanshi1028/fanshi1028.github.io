@@ -60,6 +60,39 @@ const renderUVIndexGeoJSON = (
   })
 }
 
+const render_hssp7 = (map: Map, data: [lat: number, lng: number][]) => {
+  map
+    .addSource('hssp7', {
+      type: 'geojson',
+      data: {
+        type: 'FeatureCollection',
+        features: data.map(([lat, lng], i) => {
+          return {
+            type: 'Feature',
+            geometry: {
+              type: 'Point',
+              coordinates: [lng, lat],
+            },
+            properties: {
+              title: hssp7[i]?.Name_cn,
+            },
+          }
+        }),
+      },
+    })
+    .addLayer({
+      id: 'hssp7',
+      source: 'hssp7',
+      type: 'symbol',
+      layout: {
+        'icon-image': 'custom-marker',
+        'text-field': ['get', 'title'],
+        'text-offset': [0, 1.25],
+        'text-anchor': 'top',
+      },
+    })
+}
+
 declare global {
   var maplibregl_ffi: unknown
 }
@@ -70,4 +103,5 @@ globalThis.maplibregl_ffi = {
   renderUVIndexGeoJSON,
   getDataURI,
   hssp7,
+  render_hssp7,
 }

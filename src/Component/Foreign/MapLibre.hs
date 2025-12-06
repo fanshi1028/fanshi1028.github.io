@@ -9,6 +9,7 @@ module Component.Foreign.MapLibre
     getUVIndexDataURI,
     addGeoJSONSource,
     getHardSurfaceSoccerPitches7aSideInfo,
+    render_hssp7,
   )
 where
 
@@ -172,25 +173,35 @@ data HardSurfaceSoccerPitches7aSideInfo = HardSurfaceSoccerPitches7aSideInfo
   }
   deriving stock (Show)
 
+fromWGS84Str :: String -> Maybe (Quantity DPlaneAngle Double)
+fromWGS84Str str =
+  let readFromWGS84Str = do
+        deg <- (*~ degree) . fromIntegral @_ @Double <$> readPrec @Int
+        '-' <- get
+        min' <- (*~ arcminute) . fromIntegral <$> readPrec @Int
+        '-' <- get
+        sec <- (*~ arcsecond) . fromIntegral <$> readPrec @Int
+        pure $ deg + min' + sec
+   in case [x | (x, "") <- readPrec_to_S readFromWGS84Str minPrec str] of
+        [x] -> Just x
+        _ -> Nothing
+
 instance FromJSVal HardSurfaceSoccerPitches7aSideInfo where
   fromJSVal v = do
-    let readFromWGS84Str = do
-          deg <- (*~ degree) . fromIntegral @_ @Double <$> readPrec @Int
-          '-' <- get
-          min' <- (*~ arcminute) . fromIntegral <$> readPrec @Int
-          '-' <- get
-          sec <- (*~ arcsecond) . fromIntegral <$> readPrec @Int
-          pure $ deg + min' + sec
-        fromWGS84Str = \case
-          Just t -> case [x | (x, "") <- readPrec_to_S readFromWGS84Str minPrec t] of
-            [x] -> pure $ Just x
-            _ -> pure Nothing
-          Nothing -> pure Nothing
-    mLat <- v ! "Latitude" >>= fromJSVal >>= fromWGS84Str
-    mLng <- v ! "Longitude" >>= fromJSVal >>= fromWGS84Str
+    mLat <- v ! "Latitude" >>= fromJSVal <&> (>>= fromWGS84Str)
+    mLng <- v ! "Longitude" >>= fromJSVal <&> (>>= fromWGS84Str)
     pure $ HardSurfaceSoccerPitches7aSideInfo <$> mLat <*> mLng
 
 getHardSurfaceSoccerPitches7aSideInfo :: ReaderT MapLibreLib JSM [HardSurfaceSoccerPitches7aSideInfo]
 getHardSurfaceSoccerPitches7aSideInfo = do
   mapLibreLib <- ask
   liftJSM $ mapLibreLib ! "hssp7" >>= fromJSValUnchecked
+
+render_hssp7 :: ReaderT MapLibreLib JSM ()
+render_hssp7 = do
+  mapLibreLib <- ask
+  hssp7 <- getHardSurfaceSoccerPitches7aSideInfo
+  let hssp7' = [(lat /~ degree, lng /~ degree) | HardSurfaceSoccerPitches7aSideInfo lat lng <- hssp7]
+  void . liftJSM $ do
+    mapLibre <- liftIO $ readMVar mapLibreMVar
+    void . liftJSM $ mapLibreLib # "render_hssp7" $ (mapLibre, hssp7')

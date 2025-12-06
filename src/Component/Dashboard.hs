@@ -109,6 +109,7 @@ updateModel = \case
     temp <- runMapLibre $ do
       createMap
       getHardSurfaceSoccerPitches7aSideInfo
+      render_hssp7
     void $ (jsg "console" # "log") [show temp]
   CleanUpMapLibre -> io_ cleanUpMap
   FetchWeatherData -> withSink fetchData
