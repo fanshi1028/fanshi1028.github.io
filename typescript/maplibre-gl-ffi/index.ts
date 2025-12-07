@@ -1,12 +1,17 @@
 import {
   Map,
   Marker,
+  LngLat,
   type GeoJSONSourceSpecification,
   type CameraUpdateTransformFunction,
   type LngLatLike,
 } from 'maplibre-gl'
 
 import hssp7 from './facility-hssp7.json'
+
+function isNotNull<T>(item: T | null): item is T {
+  return item !== null
+}
 
 const createMap = (
   cid: string,
@@ -60,38 +65,43 @@ const renderUVIndexGeoJSON = (
   })
 }
 
-const render_hssp7 = (map: Map, data: [lat: number, lng: number][]) => {
-  map
-    .addSource('hssp7', {
-      type: 'geojson',
-      data: {
-        type: 'FeatureCollection',
-        features: data.map(([lat, lng], i) => {
-          return {
-            type: 'Feature',
-            geometry: {
-              type: 'Point',
-              coordinates: [lng, lat],
-            },
-            properties: {
-              title: hssp7[i]?.Name_cn,
-            },
-          }
-        }),
+const render_hssp7 = (map: Map, data: (LngLatLike | null)[]) => {
+  const features = data.filter(isNotNull).map((d, i) => {
+    return {
+      type: 'Feature' as const,
+      geometry: {
+        type: 'Point' as const,
+        coordinates: LngLat.convert(d).toArray(),
       },
-    })
-    .addLayer({
-      id: 'hssp7',
-      source: 'hssp7',
-      type: 'symbol',
-      layout: {
-        'icon-image': 'soccer',
-        'text-field': ['get', 'title'],
-        'text-offset': [0, 1.25],
-        'text-anchor': 'top',
-        'text-font': ['Noto Sans Regular'],
+      properties: {
+        title: hssp7[i]?.Name_cn,
       },
-    })
+    }
+  })
+  if (features.length == 0) {
+    console.warn('render_hssp7 got an empty list of non-null coords')
+  } else {
+    map
+      .addSource('hssp7', {
+        type: 'geojson',
+        data: {
+          type: 'FeatureCollection',
+          features,
+        },
+      })
+      .addLayer({
+        id: 'hssp7',
+        source: 'hssp7',
+        type: 'symbol',
+        layout: {
+          'icon-image': 'soccer',
+          'text-field': ['get', 'title'],
+          'text-offset': [0, 1.25],
+          'text-anchor': 'top',
+          'text-font': ['Noto Sans Regular'],
+        },
+      })
+  }
 }
 
 declare global {

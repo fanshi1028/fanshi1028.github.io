@@ -8,7 +8,6 @@ import Component.Dashboard.View
 import Component.Foreign.MapLibre
 import Control.Monad.IO.Class
 import Data.Function
-import Data.Functor
 import Data.Time
 import DataSource.BrowserGeolocationAPI
 import DataSource.CommonSpatialDataInfrastructurePortal

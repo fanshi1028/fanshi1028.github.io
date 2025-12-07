@@ -8,7 +8,6 @@ module Component.Foreign.MapLibre
     addMarkerAndEaseToLocation,
     getUVIndexDataURI,
     addGeoJSONSource,
-    getHardSurfaceSoccerPitches7aSideInfo,
     render_hssp7,
   )
 where
@@ -144,6 +143,12 @@ addGeoJSONSource sourceId v = do
   mapLibre <- liftIO $ readMVar mapLibreMVar
   void . liftJSM $ mapLibreLib # "renderUVIndexGeoJSON" $ (mapLibre, sourceId, v)
 
+data LngLat = LngLat (Quantity DPlaneAngle Double) (Quantity DPlaneAngle Double)
+  deriving stock (Show)
+
+instance ToJSVal LngLat where
+  toJSVal (LngLat lng lat) = toJSVal (lng /~ degree, lat /~ degree)
+
 -- NOTE: https://www.lcsd.gov.hk/datagovhk/facility/facility-hssp7_data_dictionary.pdf
 {- example item <2025-12-01 Mon>:
 {
@@ -186,22 +191,24 @@ fromWGS84Str str =
         [x] -> Just x
         _ -> Nothing
 
-instance FromJSVal HardSurfaceSoccerPitches7aSideInfo where
-  fromJSVal v = do
-    mLat <- v ! "Latitude" >>= fromJSVal <&> (>>= fromWGS84Str)
-    mLng <- v ! "Longitude" >>= fromJSVal <&> (>>= fromWGS84Str)
-    pure $ HardSurfaceSoccerPitches7aSideInfo <$> mLat <*> mLng
-
-getHardSurfaceSoccerPitches7aSideInfo :: ReaderT MapLibreLib JSM [HardSurfaceSoccerPitches7aSideInfo]
-getHardSurfaceSoccerPitches7aSideInfo = do
-  mapLibreLib <- ask
-  liftJSM $ mapLibreLib ! "hssp7" >>= fromJSValUnchecked
-
 render_hssp7 :: ReaderT MapLibreLib JSM ()
 render_hssp7 = do
   mapLibreLib <- ask
-  hssp7 <- getHardSurfaceSoccerPitches7aSideInfo
-  let hssp7' = [(lat /~ degree, lng /~ degree) | HardSurfaceSoccerPitches7aSideInfo lat lng <- hssp7]
   void . liftJSM $ do
+    coords <-
+      mapLibreLib ! "hssp7"
+        >>= fromJSVal @[JSVal]
+        >>= \case
+          Just hssp7s ->
+            traverse
+              ( \hssp7 -> do
+                  mLng <- hssp7 ! "Longitude" >>= fromJSVal <&> (>>= fromWGS84Str)
+                  mLat <- hssp7 ! "Latitude" >>= fromJSVal <&> (>>= fromWGS84Str)
+                  pure $ LngLat <$> mLng <*> mLat
+              )
+              hssp7s
+          Nothing -> do
+            _ <- jsg "console" # "error" $ "impossible; hssp7 is not an array"
+            pure []
     mapLibre <- liftIO $ readMVar mapLibreMVar
-    void . liftJSM $ mapLibreLib # "render_hssp7" $ (mapLibre, hssp7')
+    void . liftJSM $ mapLibreLib # "render_hssp7" $ (mapLibre, coords)
