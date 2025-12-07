@@ -8,7 +8,7 @@ module Component.Foreign.MapLibre
     addMarkerAndEaseToLocation,
     getUVIndexDataURI,
     addGeoJSONSource,
-    render_hssp7,
+    toggle_hssp7,
   )
 where
 
@@ -162,24 +162,29 @@ fromWGS84Str str =
         [x] -> Just x
         _ -> Nothing
 
-render_hssp7 :: ReaderT MapLibreLib JSM ()
-render_hssp7 = do
+toggle_hssp7 :: ReaderT MapLibreLib JSM ()
+toggle_hssp7 = do
   mapLibreLib <- ask
   void . liftJSM $ do
-    coords <-
-      mapLibreLib ! "hssp7"
-        >>= fromJSVal @[JSVal]
-        >>= \case
-          Just hssp7s ->
-            traverse
-              ( \hssp7 -> do
-                  mLng <- hssp7 ! "Longitude" >>= fromJSVal <&> (>>= fromWGS84Str)
-                  mLat <- hssp7 ! "Latitude" >>= fromJSVal <&> (>>= fromWGS84Str)
-                  pure $ LngLat <$> mLng <*> mLat
-              )
-              hssp7s
-          Nothing -> do
-            _ <- jsg "console" # "error" $ "impossible; hssp7 is not an array"
-            pure []
+    hssp7Lib <- mapLibreLib ! "hard_surface_soccer_pitch_7"
     mapLibre <- liftIO $ readMVar mapLibreMVar
-    void . liftJSM $ mapLibreLib # "render_hssp7" $ (mapLibre, coords)
+    (hssp7Lib # "getFeatures") () >>= fromJSVal @(Maybe JSVal) >>= \case
+      Nothing -> void $ jsg "console" # "error" $ "impossible: hard_surface_soccer_pitch_7 getFeatures return unexpected result"
+      Just Nothing -> do
+        processCoords <- function $ \_ _ -> \case
+          [hssp7_data, setCoords] ->
+            fromJSVal @[JSVal] hssp7_data >>= \case
+              Just hssp7s ->
+                void . call setCoords global $
+                  [ traverse
+                      ( \hssp7 -> do
+                          mLng <- hssp7 ! "Longitude" >>= fromJSVal <&> (>>= fromWGS84Str)
+                          mLat <- hssp7 ! "Latitude" >>= fromJSVal <&> (>>= fromWGS84Str)
+                          pure $ LngLat <$> mLng <*> mLat
+                      )
+                      hssp7s
+                  ]
+              Nothing -> void $ jsg "console" # "error" $ "impossible: hard_surface_soccer_pitch_7 data is not an array"
+          _ -> void $ jsg "console" # "error" $ "unexpected args count for processCoords: "
+        void . liftJSM $ hssp7Lib # "toggleLayer" $ (mapLibre, processCoords)
+      Just _ -> void . liftJSM $ hssp7Lib # "toggleLayer" $ [mapLibre]

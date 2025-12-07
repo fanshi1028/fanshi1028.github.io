@@ -51,6 +51,7 @@ data Action
   | SetLatest15minUVIndex (Vector UVIndexRecord)
   | SetDisplayTemperature Bool
   | SetDisplayRainfall Bool
+  | ToggleDisplayHardSurfaceSoccerPitch7
   deriving stock (Eq, Show)
 
 defaultModel :: Model
@@ -372,5 +373,8 @@ viewModel (Model mELocation mTimeZone mCurrentWeatherReport mLocalWeatherForecas
         )
         (view9DayWeatherForecast mTimeZone)
         m9DayWeatherForecast,
-      div_ [] $ [button_ [onClick FetchWeatherData] [text "TEMP FIXME Test: refetch"]]
+      div_ [class_ "z-10 absolute flex flex-col items-start gap-2"] $
+        [ button_ [onClick FetchWeatherData, class_ "bg-neutral-200 text-neutral-600 p-2 rounded"] [text "TEMP FIXME Test: refetch"],
+          button_ [onClick $ ToggleDisplayHardSurfaceSoccerPitch7, class_ "bg-neutral-200 text-neutral-600 p-2 rounded"] [text "Toggle hard-surface 7-a-side football patch"]
+        ]
     ]

@@ -102,9 +102,7 @@ fetchData sink = do
 
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
-  InitAction -> do
-    issue FetchWeatherData
-    io_ $ runMapLibre render_hssp7
+  InitAction -> issue FetchWeatherData
   InitMapLibre -> io_ $ runMapLibre createMap
   CleanUpMapLibre -> io_ cleanUpMap
   FetchWeatherData -> withSink fetchData
@@ -119,6 +117,7 @@ updateModel = \case
   SetDisplayRainfall b -> displayRainfall .= b
   SetLatest15minUVIndexGeoJSON geoJSON -> io_ . runMapLibre $ addGeoJSONSource (ms "latest15minUVIndex") geoJSON
   SetLatest15minUVIndex d -> io_ $ Miso.consoleLog . ms $ show d -- TEMP FIXME
+  ToggleDisplayHardSurfaceSoccerPitch7 -> io_ . runMapLibre $ toggle_hssp7
 
 dashboardComponent :: Component parent Model Action
 dashboardComponent = (component defaultModel updateModel viewModel) {initialAction = Just InitAction}
