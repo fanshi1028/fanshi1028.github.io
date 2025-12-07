@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Component.Foreign.MapLibre
   ( mapLibreComponent,
@@ -70,11 +71,14 @@ mapLibreComponent =
 #endif
 #endif
 
+geolocationToLngLat :: Geolocation -> LngLat
+geolocationToLngLat (Geolocation lat lon _acc) = LngLat (lon *~ degree) (lat *~ degree)
+
 addMarkerAndEaseToLocation :: Geolocation -> ReaderT MapLibreLib JSM ()
-addMarkerAndEaseToLocation (Geolocation lat lon acc) = do
+addMarkerAndEaseToLocation (geolocationToLngLat -> loc) = do
   mapLibreLib <- ask
   mapLibre <- liftIO $ readMVar mapLibreMVar
-  void . liftJSM $ (mapLibreLib # "addMarkerAndEaseToLocation") (lon, lat, mapLibre)
+  void . liftJSM $ mapLibreLib # "addMarkerAndEaseToLocation" $ (loc, mapLibre)
 
 runMapLibre :: ReaderT MapLibreLib JSM a -> JSM a
 runMapLibre m = do

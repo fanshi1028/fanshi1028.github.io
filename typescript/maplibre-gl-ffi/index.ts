@@ -26,8 +26,7 @@ const createMap = (
   return map
 }
 
-const addMarkerAndEaseToLocation = (lng: number, lat: number, mapLbre: Map) => {
-  const location: LngLatLike = [lng, lat]
+const addMarkerAndEaseToLocation = (location: LngLatLike, mapLbre: Map) => {
   new Marker().setLngLat(location).addTo(mapLbre)
   mapLbre.easeTo({ center: location })
 }
