@@ -149,35 +149,6 @@ data LngLat = LngLat (Quantity DPlaneAngle Double) (Quantity DPlaneAngle Double)
 instance ToJSVal LngLat where
   toJSVal (LngLat lng lat) = toJSVal (lng /~ degree, lat /~ degree)
 
--- NOTE: https://www.lcsd.gov.hk/datagovhk/facility/facility-hssp7_data_dictionary.pdf
-{- example item <2025-12-01 Mon>:
-{
-    "Address_cn": "九龍何文田忠義街一號",
-    "Address_en": "No.1 Chung Yee Street, Ho Man Tin, Kowloon.",
-    "Ancillary_facilities_cn": "<ul>\r\n<li>男、女更衣室及洗手間</li>\r\n<li>1個收費停車場 (設有1個殘疾人士專用車位)</li>\r\n<li>其他設施包括2個籃球場、1個兒童遊樂場、1條緩跑徑及6個健身站</li>\r\n<li>此球場可進行7人足球或手球活動</li>\r\n<li>設有可容納480人的看台</li>\r\n<li>無障礙設施：暢通易達洗手間、觸覺引路帶、觸覺點字及觸覺平面圖</li>\r\n</ul>",
-    "Ancillary_facilities_en": "<ul>\r\n<li>Men's and ladies' changing rooms and toilets</li>\r\n<li>A fee-charging car park (including 1 designated disabled parking space)</li>\r\n<li>Other facilities include 2 basketball courts, a children's playground and a jogging track with 6 fitness stations.</li>\r\n<li>This court can be used for playing 7-a-side soccer or handball.</li>\r\n<li>A spectator stand with 480 seats is provided.</li>\r\n<li>Barrier Free Facilities: Accessible Toilet, Tactile Guide Path, Braille Directory Map/Floor Plan</li>\r\n</ul>",
-    "Court_no_cn": "1",
-    "Court_no_en": "1",
-    "District_cn": "九龍城區",
-    "District_en": "Kowloon City",
-    "GIHS": "MSKgwBPmtd",
-    "Latitude": "22-18-44",
-    "Longitude": "114-10-50",
-    "Name_cn": "何文田公園",
-    "Name_en": "Ho Man Tin Park",
-    "Opening_hours_cn": "每日上午7時至晚上11時",
-    "Opening_hours_en": "7 am to 11 pm daily",
-    "Phone": "2762 7837",
-    "Remarks_cn": "",
-    "Remarks_en": ""
-}
--}
-data HardSurfaceSoccerPitches7aSideInfo = HardSurfaceSoccerPitches7aSideInfo
-  { latitude :: Quantity DPlaneAngle Double,
-    longitude :: Quantity DPlaneAngle Double
-  }
-  deriving stock (Show)
-
 fromWGS84Str :: String -> Maybe (Quantity DPlaneAngle Double)
 fromWGS84Str str =
   let readFromWGS84Str = do
