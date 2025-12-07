@@ -89,6 +89,7 @@ const render_hssp7 = (map: Map, data: [lat: number, lng: number][]) => {
         'text-field': ['get', 'title'],
         'text-offset': [0, 1.25],
         'text-anchor': 'top',
+        'text-font': ['Noto Sans Regular'],
       },
     })
 }
