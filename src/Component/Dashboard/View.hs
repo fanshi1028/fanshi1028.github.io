@@ -373,8 +373,23 @@ viewModel (Model mELocation mTimeZone mCurrentWeatherReport mLocalWeatherForecas
         )
         (view9DayWeatherForecast mTimeZone)
         m9DayWeatherForecast,
-      div_ [class_ "z-10 absolute flex flex-col items-start gap-2"] $
+      div_ [class_ "z-10 absolute flex flex-col items-start gap-2 p-2"] $
         [ button_ [onClick FetchWeatherData, class_ "bg-neutral-200 text-neutral-600 p-2 rounded"] [text "TEMP FIXME Test: refetch"],
-          button_ [onClick $ ToggleDisplayHardSurfaceSoccerPitch7, class_ "bg-neutral-200 text-neutral-600 p-2 rounded"] [text "Toggle hard-surface 7-a-side football patch"]
+          button_
+            [onClick $ ToggleDisplayHardSurfaceSoccerPitch7, class_ "group bg-neutral-200 text-neutral-600 p-2 rounded inline-block relative"]
+            [ "Toggle Football Pitches",
+              span_
+                [ classes_
+                    [ "invisible group-hover:visible",
+                      "transition-opacity opacity-0  group-hover:opacity-100",
+                      "absolute z-20 left-1/4 top-[120%] -mt-px",
+                      "bg-neutral-600 text-neutral-200 text-nowrap px-2 rounded",
+                      -- NOTE: arrow
+                      "after:border-solid after:border-8 after:border-transparent after:border-b-neutral-600",
+                      "after:content-[''] after:absolute after:left-2 after:bottom-full after:-mb-px"
+                    ]
+                ]
+                ["Toggle hard-surface 7-a-side football pitches"]
+            ]
         ]
     ]
