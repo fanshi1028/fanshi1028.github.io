@@ -374,7 +374,7 @@ viewModel (Model mELocation mTimeZone mCurrentWeatherReport mLocalWeatherForecas
         (view9DayWeatherForecast mTimeZone)
         m9DayWeatherForecast,
       div_ [class_ "z-10 absolute flex flex-col items-start gap-2 p-2"] $
-        [ button_ [onClick FetchWeatherData, class_ "bg-neutral-200 text-neutral-600 p-2 rounded"] [text "TEMP FIXME Test: refetch"],
+        [ button_ [onClick FetchWeatherData, class_ "hidden bg-neutral-200 text-neutral-600 p-2 rounded"] [text "TEMP FIXME Test: refetch"],
           button_
             [onClick $ ToggleDisplayHardSurfaceSoccerPitch7, class_ "group bg-neutral-200 text-neutral-600 p-2 rounded inline-block relative"]
             [ "Toggle Football Pitches",
