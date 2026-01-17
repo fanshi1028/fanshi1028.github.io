@@ -4,8 +4,7 @@
   ];
 
   inputs = {
-    # copied from miso's flake
-    nixpkgs.url = "github:nixos/nixpkgs?rev=9e2e8a7878573d312db421d69e071690ec34e98c";
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-25.05-darwin";
     ghc-wasm.url = "gitlab:haskell-wasm/ghc-wasm-meta?host=gitlab.haskell.org";
   };
 
