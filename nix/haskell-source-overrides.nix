@@ -3,8 +3,8 @@
   miso = fetchFromGitHub {
     owner = "dmjio";
     repo = "miso";
-    rev = "af221db695f7df4191f182a9458f708a4e6020ae";
-    sha256 = "sha256-JsxFNgYITtPV4fCIsmhjz9aAMp0RP8ECuUdCUn3NkfU=";
+    rev = "7e026d8e7668867623ff7c546add70a2551bad7a";
+    sha256 = "sha256-nLTHRWTFaMw5qD55Kcuw1iWVgG64X2MUAlWk3edj9mI=";
   };
 
   cborg = "${
