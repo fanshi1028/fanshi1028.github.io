@@ -5,6 +5,7 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-25.05-darwin";
+    nixpkgs-unstable.url = "github:nixos/nixpkgs";
     ghc-wasm.url = "gitlab:haskell-wasm/ghc-wasm-meta?host=gitlab.haskell.org";
   };
 
@@ -12,6 +13,7 @@
     {
       self,
       nixpkgs,
+      nixpkgs-unstable,
       ghc-wasm,
     }:
     let
@@ -95,7 +97,6 @@
                 #   Referenced from: /nix/store/2dxgd64421azhmwp63h9h3hzczgvh9w7-tailwindcss_4-4.1.7/bin/.tailwindcss-wrapped (which was built for Mac OS X 13.0)
                 #   Expected in: /usr/lib/libicucore.A.dylib
                 bun
-                prettier
                 closurecompiler
                 # webpack-cli
                 # swc
@@ -114,6 +115,7 @@
               ++ (lib.attrVals [ "ghciwatch-fanshi1028-site" "ghciwatch-prerender" ] (
                 callPackage ./nix/ghciwatch-commands.nix { }
               ))
+              ++ [ nixpkgs-unstable.legacyPackages.${system}.prettier ]
             );
           returnShellEnv = true;
         };

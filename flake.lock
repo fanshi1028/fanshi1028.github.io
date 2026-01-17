@@ -55,6 +55,21 @@
         "type": "github"
       }
     },
+    "nixpkgs-unstable": {
+      "locked": {
+        "lastModified": 1768662779,
+        "narHash": "sha256-IgxOmUKOeYYf6pN5TCi3mFafBCI8fGP22pj8Gw6cmLM=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "7a6ba12d443c26ae0c9992fe908b07e4f0c9c793",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "nixpkgs_2": {
       "locked": {
         "lastModified": 1767313136,
@@ -74,7 +89,8 @@
     "root": {
       "inputs": {
         "ghc-wasm": "ghc-wasm",
-        "nixpkgs": "nixpkgs_2"
+        "nixpkgs": "nixpkgs_2",
+        "nixpkgs-unstable": "nixpkgs-unstable"
       }
     },
     "systems": {
