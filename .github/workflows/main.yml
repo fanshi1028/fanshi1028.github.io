@@ -146,7 +146,6 @@ jobs:
             wasm.cabal.project.freeze
             dist-newstyle
           key: cabal-${{ runner.os }}-${{ hashFiles('**/*.nix', '**/flake.lock', '**/*.cabal', '**/wasm.cabal.project') }}
-          restore-keys: cabal-${{ runner.os }}-
 
       - name: Prepare local miso source
         shell: bash -e {0}
