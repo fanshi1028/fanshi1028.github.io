@@ -26,9 +26,9 @@ const createMap = (
   return map
 }
 
-const addMarkerAndEaseToLocation = (location: LngLatLike, mapLbre: Map) => {
-  new Marker().setLngLat(location).addTo(mapLbre)
-  mapLbre.easeTo({ center: location })
+const addMarkerAndEaseToLocation = (location: LngLatLike, mapLibre: Map) => {
+  new Marker().setLngLat(location).addTo(mapLibre)
+  mapLibre.easeTo({ center: location })
 }
 
 const getDataURI = (
