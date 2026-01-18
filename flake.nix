@@ -4,16 +4,16 @@
   ];
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-25.05-darwin";
-    nixpkgs-unstable.url = "github:nixos/nixpkgs";
+    nixpkgs-darwin.url = "github:nixos/nixpkgs/nixos-25.05"; # NOTE: last nixpkgs release that support my old-macbook
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11"; # current nixpkgs stable release
     ghc-wasm.url = "gitlab:haskell-wasm/ghc-wasm-meta?host=gitlab.haskell.org";
   };
 
   outputs =
     {
       self,
+      nixpkgs-darwin,
       nixpkgs,
-      nixpkgs-unstable,
       ghc-wasm,
     }:
     let
@@ -69,7 +69,7 @@
             }
         ) (builtins.readDir ./typescript);
 
-      }) nixpkgs.legacyPackages;
+      }) nixpkgs-darwin.legacyPackages;
 
       devShells = builtins.mapAttrs (system: pkgs: {
         default = pkgs.callPackage ./nix/fanshi1028-site.nix { } {
@@ -115,7 +115,7 @@
               ++ (lib.attrVals [ "ghciwatch-fanshi1028-site" "ghciwatch-prerender" ] (
                 callPackage ./nix/ghciwatch-commands.nix { }
               ))
-              ++ [ nixpkgs-unstable.legacyPackages.${system}.prettier ]
+              ++ [ nixpkgs.legacyPackages.${system}.prettier ]
             );
           returnShellEnv = true;
         };
@@ -132,6 +132,6 @@
               npmRoot = ./typescript/${path};
             }
         ) (builtins.readDir ./typescript);
-      }) nixpkgs.legacyPackages;
+      }) nixpkgs-darwin.legacyPackages;
     };
 }
