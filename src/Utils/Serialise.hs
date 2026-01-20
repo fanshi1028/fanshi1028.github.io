@@ -12,6 +12,7 @@ import Data.Maybe
 import Data.Scientific
 import Miso.DSL
 import Miso.JSON qualified as JSON
+import Miso.String (StrictText, fromMisoString, ms)
 import System.IO.Unsafe
 import Prelude hiding ((+))
 
@@ -23,8 +24,8 @@ instance Serialise JSON.Value where
       Just v -> pure v
 
 instance Serialise JSVal where
-  encode = encode . unsafePerformIO . JSON.jsonStringify
-  decode = unsafePerformIO . JSON.jsonParse <$> decode
+  encode = encode . fromMisoString @StrictText . unsafePerformIO . JSON.jsonStringify
+  decode = unsafePerformIO . JSON.jsonParse . ms @StrictText <$> decode
 
 encodeScientific :: Scientific -> Encoding
 encodeScientific (normalize -> v) = encodeListLen 2 <> encode (coefficient v) <> encode (base10Exponent v)
