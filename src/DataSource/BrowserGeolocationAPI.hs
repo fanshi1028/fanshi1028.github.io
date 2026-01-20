@@ -47,7 +47,7 @@ instance DataSource u LocationReq where
                 fromJSVal v >>= \case
                   Nothing ->
                     jsonStringify v <&> \stringified ->
-                      Left . toException . JSONError $ pack "Impossible! succeeded but failed to be parsed as Geolocation: " <> stringified
+                      Left . toException . JSONError . fromMisoString $ "Impossible! succeeded but failed to be parsed as Geolocation: " <> stringified
                   Just r -> pure $ Right r
               liftIO $ putMVar resultMVar result
           failCB <-
@@ -56,7 +56,7 @@ instance DataSource u LocationReq where
                 fromJSVal @GeolocationError v >>= \case
                   Nothing ->
                     jsonStringify v <&> \stringified ->
-                      toException . JSONError $ pack "Impossible! failed with unexpected error: " <> stringified
+                      toException . JSONError . fromMisoString $ pack "Impossible! failed with unexpected error: " <> stringified
                   Just err -> pure . toException . FetchError . pack $ show err
               liftIO . putMVar resultMVar $ Left result
           void $ jsg "navigator" ! "geolocation" # "getCurrentPosition" $ (successCB, failCB, options)
