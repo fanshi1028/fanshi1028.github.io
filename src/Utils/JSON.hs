@@ -8,11 +8,12 @@ import Data.Functor
 import Data.Hashable
 import Data.List
 import Data.Scientific
+import Data.Text (StrictText, toLower)
 import Data.Time
 import Data.Time.Format.ISO8601
 import Miso.DSL
 import Miso.JSON
-import Miso.String hiding (find)
+import Miso.String (fromMisoString)
 import Numeric.Natural
 import System.IO.Unsafe
 import Text.ParserCombinators.ReadP
