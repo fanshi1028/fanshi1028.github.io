@@ -50,7 +50,7 @@ instance FromJSVal Natural where
       Nothing -> Nothing
 
 instance Hashable Value where
-  hashWithSalt s = hashWithSalt s . encodePretty
+  hashWithSalt s = hashWithSalt s . fromMisoString @StrictText . encodePretty
 
 instance Hashable JSVal where
   hashWithSalt s = hashWithSalt s . fromMisoString @StrictText . unsafePerformIO . jsonStringify

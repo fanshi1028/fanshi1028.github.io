@@ -127,7 +127,7 @@ getUVIndexDataURI geoJSON = do
               Just url' -> pure url'
               Nothing -> jsonStringify url
           putMVar dataURIMVar . Left $
-            toException . InvalidParameter $
+            toException . InvalidParameter . fromMisoString $
               "impossible: getDataURI callback expect valid uri but got " <> invalidURI
         Just data_uri -> putMVar dataURIMVar $ Right data_uri
     _ <- mapLibreLib # "getDataURI" $ (geoJSON, callback)

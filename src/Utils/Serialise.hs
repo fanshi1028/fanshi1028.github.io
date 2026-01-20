@@ -18,9 +18,9 @@ import System.IO.Unsafe
 import Prelude hiding ((+))
 
 instance Serialise JSON.Value where
-  encode = encode . JSON.encodePretty
+  encode = encode . fromMisoString @StrictText . JSON.encodePretty
   decode =
-    JSON.decode <$> decode >>= \case
+    JSON.decode . ms @StrictText <$> decode >>= \case
       Nothing -> fail "invali JSON Value encoding"
       Just v -> pure v
 
