@@ -31,7 +31,7 @@ instance StateKey LocationReq where
   data State LocationReq = LocationReqState
 
 instance DataSourceName LocationReq where
-  dataSourceName _ = pack "browser geolocation api"
+  dataSourceName _ = "browser geolocation api"
 
 instance DataSource u LocationReq where
   fetch =
@@ -56,7 +56,7 @@ instance DataSource u LocationReq where
                 fromJSVal @GeolocationError v >>= \case
                   Nothing ->
                     jsonStringify v <&> \stringified ->
-                      toException . JSONError . fromMisoString $ pack "Impossible! failed with unexpected error: " <> stringified
+                      toException . JSONError . fromMisoString $ "Impossible! failed with unexpected error: " <> stringified
                   Just err -> pure . toException . FetchError . pack $ show err
               liftIO . putMVar resultMVar $ Left result
           void $ jsg "navigator" ! "geolocation" # "getCurrentPosition" $ (successCB, failCB, options)
