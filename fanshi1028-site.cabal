@@ -30,14 +30,11 @@ flag prerender-wasm
 
 common lib
   build-depends:
-    aeson,
-    aeson-pretty,
     async,
     base <5,
     base64,
     bytestring,
     cassava,
-    cborg-json,
     containers,
     data-interval,
     dimensional,
@@ -45,7 +42,6 @@ common lib
     hashtables,
     haxl,
     http-types,
-    jsaddle,
     lens,
     miso,
     mtl,
@@ -86,7 +82,7 @@ common lib
       Utils.Dimensional
       Utils.Haxl
       Utils.IntervalPeriod
-      Utils.JS
+      Utils.JSON
       Utils.Serialise
       View.ProductRequirementDocument
       View.ProductRequirementDocument.Dashboard
@@ -119,7 +115,7 @@ library
     Utils.Dimensional
     Utils.Haxl
     Utils.IntervalPeriod
-    Utils.JS
+    Utils.JSON
     Utils.Serialise
     View.ProductRequirementDocument
     View.ProductRequirementDocument.Dashboard

@@ -5,11 +5,10 @@ module Component.Clock (ClockDoneMessage (ClockDoneMessage), clockComponent) whe
 import Component.Clock.View
 import Control.Concurrent (threadDelay)
 import Control.Monad (forever)
-import Control.Monad.IO.Class (liftIO)
-import Data.Aeson hiding ((.=))
 import Data.Time
 import GHC.Generics
 import Miso
+import Miso.JSON hiding ((.=))
 import Miso.Lens
 import Miso.String
 import Prelude hiding (error)

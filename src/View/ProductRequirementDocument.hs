@@ -20,7 +20,6 @@ module View.ProductRequirementDocument
   )
 where
 
-import Data.Aeson
 import Data.List.NonEmpty
 import Data.Maybe (fromMaybe)
 import Data.Text
@@ -30,7 +29,7 @@ import Miso hiding (URI)
 import Miso.Html.Element
 import Miso.Html.Property
 import Miso.Svg.Element
-import Miso.Svg.Property hiding (id_, path_)
+import Miso.Svg.Property hiding (path_)
 import Network.URI
 
 data ProductRequirementDocument = ProductRequirementDocument
@@ -41,7 +40,7 @@ data ProductRequirementDocument = ProductRequirementDocument
     -- NOTE: outlines dependencies for launch
     _launchReadiness :: [KeyMilestone]
   }
-  deriving (Eq, Generic, FromJSON, ToJSON)
+  deriving (Eq, Generic)
 
 data SolutionAlignment = SolutionAlignment
   { _userFlows :: Text,
@@ -49,20 +48,20 @@ data SolutionAlignment = SolutionAlignment
     _openIssues :: [OpenIssues],
     _references :: [Reference]
   }
-  deriving (Eq, Generic, FromJSON, ToJSON)
+  deriving (Eq, Generic)
 
 data OpenIssues = OpenIssues
   { _openIssuesDescription :: Text,
     _keyDecisions :: NonEmpty Text
   }
-  deriving (Eq, Generic, FromJSON, ToJSON)
+  deriving (Eq, Generic)
 
 data Reference = Reference
   { _referenceName :: Maybe Text,
     _referencelink :: URI,
     _referenceComments :: NonEmpty Text
   }
-  deriving (Eq, Generic, FromJSON, ToJSON)
+  deriving (Eq, Generic)
 
 -- NOTE: Describe the problem (or opportunity) you’re trying to solve.
 -- Why is it important to our users and our business?
@@ -77,7 +76,7 @@ data Problem = Problem
     _why4 :: Text,
     _why5 :: Text
   }
-  deriving (Eq, Generic, FromJSON, ToJSON)
+  deriving (Eq, Generic)
 
 data ProblemAlignment = ProblemAlignment
   { _problems :: NonEmpty Problem,
@@ -89,7 +88,7 @@ data ProblemAlignment = ProblemAlignment
     -- NOTE: State all your goals, even those immeasurable.
     _goalsAndSuccess :: NonEmpty Text
   }
-  deriving (Eq, Generic, FromJSON, ToJSON)
+  deriving (Eq, Generic)
 
 data KeyMilestone = KeyMilestone
   { _milestoneName :: Text,
@@ -98,7 +97,7 @@ data KeyMilestone = KeyMilestone
     _launchChecklist :: [Text],
     _deadLine :: Maybe UTCTime
   }
-  deriving (Eq, Generic, FromJSON, ToJSON)
+  deriving (Eq, Generic)
 
 prdDialogueId :: MisoString
 prdDialogueId = "prdDialogue-LZZ2CwjFRCd24oOi"
