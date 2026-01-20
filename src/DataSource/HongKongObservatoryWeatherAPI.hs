@@ -12,7 +12,7 @@ import Data.Void
 import DataSource.HongKongObservatoryWeatherAPI.Types
 import DataSource.LocalStorage
 import Haxl.Core hiding (throw)
-import Language.Javascript.JSaddle hiding (Object, Success)
+import Miso.JSON qualified as JSON
 import Network.URI
 import Network.URI.Static
 import Utils.Haxl
@@ -24,9 +24,9 @@ data HKOWeatherInformationReq a where
   GetLocalWeatherForecast :: IntervalPeriod 60 -> HKOWeatherInformationReq LocalWeatherForecast
   Get9DayWeatherForecast :: TwiceADay -> HKOWeatherInformationReq NineDayWeatherForecast
   GetCurrentWeatherReport :: IntervalPeriod 60 -> HKOWeatherInformationReq CurrentWeatherReport
-  GetWeatherWarningSummary :: UTCTime -> HKOWeatherInformationReq SerialisableValue
-  GetWeatherWarningInfo :: UTCTime -> HKOWeatherInformationReq SerialisableValue
-  GetSpecialWeatherTips :: UTCTime -> HKOWeatherInformationReq SerialisableValue
+  GetWeatherWarningSummary :: UTCTime -> HKOWeatherInformationReq JSON.Value
+  GetWeatherWarningInfo :: UTCTime -> HKOWeatherInformationReq JSON.Value
+  GetSpecialWeatherTips :: UTCTime -> HKOWeatherInformationReq JSON.Value
 
 deriving instance Eq (HKOWeatherInformationReq a)
 
@@ -44,7 +44,7 @@ deriving instance Show (HKOWeatherInformationReq a)
 instance ShowP HKOWeatherInformationReq where showp = show
 
 instance StateKey HKOWeatherInformationReq where
-  newtype State HKOWeatherInformationReq = HKOWeatherInformationReqState JSContextRef
+  data State HKOWeatherInformationReq = HKOWeatherInformationReqState
 
 instance DataSourceName HKOWeatherInformationReq where
   dataSourceName _ = pack "HKO Weather Information API"
@@ -67,18 +67,17 @@ hkoWeatherInformationReqToURI req =
     }
 
 instance DataSource u HKOWeatherInformationReq where
-  fetch reqState@(HKOWeatherInformationReqState jscontext) =
+  fetch =
     backgroundFetchPar
-      ( -- NOTE: sad boilerplate
-        \req -> runJSaddle jscontext $ case req of
-          GetLocalWeatherForecast _ -> fetchGetJSON Proxy $ hkoWeatherInformationReqToURI req
-          Get9DayWeatherForecast _ -> fetchGetJSON Proxy $ hkoWeatherInformationReqToURI req
-          GetCurrentWeatherReport _ -> fetchGetJSON Proxy $ hkoWeatherInformationReqToURI req
-          GetWeatherWarningSummary _ -> fetchGetJSON Proxy $ hkoWeatherInformationReqToURI req
-          GetWeatherWarningInfo _ -> fetchGetJSON Proxy $ hkoWeatherInformationReqToURI req
-          GetSpecialWeatherTips _ -> fetchGetJSON Proxy $ hkoWeatherInformationReqToURI req
-      )
-      reqState
+    -- NOTE: sad boilerplate
+    $
+      \req -> case req of
+        GetLocalWeatherForecast _ -> fetchGetJSON Proxy $ hkoWeatherInformationReqToURI req
+        Get9DayWeatherForecast _ -> fetchGetJSON Proxy $ hkoWeatherInformationReqToURI req
+        GetCurrentWeatherReport _ -> fetchGetJSON Proxy $ hkoWeatherInformationReqToURI req
+        GetWeatherWarningSummary _ -> fetchGetJSON Proxy $ hkoWeatherInformationReqToURI req
+        GetWeatherWarningInfo _ -> fetchGetJSON Proxy $ hkoWeatherInformationReqToURI req
+        GetSpecialWeatherTips _ -> fetchGetJSON Proxy $ hkoWeatherInformationReqToURI req
 
 -- NOTE: Rainfall in The Past Hour from Automatic Weather Station API
 data HKOHourlyRainFallReq a where

@@ -1,10 +1,10 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module App (app) where
 
 import App.View
 import Control.Monad
-import Language.Javascript.JSaddle
 import Miso
 import Miso.Lens
 import Miso.Router

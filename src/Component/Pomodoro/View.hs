@@ -134,10 +134,9 @@ viewModel m = div_ [class_ "flex flex-col container items-center lg:justify-cent
                       ]
                   ],
                 div_
-                  [ key_ @MisoString $ "stopwatch " <> ms (show currentPomodoroTime),
-                    class_ "h-full w-full pt-6"
+                  [class_ "h-full w-full pt-6"]
+                  [ "stopwatch " <> ms (show currentPomodoroTime) +> clockComponent False currentPomodoroTime
                   ]
-                  +> clockComponent False currentPomodoroTime
               ]
        in div_
             [class_ "contents"]
@@ -175,8 +174,8 @@ viewModel m = div_ [class_ "flex flex-col container items-center lg:justify-cent
         ]
 
     settingView stage =
-      let v = m ^. (stageToSettingLens stage) . settings
-          disableIfOtherInvalidated = case traverse (\stage' -> (m ^. (stageToSettingLens stage') . settings)._validation) [minBound .. maxBound] of
+      let v = m ^. settings . (stageToSettingLens stage)
+          disableIfOtherInvalidated = case traverse (\stage' -> (m ^. settings . (stageToSettingLens stage'))._validation) [minBound .. maxBound] of
             Validation.Success _ -> Prelude.id
             Failure _ -> case v._validation of
               Validation.Success _ -> (disabled_ :)

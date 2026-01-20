@@ -2,29 +2,29 @@
 
 module Utils.Serialise where
 
-import Codec.CBOR.JSON
 import Codec.Serialise
 import Codec.Serialise.Decoding
 import Codec.Serialise.Encoding
 import Control.Applicative
-import Data.Aeson hiding (Encoding, decode, encode)
 import Data.Function
-import Data.Functor
-import Data.Hashable
 import Data.Interval
 import Data.Maybe
 import Data.Scientific
-import Language.Javascript.JSaddle hiding (Object, Success)
+import Miso.DSL
+import Miso.JSON qualified as JSON
+import System.IO.Unsafe
 import Prelude hiding ((+))
 
-newtype SerialisableValue = SerialisableValue Value deriving newtype (Eq, Show, FromJSON, ToJSON, ToJSVal, Hashable)
+instance Serialise JSON.Value where
+  encode = encode . JSON.encodePretty
+  decode =
+    JSON.decode <$> decode >>= \case
+      Nothing -> fail "invali JSON Value encoding"
+      Just v -> pure v
 
-instance FromJSVal SerialisableValue where
-  fromJSVal v = fmap SerialisableValue <$> fromJSVal v
-
-instance Serialise SerialisableValue where
-  encode (SerialisableValue v) = encodeValue v
-  decode = SerialisableValue <$> decodeValue False
+instance Serialise JSVal where
+  encode = encode . unsafePerformIO . JSON.jsonStringify
+  decode = unsafePerformIO . JSON.jsonParse <$> decode
 
 encodeScientific :: Scientific -> Encoding
 encodeScientific (normalize -> v) = encodeListLen 2 <> encode (coefficient v) <> encode (base10Exponent v)

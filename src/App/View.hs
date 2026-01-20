@@ -192,8 +192,8 @@ viewModel = \case
                         )
                         <$> boundedEnumFrom (succ minBound) -- NOTE: exclude Index
                   ]
-              Pomodoro -> div_ [key_ @MisoString "pomodoro"] +> pomodoroComponent
-              Dashboard -> div_ [key_ @MisoString "dashboard"] +> dashboardComponent
+              Pomodoro -> "pomodoro" +> pomodoroComponent
+              Dashboard -> "dashboard" +> dashboardComponent
           ]
   where
     topRightClss =
