@@ -52,7 +52,7 @@ instance Hashable Value where
   hashWithSalt s = hashWithSalt s . encodePretty
 
 instance Hashable JSVal where
-  hashWithSalt s = hashWithSalt s . unsafePerformIO . jsonStringify
+  hashWithSalt s = hashWithSalt s . fromMisoString @StrictText . unsafePerformIO . jsonStringify
 
 instance Show JSVal where
   show = fromMisoString . unsafePerformIO . jsonStringify
