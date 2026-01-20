@@ -10,9 +10,10 @@ import Data.Function
 import Data.Interval
 import Data.Maybe
 import Data.Scientific
+import Data.Text (StrictText)
 import Miso.DSL
 import Miso.JSON qualified as JSON
-import Miso.String (StrictText, fromMisoString, ms)
+import Miso.String (fromMisoString, ms)
 import System.IO.Unsafe
 import Prelude hiding ((+))
 
