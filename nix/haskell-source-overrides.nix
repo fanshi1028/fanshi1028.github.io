@@ -1,10 +1,10 @@
 { fetchFromGitHub }:
 {
   miso = fetchFromGitHub {
-    owner = "dmjio";
+    owner = "fanshi1028";
     repo = "miso";
-    rev = "dee2a5ce312b1547d34d8bcb0c9f2838bf59c122";
-    sha256 = "sha256-//ewcDwijf71wyz+Y7yHBqlTPNUSHIY4te68AfIlJW8=";
+    rev = "092b594e299cd1ccf78b53ce7b15bdf5892e2f83";
+    sha256 = "sha256-wSPoQ9dzGqakFkm/Tm/7KzZi7CXINLhnST6/SdFnIKg=";
   };
 
   cborg = "${
