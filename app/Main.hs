@@ -12,4 +12,4 @@ foreign export javascript "hs_start" main :: IO ()
 -----------------------------------------------------------------------------
 
 main :: IO ()
-main = run $ miso app
+main = run $ miso defaultEvents app
