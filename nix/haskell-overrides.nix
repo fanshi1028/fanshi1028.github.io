@@ -16,13 +16,7 @@ hself: hsuper: {
     sha256 = "sha256-/p9p/hBK4TsTR524n1i8tgsJwv7Vw+i288Ccmzb2bfI=";
   } { };
 
-  miso = lib.pipe hsuper.miso (
-    with haskell.lib.compose;
-    [
-      (enableCabalFlag "template-haskell")
-      (enableCabalFlag "benchmark")
-    ]
-  );
+  miso = lib.pipe hsuper.miso (with haskell.lib.compose; [ (enableCabalFlag "template-haskell") ]);
 
   haxl = lib.pipe hsuper.haxl (
     with haskell.lib.compose;
