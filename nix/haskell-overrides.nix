@@ -10,11 +10,13 @@ hself: hsuper: {
     sha256 = "sha256-/p9p/hBK4TsTR524n1i8tgsJwv7Vw+i288Ccmzb2bfI=";
   } { };
 
-  jsaddle-warp = haskell.lib.dontCheck hself.callHackageDirect {
-    pkg = "jsaddle-warp";
-    ver = "0.9.9.5";
-    sha256 = "sha256-Wv1upgYJP4zHbVtamRLCWNNAcI1NOLQJ4VpR7QDceOY=";
-  } { };
+  jsaddle-warp = haskell.lib.dontCheck (
+    hself.callHackageDirect {
+      pkg = "jsaddle-warp";
+      ver = "0.9.9.5";
+      sha256 = "sha256-Wv1upgYJP4zHbVtamRLCWNNAcI1NOLQJ4VpR7QDceOY=";
+    } { }
+  );
 
   miso = lib.pipe hsuper.miso (with haskell.lib.compose; [ (enableCabalFlag "template-haskell") ]);
 
