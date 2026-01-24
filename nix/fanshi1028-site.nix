@@ -27,8 +27,12 @@ haskell.packages."ghc${ghcVersion}".developPackage (
   // {
     overrides = lib.composeManyExtensions [
       (
-        if stdenv.hostPlatform.isGhcjs && !prerender then
-          hself: hsuper: ({
+        if prerender then
+          hself: hsuper: {
+            miso = haskell.lib.enableCabalFlag hsuper.miso "ssr";
+          }
+        else if stdenv.hostPlatform.isGhcjs then
+          hself: hsuper: {
             hashtables = haskell.lib.enableCabalFlag hsuper.hashtables "portable";
             # NOTE: https://github.com/ghcjs/jsaddle/pull/162
             jsaddle = haskell.lib.appendPatch hsuper.jsaddle (fetchpatch {
