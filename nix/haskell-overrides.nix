@@ -4,7 +4,25 @@
 }:
 hself: hsuper: {
 
-  miso = lib.pipe hsuper.miso [ (haskell.lib.compose.enableCabalFlag "template-haskell") ];
+  jsaddle = hself.callHackageDirect {
+    pkg = "jsaddle";
+    ver = "0.9.9.3";
+    sha256 = "sha256-/p9p/hBK4TsTR524n1i8tgsJwv7Vw+i288Ccmzb2bfI=";
+  } { };
+
+  jsaddle-warp = hself.callHackageDirect {
+    pkg = "jsaddle-warp";
+    ver = "0.9.9.5";
+    sha256 = "sha256-/p9p/hBK4TsTR524n1i8tgsJwv7Vw+i288Ccmzb2bfI=";
+  } { };
+
+  miso = lib.pipe hsuper.miso (
+    with haskell.lib.compose;
+    [
+      (enableCabalFlag "template-haskell")
+      (enableCabalFlag "benchmark")
+    ]
+  );
 
   haxl = lib.pipe hsuper.haxl (
     with haskell.lib.compose;
