@@ -16,7 +16,7 @@ data Model = Model
   }
   deriving (Eq)
 
-data Action = Tick UTCTime | Start | Stop | End
+data Action = Tick UTCTime | Start | Stop | End deriving (Show)
 
 viewModel :: Model -> View Model Action
 viewModel (Model active timeLeft _) =

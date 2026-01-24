@@ -67,6 +67,7 @@ data Action
   | SetURI Route
   | SetPRDOpen Bool
   | AfterLoaded
+  deriving (Show)
 
 data Model
   = RoutingError RoutingError
