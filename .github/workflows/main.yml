@@ -2,7 +2,7 @@ name: Build and deploy
 
 on:
   push:
-    branches: try_revive_jsaddle
+    branches: try_revive_jsaddle_2
   pull_request:
 
 concurrency:
