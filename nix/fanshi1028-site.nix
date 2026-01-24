@@ -27,16 +27,16 @@ haskell.packages."ghc${ghcVersion}".developPackage (
   // {
     overrides = lib.composeManyExtensions [
       (
-        if prerender then
-          hself: hsuper: {
-            miso = haskell.lib.enableCabalFlag hsuper.miso "ssr";
-          }
-        else if stdenv.hostPlatform.isGhcjs then
-          hself: hsuper: {
-            hashtables = haskell.lib.enableCabalFlag hsuper.hashtables "portable";
-          }
-        else
-          hself: hsuper: { }
+        hself: hsuper:
+        lib.attrsets.optionalAttrs prerender {
+          miso = haskell.lib.enableCabalFlag hsuper.miso "ssr";
+        }
+      )
+      (
+        hself: hsuper:
+        lib.attrsets.optionalAttrs stdenv.hostPlatform.isGhcjs {
+          hashtables = haskell.lib.enableCabalFlag hsuper.hashtables "portable";
+        }
       )
       (callPackage ./haskell-overrides.nix { })
       overrides
