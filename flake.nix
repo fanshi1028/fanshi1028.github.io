@@ -88,11 +88,6 @@
                 #   Expected in: /usr/lib/libicucore.A.dylib
                 bun
                 prettier
-                closurecompiler
-                # webpack-cli
-                # swc
-                uglify-js
-                http-server
                 (haskell-language-server.override {
                   supportedGhcVersions = [ ghcVersion ];
                   supportedFormatters = [ "ormolu" ];
