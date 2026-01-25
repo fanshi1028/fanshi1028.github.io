@@ -16,10 +16,7 @@
 }@args:
 assert wasm -> prerender; # NOTE nix build for wasm site is not supported yet
 haskell.packages."ghc${ghcVersion}".developPackage (
-  {
-    source-overrides = callPackage ./haskell-source-overrides.nix { };
-  }
-  // (builtins.removeAttrs args [
+  (builtins.removeAttrs args [
     "ghcVersion"
     "prerender"
     "wasm"
@@ -32,13 +29,6 @@ haskell.packages."ghc${ghcVersion}".developPackage (
           miso = haskell.lib.enableCabalFlag hsuper.miso "ssr";
         }
       )
-      (
-        hself: hsuper:
-        lib.attrsets.optionalAttrs stdenv.hostPlatform.isGhcjs {
-          hashtables = haskell.lib.enableCabalFlag hsuper.hashtables "portable";
-        }
-      )
-      (callPackage ./haskell-overrides.nix { })
       overrides
     ];
 

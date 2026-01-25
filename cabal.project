@@ -1,6 +1,17 @@
 packages: .
 
+-- NOTE: https://github.com/haskell/time/issues/266#issuecomment-2561585220
+constraints: time >= 1.14
+allow-newer: haxl:time
+
+package miso
+  flags: +template-haskell
+
+package hashtables
+  flags: +portable
+
 source-repository-package
   type: git
   location: https://github.com/dmjio/miso.git
+-- lastest commit on <2026-01-25 Sun>
   tag: 240ae7306d8a3ac40aef557ae830b0736e5cafb8
