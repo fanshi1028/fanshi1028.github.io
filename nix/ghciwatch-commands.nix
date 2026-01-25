@@ -6,6 +6,7 @@
   ghciwatch,
 }:
 let
+  isWasm = cabal-install.name == "wasm32-wasi-cabal";
   make-ghciwatch-script =
     exe-name:
     {
@@ -20,11 +21,13 @@ let
       ++ runtimeInputs;
       text = ''
         ghciwatch \
-         --command "cabal repl exe:${exe-name} --flags=\"+local-dev\"" \
+         --command "${
+           if isWasm then "wasm32-wasi-cabal" else "cabal"
+         } repl exe:${exe-name} --flags=\"+local-dev\" ${lib.optionalString isWasm "-finteractive --repl-options=\"-fghci-browser -fghci-browser-port=8080\""}" \
          --clear \
          --watch src \
          ${flags} \
-         "$@" 
+         "$@"
       '';
       name = "ghciwatch-" + exe-name;
     });
