@@ -30,4 +30,3 @@ jobs:
           wasm32-wasi-ghc --version
           wasm32-wasi-cabal --version
           wasmtime --version
-          wasi-sdk --version
