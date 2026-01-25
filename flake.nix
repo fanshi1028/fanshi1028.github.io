@@ -120,15 +120,17 @@
         };
         wasm =
           let
-            ghc-wasm = ghc-wasm.packages.${system};
+            ghc-wasm-pkgs = ghc-wasm.packages.${system};
           in
           pkgs.mkShell {
             name = "The miso ${system} GHC WASM ${ghcVersion} shell";
             packages = [
-              ghc-wasm.all_9_12
+              ghc-wasm-pkgs.all_9_12
             ]
             ++ (pkgs.lib.attrVals [ "ghciwatch-fanshi1028-site" ] (
-              pkgs.callPackage ./nix/ghciwatch-commands.nix { cabal-install = ghc-wasm.wasm32-wasi-cabal-9_12; }
+              pkgs.callPackage ./nix/ghciwatch-commands.nix {
+                cabal-install = ghc-wasm-pkgs.wasm32-wasi-cabal-9_12;
+              }
             ));
           };
         npm = pkgs.lib.attrsets.mapAttrs (
