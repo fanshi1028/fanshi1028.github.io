@@ -23,7 +23,7 @@ let
         ghciwatch \
          --command "${
            if isWasm then "wasm32-wasi-cabal" else "cabal"
-         } repl exe:${exe-name} --flags=\"+local-dev\" ${lib.optionalString isWasm "-finteractive --repl-options=\"-fghci-browser -fghci-browser-port=8080\""}" \
+         } repl exe:${exe-name} --flags=\"+local-dev\" ${lib.optionalString isWasm "-finteractive --repl-options=\\\"-fghci-browser -fghci-browser-port=8080\\\""}" \
          --clear \
          --watch src \
          ${flags} \
