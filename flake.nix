@@ -6,7 +6,7 @@
   inputs = {
     # copied from miso's flake
     nixpkgs.url = "github:nixos/nixpkgs?rev=9e2e8a7878573d312db421d69e071690ec34e98c";
-    ghc-wasm.url = "gitlab:haskell-wasm/ghc-wasm-meta?host=gitlab.haskell.org";
+    ghc-wasm.url = "gitlab:haskell-wasm/ghc-wasm-meta?host=gitlab.haskell.org&rev=75d841e0c8767c17ef4ea8405e59b1a116657e1b";
   };
 
   outputs =
