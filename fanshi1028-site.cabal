@@ -48,7 +48,6 @@ common lib
     network-uri,
     retry,
     scientific,
-    serialise,
     text,
     time,
     unliftio,

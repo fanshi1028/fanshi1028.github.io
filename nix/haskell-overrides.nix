@@ -20,12 +20,6 @@ hself: hsuper: {
     ]
   );
 
-  cborg = lib.pipe hsuper.cborg [
-    (haskell.lib.compose.overrideCabal (drv: {
-      patches = [ ];
-    }))
-  ];
-
   statistics = hself.callHackageDirect {
     pkg = "statistics";
     ver = "0.16.4.0";
