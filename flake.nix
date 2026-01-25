@@ -74,6 +74,15 @@
         default = pkgs.callPackage ./nix/fanshi1028-site.nix { } {
           inherit ghcVersion;
           root = ./.;
+          overrides = hself: hsuper: {
+            jsaddle = pkgs.lib.pipe hsuper.jsaddle (
+              with pkgs.haskell.lib.compose;
+              [
+                (enableCabalFlag "call-stacks")
+                (enableCabalFlag "check-unchecked")
+              ]
+            );
+          };
           modifier =
             drv:
             pkgs.haskell.lib.addBuildTools drv (
@@ -88,6 +97,11 @@
                 #   Expected in: /usr/lib/libicucore.A.dylib
                 bun
                 prettier
+                closurecompiler
+                # webpack-cli
+                # swc
+                uglify-js
+                http-server
                 (haskell-language-server.override {
                   supportedGhcVersions = [ ghcVersion ];
                   supportedFormatters = [ "ormolu" ];
@@ -98,16 +112,9 @@
                 cabal-gild_1_6_0_0
                 ormolu_0_8_0_0
               ])
-              ++ (lib.attrVals [ "ghciwatch-prerender" ] (callPackage ./nix/ghciwatch-commands.nix { }))
-              ++ (
-                with ghc-wasm.packages.${system};
-                [ wasm32-wasi-cabal-9_12 ]
-                ++ (lib.attrVals [ "ghciwatch-fanshi1028-site" ] (
-                  callPackage ./nix/ghciwatch-commands.nix {
-                    cabal-install = wasm32-wasi-cabal-9_12;
-                  }
-                ))
-              )
+              ++ (lib.attrVals [ "ghciwatch-fanshi1028-site" "ghciwatch-prerender" ] (
+                callPackage ./nix/ghciwatch-commands.nix { }
+              ))
             );
           returnShellEnv = true;
         };
@@ -117,7 +124,14 @@
           in
           pkgs.mkShell {
             name = "The miso ${system} GHC WASM ${ghcVersion} shell";
-            packages = [ ghc-wasm-pkgs.all_9_12 ];
+            packages = [
+              ghc-wasm-pkgs.all_9_12
+            ]
+            ++ (pkgs.lib.attrVals [ "ghciwatch-fanshi1028-site" ] (
+              pkgs.callPackage ./nix/ghciwatch-commands.nix {
+                cabal-install = ghc-wasm-pkgs.wasm32-wasi-cabal-9_12;
+              }
+            ));
           };
         npm = pkgs.lib.attrsets.mapAttrs (
           path: type:
