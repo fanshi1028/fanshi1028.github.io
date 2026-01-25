@@ -1,3 +1,4 @@
+# NOTE: please keep this in sync with cabal.project
 {
   callPackage,
   lib,
