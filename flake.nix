@@ -74,15 +74,6 @@
         default = pkgs.callPackage ./nix/fanshi1028-site.nix { } {
           inherit ghcVersion;
           root = ./.;
-          overrides = hself: hsuper: {
-            jsaddle = pkgs.lib.pipe hsuper.jsaddle (
-              with pkgs.haskell.lib.compose;
-              [
-                (enableCabalFlag "call-stacks")
-                (enableCabalFlag "check-unchecked")
-              ]
-            );
-          };
           modifier =
             drv:
             pkgs.haskell.lib.addBuildTools drv (
@@ -112,27 +103,21 @@
                 cabal-gild_1_6_0_0
                 ormolu_0_8_0_0
               ])
-              ++ (lib.attrVals [ "ghciwatch-fanshi1028-site" "ghciwatch-prerender" ] (
-                callPackage ./nix/ghciwatch-commands.nix { }
+              ++ (lib.attrVals [ "ghciwatch-prerender" ] (callPackage ./nix/ghciwatch-commands.nix { }))
+              ++ (lib.attrVals [ "ghciwatch-fanshi1028-site" ] (
+                callPackage ./nix/ghciwatch-commands.nix {
+                  cabal-install = ghc-wasm.packages.${system}.wasm32-wasi-cabal-9_12;
+                }
               ))
             );
           returnShellEnv = true;
         };
-        wasm =
-          let
-            ghc-wasm-pkgs = ghc-wasm.packages.${system};
-          in
-          pkgs.mkShell {
-            name = "The miso ${system} GHC WASM ${ghcVersion} shell";
-            packages = [
-              ghc-wasm-pkgs.all_9_12
-            ]
-            ++ (pkgs.lib.attrVals [ "ghciwatch-fanshi1028-site" ] (
-              pkgs.callPackage ./nix/ghciwatch-commands.nix {
-                cabal-install = ghc-wasm-pkgs.wasm32-wasi-cabal-9_12;
-              }
-            ));
-          };
+        wasm = pkgs.mkShell {
+          name = "The miso ${system} GHC WASM ${ghcVersion} shell";
+          packages = [
+            ghc-wasm.packages.${system}.all_9_12
+          ];
+        };
         npm = pkgs.lib.attrsets.mapAttrs (
           path: type:
           if type != "directory" then
