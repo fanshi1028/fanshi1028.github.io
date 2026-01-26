@@ -1,6 +1,0 @@
--- -*- mode: haskell-cabal;-*-
-packages: ./*.cabal ./*/*.cabal
-flags: +production
--- NOTE: https://github.com/haskell/time/issues/266#issuecomment-2561585220
-constraints: time >= 1.14
-allow-newer: haxl:time
