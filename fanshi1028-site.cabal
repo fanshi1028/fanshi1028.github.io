@@ -82,7 +82,6 @@ common lib
       Utils.Haxl
       Utils.IntervalPeriod
       Utils.JSON
-      Utils.Serialise
       View.ProductRequirementDocument
       View.ProductRequirementDocument.Dashboard
       View.ProductRequirementDocument.Home
@@ -115,7 +114,6 @@ library
     Utils.Haxl
     Utils.IntervalPeriod
     Utils.JSON
-    Utils.Serialise
     View.ProductRequirementDocument
     View.ProductRequirementDocument.Dashboard
     View.ProductRequirementDocument.Home

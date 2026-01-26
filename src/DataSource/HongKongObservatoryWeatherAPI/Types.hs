@@ -1,13 +1,11 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE NoFieldSelectors #-}
 
 module DataSource.HongKongObservatoryWeatherAPI.Types where
 
-import Codec.Serialise
-import Codec.Serialise.Decoding
-import Codec.Serialise.Encoding
 import Control.Applicative
 import Data.Functor
 import Data.Interval
@@ -16,13 +14,13 @@ import Data.Text hiding (concat, elem, foldl', foldr, reverse, show)
 import Data.Time
 import GHC.Generics
 import Miso.DSL
+import Miso.String (MisoString)
 import Numeric.Natural
 import Numeric.Units.Dimensional
 import Numeric.Units.Dimensional.NonSI
-import Numeric.Units.Dimensional.SIUnits hiding (fromDegreeCelsiusAbsolute)
+import Numeric.Units.Dimensional.SIUnits hiding (fromDegreeCelsiusAbsolute, toDegreeCelsiusAbsolute)
 import Utils.Dimensional
 import Utils.JSON
-import Utils.Serialise
 
 data LocalWeatherForecast = LocalWeatherForecast
   { generalSituation :: StrictText, -- General Situation
@@ -34,7 +32,7 @@ data LocalWeatherForecast = LocalWeatherForecast
     updateTime :: UTCTime -- Update Time YYYY-MM-DD'T'hh:mm:ssZ Example: 2020-09-01T08:19:00+08:00
   }
   deriving stock (Eq, Show, Generic)
-  deriving anyclass (Serialise, FromJSVal)
+  deriving anyclass (FromJSVal, ToJSVal)
 
 data SoilTemp = SoilTemp
   { place :: StrictText, -- location
@@ -44,13 +42,6 @@ data SoilTemp = SoilTemp
   }
   deriving stock (Eq, Show)
 
-instance Serialise SoilTemp where
-  encode (SoilTemp place value recordTime depth) = encodeListLen 5 <> encodeWord 0 <> encode place <> encodeScientific (value /~ degreeCelsius) <> encode recordTime <> encodeScientific (depth /~ meter)
-  decode =
-    (,) <$> decodeListLen <*> decodeWord >>= \case
-      (5, 0) -> SoilTemp <$> decode <*> ((*~ degreeCelsius) <$> decodeScientific) <*> decode <*> ((*~ meter) <$> decodeScientific)
-      _ -> fail "invalid SoilTemp encoding"
-
 instance FromJSVal SoilTemp where
   fromJSVal o = do
     mPlace <- o ! "place" >>= fromJSVal
@@ -58,12 +49,25 @@ instance FromJSVal SoilTemp where
     mRecordTime <- o ! "recordTime" >>= fromJSVal
     mDepth <-
       o ! "depth"
-        >>= parseJSVal_Unit
+        >>= fromJSVal_Unit
           ( \case
               "metre" -> Just meter
               _ -> Nothing
           )
     pure $ SoilTemp <$> mPlace <*> mTemp <*> mRecordTime <*> mDepth
+
+instance ToJSVal SoilTemp where
+  toJSVal (SoilTemp place value recordTime depth) = do
+    o <- create
+    setProp "place" place o
+    setProp "value" (toDegreeCelsiusAbsolute value) o
+    setProp @MisoString "unit" "C" o
+    setProp "recordTime" recordTime o
+    o_depth <- create
+    setProp "value" (depth /~ meter) o_depth
+    setProp @MisoString "unit" "meter" o_depth
+    setProp "depth" o_depth o
+    toJSVal o
 
 data SeaTemp = SeaTemp
   { place :: StrictText, -- location
@@ -72,19 +76,21 @@ data SeaTemp = SeaTemp
   }
   deriving stock (Eq, Show)
 
-instance Serialise SeaTemp where
-  encode (SeaTemp place value recordTime) = encodeListLen 4 <> encodeWord 0 <> encode place <> encodeScientific (value /~ degreeCelsius) <> encode recordTime
-  decode =
-    (,) <$> decodeListLen <*> decodeWord >>= \case
-      (4, 0) -> SeaTemp <$> decode <*> ((*~ degreeCelsius) <$> decodeScientific) <*> decode
-      _ -> fail "invalid SoilTemp encoding"
-
 instance FromJSVal SeaTemp where
   fromJSVal o = do
     mPlace <- o ! "place" >>= fromJSVal
     mTemp <- parseJSVal_DegreeCelsius o
     mRecordTime <- o ! "recordTime" >>= fromJSVal
     pure $ SeaTemp <$> mPlace <*> mTemp <*> mRecordTime
+
+instance ToJSVal SeaTemp where
+  toJSVal (SeaTemp place value recordTime) = do
+    o <- create
+    setProp "place" place o
+    setProp "value" (toDegreeCelsiusAbsolute value) o
+    setProp @MisoString "unit" "C" o
+    setProp "recordTime" recordTime o
+    toJSVal o
 
 data WeatherForecast = WeatherForecast
   { forecastDate :: Day, -- Forecast Date YYYYMMDD
@@ -107,34 +113,8 @@ data WeatherForecast = WeatherForecast
   }
   deriving stock (Eq, Show)
 
-instance Serialise WeatherForecast where
-  encode (WeatherForecast forcastDate week forecastWind forecastWeather forecastTempInterval forecastRHInterval psr forecastIcon) =
-    encodeListLen 9
-      <> encodeWord 0
-      <> encode (toModifiedJulianDay forcastDate)
-      <> encode (fromEnum week)
-      <> encode forecastWind
-      <> encode forecastWeather
-      <> encodeInterval (encodeScientific . (/~ degreeCelsius)) forecastTempInterval
-      <> encodeInterval (encodeScientific . (/~ percent)) forecastRHInterval
-      <> encode psr
-      <> encode forecastIcon
-  decode = do
-    (,) <$> decodeListLen <*> decodeWord >>= \case
-      (9, 0) ->
-        WeatherForecast
-          <$> (ModifiedJulianDay <$> decode)
-          <*> (toEnum <$> decode)
-          <*> decode
-          <*> decode
-          <*> decodeInterval ((*~ degreeCelsius) <$> decodeScientific)
-          <*> decodeInterval ((*~ percent) <$> decodeScientific)
-          <*> decode
-          <*> decode
-      _ -> fail "invalid WeatherForecast encoding"
-
-parseJSVal_Unit :: (FromJSVal a, Num a) => (StrictText -> (Maybe (Unit m d a))) -> JSVal -> IO (Maybe (Quantity d a))
-parseJSVal_Unit parseUnit v = do
+fromJSVal_Unit :: (FromJSVal a, Num a) => (StrictText -> (Maybe (Unit m d a))) -> JSVal -> IO (Maybe (Quantity d a))
+fromJSVal_Unit parseUnit v = do
   mValue <- v ! "value" >>= fromJSVal
   mUnit <- v ! "unit" >>= fromJSVal <&> (>>= parseUnit)
   pure $ (*~) <$> mValue <*> mUnit
@@ -165,8 +145,8 @@ instance FromJSVal WeatherForecast where
       let parsePercent = \case
             "percent" -> Just percent
             _ -> Nothing
-      mMin <- o ! "forecastMinrh" >>= parseJSVal_Unit parsePercent
-      mMax <- o ! "forecastMaxrh" >>= parseJSVal_Unit parsePercent
+      mMin <- o ! "forecastMinrh" >>= fromJSVal_Unit parsePercent
+      mMax <- o ! "forecastMaxrh" >>= fromJSVal_Unit parsePercent
       pure $ (<=..<=) <$> (Finite <$> mMin) <*> (Finite <$> mMax)
     mPSR <-
       o ! "PSR" >>= fromJSVal <&> \case
@@ -185,6 +165,39 @@ instance FromJSVal WeatherForecast where
         <*> mPSR
         <*> mForecastIcon
 
+instance ToJSVal WeatherForecast where
+  toJSVal (WeatherForecast {..}) = do
+    o <- create
+    setProp "forecastDate" (formatTime defaultTimeLocale "%Y%m%d" forecastDate) o
+    setProp "week" week o
+    setProp "forecastWind" forecastWind o
+    setProp "forecastWeather" forecastWeather o
+    setProp "ForecastIcon" forecastIcon o
+    case (lowerBound' forecastTempInterval, upperBound' forecastTempInterval) of
+      ((Finite lb, Closed), (Finite ub, Closed)) -> do
+        o_forecastMintemp <- create
+        setProp "value" (toDegreeCelsiusAbsolute lb) o_forecastMintemp
+        setProp @MisoString "unit" "C" o_forecastMintemp
+        setProp "forecastMintemp" o_forecastMintemp o
+        o_forecastMaxtemp <- create
+        setProp "value" (toDegreeCelsiusAbsolute ub) o_forecastMaxtemp
+        setProp @MisoString "unit" "C" o_forecastMaxtemp
+        setProp "forecastMaxtemp" o_forecastMaxtemp o
+      _ -> error "toJSVal WeatherForecast: unexpected forecast Temp interval"
+    case (lowerBound' forecastRHInterval, upperBound' forecastRHInterval) of
+      ((Finite lb, Closed), (Finite ub, Closed)) -> do
+        o_forecastMinRH <- create
+        setProp "value" (lb /~ percent) o_forecastMinRH
+        setProp @MisoString "unit" "percent" o_forecastMinRH
+        setProp "forecastMinrh" o_forecastMinRH o
+        o_forecastMaxRH <- create
+        setProp "value" (ub /~ percent) o_forecastMaxRH
+        setProp @MisoString "unit" "percent" o_forecastMaxRH
+        setProp "forecastMaxrh" o_forecastMaxRH o
+      _ -> error "toJSVal WeatherForecast: unexpected forecast rh interval"
+    setProp "PSR" psr o
+    toJSVal o
+
 data NineDayWeatherForecast = NineDayWeatherForecast
   { weatherForecast :: [WeatherForecast], -- Weather Forecast
     soilTemp :: [SoilTemp], -- Soil Temperature, NOTE: doc didn't say it is a list, but you know...
@@ -196,7 +209,7 @@ data NineDayWeatherForecast = NineDayWeatherForecast
     updateTime :: UTCTime
   }
   deriving stock (Eq, Show, Generic)
-  deriving anyclass (Serialise, FromJSVal)
+  deriving anyclass (FromJSVal, ToJSVal)
 
 data DataWithInterval a = DataWithInterval
   { --  Start Time YYYY-MM-DD'T'hh:mm:ssZ Example: 2020-09-01T08:19:00+08:00 endTime End Time
@@ -206,33 +219,31 @@ data DataWithInterval a = DataWithInterval
   }
   deriving stock (Eq, Show)
 
-encodeDataWithInterval :: (a -> Encoding) -> DataWithInterval a -> Encoding
-encodeDataWithInterval encoder (DataWithInterval interval' _data) = encodeListLen 3 <> encodeWord 0 <> encodeInterval encode interval' <> encodeListWith encoder _data
-
-decodeDataWithInterval :: Decoder s a -> Decoder s (DataWithInterval a)
-decodeDataWithInterval decoder =
-  (,) <$> decodeListLen <*> decodeWord >>= \case
-    (3, 0) -> DataWithInterval <$> decodeInterval decode <*> decodeListWith decoder
-    _ -> fail "invalide DataWithInterval encoding"
-
-instance (Serialise a) => Serialise (DataWithInterval a) where
-  encode = encodeDataWithInterval encode
-  decode = decodeDataWithInterval decode
-
 instance (FromJSVal a) => FromJSVal (DataWithInterval a) where
   fromJSVal o = do
     mT1 <- (fmap Finite) <$> (o ! "startTime" >>= fromJSVal)
     mT2 <- (fmap Finite) <$> (o ! "endTime" >>= fromJSVal)
-    let mInterval = (<=..<=) <$> mT1 <*> mT2
+    let mInterval = (<=..<) <$> mT1 <*> mT2
     mData <- o ! "data" >>= fromJSVal
     pure $ DataWithInterval <$> mInterval <*> mData
+
+instance (ToJSVal a) => ToJSVal (DataWithInterval a) where
+  toJSVal (DataWithInterval interval' d) = do
+    o <- create
+    case (lowerBound' interval', upperBound' interval') of
+      ((Finite lb, Closed), (Finite ub, Open)) -> do
+        setProp "startTime" lb o
+        setProp "endTime" ub o
+        setProp "data" d o
+        toJSVal o
+      _ -> error "unexpected DataWithInterval toJSON failed"
 
 data Lightning = Lightning
   { place :: StrictText, -- location
     occur :: Bool
   }
   deriving stock (Eq, Show, Generic)
-  deriving anyclass (FromJSVal, Serialise)
+  deriving anyclass (FromJSVal, ToJSVal)
 
 data Rainfall = Rainfall
   { interval :: Interval (Length Scientific), -- Minimum & Maximum rainfall record
@@ -241,19 +252,12 @@ data Rainfall = Rainfall
   }
   deriving stock (Eq, Show)
 
-instance Serialise Rainfall where
-  encode (Rainfall interval' place main) = encodeListLen 4 <> encodeWord 0 <> encodeInterval (encodeScientific . (/~ milli meter)) interval' <> encode place <> encode main
-  decode =
-    (,) <$> decodeListLen <*> decodeWord >>= \case
-      (4, 0) -> Rainfall <$> decodeInterval ((*~ milli meter) <$> decodeScientific) <*> decode <*> decode
-      _ -> fail "invalid Rainfall encoding"
-
 instance FromJSVal Rainfall where
   fromJSVal o = do
     mPlace <- o ! "place" >>= fromJSVal
     mMain <-
       o ! "main"
-        >>= fromJSVal
+        >>= fromJSVal @MisoString
         <&> ( >>=
                 \case
                   "TRUE" -> Just True
@@ -262,7 +266,7 @@ instance FromJSVal Rainfall where
             )
     mUnit <-
       o ! "unit"
-        >>= fromJSVal
+        >>= fromJSVal @MisoString
         <&> ( >>=
                 \case
                   "mm" -> Just $ milli meter
@@ -270,17 +274,37 @@ instance FromJSVal Rainfall where
             )
     mMin <-
       o ! "min" >>= fromJSVal <&> \case
-        Just min' -> Finite . (min' *~) <$> mUnit
-        Nothing -> Just NegInf
+        Just (Just min') -> Finite . (min' *~) <$> mUnit
+        Just Nothing -> Just NegInf
+        Nothing -> Nothing
     mMax <-
       o ! "max" >>= fromJSVal <&> \case
-        Just max' -> Finite . (max' *~) <$> mUnit
-        Nothing -> Just PosInf
+        Just (Just max') -> Finite . (max' *~) <$> mUnit
+        Just Nothing -> Just PosInf
+        Nothing -> Nothing
     pure $
       Rainfall
         <$> ((<=..<=) <$> mMin <*> mMax)
         <*> mPlace
         <*> mMain
+
+instance ToJSVal Rainfall where
+  toJSVal (Rainfall interval' place main) = case (lowerBound' interval', upperBound' interval') of
+    ((lb, Closed), (ub, Closed)) -> do
+      o <- create
+      setProp "place" place o
+      setProp "main" main o
+      setProp @MisoString "unit" "mm" o
+      case lb of
+        Finite lb' -> setProp "min" (lb' /~ milli meter) o
+        NegInf -> pure ()
+        PosInf -> error "toJSVal: unexpected PosInf lower bound interval in Rainfall"
+      case ub of
+        Finite ub' -> setProp "max" (ub' /~ milli meter) o
+        NegInf -> error "toJSVal: unexpected NegInf upper bound interval in Rainfall"
+        PosInf -> pure ()
+      toJSVal o
+    _ -> error "toJSVal: unexpected interval in Rainfall"
 
 data UVIndexData = UVIndexData
   { place :: StrictText, -- location
@@ -289,27 +313,13 @@ data UVIndexData = UVIndexData
     message :: Maybe StrictText -- message
   }
   deriving stock (Show, Eq, Generic)
-  deriving anyclass (FromJSVal)
-
-instance Serialise UVIndexData where
-  encode (UVIndexData place value desc message) = encodeListLen 5 <> encodeWord 0 <> encode place <> encodeScientific value <> encode desc <> encode message
-  decode =
-    (,) <$> decodeListLen <*> decodeWord >>= \case
-      (5, 0) -> UVIndexData <$> decode <*> decodeScientific <*> decode <*> decode
-      _ -> fail "invalid Rainfall encoding"
+  deriving anyclass (FromJSVal, ToJSVal)
 
 data UVIndex = UVIndex
   { _data :: [UVIndexData],
     recordDesc :: StrictText -- record description
   }
   deriving stock (Show, Eq)
-
-instance Serialise UVIndex where
-  encode (UVIndex _data recordDesc) = encodeListLen 3 <> encodeWord 0 <> encode _data <> encode recordDesc
-  decode =
-    (,) <$> decodeListLen <*> decodeWord >>= \case
-      (3, 0) -> UVIndex <$> decode <*> decode
-      _ -> fail "invalid UVIndex encoding"
 
 instance FromJSVal UVIndex where
   fromJSVal o =
@@ -325,24 +335,18 @@ instance FromJSVal UVIndex where
         mRecordDesc <- o ! "recordDesc" >>= fromJSVal
         pure $ UVIndex <$> mData <*> mRecordDesc
 
+instance ToJSVal UVIndex where
+  toJSVal (UVIndex _d recordDesc) = do
+    o <- create
+    setProp "data" _d o
+    setProp "recordDesc" recordDesc o
+    toJSVal o
+
 data DataWithRecordTime a = DataWithRecordTime
   { recordTime :: UTCTime, -- record time YYYY-MMDD'T'hh:mm:ssZ Example: 2020-09- 01T08:19:00+08:00
     _data :: [a]
   }
   deriving stock (Eq, Show)
-
-encodeDataWithRecordTime :: (a -> Encoding) -> DataWithRecordTime a -> Encoding
-encodeDataWithRecordTime encoder (DataWithRecordTime recordTime _data) = encodeListLen 3 <> encodeWord 0 <> encode recordTime <> encodeListWith encoder _data
-
-decodeDataWithRecordTime :: Decoder s a -> Decoder s (DataWithRecordTime a)
-decodeDataWithRecordTime decoder =
-  (,) <$> decodeListLen <*> decodeWord >>= \case
-    (3, 0) -> DataWithRecordTime <$> decode <*> decodeListWith decoder
-    _ -> fail "invalide DataWithRecordTime encoding"
-
-instance (Serialise a) => Serialise (DataWithRecordTime a) where
-  encode = encodeDataWithRecordTime encode
-  decode = decodeDataWithRecordTime decode
 
 instance (FromJSVal a) => FromJSVal (DataWithRecordTime a) where
   fromJSVal o = do
@@ -350,18 +354,18 @@ instance (FromJSVal a) => FromJSVal (DataWithRecordTime a) where
     mData <- o ! "data" >>= fromJSVal
     pure $ DataWithRecordTime <$> mRecordTime <*> mData
 
+instance (ToJSVal a) => ToJSVal (DataWithRecordTime a) where
+  toJSVal (DataWithRecordTime recordTime _d) = do
+    o <- create
+    setProp "recordTime" recordTime o
+    setProp "data" _d o
+    toJSVal o
+
 data Temperature = Temperature
   { place :: StrictText, -- location
     value :: ThermodynamicTemperature Scientific -- value
   }
   deriving stock (Eq, Show)
-
-instance Serialise Temperature where
-  encode (Temperature place value) = encodeListLen 3 <> encodeWord 0 <> encode place <> encodeScientific (value /~ degreeCelsius)
-  decode =
-    (,) <$> decodeListLen <*> decodeWord >>= \case
-      (3, 0) -> Temperature <$> decode <*> ((*~ degreeCelsius) <$> decodeScientific)
-      _ -> fail "invalid Temperature encoding"
 
 instance FromJSVal Temperature where
   fromJSVal o = do
@@ -369,30 +373,39 @@ instance FromJSVal Temperature where
     mValue <- parseJSVal_DegreeCelsius o
     pure $ Temperature <$> mPlace <*> mValue
 
+instance ToJSVal Temperature where
+  toJSVal (Temperature place value) = do
+    o <- create
+    setProp "place" place o
+    setProp "value" (toDegreeCelsiusAbsolute value) o
+    setProp @MisoString "unit" "C" o
+    toJSVal o
+
 data Humidity = Humidity
   { place :: StrictText, -- location
     value :: Dimensionless Scientific -- value
   }
   deriving stock (Eq, Show)
 
-instance Serialise Humidity where
-  encode (Humidity place value) = encodeListLen 3 <> encodeWord 0 <> encode place <> encodeScientific (value /~ percent)
-  decode =
-    (,) <$> decodeListLen <*> decodeWord >>= \case
-      (3, 0) -> Humidity <$> decode <*> ((*~ percent) <$> decodeScientific)
-      _ -> fail "invalid Humidity encoding"
-
 instance FromJSVal Humidity where
   fromJSVal o = do
     mPlace <- o ! "place" >>= fromJSVal
     mValue <-
-      parseJSVal_Unit
+      fromJSVal_Unit
         ( \case
             "percent" -> Just percent
             _ -> Nothing
         )
         o
     pure $ Humidity <$> mPlace <*> mValue
+
+instance ToJSVal Humidity where
+  toJSVal (Humidity place value) = do
+    o <- create
+    setProp "place" place o
+    setProp "value" (value /~ percent) o
+    setProp @MisoString "unit" "percent" o
+    toJSVal o
 
 data CurrentWeatherReport = CurrentWeatherReport
   { lightning :: Maybe (DataWithInterval Lightning),
@@ -412,8 +425,7 @@ data CurrentWeatherReport = CurrentWeatherReport
     temperature :: DataWithRecordTime Temperature, -- Temperature
     humidity :: DataWithRecordTime Humidity -- Humidity
   }
-  deriving stock (Eq, Show, Generic)
-  deriving anyclass (Serialise)
+  deriving stock (Eq, Show)
 
 instance FromJSVal CurrentWeatherReport where
   fromJSVal o = do
@@ -469,3 +481,24 @@ instance FromJSVal CurrentWeatherReport where
         <*> mRainfallJanuaryToLastMonth
         <*> mTemperature
         <*> mHumidity
+
+instance ToJSVal CurrentWeatherReport where
+  toJSVal (CurrentWeatherReport {..}) = do
+    o <- create
+    setProp "lightning" lightning o
+    setProp "rainfall" rainfall o
+    setProp "icon" icon o
+    setProp "iconUpdateTime" iconUpdateTime o
+    setProp "uvindex" uvindex o
+    setProp "updateTime" updateTime o
+    setProp "warningMessage" warningMessage o
+    setProp "rainstormReminder" rainstormReminder o
+    setProp "specialWxTips" specialWxTips o
+    setProp "tcmessage" tcmessage o
+    setProp "mintempFrom00To09" mintempFrom00To09 o
+    setProp "rainfallFrom00To12" rainfallFrom00To12 o
+    setProp "rainfallLastMonth" rainfallLastMonth o
+    setProp "rainfallJanuaryToLastMonth" rainfallJanuaryToLastMonth o
+    setProp "temperature" temperature o
+    setProp "humidity" humidity o
+    toJSVal o

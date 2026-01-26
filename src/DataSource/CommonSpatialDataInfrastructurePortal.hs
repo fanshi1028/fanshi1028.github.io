@@ -5,9 +5,6 @@
 -- NOTE: https://www.hko.gov.hk/en/abouthko/opendata_intro.htm
 module DataSource.CommonSpatialDataInfrastructurePortal where
 
-import Codec.Serialise
-import Codec.Serialise.Decoding
-import Codec.Serialise.Encoding
 import Data.Csv hiding (decode, encode, lookup)
 import Data.Hashable
 import Data.Text hiding (show)
@@ -15,18 +12,16 @@ import Data.Text.Read
 import Data.Time
 import Data.Time.Calendar.Julian
 import Data.Typeable
-import Data.Vector
+import Data.Vector hiding (create, (!))
 import DataSource.LocalStorage
 import Haxl.Core hiding (throw)
 import Miso.DSL
-import Miso.JSON hiding (decode, encode, (.:))
 import Network.URI
 import Network.URI.Static
 import Text.XML.Light
 import Utils.Haxl
 import Utils.IntervalPeriod
 import Utils.JSON
-import Utils.Serialise
 
 -- NOTE: CSDI Portal API
 data CommonSpatialDataInfrastructurePortalReq a where
@@ -139,9 +134,15 @@ instance FromRecord UVIndexRecord where
         idx <- m .! 7
         pure $ UVIndexRecord (zonedTimeToUTC $ ZonedTime (LocalTime day timeOfDay) tz) idx
 
-instance Serialise UVIndexRecord where
-  encode (UVIndexRecord t idx) = encodeListLen 3 <> encodeWord 0 <> encode t <> encode idx
-  decode =
-    (,) <$> decodeListLen <*> decodeWord >>= \case
-      (3, 0) -> UVIndexRecord <$> decode <*> decode
-      _ -> fail "invalid UVIndexRecord encoding"
+instance FromJSVal UVIndexRecord where
+  fromJSVal o = do
+    mTime <- o ! "time" >>= fromJSVal
+    mRecord <- o ! "record" >>= fromJSVal
+    pure $ UVIndexRecord <$> mTime <*> mRecord
+
+instance ToJSVal UVIndexRecord where
+  toJSVal (UVIndexRecord t record') = do
+    o <- create
+    setProp "time" t o
+    setProp "record" record' o
+    toJSVal o

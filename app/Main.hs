@@ -6,7 +6,7 @@ import App
 import Miso
 
 -----------------------------------------------------------------------------
-#ifdef wasm32_HOST_ARCH
+#if defined(wasm32_HOST_ARCH) && defined(PRODUCTION)
 foreign export javascript "hs_start" main :: IO ()
 #endif
 -----------------------------------------------------------------------------

@@ -22,7 +22,7 @@ import Numeric.Units.Dimensional hiding ((*), (-))
 import Numeric.Units.Dimensional.NonSI
 import Numeric.Units.Dimensional.SIUnits hiding (toDegreeCelsiusAbsolute)
 import Utils.Dimensional
-import Utils.Serialise
+
 import View.SVG.LoadSpinner
 import Prelude hiding (show)
 

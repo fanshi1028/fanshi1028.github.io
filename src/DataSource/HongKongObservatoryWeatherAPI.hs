@@ -17,7 +17,7 @@ import Network.URI
 import Network.URI.Static
 import Utils.Haxl
 import Utils.IntervalPeriod
-import Utils.Serialise
+
 
 -- NOTE: Weather Information API
 data HKOWeatherInformationReq a where
