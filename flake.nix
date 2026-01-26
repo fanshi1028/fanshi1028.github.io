@@ -76,38 +76,44 @@
           root = ./.;
           modifier =
             drv:
-            pkgs.haskell.lib.addBuildTools drv (
-              with pkgs;
+            pkgs.lib.pipe drv (
+              with pkgs.haskell.lib.compose;
               [
-                cabal-install
-                tailwindcss
-                ghciwatch
-                # NOTE: tailwindcss_4 when trying to run
-                # dyld: Symbol not found: _ubrk_clone
-                #   Referenced from: /nix/store/2dxgd64421azhmwp63h9h3hzczgvh9w7-tailwindcss_4-4.1.7/bin/.tailwindcss-wrapped (which was built for Mac OS X 13.0)
-                #   Expected in: /usr/lib/libicucore.A.dylib
-                bun
-                prettier
-                (haskell-language-server.override {
-                  supportedGhcVersions = [ ghcVersion ];
-                  supportedFormatters = [ "ormolu" ];
-                })
-                emacs-lsp-booster
-              ]
-              ++ (with haskell.packages."ghc${ghcVersion}"; [
-                cabal-gild_1_6_0_0
-                ormolu_0_8_0_0
-              ])
-              ++ (lib.attrVals [ "ghciwatch-prerender" ] (callPackage ./nix/ghciwatch-commands.nix { }))
-              ++ (
-                with ghc-wasm.packages.${system};
-                [ all_9_12 ]
-                ++ (lib.attrVals [ "ghciwatch-fanshi1028-site" ] (
-                  callPackage ./nix/ghciwatch-commands.nix {
-                    cabal-install = wasm32-wasi-cabal-9_12;
-                  }
+                (enableCabalFlag "local-dev")
+                (addBuildTools drv (
+                  with pkgs;
+                  [
+                    cabal-install
+                    tailwindcss
+                    ghciwatch
+                    # NOTE: tailwindcss_4 when trying to run
+                    # dyld: Symbol not found: _ubrk_clone
+                    #   Referenced from: /nix/store/2dxgd64421azhmwp63h9h3hzczgvh9w7-tailwindcss_4-4.1.7/bin/.tailwindcss-wrapped (which was built for Mac OS X 13.0)
+                    #   Expected in: /usr/lib/libicucore.A.dylib
+                    bun
+                    prettier
+                    (haskell-language-server.override {
+                      supportedGhcVersions = [ ghcVersion ];
+                      supportedFormatters = [ "ormolu" ];
+                    })
+                    emacs-lsp-booster
+                  ]
+                  ++ (with haskell.packages."ghc${ghcVersion}"; [
+                    cabal-gild_1_6_0_0
+                    ormolu_0_8_0_0
+                  ])
+                  ++ (lib.attrVals [ "ghciwatch-prerender" ] (callPackage ./nix/ghciwatch-commands.nix { }))
+                  ++ (
+                    with ghc-wasm.packages.${system};
+                    [ all_9_12 ]
+                    ++ (lib.attrVals [ "ghciwatch-fanshi1028-site" ] (
+                      callPackage ./nix/ghciwatch-commands.nix {
+                        cabal-install = wasm32-wasi-cabal-9_12;
+                      }
+                    ))
+                  )
                 ))
-              )
+              ]
             );
           returnShellEnv = true;
         };
