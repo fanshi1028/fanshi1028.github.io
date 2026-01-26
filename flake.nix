@@ -80,7 +80,7 @@
               with pkgs.haskell.lib.compose;
               [
                 (enableCabalFlag "local-dev")
-                (addBuildTools drv (
+                (addBuildTools (
                   with pkgs;
                   [
                     cabal-install
