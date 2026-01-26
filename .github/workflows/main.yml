@@ -145,37 +145,25 @@ jobs:
           path: |
             ~/.ghc-wasm/.cabal/packages
             ~/.ghc-wasm/.cabal/store
-            wasm.cabal.project.freeze
+            cabal.project.freeze
             dist-newstyle
-          key: cabal-${{ runner.os }}-${{ hashFiles('**/*.nix', '**/flake.lock', '**/*.cabal', '**/wasm.cabal.project') }}
-
-      - name: Prepare local miso source
-        shell: bash -e {0}
-        run: |
-          nix develop .#miso --unpack
-
-      - name: Prepare local patched haxl source
-        shell: bash -e {0}
-        run: |
-          nix develop .#haxl --unpack
-          nix develop .#haxl --phase postPatch
-
-      - name: Prepare local cborg source
-        shell: bash -e {0}
-        run: |
-          nix develop .#cborg --unpack
+          key: cabal-${{ runner.os }}-${{ hashFiles('**/*.nix', '**/flake.lock', '**/*.cabal', '**/cabal.project') }}
 
       - name: Nix Develop (WASM) Cabal Update
         run: |
           wasm32-wasi-cabal update
 
+      - name: Nix Develop (WASM) Cabal Configure production build
+        run: |
+          wasm32-wasi-cabal configure -fproduction
+
       - name: Nix Develop (WASM) Cabal Build fanshi1028-site
         run: |
-          wasm32-wasi-cabal --project-file=wasm.cabal.project build fanshi1028-site:exe:fanshi1028-site
+          wasm32-wasi-cabal build fanshi1028-site:exe:fanshi1028-site
 
       - name: find wasmArtifactPath
         run: |
-          echo "wasmArtifactPath=$(wasm32-wasi-cabal --project-file=wasm.cabal.project list-bin exe:fanshi1028-site | tail -n 1)" >> $GITHUB_ENV
+          echo "wasmArtifactPath=$(wasm32-wasi-cabal list-bin exe:fanshi1028-site | tail -n 1)" >> $GITHUB_ENV
 
       - name: find ghcLibPath
         run: |
@@ -192,7 +180,7 @@ jobs:
 
       - name: Freeze cabal deps used
         run: |
-          wasm32-wasi-cabal freeze --project-file=wasm.cabal.project
+          wasm32-wasi-cabal freeze
 
       - name: bun build wasm
         shell: nix develop ../..#npm.wasm-entry --command bash -e {0}
