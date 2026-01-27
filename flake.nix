@@ -21,21 +21,6 @@
     {
       packages = builtins.mapAttrs (system: pkgs: {
         inherit (pkgs) tailwindcss closurecompiler;
-        inherit
-          (
-            let
-              hsPkgs = pkgs.haskell.packages."ghc${ghcVersion}";
-            in
-            hsPkgs.override {
-              overrides = pkgs.lib.composeExtensions (hsPkgs.packageSourceOverrides (
-                pkgs.callPackage ./nix/haskell-source-overrides.nix { }
-              )) (pkgs.callPackage ./nix/haskell-overrides.nix { });
-            }
-          )
-          miso
-          haxl
-          cborg
-          ;
 
         prerender-js = pkgs.callPackage ./nix/fanshi1028-site.nix { } {
           inherit ghcVersion;
