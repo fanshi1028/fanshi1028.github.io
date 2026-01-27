@@ -25,8 +25,7 @@ writeShellApplication {
      --watch src \
      --watch app \
      --before-reload-shell "bun build typescript/maplibre-gl-ffi/index.ts --root typescript/maplibre-gl-ffi --outdir ./typescript/maplibre-gl-ffi" \
-     --test-ghci Main.main
-     "$@"
+     --test-ghci Main.main "$@"
   '';
   name = "ghciwatch-site";
   # ''--watch app --before-reload-shell "tailwindcss -i static/input.css -o static/output.css"'';
