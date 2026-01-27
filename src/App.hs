@@ -10,6 +10,10 @@ import Miso.Lens
 import Miso.Router
 import View.ProductRequirementDocument
 
+#ifdef LOCALDEV
+import Embed.CSS
+#endif
+
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
   SetRoutingError err -> this .= RoutingError err
@@ -47,8 +51,9 @@ app route' =
     styles = []
     logLevel = Off
 #endif
-#ifndef PRODUCTION
-    scripts = [Src $ ms "https://cdn.tailwindcss.com"]
-    styles = [Href $ ms "static/input.css"]
+-- NOTE: local-dev? production?
+#ifdef LOCALDEV
+    scripts = [Src "https://cdn.tailwindcss.com"]
+    styles = [Style $ ms staticInputCSS]
     logLevel = DebugAll
 #endif

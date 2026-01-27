@@ -1,0 +1,12 @@
+packages: .
+-- NOTE: https://github.com/haskell/time/issues/266#issuecomment-2561585220
+constraints: time >= 1.14
+allow-newer: haxl:time
+
+package miso
+  flags: +template-haskell
+
+package hashtables
+  flags: +portable
+
+flags: +local-dev

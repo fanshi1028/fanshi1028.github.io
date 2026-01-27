@@ -1,9 +1,10 @@
------------------------------------------
--- NOTE: Please keep this sync with    --
--- 1. nix/fanshi1028-site.nix          --
--- 2. nix/haskell-source-overrides.nix --
--- 3. nix/haskell-overrides.nix        --
------------------------------------------
+------------------------------------------------------------------
+-- NOTE: Please keep this sync with                             --
+-- 1. nix/fanshi1028-site.nix                                   --
+-- 2. nix/haskell-source-overrides.nix                          --
+-- 3. nix/haskell-overrides.nix                                 --
+-- 4. cabal.project.dev (but without source-repository-package) --
+------------------------------------------------------------------
 packages: .
 -- NOTE: https://github.com/haskell/time/issues/266#issuecomment-2561585220
 constraints: time >= 1.14
