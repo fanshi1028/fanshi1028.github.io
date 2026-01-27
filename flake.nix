@@ -108,15 +108,21 @@
               ghc-wasm.packages.${system}.all_9_12
             ];
           };
-          npm = pkgs.lib.attrsets.mapAttrs (
-            path: type:
-            if type != "directory" then
-              null
-            else
-              pkgs.callPackage ./nix/npm-shell.nix { nodejs = pkgs.nodejs_24; } {
-                npmRoot = ./typescript/${path};
-              }
-          ) (builtins.readDir ./typescript);
+          npm =
+            (pkgs.lib.attrsets.mapAttrs (
+              path: type:
+              if type != "directory" then
+                null
+              else
+                pkgs.callPackage ./nix/npm-shell.nix { nodejs = pkgs.nodejs_24; } {
+                  npmRoot = ./typescript/${path};
+                }
+            ) (builtins.readDir ./typescript))
+            // {
+              default = pkgs.callPackage ./nix/npm-shell.nix { nodejs = pkgs.nodejs_24; } {
+                noPackageJSON = true;
+              };
+            };
         }
       ) nixpkgs.legacyPackages;
     };
