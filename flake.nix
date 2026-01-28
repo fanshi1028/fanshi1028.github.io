@@ -69,7 +69,13 @@
               pkgs.lib.pipe drv (
                 with pkgs.haskell.lib.compose;
                 [
-                  (addBuildDepends with hsPkgs; [ file-embed ki ]) # NOTE: dep for local-dev
+                  (addBuildDepends (
+                    with hsPkgs;
+                    [
+                      file-embed
+                      ki
+                    ]
+                  )) # NOTE: dep for local-dev
                   (addBuildTools (
                     with pkgs;
                     [
