@@ -49,21 +49,14 @@ haskell.packages."ghc${ghcVersion}".developPackage (
         lib.pipe drv (
           with haskell.lib.compose;
           if prerender then
-            if wasm then
-              [
-                (setBuildTargets [ "prerender" ])
-                (enableCabalFlag "prerender-wasm")
-                (overrideCabal (_: {
-                  pname = "prerender";
-                }))
-              ]
-            else
-              [
-                (setBuildTargets [ "prerender" ])
-                (overrideCabal (_: {
-                  pname = "prerender";
-                }))
-              ]
+            [
+              (setBuildTargets [ "prerender" ])
+              (enableCabalFlag "production")
+              (overrideCabal (_: {
+                pname = "prerender";
+              }))
+            ]
+            ++ lib.optional wasm (enableCabalFlag "prerender-wasm")
           else if wasm then
             [ ] # NOTE: impossible case
           else
