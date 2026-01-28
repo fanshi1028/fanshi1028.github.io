@@ -92,9 +92,9 @@
                       hsPkgs.ormolu_0_8_0_0
                     ]
                     ++ (with ghc-wasm.packages.${system}; [
-                      all_9_12
+                      all_9_14
                       (callPackage ./nix/ghciwatch-commands.nix {
-                        cabal-install = wasm32-wasi-cabal-9_12;
+                        cabal-install = wasm32-wasi-cabal-9_14;
                       })
                     ])
                   ))
@@ -105,7 +105,7 @@
           wasm = pkgs.mkShell {
             name = "The miso ${system} GHC WASM ${ghcVersion} shell";
             packages = [
-              ghc-wasm.packages.${system}.all_9_12
+              ghc-wasm.packages.${system}.all_9_14
             ];
           };
           npm =
