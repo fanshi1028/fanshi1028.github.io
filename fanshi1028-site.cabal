@@ -159,8 +159,7 @@ executable fanshi1028-site
   if flag(local-dev)
     import: lib
     build-depends:
-      fanshi1028-site-static-embed,
-      ki,
+      fanshi1028-site-static-embed
   else
     build-depends:
       fanshi1028-site
