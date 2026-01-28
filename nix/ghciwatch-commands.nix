@@ -18,9 +18,8 @@ writeShellApplication {
   ];
   text = ''
     ghciwatch \
-     --command "${cabal} repl exe:fanshi1028-site \
-     --flags=\"+local-dev\" \
-     ${lib.optionalString wasm "--repl-options=\\\"-fghci-browser -fghci-browser-port=8080\\\""}" \
+     --command "${cabal} repl exe:fanshi1028-site -flocal-dev \
+     ${lib.optionalString wasm "--repl-options=-fghci-browser"}" \
      --clear \
      --watch src \
      --watch app \
