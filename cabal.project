@@ -5,6 +5,26 @@
 -- 3. nix/haskell-overrides.nix                                 --
 -- 4. cabal.project.dev (but without source-repository-package) --
 ------------------------------------------------------------------
+if (impl(ghc >=9.14))
+  allow-newer: these:base
+  allow-newer: indexed-traversable-instances:base
+  allow-newer: indexed-traversable:base
+  allow-newer: aeson:template-haskell
+  allow-newer: haxl:containers
+  allow-newer: aeson:containers
+  allow-newer: aeson:time
+  allow-newer: indexed-traversable:containers
+  allow-newer: base64:base
+  allow-newer: miso:template-haskell
+  constraints: aeson == 2.2.3.0
+  allow-newer: uuid-types:template-haskell
+  allow-newer: time-compat:base
+  allow-newer: semialign:base
+  allow-newer: semialign:containers
+  constraints: unix installed
+  constraints: time installed
+  allow-newer: time-compat:time
+  allow-newer: text-iso8601:time
 packages: .
 -- NOTE: https://github.com/haskell/time/issues/266#issuecomment-2561585220
 constraints: time >= 1.14

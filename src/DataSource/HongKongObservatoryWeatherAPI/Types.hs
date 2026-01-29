@@ -326,7 +326,7 @@ instance FromJSVal UVIndex where
     (<|>)
       <$>
       -- NOTE: it just return empty string at night!! not mentioned in doc, so nice!
-      ( fromJSVal o <&> \case
+      ( fromJSVal @MisoString o <&> \case
           Just "" -> Just $ UVIndex [] "nighttime no uv!"
           _ -> Nothing
       )
