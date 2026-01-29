@@ -30,6 +30,9 @@ packages: .
 constraints: time >= 1.14
 allow-newer: haxl:time
 
+package unix
+  flags: +os-string
+
 package miso
   flags: +template-haskell
 
