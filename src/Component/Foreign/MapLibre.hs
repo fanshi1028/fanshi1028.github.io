@@ -36,6 +36,10 @@ import Text.Read
 import UnliftIO.Async
 import Prelude hiding (show, (!!), (+))
 
+#ifdef LOCALDEV
+import Embed.Dev
+#endif
+
 mapLibreId :: MisoString
 mapLibreId = "mapLibreId-14yMVNtDA3GBoGwMHBcDu5bhKUHu/9gcFx41dNF+2Zg="
 
@@ -55,9 +59,9 @@ mapLibreComponent =
       styles
     }
   where
-#ifndef PRODUCTION
-    scripts = [Src "typescript/maplibre-gl-ffi/index.js"]
-    styles = [Href "typescript/maplibre-gl-ffi/node_modules/maplibre-gl/dist/maplibre-gl.css"]
+#ifdef LOCALDEV
+    scripts = [Script $ ms maplibreglJS]
+    styles = [Style $ ms maplibreglCSS]
 #endif
 #ifdef PRODUCTION
 #ifdef WASM

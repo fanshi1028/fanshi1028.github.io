@@ -11,7 +11,7 @@ import Miso.Router
 import View.ProductRequirementDocument
 
 #ifdef LOCALDEV
-import Embed.CSS
+import Embed.Dev
 #endif
 
 updateModel :: Action -> Effect parent Model Action
