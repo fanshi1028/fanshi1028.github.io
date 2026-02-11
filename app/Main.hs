@@ -20,5 +20,5 @@ main :: IO ()
 main = reload . startApp defaultEvents . app $ toURI Index
 #endif
 #ifndef LOCALDEV
-main = run $ miso defaultEvents app
+main = miso defaultEvents app
 #endif
