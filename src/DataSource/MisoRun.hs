@@ -8,7 +8,6 @@ import Data.Hashable
 import Data.Text hiding (foldl', show)
 import Data.Typeable
 import Haxl.Core
-import Language.Javascript.JSaddle
 import Miso
 
 data MisoRunAction action a where
@@ -28,19 +27,18 @@ instance DataSourceName (MisoRunAction action) where
   dataSourceName _ = pack "MisoRunAction"
 
 instance (Typeable action) => StateKey (MisoRunAction action) where
-  data State (MisoRunAction action) = MisoRunActionState JSContextRef (Sink action)
+  newtype State (MisoRunAction action) = MisoRunActionState (Sink action)
 
 instance (Typeable action) => DataSource u (MisoRunAction action) where
-  fetch (MisoRunActionState jscontext sink) _ _ =
+  fetch (MisoRunActionState sink) _ _ =
     SyncFetch $ \reqs ->
-      runJSaddle jscontext $
-        foldlM
-          ( \() (BlockedFetch (MisoRunAction action) r) -> do
-              sink action
-              liftIO (putResult r $ Right ())
-          )
-          ()
-          reqs
+      foldlM
+        ( \() (BlockedFetch (MisoRunAction action) r) -> do
+            sink action
+            putResult r $ Right ()
+        )
+        ()
+        reqs
 
 misoRunAction :: (Typeable action, Show action, Eq action) => action -> GenHaxl u w ()
 misoRunAction = uncachedRequest . MisoRunAction

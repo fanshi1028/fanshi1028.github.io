@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ViewPatterns #-}
 
 module Component.Foreign.MapLibre
@@ -19,14 +20,12 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Reader
 import Data.Functor
-import Data.List
-import Data.Text hiding (length)
 import Data.Void
 import Haxl.Core.Exception
-import Language.Javascript.JSaddle
 import Miso hiding (URI, get, (<#))
 import Miso.Html.Element
 import Miso.Html.Property
+import Miso.JSON
 import Miso.Navigator
 import Network.URI
 import Numeric.Units.Dimensional
@@ -37,12 +36,16 @@ import Text.Read
 import UnliftIO.Async
 import Prelude hiding (show, (!!), (+))
 
+#ifdef LOCALDEV
+import Embed.Dev
+#endif
+
 mapLibreId :: MisoString
-mapLibreId = ms "mapLibreId-14yMVNtDA3GBoGwMHBcDu5bhKUHu/9gcFx41dNF+2Zg="
+mapLibreId = "mapLibreId-14yMVNtDA3GBoGwMHBcDu5bhKUHu/9gcFx41dNF+2Zg="
 
-newtype MapLibreLib = MapLibreLib JSVal deriving newtype (ToJSVal, MakeObject)
+newtype MapLibreLib = MapLibreLib JSVal deriving newtype (ToJSVal, ToObject)
 
-newtype MapLibre = MapLibre JSVal deriving newtype (ToJSVal, MakeObject)
+newtype MapLibre = MapLibre JSVal deriving newtype (ToJSVal, ToObject)
 
 mapLibreMVar :: MVar MapLibre
 mapLibreMVar = unsafePerformIO newEmptyMVar
@@ -50,102 +53,97 @@ mapLibreMVar = unsafePerformIO newEmptyMVar
 mapLibreComponent :: Component parent () Void
 mapLibreComponent =
   ( component () absurd $ \_ ->
-      div_ [id_ $ ms "FIXME: need to wrap the div with id ${mapLibreId} to TEMP fix the 'conatianer not found' for maplibre", class_ $ ms "h-full"] [div_ [id_ mapLibreId, class_ $ ms "h-full"] []]
+      div_ [id_ "FIXME: need to wrap the div with id ${mapLibreId} to TEMP fix the 'conatianer not found' for maplibre", class_ "h-full"] [div_ [id_ mapLibreId, class_ "h-full"] []]
   )
     { scripts,
       styles
     }
   where
-#ifndef PRODUCTION
-    scripts = [Src $ toJSString "typescript/maplibre-gl-ffi/index.js"]
-    styles = [Href $ toJSString "typescript/maplibre-gl-ffi/node_modules/maplibre-gl/dist/maplibre-gl.css"]
+#ifdef LOCALDEV
+    scripts = [Script $ ms maplibreglJS]
+    styles = [Style $ ms maplibreglCSS]
 #endif
 #ifdef PRODUCTION
 #ifdef WASM
-    scripts = [Src $ toJSString "../maplibre-gl-ffi.js"]
-    styles = [Href $ toJSString "../maplibre-gl.css"]
+    scripts = [Src "../maplibre-gl-ffi.js"]
+    styles = [Href "../maplibre-gl.css"]
 #endif
 #ifndef WASM
-    scripts = [Src $ toJSString "maplibre-gl-ffi.js"]
-    styles = [Href $ toJSString "maplibre-gl.css"]
+    scripts = [Src "maplibre-gl-ffi.js"]
+    styles = [Href "maplibre-gl.css"]
 #endif
 #endif
 
 geolocationToLngLat :: Geolocation -> LngLat
 geolocationToLngLat (Geolocation lat lon _acc) = LngLat (lon *~ degree) (lat *~ degree)
 
-addMarkerAndEaseToLocation :: Geolocation -> ReaderT MapLibreLib JSM ()
+addMarkerAndEaseToLocation :: Geolocation -> ReaderT MapLibreLib IO ()
 addMarkerAndEaseToLocation (geolocationToLngLat -> loc) = do
   mapLibreLib <- ask
   mapLibre <- liftIO $ readMVar mapLibreMVar
-  void . liftJSM $ mapLibreLib # "addMarkerAndEaseToLocation" $ (loc, mapLibre)
+  void . liftIO $ mapLibreLib # "addMarkerAndEaseToLocation" $ (loc, mapLibre)
 
-runMapLibre :: ReaderT MapLibreLib JSM a -> JSM a
+runMapLibre :: ReaderT MapLibreLib IO a -> IO a
 runMapLibre m = do
-  mapLibreLibMVar <- liftIO newEmptyMVar
+  mapLibreLibMVar <- newEmptyMVar
   mapLibreLib <-
-    liftIO (tryReadMVar mapLibreLibMVar) >>= \case
+    tryReadMVar mapLibreLibMVar >>= \case
       Just r -> pure r
       Nothing -> withAsync
         ( forever $ do
             maplibregl <- jsg "maplibregl_ffi"
-            maplibreglDefined <- not <$> valIsUndefined maplibregl
-            when (maplibreglDefined) $ liftIO $ putMVar mapLibreLibMVar $ MapLibreLib maplibregl
-            liftIO $ threadDelay 100000
+            maplibreglDefined <- not <$> isUndefined maplibregl
+            when (maplibreglDefined) $ putMVar mapLibreLibMVar $ MapLibreLib maplibregl
+            threadDelay 100000
         )
-        $ \_ -> liftIO (readMVar mapLibreLibMVar)
+        $ \_ -> readMVar mapLibreLibMVar
   runReaderT m mapLibreLib
 
-createMap :: ReaderT MapLibreLib JSM ()
+createMap :: ReaderT MapLibreLib IO ()
 createMap = do
   mapLibreLib <- ask
-  void . liftJSM $ do
+  void . liftIO $ do
     map' <- mapLibreLib # "createMap" $ mapLibreId
     withAsync
       ( forever $ do
           loaded <- (map' # "loaded") () >>= fromJSValUnchecked
-          when loaded $ liftIO . putMVar mapLibreMVar $ MapLibre map'
-          liftIO $ threadDelay 100000
+          when loaded $ putMVar mapLibreMVar $ MapLibre map'
+          threadDelay 100000
       )
-      $ \_ -> liftIO (readMVar mapLibreMVar)
+      $ \_ -> readMVar mapLibreMVar
 
-cleanUpMap :: JSM ()
-cleanUpMap = do
-  liftIO (tryTakeMVar mapLibreMVar) >>= \case
+cleanUpMap :: IO ()
+cleanUpMap =
+  tryTakeMVar mapLibreMVar >>= \case
     Just mapLibre -> void $ mapLibre # "remove" $ ()
-    Nothing -> consoleWarn $ ms "cleanUpMap: no map to be cleaned up"
+    Nothing -> consoleWarn "cleanUpMap: no map to be cleaned up"
 
-getUVIndexDataURI :: (ToJSVal geoJSON) => geoJSON -> ReaderT MapLibreLib JSM (Either SomeException URI)
+getUVIndexDataURI :: JSVal -> ReaderT MapLibreLib IO (Either SomeException URI)
 getUVIndexDataURI geoJSON = do
   mapLibreLib <- ask
-  dataURIMVar <- liftIO $ newEmptyMVar
-  liftJSM $ do
-    callback <- function $ \_ _ -> \case
-      [url] ->
-        fromJSValUnchecked url <&> parseAbsoluteURI >>= \case
-          Nothing -> do
-            invalidURI <-
-              fromJSVal url >>= \case
-                Just url' -> pure url'
-                Nothing -> (jsg "JSON" # "stringify" $ [url]) >>= fromJSValUnchecked
-            liftIO . putMVar dataURIMVar . Left $
-              toException . InvalidParameter $
-                pack "impossible: getDataURI callback expect valid uri but got " <> invalidURI
-          Just data_uri -> liftIO . putMVar dataURIMVar $ Right data_uri
-      args ->
-        liftIO . putMVar dataURIMVar . Left $
-          toException . InvalidParameter $
-            pack "impossible: getDataURI callback expect 1 args but got " <> show (length args)
+  liftIO $ do
+    dataURIMVar <- newEmptyMVar
+    callback <- syncCallback1 $ \url ->
+      fromJSValUnchecked url <&> parseAbsoluteURI >>= \case
+        Nothing -> do
+          invalidURI <-
+            fromJSVal url >>= \case
+              Just url' -> pure url'
+              Nothing -> jsonStringify url
+          putMVar dataURIMVar . Left $
+            toException . InvalidParameter . fromMisoString $
+              "impossible: getDataURI callback expect valid uri but got " <> invalidURI
+        Just data_uri -> putMVar dataURIMVar $ Right data_uri
     _ <- mapLibreLib # "getDataURI" $ (geoJSON, callback)
-    r <- liftIO $ takeMVar dataURIMVar
-    freeFunction callback
+    r <- takeMVar dataURIMVar
     pure r
 
-addGeoJSONSource :: (ToJSVal a) => MisoString -> a -> ReaderT MapLibreLib JSM ()
+addGeoJSONSource :: (ToJSVal a) => MisoString -> a -> ReaderT MapLibreLib IO ()
 addGeoJSONSource sourceId v = do
   mapLibreLib <- ask
-  mapLibre <- liftIO $ readMVar mapLibreMVar
-  void . liftJSM $ mapLibreLib # "renderUVIndexGeoJSON" $ (mapLibre, sourceId, v)
+  void . liftIO $ do
+    mapLibre <- readMVar mapLibreMVar
+    mapLibreLib # "renderUVIndexGeoJSON" $ (mapLibre, sourceId, v)
 
 data LngLat = LngLat (Quantity DPlaneAngle Double) (Quantity DPlaneAngle Double)
   deriving stock (Show)
@@ -166,29 +164,27 @@ fromWGS84Str str =
         [x] -> Just x
         _ -> Nothing
 
-toggle_hssp7 :: ReaderT MapLibreLib JSM ()
+toggle_hssp7 :: ReaderT MapLibreLib IO ()
 toggle_hssp7 = do
   mapLibreLib <- ask
-  void . liftJSM $ do
+  void . liftIO $ do
     hssp7Lib <- mapLibreLib ! "hard_surface_soccer_pitch_7"
-    mapLibre <- liftIO $ readMVar mapLibreMVar
+    mapLibre <- readMVar mapLibreMVar
     (hssp7Lib # "getFeatures") () >>= fromJSVal @(Maybe JSVal) >>= \case
-      Nothing -> void $ jsg "console" # "error" $ "impossible: hard_surface_soccer_pitch_7 getFeatures return unexpected result"
+      Nothing -> void $ jsg "console" # ("error" :: MisoString) $ ("impossible: hard_surface_soccer_pitch_7 getFeatures return unexpected result" :: MisoString)
       Just Nothing -> do
-        processCoords <- function $ \_ _ -> \case
-          [hssp7_data, setCoords] ->
-            fromJSVal @[JSVal] hssp7_data >>= \case
-              Just hssp7s ->
-                void . call setCoords global $
-                  [ traverse
-                      ( \hssp7 -> do
-                          mLng <- hssp7 ! "Longitude" >>= fromJSVal <&> (>>= fromWGS84Str)
-                          mLat <- hssp7 ! "Latitude" >>= fromJSVal <&> (>>= fromWGS84Str)
-                          pure $ LngLat <$> mLng <*> mLat
-                      )
-                      hssp7s
-                  ]
-              Nothing -> void $ jsg "console" # "error" $ "impossible: hard_surface_soccer_pitch_7 data is not an array"
-          _ -> void $ jsg "console" # "error" $ "unexpected args count for processCoords: "
-        void . liftJSM $ hssp7Lib # "toggleLayer" $ (mapLibre, processCoords)
-      Just _ -> void . liftJSM $ hssp7Lib # "toggleLayer" $ [mapLibre]
+        processCoords <- syncCallback2 $ \hssp7_data setCoords ->
+          fromJSVal @[JSVal] hssp7_data >>= \case
+            Just hssp7s ->
+              void . call setCoords global $
+                [ traverse
+                    ( \hssp7 -> do
+                        mLng <- hssp7 ! "Longitude" >>= fromJSVal <&> (>>= fromWGS84Str)
+                        mLat <- hssp7 ! "Latitude" >>= fromJSVal <&> (>>= fromWGS84Str)
+                        pure $ LngLat <$> mLng <*> mLat
+                    )
+                    hssp7s
+                ]
+            Nothing -> void $ jsg "console" # "error" $ ("impossible: hard_surface_soccer_pitch_7 data is not an array" :: MisoString)
+        void $ hssp7Lib # "toggleLayer" $ (mapLibre, processCoords)
+      Just _ -> void $ hssp7Lib # "toggleLayer" $ [mapLibre]

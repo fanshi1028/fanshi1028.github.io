@@ -10,7 +10,6 @@ import Component.Pomodoro.View
 import Control.Applicative
 import Control.Category
 import Control.Monad
-import Data.Aeson as Aeson hiding ((.=))
 import Data.Bifunctor
 import Data.List.NonEmpty as NE
 import Data.Maybe
@@ -18,8 +17,9 @@ import Data.Time
 import GHC.Generics
 import GHC.Natural
 import Miso hiding (Transition)
+import Miso.JSON hiding ((.=))
+import Miso.JSON qualified as JSON (Result (Success))
 import Miso.Lens
-import Miso.String hiding (foldl')
 import Text.Read
 import Validation as Validation hiding (validation)
 import Prelude hiding ((.))
@@ -63,9 +63,9 @@ data PomodoroDone = PomodoroDone
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
   ApplyPomodoroSettings -> do
-    pomodoro' <- use $ pomodoro . settings
-    shortBreak' <- use $ shortBreak . settings
-    longBreak' <- use $ longBreak . settings
+    pomodoro' <- use $ settings . pomodoro
+    shortBreak' <- use $ settings . shortBreak
+    longBreak' <- use $ settings . longBreak
     case (,,) <$> pomodoro'._validation <*> shortBreak'._validation <*> longBreak'._validation of
       Failure (err :| errs) -> do
         io_ . consoleWarn $ foldl' (\acc err' -> acc <> ", " <> ms err') (ms err) errs -- NOTE: ApplyPomodoroSettings button should not be active when validation failed
@@ -105,8 +105,8 @@ updateModel = \case
     let validateMax45 n = failureIf (n > 45) (PomodoroMinuteSettingValidationError "must <= 45")
         validateMin5 n = failureIf (n < 5) (PomodoroMinuteSettingValidationError "must >= 5")
         validateMultiple5 n = failureIf (n `rem` 5 /= 0) (PomodoroMinuteSettingValidationError "must be a multiple of 5")
-    value . stageLens . settings .= str
-    validation . stageLens . settings .= case readEither $ fromMisoString str of
+    settings . stageLens . value .= str
+    settings . stageLens . validation .= case readEither $ fromMisoString str of
       Left _ -> failure (PomodoroMinuteSettingValidationError $ "must be a number")
       Right n -> validateAll [validateMultiple5, validateMin5, validateMax45] n
 
@@ -115,5 +115,5 @@ pomodoroComponent =
   (component defaultModel updateModel viewModel)
     { mailbox = \v -> case fromJSON v of
         Error _ -> Nothing
-        Aeson.Success ClockDoneMessage -> Just Next
+        JSON.Success ClockDoneMessage -> Just Next
     }

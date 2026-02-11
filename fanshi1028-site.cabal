@@ -18,6 +18,7 @@ flag local-dev
   default: False
   manual: True
 
+-- NOTE: local-dev and production flag should be mutual exclusive!!! Don't turn on both of them.
 flag production
   description: production
   default: False
@@ -30,14 +31,11 @@ flag prerender-wasm
 
 common lib
   build-depends:
-    aeson,
-    aeson-pretty,
     async,
     base <5,
     base64,
     bytestring,
     cassava,
-    cborg-json,
     containers,
     data-interval,
     dimensional,
@@ -45,14 +43,12 @@ common lib
     hashtables,
     haxl,
     http-types,
-    jsaddle,
     lens,
     miso,
     mtl,
     network-uri,
     retry,
     scientific,
-    serialise,
     text,
     time,
     unliftio,
@@ -86,8 +82,7 @@ common lib
       Utils.Dimensional
       Utils.Haxl
       Utils.IntervalPeriod
-      Utils.JS
-      Utils.Serialise
+      Utils.JSON
       View.ProductRequirementDocument
       View.ProductRequirementDocument.Dashboard
       View.ProductRequirementDocument.Home
@@ -119,8 +114,7 @@ library
     Utils.Dimensional
     Utils.Haxl
     Utils.IntervalPeriod
-    Utils.JS
-    Utils.Serialise
+    Utils.JSON
     View.ProductRequirementDocument
     View.ProductRequirementDocument.Dashboard
     View.ProductRequirementDocument.Home
@@ -145,9 +139,27 @@ library
   if arch(wasm32) || flag(prerender-wasm)
     cpp-options: -DWASM
 
+library fanshi1028-site-static-embed
+  if flag(local-dev)
+    buildable: True
+  else
+    buildable: False
+
+  build-depends:
+    base,
+    file-embed,
+
+  hs-source-dirs:
+    embed
+
+  -- cabal-gild: discover embed
+  exposed-modules: Embed.Dev
+
 executable fanshi1028-site
   if flag(local-dev)
     import: lib
+    build-depends:
+      fanshi1028-site-static-embed
   else
     build-depends:
       fanshi1028-site
@@ -171,6 +183,10 @@ executable fanshi1028-site
     -ferror-spans
     -fspecialise-aggressively
     -Wall
+
+  if flag(local-dev)
+    cpp-options:
+      -DLOCALDEV
 
   if arch(wasm32)
     ghc-options:

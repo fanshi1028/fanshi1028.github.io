@@ -4,12 +4,21 @@ module Main where
 
 import App
 import Miso
+#ifdef LOCALDEV
+import App.View
+import Miso.Router
+#endif
 
 -----------------------------------------------------------------------------
-#ifdef wasm32_HOST_ARCH
+#if defined(wasm32_HOST_ARCH) && !defined(LOCALDEV)
 foreign export javascript "hs_start" main :: IO ()
 #endif
 -----------------------------------------------------------------------------
 
 main :: IO ()
-main = run $ miso app
+#ifdef LOCALDEV
+main = reload . startApp defaultEvents . app $ toURI Index
+#endif
+#ifndef LOCALDEV
+main = miso defaultEvents app
+#endif

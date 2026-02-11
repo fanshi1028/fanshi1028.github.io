@@ -21,7 +21,6 @@ import Numeric.Units.Dimensional hiding ((*), (-))
 import Numeric.Units.Dimensional.NonSI
 import Numeric.Units.Dimensional.SIUnits hiding (toDegreeCelsiusAbsolute)
 import Utils.Dimensional
-import Utils.Serialise
 import View.SVG.LoadSpinner
 import Prelude hiding (show)
 
@@ -47,7 +46,7 @@ data Action
   | SetCurrentWeatherReport CurrentWeatherReport
   | SetLocalWeatherForecast LocalWeatherForecast
   | Set9DayWeatherForecast NineDayWeatherForecast
-  | SetLatest15minUVIndexGeoJSON SerialisableValue
+  | SetLatest15minUVIndexGeoJSON JSVal
   | SetLatest15minUVIndex (Vector UVIndexRecord)
   | SetDisplayTemperature Bool
   | SetDisplayRainfall Bool
@@ -334,14 +333,13 @@ viewModel (Model mELocation mTimeZone mCurrentWeatherReport mLocalWeatherForecas
   div_
     [class_ "flex flex-col gap-8 bg-neutral-600 text-neutral-200"]
     [ div_
-        [ key_ @Key "mapLibreComponent",
-          class_ $ case mELocation of
+        [ class_ $ case mELocation of
             Just (Right _) -> "h-screen w-full"
             _ -> "",
-          onMounted InitMapLibre,
-          onBeforeUnmounted CleanUpMapLibre
+          onCreated InitMapLibre,
+          onDestroyed CleanUpMapLibre
         ]
-        +> mapLibreComponent,
+        ["mapLibreComponent" +> mapLibreComponent],
       -- case  errCode of
       --   PERMISSION_DENIED -> _
       --   POSITION_UNAVAILABLE -> _

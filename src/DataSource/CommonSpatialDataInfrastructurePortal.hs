@@ -5,9 +5,6 @@
 -- NOTE: https://www.hko.gov.hk/en/abouthko/opendata_intro.htm
 module DataSource.CommonSpatialDataInfrastructurePortal where
 
-import Codec.Serialise
-import Codec.Serialise.Decoding
-import Codec.Serialise.Encoding
 import Data.Csv hiding (decode, encode, lookup)
 import Data.Hashable
 import Data.Text hiding (show)
@@ -15,21 +12,21 @@ import Data.Text.Read
 import Data.Time
 import Data.Time.Calendar.Julian
 import Data.Typeable
-import Data.Vector
+import Data.Vector hiding (create, (!))
 import DataSource.LocalStorage
 import Haxl.Core hiding (throw)
-import Language.Javascript.JSaddle hiding (Object, Success)
+import Miso.DSL
 import Network.URI
 import Network.URI.Static
 import Text.XML.Light
 import Utils.Haxl
 import Utils.IntervalPeriod
-import Utils.Serialise
+import Utils.JSON
 
 -- NOTE: CSDI Portal API
 data CommonSpatialDataInfrastructurePortalReq a where
   GetLatest15minUVIndex :: IntervalPeriod 15 -> URI -> CommonSpatialDataInfrastructurePortalReq (Vector UVIndexRecord)
-  GetLatest15minUVIndexGeoJSON :: IntervalPeriod 15 -> CommonSpatialDataInfrastructurePortalReq SerialisableValue
+  GetLatest15minUVIndexGeoJSON :: IntervalPeriod 15 -> CommonSpatialDataInfrastructurePortalReq JSVal
 
 deriving instance Eq (CommonSpatialDataInfrastructurePortalReq a)
 
@@ -43,7 +40,7 @@ deriving instance Show (CommonSpatialDataInfrastructurePortalReq a)
 instance ShowP CommonSpatialDataInfrastructurePortalReq where showp = show
 
 instance StateKey CommonSpatialDataInfrastructurePortalReq where
-  newtype State CommonSpatialDataInfrastructurePortalReq = CommonSpatialDataInfrastructurePortalReqState JSContextRef
+  data State CommonSpatialDataInfrastructurePortalReq = CommonSpatialDataInfrastructurePortalReqState
 
 instance DataSourceName CommonSpatialDataInfrastructurePortalReq where
   dataSourceName _ = pack "CSDI Portal API"
@@ -79,16 +76,15 @@ csdiPortalReqToURI (GetLatest15minUVIndexGeoJSON _) =
     }
 
 instance DataSource u CommonSpatialDataInfrastructurePortalReq where
-  fetch reqState@(CommonSpatialDataInfrastructurePortalReqState jscontext) =
+  fetch =
     backgroundFetchPar
-      ( -- NOTE: sad boilerplate
-        \req -> runJSaddle jscontext $ case req of
-          GetLatest15minUVIndexGeoJSON _ -> fetchGetJSON Proxy $ csdiPortalReqToURI req
-          GetLatest15minUVIndex _ _ -> fetchGetCSV Proxy HasHeader (corsProxy $ csdiPortalReqToURI req)
-      )
-      reqState
+    -- NOTE: sad boilerplate
+    $
+      \req -> case req of
+        GetLatest15minUVIndexGeoJSON _ -> fetchGetJSON Proxy $ csdiPortalReqToURI req
+        GetLatest15minUVIndex _ _ -> fetchGetCSV Proxy HasHeader (corsProxy $ csdiPortalReqToURI req)
 
-getLatest15minUVIndexGeoJSON :: UTCTime -> GenHaxl u w SerialisableValue
+getLatest15minUVIndexGeoJSON :: UTCTime -> GenHaxl u w JSVal
 getLatest15minUVIndexGeoJSON = fetchCacheable . GetLatest15minUVIndexGeoJSON . utcTimeToIntervalPeriod Proxy
 
 getLatest15minUVIndex :: UTCTime -> URI -> GenHaxl u w (Vector UVIndexRecord)
@@ -138,9 +134,15 @@ instance FromRecord UVIndexRecord where
         idx <- m .! 7
         pure $ UVIndexRecord (zonedTimeToUTC $ ZonedTime (LocalTime day timeOfDay) tz) idx
 
-instance Serialise UVIndexRecord where
-  encode (UVIndexRecord t idx) = encodeListLen 3 <> encodeWord 0 <> encode t <> encode idx
-  decode =
-    (,) <$> decodeListLen <*> decodeWord >>= \case
-      (3, 0) -> UVIndexRecord <$> decode <*> decode
-      _ -> fail "invalid UVIndexRecord encoding"
+instance FromJSVal UVIndexRecord where
+  fromJSVal o = do
+    mTime <- o ! "time" >>= fromJSVal
+    mRecord <- o ! "record" >>= fromJSVal
+    pure $ UVIndexRecord <$> mTime <*> mRecord
+
+instance ToJSVal UVIndexRecord where
+  toJSVal (UVIndexRecord t record') = do
+    o <- create
+    setProp "time" t o
+    setProp "record" record' o
+    toJSVal o

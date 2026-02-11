@@ -10,9 +10,10 @@
   prettier,
 }:
 {
-  npmRoot,
+  npmRoot ? null,
   noPackageJSON ? false, # NOTE: set this to true to just have a npm env to init your packge.
 }:
+assert !noPackageJSON -> npmRoot != null;
 mkShell (
   {
     packages = [

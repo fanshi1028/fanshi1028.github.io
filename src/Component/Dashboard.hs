@@ -6,7 +6,6 @@ module Component.Dashboard (dashboardComponent) where
 
 import Component.Dashboard.View
 import Component.Foreign.MapLibre
-import Control.Monad.IO.Class
 import Data.Function
 import Data.Time
 import DataSource.BrowserGeolocationAPI
@@ -19,7 +18,6 @@ import DataSource.MisoRun
 import DataSource.SimpleFetch
 import Haxl.Core
 import Haxl.DataSource.ConcurrentIO
-import Language.Javascript.JSaddle
 import Miso hiding (consoleLog, consoleLog')
 import Miso qualified (consoleLog)
 import Miso.Lens hiding ((*~))
@@ -53,26 +51,24 @@ displayTemperature, displayRainfall :: Lens Model Bool
 displayTemperature = lens _displayTemperature $ \record x -> record {_displayTemperature = x}
 displayRainfall = lens _displayRainfall $ \record x -> record {_displayRainfall = x}
 
-fetchData :: Sink Action -> JSM ()
+fetchData :: Sink Action -> IO ()
 fetchData sink = do
-  jscontext <- askJSM
-
-  ioState <- liftIO mkConcurrentIOState
+  ioState <- mkConcurrentIOState
   let st =
         stateEmpty
-          & stateSet (MisoRunActionState jscontext sink)
-          & stateSet (LocationReqState jscontext)
-          & stateSet (HKOWeatherInformationReqState jscontext)
-          & stateSet (CommonSpatialDataInfrastructurePortalReqState jscontext)
-          & stateSet (JSMActionState jscontext)
-          & stateSet (LocalStorageReqState @HKOWeatherInformationReq jscontext)
-          & stateSet (LocalStorageReqState @SimpleFetch jscontext)
-          & stateSet (LocalStorageReqState @CommonSpatialDataInfrastructurePortalReq jscontext)
+          & stateSet (MisoRunActionState sink)
+          & stateSet LocationReqState
+          & stateSet HKOWeatherInformationReqState
+          & stateSet CommonSpatialDataInfrastructurePortalReqState
+          & stateSet JSMActionState
+          & stateSet (LocalStorageReqState @HKOWeatherInformationReq)
+          & stateSet (LocalStorageReqState @SimpleFetch)
+          & stateSet (LocalStorageReqState @CommonSpatialDataInfrastructurePortalReq)
           & stateSet ioState
 
-  env' <- liftIO $ initEnv @() st jscontext
+  env' <- initEnv @() st ()
 
-  _ <- liftIO . runHaxl (env' {flags = haxlEnvflags}) $ do
+  _ <- runHaxl (env' {flags = haxlEnvflags}) $ do
     t <- uncachedRequest GetCurrentTime
 
     uncachedRequest GetCurrentTimeZone >>= misoRunAction . SetTimeZone
@@ -92,7 +88,7 @@ fetchData sink = do
 
     misoRunAction $ SetLatest15minUVIndexGeoJSON geoJSON
 
-    getUVIndexDataUriJSMAction jscontext geoJSON
+    dataFetch (GetUVIndexDataURI geoJSON)
       >>= getLatest15minUVIndex t
       >>= misoRunAction . SetLatest15minUVIndex
 
@@ -120,4 +116,4 @@ updateModel = \case
   ToggleDisplayHardSurfaceSoccerPitch7 -> io_ . runMapLibre $ toggle_hssp7
 
 dashboardComponent :: Component parent Model Action
-dashboardComponent = (component defaultModel updateModel viewModel) {initialAction = Just InitAction}
+dashboardComponent = (component defaultModel updateModel viewModel) {mount = Just InitAction}

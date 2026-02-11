@@ -1,3 +1,4 @@
+# NOTE: please keep this in sync with cabal.project
 {
   callPackage,
   lib,
@@ -27,18 +28,16 @@ haskell.packages."ghc${ghcVersion}".developPackage (
   // {
     overrides = lib.composeManyExtensions [
       (
-        if stdenv.hostPlatform.isGhcjs && !prerender then
-          hself: hsuper: ({
-            hashtables = haskell.lib.enableCabalFlag hsuper.hashtables "portable";
-            # NOTE: https://github.com/ghcjs/jsaddle/pull/162
-            jsaddle = haskell.lib.appendPatch hsuper.jsaddle (fetchpatch {
-              url = "https://patch-diff.githubusercontent.com/raw/ghcjs/jsaddle/pull/162.patch";
-              hash = "sha256-jVaHy+7y4O6/jVx9CLIp/QHKRnL922ueLIGjP+Jd6b8=";
-              stripLen = 1;
-            });
-          })
-        else
-          hself: hsuper: { }
+        hself: hsuper:
+        lib.attrsets.optionalAttrs prerender {
+          miso = haskell.lib.enableCabalFlag hsuper.miso "ssr";
+        }
+      )
+      (
+        hself: hsuper:
+        lib.attrsets.optionalAttrs stdenv.hostPlatform.isGhcjs {
+          hashtables = haskell.lib.enableCabalFlag hsuper.hashtables "portable";
+        }
       )
       (callPackage ./haskell-overrides.nix { })
       overrides
@@ -50,21 +49,14 @@ haskell.packages."ghc${ghcVersion}".developPackage (
         lib.pipe drv (
           with haskell.lib.compose;
           if prerender then
-            if wasm then
-              [
-                (setBuildTargets [ "prerender" ])
-                (enableCabalFlag "prerender-wasm")
-                (overrideCabal (_: {
-                  pname = "prerender";
-                }))
-              ]
-            else
-              [
-                (setBuildTargets [ "prerender" ])
-                (overrideCabal (_: {
-                  pname = "prerender";
-                }))
-              ]
+            [
+              (setBuildTargets [ "prerender" ])
+              (enableCabalFlag "production")
+              (overrideCabal (_: {
+                pname = "prerender";
+              }))
+            ]
+            ++ lib.optional wasm (enableCabalFlag "prerender-wasm")
           else if wasm then
             [ ] # NOTE: impossible case
           else

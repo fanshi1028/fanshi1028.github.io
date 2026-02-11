@@ -1,3 +1,4 @@
+# NOTE: please keep this in sync with cabal.project
 {
   lib,
   haskell,
@@ -19,12 +20,6 @@ hself: hsuper: {
       }))
     ]
   );
-
-  cborg = lib.pipe hsuper.cborg [
-    (haskell.lib.compose.overrideCabal (drv: {
-      patches = [ ];
-    }))
-  ];
 
   statistics = hself.callHackageDirect {
     pkg = "statistics";

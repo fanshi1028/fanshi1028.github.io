@@ -1,56 +1,52 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
 
 module DataSource.LocalStorage where
 
-import Codec.Serialise
 import Control.Monad
 import Control.Monad.IO.Class
-import Data.Base64.Types
-import Data.ByteString.Base64
-import Data.ByteString.Lazy hiding (pack, unpack)
+import Data.Functor
 import Data.HashTable.IO qualified as H
 import Data.Hashable
 import Data.Text hiding (show)
-import Data.Text.Encoding
-import Data.Text.Encoding.Base64.Error
 import Data.Typeable
-import Data.Void
 import Haxl.Core
 import Haxl.Core.DataCache
 import Haxl.Core.Fetch
 import Haxl.Core.Monad
 import Haxl.Prelude hiding (forM_)
-import Language.Javascript.JSaddle
 import Miso (ms)
+import Miso.DSL
+import Miso.JSON
+import Miso.String (fromMisoString)
+import System.IO.Unsafe
 import UnliftIO hiding (catchAny)
 
-showReqResultSerialised :: (ShowP r, Serialise a) => ShowReq r a
-showReqResultSerialised = (showp, unpack . extractBase64 . encodeBase64 . toStrict . serialise)
+showReqResultSerialised :: (ShowP r, ToJSVal a) => ShowReq r a
+showReqResultSerialised = (showp, fromMisoString . unsafePerformIO . (jsonStringify <=< toJSVal))
 
-dataFetchWithSerialise :: forall u r a w. (DataSource u r, Hashable (r a), Typeable (r a), ShowP r, Serialise a) => r a -> GenHaxl u w a
+dataFetchWithSerialise :: forall u r a w. (DataSource u r, Hashable (r a), Typeable (r a), ShowP r, ToJSVal a) => r a -> GenHaxl u w a
 dataFetchWithSerialise = dataFetchWithShow showReqResultSerialised
 
-cachedRequestWithLocalStorage :: (ShowP r, Serialise a) => r a -> JSM (Either SomeException a)
+cachedRequestWithLocalStorage :: (ShowP r, FromJSVal a) => r a -> IO (Either SomeException a)
 cachedRequestWithLocalStorage (showp -> key) = do
   v <- (jsg "window" ! "localStorage") # "getItem" $ [pack key]
-  valIsNull v >>= \case
+  isNull v >>= \case
     True -> pure . Left . toException . NotFound . pack $ key <> ": not found in localStorage"
     False -> do
       txt <- fromJSValUnchecked v
-      pure $ case decodeBase64Untyped $ encodeUtf8 txt of
-        Left err -> Left . logicErrorToException $ DecodeError @Void err
-        Right r -> case deserialiseOrFail $ fromStrict r of
-          Left err -> Left $ logicErrorToException err
-          Right r' -> Right r'
+      jsonParse txt >>= fromJSVal <&> \case
+        Nothing -> Left . logicBugToException . UnexpectedType $ "LocalStorage " <> pack key <> ": " <> fromMisoString txt
+        Just r -> Right r
 
-saveCacheToLocalStorage :: HaxlDataCache u w -> JSM ()
-saveCacheToLocalStorage (DataCache cache) = withRunInIO $ \runInIO -> H.mapM_ (runInIO . goSubCache) cache
+saveCacheToLocalStorage :: HaxlDataCache u w -> IO ()
+saveCacheToLocalStorage (DataCache cache) = H.mapM_ goSubCache cache
   where
-    goSubCache :: (TypeRep, SubCache (DataCacheItem u w)) -> JSM ()
-    goSubCache (_ty, SubCache showReq showRes hm) = withRunInIO $ \runInIO ->
+    goSubCache :: (TypeRep, SubCache (DataCacheItem u w)) -> IO ()
+    goSubCache (_ty, SubCache showReq showRes hm) =
       H.mapM_
-        ( runInIO . \(showReq -> reqStr, (DataCacheItem IVar {ivarRef = !ref} _)) ->
+        ( \(showReq -> reqStr, (DataCacheItem IVar {ivarRef = !ref} _)) ->
             let logError err = void $ (jsg "console" # "log") $ ms $ reqStr <> ":" <> displayException err
              in liftIO (readIORef ref) >>= \case
                   IVarEmpty _ -> pure ()
@@ -63,7 +59,7 @@ saveCacheToLocalStorage (DataCache cache) = withRunInIO $ \runInIO -> H.mapM_ (r
         hm
 
 data LocalStorage req a where
-  FetchFromLocalStorage :: forall req a. (Serialise a) => req a -> LocalStorage req a
+  FetchFromLocalStorage :: forall req a. (FromJSVal a) => req a -> LocalStorage req a
 
 deriving instance (Show (req a)) => Show (LocalStorage req a)
 
@@ -76,16 +72,13 @@ instance (Hashable (req a)) => Hashable (LocalStorage req a) where
   hashWithSalt s (FetchFromLocalStorage req) = s `hashWithSalt` req
 
 instance (Typeable req) => StateKey (LocalStorage req) where
-  data State (LocalStorage req) = LocalStorageReqState JSContextRef
+  data State (LocalStorage req) = LocalStorageReqState
 
 instance (DataSourceName req) => DataSourceName (LocalStorage req) where
   dataSourceName _ = pack "localStorage:" <> dataSourceName (Proxy @req)
 
 instance (DataSource u req) => DataSource u (LocalStorage req) where
-  fetch state@(LocalStorageReqState jscontext) =
-    backgroundFetchPar
-      (\(FetchFromLocalStorage req) -> runJSaddle jscontext $ cachedRequestWithLocalStorage req)
-      state
+  fetch = backgroundFetchPar $ \(FetchFromLocalStorage req) -> cachedRequestWithLocalStorage req
 
-fetchCacheable :: (Typeable a, Serialise a, Request req a, DataSource u req, DataSource u (LocalStorage req)) => req a -> GenHaxl u w a
+fetchCacheable :: (Typeable a, FromJSVal a, ToJSVal a, Request req a, DataSource u req, DataSource u (LocalStorage req)) => req a -> GenHaxl u w a
 fetchCacheable req = uncachedRequest (FetchFromLocalStorage req) `catchAny` dataFetchWithSerialise req

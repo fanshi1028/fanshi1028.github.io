@@ -1,0 +1,10 @@
+cradle:
+  cabal:
+    cabalProject: 'cabal.project.dev'
+    components:
+      - path: 'src'
+        component: 'exe:fanshi1028-site'
+      - path: 'app'
+        component: 'exe:fanshi1028-site'
+      - path: 'embed'
+        component: 'lib:fanshi1028-site-static-embed'

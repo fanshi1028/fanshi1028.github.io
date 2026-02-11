@@ -2,7 +2,7 @@ name: Build and deploy
 
 on:
   push:
-    branches: dev_env
+    branches: dev_env_914
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -31,3 +31,6 @@ jobs:
           haskell-language-server-wrapper --version
           ghc --version
           cabal --version
+          wasm32-wasi-ghc --version
+          wasm32-wasi-cabal --version
+          wasmtime --version

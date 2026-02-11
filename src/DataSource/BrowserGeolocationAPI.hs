@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
 
 module DataSource.BrowserGeolocationAPI where
@@ -10,8 +11,8 @@ import Data.Functor
 import Data.Hashable
 import Data.Text (pack)
 import Haxl.Core
-import Language.Javascript.JSaddle
-import Miso hiding (jsonStringify, (<#))
+import Miso
+import Miso.JSON
 import Miso.Navigator hiding (geolocation)
 
 data LocationReq a where
@@ -27,40 +28,38 @@ deriving instance Show (LocationReq a)
 instance ShowP LocationReq where showp = show
 
 instance StateKey LocationReq where
-  newtype State LocationReq = LocationReqState JSContextRef
+  data State LocationReq = LocationReqState
 
 instance DataSourceName LocationReq where
-  dataSourceName _ = pack "browser geolocation api"
+  dataSourceName _ = "browser geolocation api"
 
 instance DataSource u LocationReq where
-  fetch state@(LocationReqState jscontext) =
+  fetch =
     asyncFetchAcquireRelease
       newEmptyMVar
       (const $ pure ())
-      ( \resultMVar -> runJSaddle jscontext $ do
+      ( \resultMVar -> do
           options <- create
-          options <# "enableHighAccuracy" $ jsTrue
-          let jsonStringify v = (jsg "JSON" # "stringify" $ [v]) >>= fromJSValUnchecked
+          setProp "enableHighAccuracy" True options
           successCB <-
-            asyncCallback1 $ \v -> do
+            syncCallback1 $ \v -> do
               result <-
                 fromJSVal v >>= \case
                   Nothing ->
                     jsonStringify v <&> \stringified ->
-                      Left . toException . JSONError $ pack "Impossible! succeeded but failed to be parsed as Geolocation: " <> stringified
+                      Left . toException . JSONError . fromMisoString $ "Impossible! succeeded but failed to be parsed as Geolocation: " <> stringified
                   Just r -> pure $ Right r
               liftIO $ putMVar resultMVar result
           failCB <-
-            asyncCallback1 $ \v -> do
+            syncCallback1 $ \v -> do
               result <-
                 fromJSVal @GeolocationError v >>= \case
                   Nothing ->
                     jsonStringify v <&> \stringified ->
-                      toException . JSONError $ pack "Impossible! failed with unexpected error: " <> stringified
+                      toException . JSONError . fromMisoString $ "Impossible! failed with unexpected error: " <> stringified
                   Just err -> pure . toException . FetchError . pack $ show err
               liftIO . putMVar resultMVar $ Left result
           void $ jsg "navigator" ! "geolocation" # "getCurrentPosition" $ (successCB, failCB, options)
       )
       (const $ pure ())
       (\resultMVar GetCurrentPosition -> pure $ readMVar resultMVar)
-      state

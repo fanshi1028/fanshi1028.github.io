@@ -6,7 +6,7 @@
   inputs = {
     # copied from miso's flake
     nixpkgs.url = "github:nixos/nixpkgs?rev=9e2e8a7878573d312db421d69e071690ec34e98c";
-    ghc-wasm.url = "gitlab:haskell-wasm/ghc-wasm-meta?host=gitlab.haskell.org";
+    ghc-wasm.url = "gitlab:haskell-wasm/ghc-wasm-meta?host=gitlab.haskell.org&rev=75d841e0c8767c17ef4ea8405e59b1a116657e1b";
   };
 
   outputs =
@@ -21,21 +21,6 @@
     {
       packages = builtins.mapAttrs (system: pkgs: {
         inherit (pkgs) tailwindcss closurecompiler;
-        inherit
-          (
-            let
-              hsPkgs = pkgs.haskell.packages."ghc${ghcVersion}";
-            in
-            hsPkgs.override {
-              overrides = pkgs.lib.composeExtensions (hsPkgs.packageSourceOverrides (
-                pkgs.callPackage ./nix/haskell-source-overrides.nix { }
-              )) (pkgs.callPackage ./nix/haskell-overrides.nix { });
-            }
-          )
-          miso
-          haxl
-          cborg
-          ;
 
         prerender-js = pkgs.callPackage ./nix/fanshi1028-site.nix { } {
           inherit ghcVersion;
@@ -70,67 +55,76 @@
 
       }) nixpkgs.legacyPackages;
 
-      devShells = builtins.mapAttrs (system: pkgs: {
-        default = pkgs.callPackage ./nix/fanshi1028-site.nix { } {
-          inherit ghcVersion;
-          root = ./.;
-          overrides = hself: hsuper: {
-            jsaddle = pkgs.lib.pipe hsuper.jsaddle (
-              with pkgs.haskell.lib.compose;
-              [
-                (enableCabalFlag "call-stacks")
-                (enableCabalFlag "check-unchecked")
-              ]
-            );
+      devShells = builtins.mapAttrs (
+        system: pkgs:
+        let
+          hsPkgs = pkgs.haskell.packages."ghc${ghcVersion}";
+        in
+        {
+          default = pkgs.callPackage ./nix/fanshi1028-site.nix { } {
+            inherit ghcVersion;
+            root = ./.;
+            modifier =
+              drv:
+              pkgs.lib.pipe drv (
+                with pkgs.haskell.lib.compose;
+                [
+                  (addBuildDepend hsPkgs.file-embed) # NOTE: dep for local-dev
+                  (addBuildTools (
+                    with pkgs;
+                    [
+                      cabal-install
+                      tailwindcss
+                      ghciwatch
+                      ghcid
+                      # NOTE: tailwindcss_4 when trying to run
+                      # dyld: Symbol not found: _ubrk_clone
+                      #   Referenced from: /nix/store/2dxgd64421azhmwp63h9h3hzczgvh9w7-tailwindcss_4-4.1.7/bin/.tailwindcss-wrapped (which was built for Mac OS X 13.0)
+                      #   Expected in: /usr/lib/libicucore.A.dylib
+                      bun
+                      prettier
+                      (haskell-language-server.override {
+                        supportedGhcVersions = [ ghcVersion ];
+                        supportedFormatters = [ "ormolu" ];
+                      })
+                      emacs-lsp-booster
+
+                      hsPkgs.cabal-gild_1_6_0_0
+                      hsPkgs.ormolu_0_8_0_0
+                    ]
+                    ++ (with ghc-wasm.packages.${system}; [
+                      all_9_14
+                      (callPackage ./nix/ghciwatch-commands.nix {
+                        cabal-install = wasm32-wasi-cabal-9_14;
+                      })
+                    ])
+                  ))
+                ]
+              );
+            returnShellEnv = true;
           };
-          modifier =
-            drv:
-            pkgs.haskell.lib.addBuildTools drv (
-              with pkgs;
-              [
-                cabal-install
-                tailwindcss
-                ghciwatch
-                # NOTE: tailwindcss_4 when trying to run
-                # dyld: Symbol not found: _ubrk_clone
-                #   Referenced from: /nix/store/2dxgd64421azhmwp63h9h3hzczgvh9w7-tailwindcss_4-4.1.7/bin/.tailwindcss-wrapped (which was built for Mac OS X 13.0)
-                #   Expected in: /usr/lib/libicucore.A.dylib
-                bun
-                prettier
-                closurecompiler
-                # webpack-cli
-                # swc
-                uglify-js
-                http-server
-                (haskell-language-server.override {
-                  supportedGhcVersions = [ ghcVersion ];
-                  supportedFormatters = [ "ormolu" ];
-                })
-                emacs-lsp-booster
-              ]
-              ++ (with haskell.packages."ghc${ghcVersion}"; [
-                cabal-gild_1_6_0_0
-                ormolu_0_8_0_0
-              ])
-              ++ (lib.attrVals [ "ghciwatch-fanshi1028-site" "ghciwatch-prerender" ] (
-                callPackage ./nix/ghciwatch-commands.nix { }
-              ))
-            );
-          returnShellEnv = true;
-        };
-        wasm = pkgs.mkShell {
-          name = "The miso ${system} GHC WASM ${ghcVersion} shell";
-          packages = [ ghc-wasm.packages.${system}.all_9_12 ];
-        };
-        npm = pkgs.lib.attrsets.mapAttrs (
-          path: type:
-          if type != "directory" then
-            null
-          else
-            pkgs.callPackage ./nix/npm-shell.nix { nodejs = pkgs.nodejs_24; } {
-              npmRoot = ./typescript/${path};
-            }
-        ) (builtins.readDir ./typescript);
-      }) nixpkgs.legacyPackages;
+          wasm = pkgs.mkShell {
+            name = "The miso ${system} GHC WASM ${ghcVersion} shell";
+            packages = [
+              ghc-wasm.packages.${system}.all_9_14
+            ];
+          };
+          npm =
+            (pkgs.lib.attrsets.mapAttrs (
+              path: type:
+              if type != "directory" then
+                null
+              else
+                pkgs.callPackage ./nix/npm-shell.nix { nodejs = pkgs.nodejs_24; } {
+                  npmRoot = ./typescript/${path};
+                }
+            ) (builtins.readDir ./typescript))
+            // {
+              default = pkgs.callPackage ./nix/npm-shell.nix { nodejs = pkgs.nodejs_24; } {
+                noPackageJSON = true;
+              };
+            };
+        }
+      ) nixpkgs.legacyPackages;
     };
 }

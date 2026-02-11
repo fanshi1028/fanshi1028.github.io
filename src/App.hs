@@ -1,14 +1,18 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module App (app) where
 
 import App.View
 import Control.Monad
-import Language.Javascript.JSaddle
 import Miso
 import Miso.Lens
 import Miso.Router
 import View.ProductRequirementDocument
+
+#ifdef LOCALDEV
+import Embed.Dev
+#endif
 
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
@@ -33,7 +37,7 @@ app route' =
             Left err -> SetRoutingError err
             Right uri' -> SetURI uri'
         ],
-      initialAction = Just AfterLoaded,
+      mount = Just AfterLoaded,
       scripts,
       styles,
       logLevel
@@ -47,8 +51,9 @@ app route' =
     styles = []
     logLevel = Off
 #endif
-#ifndef PRODUCTION
-    scripts = [Src $ ms "https://cdn.tailwindcss.com"]
-    styles = [Href $ ms "static/input.css"]
+-- NOTE: local-dev? production?
+#ifdef LOCALDEV
+    scripts = [Src "https://cdn.tailwindcss.com"]
+    styles = [Style $ ms staticInputCSS]
     logLevel = DebugAll
 #endif

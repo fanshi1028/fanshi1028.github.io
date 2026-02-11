@@ -1,0 +1,57 @@
+------------------------------------------------------------------
+-- NOTE: Please keep this sync with                             --
+-- 1. nix/fanshi1028-site.nix                                   --
+-- 2. nix/haskell-source-overrides.nix                          --
+-- 3. nix/haskell-overrides.nix                                 --
+-- 4. cabal.project.dev (but without source-repository-package) --
+------------------------------------------------------------------
+if (impl(ghc >=9.14))
+  allow-newer: these:base
+  allow-newer: indexed-traversable-instances:base
+  allow-newer: indexed-traversable:base
+  allow-newer: aeson:template-haskell
+  allow-newer: haxl:containers
+  allow-newer: aeson:containers
+  allow-newer: aeson:time
+  allow-newer: indexed-traversable:containers
+  allow-newer: base64:base
+  allow-newer: miso:template-haskell
+  constraints: aeson == 2.2.3.0
+  allow-newer: uuid-types:template-haskell
+  allow-newer: time-compat:base
+  allow-newer: semialign:base
+  allow-newer: semialign:containers
+  constraints: unix installed
+  constraints: time installed
+  allow-newer: time-compat:time
+  allow-newer: text-iso8601:time
+packages: .
+-- NOTE: https://github.com/haskell/time/issues/266#issuecomment-2561585220
+constraints: time >= 1.14
+allow-newer: haxl:time
+
+package unix
+  flags: +os-string
+
+package miso
+  flags: +template-haskell
+
+package hashtables
+  flags: +portable
+
+source-repository-package
+  type: git
+  location: https://github.com/dmjio/miso.git
+  -- lastest commit on <2026-02-11 Sun>
+  tag: 1b3dadd7d24322d2af9be737da674d37d4a8e78a
+
+-- NOTE: my fork to fix
+-- Assertion failed: duplicate symbol copysign when loading libHS754-0.8.0-7accdf48-ghc9.12.2.20250924.so
+-- Assertion failed: duplicate symbol copysignf when loading libHS754-0.8.0-7accdf48-ghc9.12.2.20250924.so
+source-repository-package
+  type: git
+  location: https://github.com/fanshi1028/hs-ieee754.git
+  tag: 01ddbabf11f5fc143503fc134d740668c6a90294
+
+-- NOTE: disable due to this  bug https://github.com/haskell/cabal/issues/11115
+semaphore: False
