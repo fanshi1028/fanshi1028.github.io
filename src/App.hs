@@ -37,7 +37,7 @@ app route' =
             Left err -> SetRoutingError err
             Right uri' -> SetURI uri'
         ],
-      initialAction = Just AfterLoaded,
+      mount = Just AfterLoaded,
       scripts,
       styles,
       logLevel

@@ -6,7 +6,6 @@ module Component.Dashboard (dashboardComponent) where
 
 import Component.Dashboard.View
 import Component.Foreign.MapLibre
-import Control.Monad.IO.Class
 import Data.Function
 import Data.Time
 import DataSource.BrowserGeolocationAPI
@@ -117,4 +116,4 @@ updateModel = \case
   ToggleDisplayHardSurfaceSoccerPitch7 -> io_ . runMapLibre $ toggle_hssp7
 
 dashboardComponent :: Component parent Model Action
-dashboardComponent = (component defaultModel updateModel viewModel) {initialAction = Just InitAction}
+dashboardComponent = (component defaultModel updateModel viewModel) {mount = Just InitAction}

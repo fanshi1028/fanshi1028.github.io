@@ -42,8 +42,8 @@ package hashtables
 source-repository-package
   type: git
   location: https://github.com/dmjio/miso.git
-  -- lastest commit on <2026-01-25 Sun>
-  tag: 240ae7306d8a3ac40aef557ae830b0736e5cafb8
+  -- lastest commit on <2026-02-11 Sun>
+  tag: 1b3dadd7d24322d2af9be737da674d37d4a8e78a
 
 -- NOTE: my fork to fix
 -- Assertion failed: duplicate symbol copysign when loading libHS754-0.8.0-7accdf48-ghc9.12.2.20250924.so

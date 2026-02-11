@@ -16,13 +16,11 @@ import Miso
 import Miso.Html.Element
 import Miso.Html.Event
 import Miso.Html.Property hiding (label_)
-import Miso.JSON
 import Miso.Navigator
 import Numeric.Units.Dimensional hiding ((*), (-))
 import Numeric.Units.Dimensional.NonSI
 import Numeric.Units.Dimensional.SIUnits hiding (toDegreeCelsiusAbsolute)
 import Utils.Dimensional
-
 import View.SVG.LoadSpinner
 import Prelude hiding (show)
 
@@ -338,8 +336,8 @@ viewModel (Model mELocation mTimeZone mCurrentWeatherReport mLocalWeatherForecas
         [ class_ $ case mELocation of
             Just (Right _) -> "h-screen w-full"
             _ -> "",
-          onMounted InitMapLibre, -- TEMP FIXME
-          onBeforeUnmounted CleanUpMapLibre
+          onCreated InitMapLibre,
+          onDestroyed CleanUpMapLibre
         ]
         ["mapLibreComponent" +> mapLibreComponent],
       -- case  errCode of

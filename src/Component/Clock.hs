@@ -53,4 +53,4 @@ updateModel = \case
 
 clockComponent :: Bool -> NominalDiffTime -> Component parent Model Action
 clockComponent active' currentPomodoroTime =
-  (component (Model active' currentPomodoroTime Nothing) updateModel viewModel) {initialAction = Just Start}
+  (component (Model active' currentPomodoroTime Nothing) updateModel viewModel) {mount = Just Start}
