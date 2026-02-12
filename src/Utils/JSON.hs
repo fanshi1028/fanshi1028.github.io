@@ -4,6 +4,7 @@
 
 module Utils.JSON where
 
+import Data.Function
 import Data.List
 import Data.Map.Strict as M
 import Data.Scientific
@@ -18,11 +19,19 @@ import Numeric.Natural
 import System.IO.Unsafe
 import Text.ParserCombinators.ReadP
 
-instance FromJSON UTCTime where
-  parseJSON v = parseJSON v >>= iso8601ParseM . fromMisoString
+newtype TimeData = TimeData ZonedTime deriving (Show)
 
-instance ToJSVal UTCTime where
-  toJSVal = toJSVal . iso8601Show
+instance Eq TimeData where
+  (==) (TimeData a) (TimeData b) = ((==) `on` zonedTimeToUTC) a b
+
+instance Ord TimeData where
+  compare (TimeData a) (TimeData b) = (compare `on` zonedTimeToUTC) a b
+
+instance FromJSON TimeData where
+  parseJSON v = TimeData <$> withText "TimeData" (iso8601ParseM . fromMisoString) v
+
+instance ToJSVal TimeData where
+  toJSVal (TimeData zt) = toJSVal $ iso8601Show zt
 
 instance FromJSON DayOfWeek where
   parseJSON = withText "DayOfWeek" $ \t -> case toLower $ fromMisoString t of

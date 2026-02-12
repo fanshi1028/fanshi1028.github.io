@@ -10,13 +10,11 @@ import Control.Applicative
 import Data.Functor
 import Data.Interval
 import Data.Scientific
-import Data.Text hiding (concat, elem, foldl', foldr, reverse, show)
 import Data.Time
 import GHC.Generics
 import Miso.DSL hiding (Object)
 import Miso.JSON hiding ((.:))
 import Miso.String
-import Miso.String (MisoString)
 import Numeric.Natural
 import Numeric.Units.Dimensional
 import Numeric.Units.Dimensional.NonSI
@@ -31,7 +29,7 @@ data LocalWeatherForecast = LocalWeatherForecast
     forecastPeriod :: MisoString, -- Forecast Period
     forecastDesc :: MisoString, -- Forecast Description
     outlook :: MisoString, -- Outlook
-    updateTime :: UTCTime -- Update Time YYYY-MM-DD'T'hh:mm:ssZ Example: 2020-09-01T08:19:00+08:00
+    updateTime :: TimeData -- Update Time YYYY-MM-DD'T'hh:mm:ssZ Example: 2020-09-01T08:19:00+08:00
   }
   deriving stock (Eq, Show, Generic)
   deriving anyclass (FromJSON, ToJSVal)
@@ -39,7 +37,7 @@ data LocalWeatherForecast = LocalWeatherForecast
 data SoilTemp = SoilTemp
   { place :: MisoString, -- location
     value :: ThermodynamicTemperature Scientific, -- value
-    recordTime :: UTCTime, -- record time YYYY-MMDD'T'hh:mm:ssZ Example: 2020-09- 01T08:19:00+08:00
+    recordTime :: TimeData, -- record time YYYY-MMDD'T'hh:mm:ssZ Example: 2020-09- 01T08:19:00+08:00
     depth :: Length Scientific
   }
   deriving stock (Eq, Show)
@@ -74,7 +72,7 @@ instance ToJSVal SoilTemp where
 data SeaTemp = SeaTemp
   { place :: MisoString, -- location
     value :: ThermodynamicTemperature Scientific, -- value
-    recordTime :: UTCTime -- record time YYYY-MMDD'T'hh:mm:ssZ Example: 2020-09- 01T08:19:00+08:00
+    recordTime :: TimeData -- record time YYYY-MMDD'T'hh:mm:ssZ Example: 2020-09- 01T08:19:00+08:00
   }
   deriving stock (Eq, Show)
 
@@ -206,7 +204,7 @@ data NineDayWeatherForecast = NineDayWeatherForecast
     -- NOTE: Below are not in doc but exists in response. Nice doc --
     -----------------------------------------------------------------
     generalSituation :: MisoString,
-    updateTime :: UTCTime
+    updateTime :: TimeData
   }
   deriving stock (Eq, Show, Generic)
   deriving anyclass (FromJSON, ToJSVal)
@@ -214,7 +212,7 @@ data NineDayWeatherForecast = NineDayWeatherForecast
 data DataWithInterval a = DataWithInterval
   { --  Start Time YYYY-MM-DD'T'hh:mm:ssZ Example: 2020-09-01T08:19:00+08:00 endTime End Time
     --  End Time YYYY-MM-DD'T'hh:mm:ssZ Example: 2020-09-01T08:19:00+08:00 endTime End Time
-    interval :: Interval UTCTime,
+    interval :: Interval TimeData,
     _data :: [a]
   }
   deriving stock (Eq, Show)
@@ -264,11 +262,11 @@ instance FromJSON Rainfall where
         "mm" -> pure $ milli meter
         txt -> typeMismatch "mm as unit" $ String txt
     min'' <-
-      o .: "min" <&> \case
+      o .:? "min" <&> \case
         Just min' -> Finite $ min' *~ unit
         Nothing -> NegInf
     max'' <-
-      o .: "max" <&> \case
+      o .:? "max" <&> \case
         Just max' -> Finite $ max' *~ unit
         Nothing -> PosInf
     pure $ Rainfall (min'' <=..<= max'') place main'
@@ -325,7 +323,7 @@ instance ToJSVal UVIndex where
     toJSVal o
 
 data DataWithRecordTime a = DataWithRecordTime
-  { recordTime :: UTCTime, -- record time YYYY-MMDD'T'hh:mm:ssZ Example: 2020-09- 01T08:19:00+08:00
+  { recordTime :: TimeData, -- record time YYYY-MMDD'T'hh:mm:ssZ Example: 2020-09- 01T08:19:00+08:00
     _data :: [a]
   }
   deriving stock (Eq, Show)
@@ -388,9 +386,9 @@ data CurrentWeatherReport = CurrentWeatherReport
   { lightning :: Maybe (DataWithInterval Lightning),
     rainfall :: DataWithInterval Rainfall,
     icon :: [Natural], -- Icon Return a List Weather icon list: https://www.hko.gov.hk/textonly/v2/expla in/wxicon_e.htm
-    iconUpdateTime :: UTCTime, -- Icon Update Time YYYY-MM-DD'T'hh:mm:ssZ Example: 2020-09-01T08:19:00+08:00
+    iconUpdateTime :: TimeData, -- Icon Update Time YYYY-MM-DD'T'hh:mm:ssZ Example: 2020-09-01T08:19:00+08:00
     uvindex :: UVIndex,
-    updateTime :: UTCTime, -- Update Time YYYY-MM-DD'T'hh:mm:ssZ Example: 2020-09-01T08:19:00+08:00
+    updateTime :: TimeData, -- Update Time YYYY-MM-DD'T'hh:mm:ssZ Example: 2020-09-01T08:19:00+08:00
     warningMessage :: [MisoString], -- Warning Message Return a List. If no data for warning message, empty string will be returned.
     rainstormReminder :: Maybe MisoString, -- Rainstorm Reminder
     specialWxTips :: [MisoString], -- Special Weather Tips
@@ -406,7 +404,7 @@ data CurrentWeatherReport = CurrentWeatherReport
 
 instance FromJSON CurrentWeatherReport where
   parseJSON = withObject "CurrentWeatherReport" $ \o -> do
-    lightning <- o .: "lightning"
+    lightning <- o .:? "lightning"
     rainfall <- o .: "rainfall"
     icon <- o .: "icon"
     iconUpateTime <- o .: "iconUpdateTime"
@@ -418,7 +416,7 @@ instance FromJSON CurrentWeatherReport where
                 ("" :: MisoString) -> pure []
                 _ -> typeMismatch "warningMessage" (Object o)
             )
-    rainstormReminder <- o .: "rainstormReminder"
+    rainstormReminder <- o .:? "rainstormReminder"
     specialWxTips <- o .: "specialWxTips" .!= []
     tcmessage <-
       o .: "tcmessage"
@@ -426,10 +424,10 @@ instance FromJSON CurrentWeatherReport where
                 ("" :: MisoString) -> pure []
                 _ -> typeMismatch "tcmessage" (Object o)
             )
-    mintempFrom00To09 <- o .: "mintempFrom00To09"
-    rainfallFrom00To12 <- o .: "rainfallFrom00To12"
-    rainfallLastMonth <- o .: "rainfallLastMonth"
-    rainfallJanuaryToLastMonth <- o .: "rainfallJanuaryToLastMonth"
+    mintempFrom00To09 <- o .:? "mintempFrom00To09"
+    rainfallFrom00To12 <- o .:? "rainfallFrom00To12"
+    rainfallLastMonth <- o .:? "rainfallLastMonth"
+    rainfallJanuaryToLastMonth <- o .:? "rainfallJanuaryToLastMonth"
     temperature <- o .: "temperature"
     humidity <- o .: "humidity"
     pure $

@@ -19,13 +19,13 @@ import Numeric.Units.Dimensional hiding ((*), (-))
 import Numeric.Units.Dimensional.NonSI
 import Numeric.Units.Dimensional.SIUnits hiding (toDegreeCelsiusAbsolute)
 import Utils.Dimensional
+import Utils.JSON
 import View.SVG.LoadSpinner
 import Prelude hiding (show)
 
 data Model
   = Model
   { _location :: Maybe (Either GeolocationError Geolocation),
-    _timeZone :: Maybe TimeZone,
     _currentWeatherReport :: Maybe CurrentWeatherReport,
     _localWeatherForecast :: Maybe LocalWeatherForecast,
     _9DayWeatherForecast :: Maybe NineDayWeatherForecast,
@@ -40,7 +40,6 @@ data Action
   | InitMapLibre
   | CleanUpMapLibre
   | SetLocation Geolocation
-  | SetTimeZone TimeZone
   | SetCurrentWeatherReport CurrentWeatherReport
   | SetLocalWeatherForecast LocalWeatherForecast
   | Set9DayWeatherForecast NineDayWeatherForecast
@@ -51,11 +50,10 @@ data Action
   deriving stock (Eq, Show)
 
 defaultModel :: Model
-defaultModel = Model Nothing Nothing Nothing Nothing Nothing False False
+defaultModel = Model Nothing Nothing Nothing Nothing False False
 
-viewCurrentWeatherReport :: Maybe TimeZone -> Bool -> Bool -> CurrentWeatherReport -> View Model Action
+viewCurrentWeatherReport :: Bool -> Bool -> CurrentWeatherReport -> View Model Action
 viewCurrentWeatherReport
-  (fromMaybe utc -> timeZone')
   ifDisplayRainfall
   ifDisplayTemperature
   ( CurrentWeatherReport
@@ -64,7 +62,7 @@ viewCurrentWeatherReport
       icon
       iconUpdateTime
       uvindex
-      updateTime
+      (TimeData updateTime)
       warningMessage
       rainstormReminder
       specialWxTips
@@ -79,7 +77,7 @@ viewCurrentWeatherReport
     div_ [class_ "flex flex-col gap-6"] $
       [ div_ [class_ "flex flex-row gap-2"] $
           [ h2_ [] ["Current Weather Report"],
-            p_ [] [text . ms $ "updated at " <> show (utcToLocalTime timeZone' updateTime)]
+            p_ [] [text . ms $ "updated at " <> show (zonedTimeToLocalTime updateTime)]
           ],
         div_ [class_ "flex flex-col gap-3"] $
           [ case mLightning of
@@ -150,11 +148,11 @@ viewCurrentWeatherReport
                     _data
               ]
           ]
-      viewHumidity (DataWithRecordTime recordTime _data) =
+      viewHumidity (DataWithRecordTime (TimeData recordTime) _data) =
         div_ [] $
           [ h3_ [class_ "sr-only"] ["Humidity"],
             div_ [] $
-              [ div_ [] [text . ms . show $ utcToLocalTime timeZone' recordTime],
+              [ div_ [] [text . ms . show $ zonedTimeToLocalTime recordTime],
                 ul_ [class_ "flex flex-col gap-2"] $
                   foldl'
                     ( \acc (Humidity place value) ->
@@ -169,7 +167,7 @@ viewCurrentWeatherReport
                     _data
               ]
           ]
-      viewTemperature (DataWithRecordTime recordTime _data) =
+      viewTemperature (DataWithRecordTime (TimeData recordTime) _data) =
         div_ [] $
           [ h3_ [class_ "sr-only"] ["Temperature"],
             button_
@@ -178,7 +176,7 @@ viewCurrentWeatherReport
               ]
               $ [p_ [] [text $ (if ifDisplayTemperature then "Hide" else "Show") <> " Temperature"]],
             div_ [class_ $ if ifDisplayTemperature then "" else "hidden"] $
-              [ div_ [] [text . ms . show $ utcToLocalTime timeZone' recordTime],
+              [ div_ [] [text . ms . show $ zonedTimeToLocalTime recordTime],
                 ul_ [class_ "flex flex-col gap-2"] $
                   foldl'
                     ( \acc (Temperature place value) ->
@@ -204,7 +202,7 @@ viewCurrentWeatherReport
             div_ [class_ $ if ifDisplayRainfall then "" else "hidden"] $
               [ div_ [] $
                   [ text . ms $ case (lowerBound timeInterval, upperBound timeInterval) of
-                      (Finite lb, Finite ub) -> show (utcToLocalTime timeZone' lb) <> " - " <> show (utcToLocalTime timeZone' ub)
+                      (Finite (TimeData lb), Finite (TimeData ub)) -> show (zonedTimeToLocalTime lb) <> " - " <> show (zonedTimeToLocalTime ub)
                       _ -> "impossible: unexpected time interval for rainfall data"
                   ],
                 ul_ [class_ "flex flex-col gap-2"] $
@@ -232,9 +230,8 @@ viewCurrentWeatherReport
               ]
           ]
 
-viewLocalWeatherForecast :: Maybe TimeZone -> LocalWeatherForecast -> View Model Action
+viewLocalWeatherForecast :: LocalWeatherForecast -> View Model Action
 viewLocalWeatherForecast
-  (fromMaybe utc -> timeZone')
   ( LocalWeatherForecast
       generalSituation
       tcInfo
@@ -242,7 +239,7 @@ viewLocalWeatherForecast
       forecastPeriod
       forecastDesc
       outlook
-      updateTime
+      (TimeData updateTime)
     ) =
     div_ [class_ "flex flex-col gap-6"] $
       [ h2_ [] ["Local Weather Forecast"],
@@ -250,7 +247,7 @@ viewLocalWeatherForecast
           let displayNonEmptyText = \case
                 "" -> div_ [class_ "hidden"] []
                 t -> div_ [class_ "prose text-neutral-200"] [text $ ms t]
-           in [ p_ [] [text . ms $ "Updated at " <> show (utcToLocalTime timeZone' updateTime)],
+           in [ p_ [] [text . ms $ "Updated at " <> show (zonedTimeToLocalTime updateTime)],
                 displayNonEmptyText generalSituation,
                 displayNonEmptyText tcInfo,
                 displayNonEmptyText fireDangerWarning,
@@ -260,22 +257,21 @@ viewLocalWeatherForecast
               ]
       ]
 
-view9DayWeatherForecast :: Maybe TimeZone -> NineDayWeatherForecast -> View Model Action
+view9DayWeatherForecast :: NineDayWeatherForecast -> View Model Action
 view9DayWeatherForecast
-  (fromMaybe utc -> timeZone')
   ( NineDayWeatherForecast
       weatherForecasts
       soilTemps
       seaTemp
-      generalSituation -- :: StrictText,
-      updateTime -- :: UTCTime
+      generalSituation
+      (TimeData updateTime)
     ) =
     case foldl' (\acc weatherForecast -> viewWeatherForecast weatherForecast : acc) [] weatherForecasts of
       [] -> div_ [class_ "hidden"] []
       viewWeatherForecasts ->
         div_ [class_ "flex flex-col gap-6"] $
           [ h2_ [] [text "9 Day Weather Forecast"],
-            p_ [] [text . ms $ "Updated at " <> show (utcToLocalTime timeZone' updateTime)],
+            p_ [] [text . ms $ "Updated at " <> show (zonedTimeToLocalTime updateTime)],
             ul_ [] viewWeatherForecasts,
             case generalSituation of
               "" -> div_ [class_ "hidden"] []
@@ -320,13 +316,13 @@ view9DayWeatherForecast
                 "" -> div_ [class_ "hidden"] []
                 _ -> div_ [] [text . ms $ psr <> " probability of significant rain"]
             ]
-      viewSeaTemp (SeaTemp place value recordTime) =
-        p_ [class_ "prose text-neutral-200"] [text $ "Sea temperature is " <> ms (show $ toDegreeCelsiusAbsolute value) <> " °C in " <> place <> " at " <> ms (show $ utcToLocalTime timeZone' recordTime)]
-      viewSoilTemp (SoilTemp place value recordTime depth) =
-        p_ [class_ "prose text-neutral-200"] [text $ "Soil temperature is " <> ms (show $ toDegreeCelsiusAbsolute value) <> " °C at " <> ms (showIn meter depth) <> " in " <> place <> " at " <> ms (show $ utcToLocalTime timeZone' recordTime)]
+      viewSeaTemp (SeaTemp place value (TimeData recordTime)) =
+        p_ [class_ "prose text-neutral-200"] [text $ "Sea temperature is " <> ms (show $ toDegreeCelsiusAbsolute value) <> " °C in " <> place <> " at " <> ms (show $ zonedTimeToLocalTime recordTime)]
+      viewSoilTemp (SoilTemp place value (TimeData recordTime) depth) =
+        p_ [class_ "prose text-neutral-200"] [text $ "Soil temperature is " <> ms (show $ toDegreeCelsiusAbsolute value) <> " °C at " <> ms (showIn meter depth) <> " in " <> place <> " at " <> ms (show $ zonedTimeToLocalTime recordTime)]
 
 viewModel :: Model -> View Model Action
-viewModel (Model mELocation mTimeZone mCurrentWeatherReport mLocalWeatherForecast m9DayWeatherForecast ifDisplayRainfall ifDisplayTemperature) =
+viewModel (Model mELocation mCurrentWeatherReport mLocalWeatherForecast m9DayWeatherForecast ifDisplayRainfall ifDisplayTemperature) =
   div_
     [class_ "flex flex-col gap-8 bg-neutral-600 text-neutral-200"]
     [ div_
@@ -348,7 +344,7 @@ viewModel (Model mELocation mTimeZone mCurrentWeatherReport mLocalWeatherForecas
               "CurrentWeatherReport"
             ]
         )
-        (viewCurrentWeatherReport mTimeZone ifDisplayRainfall ifDisplayTemperature)
+        (viewCurrentWeatherReport ifDisplayRainfall ifDisplayTemperature)
         mCurrentWeatherReport,
       maybe
         ( div_
@@ -357,7 +353,7 @@ viewModel (Model mELocation mTimeZone mCurrentWeatherReport mLocalWeatherForecas
               "LocalWeatherForecast"
             ]
         )
-        (viewLocalWeatherForecast mTimeZone)
+        viewLocalWeatherForecast
         mLocalWeatherForecast,
       maybe
         ( div_
@@ -366,7 +362,7 @@ viewModel (Model mELocation mTimeZone mCurrentWeatherReport mLocalWeatherForecas
               "NineDayWeatherForecast"
             ]
         )
-        (view9DayWeatherForecast mTimeZone)
+        view9DayWeatherForecast
         m9DayWeatherForecast,
       div_ [class_ "z-10 absolute flex flex-col items-start gap-2 p-2"] $
         [ button_ [onClick FetchWeatherData, class_ "hidden bg-neutral-200 text-neutral-600 p-2 rounded"] [text "TEMP FIXME Test: refetch"],

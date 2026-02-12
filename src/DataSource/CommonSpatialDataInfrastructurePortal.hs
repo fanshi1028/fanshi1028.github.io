@@ -84,7 +84,7 @@ instance DataSource u CommonSpatialDataInfrastructurePortalReq where
 getLatest15minUVIndexGeoJSON :: UTCTime -> GenHaxl u w JSVal
 getLatest15minUVIndexGeoJSON = fetchCacheable . GetLatest15minUVIndexGeoJSON . utcTimeToIntervalPeriod Proxy
 
-data UVIndexRecord = UVIndexRecord UTCTime Double deriving (Show, Eq)
+data UVIndexRecord = UVIndexRecord TimeData Double deriving (Show, Eq)
 
 instance FromNamedRecord UVIndexRecord where
   parseNamedRecord m = do
@@ -109,7 +109,7 @@ instance FromNamedRecord UVIndexRecord where
                 Right (i', "") -> pure $ hoursToTimeZone i'
                 Right (_, leftover) -> fail $ "unexpected suffix for " <> unpack leftover <> " 'Date time (Time Zone)'"
           idx <- m CSV..: "past 15-minute mean UV Index"
-          pure $ UVIndexRecord (zonedTimeToUTC $ ZonedTime (LocalTime day timeOfDay) tz) idx
+          pure $ UVIndexRecord (TimeData $ ZonedTime (LocalTime day timeOfDay) tz) idx
 
 instance FromRecord UVIndexRecord where
   parseRecord m =
@@ -130,7 +130,7 @@ instance FromRecord UVIndexRecord where
               Right (i', "") -> pure $ hoursToTimeZone i'
               Right (_, leftover) -> fail $ "unexpected suffix for " <> unpack leftover <> " 'Date time (Time Zone)'"
         idx <- m .! 7
-        pure $ UVIndexRecord (zonedTimeToUTC $ ZonedTime (LocalTime day timeOfDay) tz) idx
+        pure $ UVIndexRecord (TimeData $ ZonedTime (LocalTime day timeOfDay) tz) idx
 
 instance FromJSON UVIndexRecord where
   parseJSON = withObject "UVIndexRecord" $ \o ->
