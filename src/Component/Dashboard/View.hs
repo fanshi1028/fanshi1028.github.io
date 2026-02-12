@@ -9,8 +9,6 @@ import Data.Interval
 import Data.Maybe
 import Data.Text hiding (foldl')
 import Data.Time
-import Data.Vector (Vector)
-import DataSource.CommonSpatialDataInfrastructurePortal
 import DataSource.HongKongObservatoryWeatherAPI.Types
 import Miso
 import Miso.Html.Element
@@ -47,7 +45,6 @@ data Action
   | SetLocalWeatherForecast LocalWeatherForecast
   | Set9DayWeatherForecast NineDayWeatherForecast
   | SetLatest15minUVIndexGeoJSON JSVal
-  | SetLatest15minUVIndex (Vector UVIndexRecord)
   | SetDisplayTemperature Bool
   | SetDisplayRainfall Bool
   | ToggleDisplayHardSurfaceSoccerPitch7

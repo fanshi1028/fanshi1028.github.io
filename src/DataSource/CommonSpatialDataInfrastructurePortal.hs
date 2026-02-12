@@ -12,7 +12,6 @@ import Data.Text.Read
 import Data.Time
 import Data.Time.Calendar.Julian
 import Data.Typeable
-import Data.Vector hiding (create, (!))
 import DataSource.LocalStorage
 import Haxl.Core hiding (throw)
 import Miso.DSL
@@ -25,14 +24,12 @@ import Utils.JSON
 
 -- NOTE: CSDI Portal API
 data CommonSpatialDataInfrastructurePortalReq a where
-  GetLatest15minUVIndex :: IntervalPeriod 15 -> URI -> CommonSpatialDataInfrastructurePortalReq (Vector UVIndexRecord)
   GetLatest15minUVIndexGeoJSON :: IntervalPeriod 15 -> CommonSpatialDataInfrastructurePortalReq JSVal
 
 deriving instance Eq (CommonSpatialDataInfrastructurePortalReq a)
 
 instance Hashable (CommonSpatialDataInfrastructurePortalReq a) where
   hashWithSalt s req = hashWithSalt @Int s $ case req of
-    GetLatest15minUVIndex p uri' -> 0 `hashWithSalt` uriToString id uri' "" `hashWithSalt` p
     GetLatest15minUVIndexGeoJSON p -> 1 `hashWithSalt` p
 
 deriving instance Show (CommonSpatialDataInfrastructurePortalReq a)
@@ -46,7 +43,6 @@ instance DataSourceName CommonSpatialDataInfrastructurePortalReq where
   dataSourceName _ = pack "CSDI Portal API"
 
 csdiPortalReqToURI :: CommonSpatialDataInfrastructurePortalReq a -> URI
-csdiPortalReqToURI (GetLatest15minUVIndex _ uri') = uri'
 csdiPortalReqToURI (GetLatest15minUVIndexGeoJSON _) =
   [uri|https://portal.csdi.gov.hk/server/services/common/hko_rcd_1634894904080_80327/MapServer/WFSServer|]
     { uriQuery =
@@ -82,13 +78,9 @@ instance DataSource u CommonSpatialDataInfrastructurePortalReq where
     $
       \req -> case req of
         GetLatest15minUVIndexGeoJSON _ -> fetchGetJSON Proxy $ csdiPortalReqToURI req
-        GetLatest15minUVIndex _ _ -> fetchGetCSV Proxy HasHeader (corsProxy $ csdiPortalReqToURI req)
 
 getLatest15minUVIndexGeoJSON :: UTCTime -> GenHaxl u w JSVal
 getLatest15minUVIndexGeoJSON = fetchCacheable . GetLatest15minUVIndexGeoJSON . utcTimeToIntervalPeriod Proxy
-
-getLatest15minUVIndex :: UTCTime -> URI -> GenHaxl u w (Vector UVIndexRecord)
-getLatest15minUVIndex t uri' = fetchCacheable $ GetLatest15minUVIndex (utcTimeToIntervalPeriod Proxy t) uri'
 
 data UVIndexRecord = UVIndexRecord UTCTime Double deriving (Show, Eq)
 

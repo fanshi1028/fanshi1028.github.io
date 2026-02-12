@@ -8,26 +8,22 @@ module Component.Foreign.MapLibre
     cleanUpMap,
     runMapLibre,
     addMarkerAndEaseToLocation,
-    getUVIndexDataURI,
     addGeoJSONSource,
     toggle_hssp7,
   )
 where
 
 import Control.Concurrent
-import Control.Exception (SomeException, toException)
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Reader
 import Data.Functor
 import Data.Void
-import Haxl.Core.Exception
 import Miso hiding (URI, get, (<#))
 import Miso.Html.Element
 import Miso.Html.Property
 import Miso.JSON
 import Miso.Navigator
-import Network.URI
 import Numeric.Units.Dimensional
 import Numeric.Units.Dimensional.Quantities
 import Numeric.Units.Dimensional.SIUnits
@@ -122,32 +118,6 @@ cleanUpMap =
   tryTakeMVar mapLibreMVar >>= \case
     Just mapLibre -> void $ mapLibre # "remove" $ ()
     Nothing -> consoleWarn "cleanUpMap: no map to be cleaned up"
-
-getUVIndexDataURI :: JSVal -> ReaderT MapLibreLib IO (Either SomeException URI)
-getUVIndexDataURI geoJSON = do
-  mapLibreLib <- ask
-  liftIO $ do
-    dataURIMVar <- newEmptyMVar
-    callback <- syncCallback1 $ \url ->
-      fromJSVal url >>= \case
-        Nothing -> do
-          unexpected <- jsonStringify url
-          putMVar dataURIMVar . Left $
-            toException . UnexpectedType $
-              "impossible: getDataURI callback expects a string as uri but got " <> fromMisoString unexpected
-        Just urlString -> case parseAbsoluteURI urlString of
-          Nothing -> do
-            invalidURI <-
-              fromJSVal url >>= \case
-                Just url' -> pure url'
-                Nothing -> jsonStringify url
-            putMVar dataURIMVar . Left $
-              toException . InvalidParameter . fromMisoString $
-                "impossible: getDataURI callback expect valid uri but got " <> invalidURI
-          Just data_uri -> putMVar dataURIMVar $ Right data_uri
-    _ <- mapLibreLib # "getDataURI" $ (geoJSON, callback)
-    r <- takeMVar dataURIMVar
-    pure r
 
 addGeoJSONSource :: (ToJSVal a) => MisoString -> a -> ReaderT MapLibreLib IO ()
 addGeoJSONSource sourceId v = do
