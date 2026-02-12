@@ -39,7 +39,7 @@ cachedRequestWithLocalStorage (showp -> key) = do
       fromJSVal v >>= \case
         Nothing -> do
           unexpected <- jsonStringify v
-          pure . Left . internalErrorToException . UnexpectedType . fromMisoString $ "impossible! LocalStorage " <> pack key <> ": returned non-string value " <> unexpected
+          pure . Left . internalErrorToException . UnexpectedType $ "impossible! LocalStorage " <> pack key <> ": returned non-string value " <> fromMisoString unexpected
         Just txt ->
           jsonParse txt >>= fromJSVal <&> \case
             Nothing -> Left . logicBugToException . UnexpectedType $ "LocalStorage " <> pack key <> ": " <> fromMisoString txt

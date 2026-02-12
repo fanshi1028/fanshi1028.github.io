@@ -133,8 +133,8 @@ getUVIndexDataURI geoJSON = do
         Nothing -> do
           unexpected <- jsonStringify url
           putMVar dataURIMVar . Left $
-            toException . UnexpectedType . fromMisoString $
-              "impossible: getDataURI callback expects a string as uri but got " <> unexpected
+            toException . UnexpectedType $
+              "impossible: getDataURI callback expects a string as uri but got " <> fromMisoString unexpected
         Just urlString -> case parseAbsoluteURI urlString of
           Nothing -> do
             invalidURI <-
