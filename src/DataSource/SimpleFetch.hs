@@ -4,20 +4,20 @@ module DataSource.SimpleFetch where
 
 import Data.Csv hiding (decode, encode)
 import Data.Hashable
-import Data.Text hiding (concat, elem, foldl', foldr, reverse, show)
 import Data.Text qualified as T
 import Data.Typeable
 import Data.Vector (Vector)
 import DataSource.LocalStorage
 import Haxl.Core
-import Miso.DSL
+import Miso.JSON
+import Miso.String
 import Network.URI
 import Utils.Haxl
 import Prelude hiding ((+))
 
 data SimpleFetch a where
-  FetchJSON :: forall a. (FromJSVal a, Typeable a) => URI -> SimpleFetch a
-  FetchText :: URI -> SimpleFetch StrictText
+  FetchJSON :: forall a. (FromJSON a, Typeable a) => URI -> SimpleFetch a
+  FetchText :: URI -> SimpleFetch MisoString
   FetchCSV :: forall a. (FromRecord a) => Bool -> URI -> SimpleFetch (Vector a)
 
 deriving instance Eq (SimpleFetch a)

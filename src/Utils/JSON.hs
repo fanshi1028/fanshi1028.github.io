@@ -4,7 +4,6 @@
 
 module Utils.JSON where
 
-import Data.Functor
 import Data.List
 import Data.Scientific
 import Data.Text (toLower)
@@ -18,26 +17,22 @@ import Numeric.Natural
 import System.IO.Unsafe
 import Text.ParserCombinators.ReadP
 
-instance FromJSVal UTCTime where
-  fromJSVal v = (>>= iso8601ParseM . fromMisoString) <$> fromJSVal v
+instance FromJSON UTCTime where
+  parseJSON v = parseJSON v >>= iso8601ParseM . fromMisoString
 
 instance ToJSVal UTCTime where
   toJSVal = toJSVal . iso8601Show
 
-instance FromJSVal DayOfWeek where
-  fromJSVal v =
-    ( >>=
-        \t -> case toLower t of
-          "monday" -> Just Monday
-          "tuesday" -> Just Tuesday
-          "wednesday" -> Just Wednesday
-          "thursday" -> Just Thursday
-          "friday" -> Just Friday
-          "saturday" -> Just Saturday
-          "sunday" -> Just Sunday
-          _ -> Nothing
-    )
-      <$> fromJSVal v
+instance FromJSON DayOfWeek where
+  parseJSON = withText "DayOfWeek" $ \t -> case toLower $ fromMisoString t of
+    "monday" -> pure Monday
+    "tuesday" -> pure Tuesday
+    "wednesday" -> pure Wednesday
+    "thursday" -> pure Thursday
+    "friday" -> pure Friday
+    "saturday" -> pure Saturday
+    "sunday" -> pure Sunday
+    _ -> typeMismatch "DayOfWeek" $ String t
 
 instance ToJSVal DayOfWeek where
   toJSVal =
@@ -50,21 +45,16 @@ instance ToJSVal DayOfWeek where
       Saturday -> "saturday"
       Sunday -> "sunday"
 
-instance FromJSVal Scientific where
-  fromJSVal v =
-    fromJSVal v
-      <&> (>>= fmap fst . find ((== "") . snd) . readP_to_S scientificP)
+instance FromJSON Scientific where
+  parseJSON v = do
+    v' <- fromMisoString <$> parseJSON v
+    case find ((== "") . snd) $ readP_to_S scientificP v' of
+      Nothing -> typeMismatch "Scientific" v
+      Just (r, _) -> pure r
 
 instance ToJSVal Scientific where
   toJSVal = toJSVal . show
 
-instance FromJSVal Natural where
-  fromJSVal v =
-    fromJSVal v <&> \case
-      Just x
-        | x >= 0 -> Just $ toEnum x
-        | otherwise -> Nothing
-      Nothing -> Nothing
 
 -- NOTE: HACK TEMP FIXME
 instance Show JSVal where
@@ -78,3 +68,7 @@ instance (ToJSVal a) => ToJSVal (V.Vector a) where
 
 instance ToJSVal Natural where
   toJSVal = toJSVal @Int . fromIntegral
+
+-- NOTE: HACK TEMP FIXME
+instance FromJSON JSVal where
+  parseJSON = pure . unsafePerformIO . toJSVal_Value

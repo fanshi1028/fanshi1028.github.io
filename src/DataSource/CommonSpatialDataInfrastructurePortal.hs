@@ -5,7 +5,8 @@
 -- NOTE: https://www.hko.gov.hk/en/abouthko/opendata_intro.htm
 module DataSource.CommonSpatialDataInfrastructurePortal where
 
-import Data.Csv hiding (decode, encode, lookup)
+import Data.Csv hiding (decode, encode, lookup, (.:))
+import Data.Csv qualified as CSV ((.:))
 import Data.Hashable
 import Data.Text hiding (show)
 import Data.Text.Read
@@ -15,6 +16,7 @@ import Data.Typeable
 import DataSource.LocalStorage
 import Haxl.Core hiding (throw)
 import Miso.DSL
+import Miso.JSON
 import Network.URI
 import Network.URI.Static
 import Text.XML.Light
@@ -86,24 +88,28 @@ data UVIndexRecord = UVIndexRecord UTCTime Double deriving (Show, Eq)
 
 instance FromNamedRecord UVIndexRecord where
   parseNamedRecord m = do
-    fromJulianValid <$> m .: "Date time (Year)" <*> m .: "Date time (Month)" <*> m .: "Date time (Day)" >>= \case
-      Nothing -> fail "Invalid Day"
-      Just day -> do
-        timeOfDay <-
-          TimeOfDay
-            <$> m .: "Date time (Hour)"
-            <*> m .: "Date time (Minute)"
-            -- sec <- m .: "Date time (Second)"
-            <*> pure 0
-        tz <-
-          stripPrefix "UTC+" <$> m .: "Date time (Time Zone)" >>= \case
-            Nothing -> fail "expected prefix: 'UTC+' for 'Date time (Time Zone)'"
-            Just i -> case decimal i of
-              Left err -> fail err
-              Right (i', "") -> pure $ hoursToTimeZone i'
-              Right (_, leftover) -> fail $ "unexpected suffix for " <> unpack leftover <> " 'Date time (Time Zone)'"
-        idx <- m .: "past 15-minute mean UV Index"
-        pure $ UVIndexRecord (zonedTimeToUTC $ ZonedTime (LocalTime day timeOfDay) tz) idx
+    fromJulianValid
+      <$> m CSV..: "Date time (Year)"
+      <*> m CSV..: "Date time (Month)"
+      <*> m CSV..: "Date time (Day)"
+      >>= \case
+        Nothing -> fail "Invalid Day"
+        Just day -> do
+          timeOfDay <-
+            TimeOfDay
+              <$> m CSV..: "Date time (Hour)"
+              <*> m CSV..: "Date time (Minute)"
+              -- sec <- m .: "Date time (Second)"
+              <*> pure 0
+          tz <-
+            stripPrefix "UTC+" <$> m CSV..: "Date time (Time Zone)" >>= \case
+              Nothing -> fail "expected prefix: 'UTC+' for 'Date time (Time Zone)'"
+              Just i -> case decimal i of
+                Left err -> fail err
+                Right (i', "") -> pure $ hoursToTimeZone i'
+                Right (_, leftover) -> fail $ "unexpected suffix for " <> unpack leftover <> " 'Date time (Time Zone)'"
+          idx <- m CSV..: "past 15-minute mean UV Index"
+          pure $ UVIndexRecord (zonedTimeToUTC $ ZonedTime (LocalTime day timeOfDay) tz) idx
 
 instance FromRecord UVIndexRecord where
   parseRecord m =
@@ -126,11 +132,11 @@ instance FromRecord UVIndexRecord where
         idx <- m .! 7
         pure $ UVIndexRecord (zonedTimeToUTC $ ZonedTime (LocalTime day timeOfDay) tz) idx
 
-instance FromJSVal UVIndexRecord where
-  fromJSVal o = do
-    mTime <- o ! "time" >>= fromJSVal
-    mRecord <- o ! "record" >>= fromJSVal
-    pure $ UVIndexRecord <$> mTime <*> mRecord
+instance FromJSON UVIndexRecord where
+  parseJSON = withObject "UVIndexRecord" $ \o ->
+    UVIndexRecord
+      <$> o .: "time"
+      <*> o .: "record"
 
 instance ToJSVal UVIndexRecord where
   toJSVal (UVIndexRecord t record') = do

@@ -321,9 +321,9 @@ view9DayWeatherForecast
                 _ -> div_ [] [text . ms $ psr <> " probability of significant rain"]
             ]
       viewSeaTemp (SeaTemp place value recordTime) =
-        p_ [class_ "prose text-neutral-200"] [text . ms $ "Sea temperature is " <> show (toDegreeCelsiusAbsolute value) <> " °C in " <> place <> " at " <> show (utcToLocalTime timeZone' recordTime)]
+        p_ [class_ "prose text-neutral-200"] [text $ "Sea temperature is " <> ms (show $ toDegreeCelsiusAbsolute value) <> " °C in " <> place <> " at " <> ms (show $ utcToLocalTime timeZone' recordTime)]
       viewSoilTemp (SoilTemp place value recordTime depth) =
-        p_ [class_ "prose text-neutral-200"] [text . ms $ "Soil temperature is " <> show (toDegreeCelsiusAbsolute value) <> " °C at " <> pack (showIn meter depth) <> " in " <> place <> " at " <> show (utcToLocalTime timeZone' recordTime)]
+        p_ [class_ "prose text-neutral-200"] [text $ "Soil temperature is " <> ms (show $ toDegreeCelsiusAbsolute value) <> " °C at " <> ms (showIn meter depth) <> " in " <> place <> " at " <> ms (show $ utcToLocalTime timeZone' recordTime)]
 
 viewModel :: Model -> View Model Action
 viewModel (Model mELocation mTimeZone mCurrentWeatherReport mLocalWeatherForecast m9DayWeatherForecast ifDisplayRainfall ifDisplayTemperature) =
