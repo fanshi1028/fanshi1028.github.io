@@ -106,9 +106,14 @@ createMap = do
     map' <- mapLibreLib # "createMap" $ mapLibreId
     withAsync
       ( forever $ do
-          loaded <- (map' # "loaded") () >>= fromJSValUnchecked
-          when loaded $ putMVar mapLibreMVar $ MapLibre map'
-          threadDelay 100000
+          loaded <- (map' # "loaded") ()
+          fromJSVal loaded >>= \case
+            Nothing -> do
+              unexpected <- jsonStringify loaded
+              consoleError $ "Unexpected(createMap): expected loaded to be Bool but got " <> unexpected
+            Just loaded' -> do
+              when loaded' $ putMVar mapLibreMVar $ MapLibre map'
+              threadDelay 100000
       )
       $ \_ -> readMVar mapLibreMVar
 
@@ -124,16 +129,22 @@ getUVIndexDataURI geoJSON = do
   liftIO $ do
     dataURIMVar <- newEmptyMVar
     callback <- syncCallback1 $ \url ->
-      fromJSValUnchecked url <&> parseAbsoluteURI >>= \case
+      fromJSVal url >>= \case
         Nothing -> do
-          invalidURI <-
-            fromJSVal url >>= \case
-              Just url' -> pure url'
-              Nothing -> jsonStringify url
+          unexpected <- jsonStringify url
           putMVar dataURIMVar . Left $
-            toException . InvalidParameter . fromMisoString $
-              "impossible: getDataURI callback expect valid uri but got " <> invalidURI
-        Just data_uri -> putMVar dataURIMVar $ Right data_uri
+            toException . UnexpectedType . fromMisoString $
+              "impossible: getDataURI callback expects a string as uri but got " <> unexpected
+        Just urlString -> case parseAbsoluteURI urlString of
+          Nothing -> do
+            invalidURI <-
+              fromJSVal url >>= \case
+                Just url' -> pure url'
+                Nothing -> jsonStringify url
+            putMVar dataURIMVar . Left $
+              toException . InvalidParameter . fromMisoString $
+                "impossible: getDataURI callback expect valid uri but got " <> invalidURI
+          Just data_uri -> putMVar dataURIMVar $ Right data_uri
     _ <- mapLibreLib # "getDataURI" $ (geoJSON, callback)
     r <- takeMVar dataURIMVar
     pure r
