@@ -16,7 +16,7 @@ import Data.Typeable
 import DataSource.LocalStorage
 import Haxl.Core hiding (throw)
 import Miso.DSL
-import Miso.JSON
+import Miso.JSON hiding ((.:))
 import Network.URI
 import Network.URI.Static
 import Text.XML.Light

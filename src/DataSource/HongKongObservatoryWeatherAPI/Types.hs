@@ -14,7 +14,7 @@ import Data.Text hiding (concat, elem, foldl', foldr, reverse, show)
 import Data.Time
 import GHC.Generics
 import Miso.DSL hiding (Object)
-import Miso.JSON
+import Miso.JSON hiding ((.:))
 import Miso.String
 import Miso.String (MisoString)
 import Numeric.Natural

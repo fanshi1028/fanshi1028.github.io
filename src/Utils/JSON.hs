@@ -5,12 +5,13 @@
 module Utils.JSON where
 
 import Data.List
+import Data.Map.Strict as M
 import Data.Scientific
 import Data.Text (toLower)
 import Data.Time
 import Data.Time.Format.ISO8601
 import Data.Vector qualified as V
-import Miso.DSL
+import Miso.DSL hiding (Object)
 import Miso.JSON
 import Miso.String (MisoString, fromMisoString)
 import Numeric.Natural
@@ -72,3 +73,7 @@ instance ToJSVal Natural where
 -- NOTE: HACK TEMP FIXME
 instance FromJSON JSVal where
   parseJSON = pure . unsafePerformIO . toJSVal_Value
+
+-- NOTE: Miso's (.:) is hopeless as is doesn't return the missing key in the error
+(.:) :: (FromJSON a) => Object -> MisoString -> Parser a
+m .: k = maybe (Parser . Left $ "key not found: " <> k) parseJSON (M.lookup k m)
