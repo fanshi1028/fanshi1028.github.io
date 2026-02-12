@@ -27,10 +27,10 @@ consoleLog = unsafeLiftIO . FFI.consoleLog
 consoleLog' :: (ToJSON v) => v -> GenHaxl u w ()
 consoleLog' = consoleLog . encodePretty
 
-failedResponseToException :: Response Value -> SomeException
+failedResponseToException :: Response MisoString -> SomeException
 failedResponseToException = \case
   Response Nothing headers mErrMsg _ -> toException . FetchError $ pack "CORS or Network Error" <> intercalate (pack ", ") [T.show headers, T.show mErrMsg]
-  Response (Just code) headers mErrMsg (v :: Value)
+  Response (Just code) headers mErrMsg err
     | code == 400 -> toException . InvalidParameter $ pack "InvalidParameter: " <> errorDetails
     | code == 404 -> toException . NotFound $ pack "Not Found: " <> errorDetails
     | code == 408 -> toException . FetchError $ pack "TEMP FIXME Request Timeout: " <> errorDetails
@@ -43,19 +43,22 @@ failedResponseToException = \case
     | otherwise -> toException . MonadFail $ pack "Error: " <> errorDetails
     where
       errorDetails = intercalate (pack ", ") $ case mErrMsg of
-        Nothing -> [T.show code, T.show headers, T.show v]
-        Just msg -> [T.show code, T.show msg, T.show headers, T.show v]
+        Nothing -> [T.show code, T.show headers, fromMisoString err]
+        Just msg -> [T.show code, T.show msg, T.show headers, fromMisoString err]
 
-fetchIO :: (forall a. (FromJSVal a) => Proxy a -> [(MisoString, MisoString)] -> CONTENT_TYPE -> StdMethod -> URI -> IO (Either SomeException a))
-fetchIO _ headers contentType' method req = do
+fetchIO :: (forall a. (FromJSVal a, Typeable a) => Proxy a -> [(MisoString, MisoString)] -> CONTENT_TYPE -> StdMethod -> URI -> IO (Either SomeException a))
+fetchIO proxy headers contentType' method req = do
   resultMVar <- newEmptyMVar
   let url = ms $ uriToString id req ""
-      successCB = \(Response _ _ _ v) -> putMVar resultMVar $ Right v
-      failCB = putMVar resultMVar . Left . failedResponseToException
+      successCB (Response _ _ _ v) = putMVar resultMVar $ Right v
+      failCB res@(Response _ _ _ v) = do
+        v' <- jsonStringify v
+        putMVar resultMVar . Left . failedResponseToException $
+          (ms (showsTypeRep (typeRep proxy) " expected but got ") <> v') <$ res
   fetch url (ms $ renderStdMethod method) Nothing headers successCB failCB contentType'
   readMVar resultMVar
 
-fetchGetJSON :: (FromJSVal a) => Proxy a -> URI -> IO (Either SomeException a)
+fetchGetJSON :: (FromJSVal a, Typeable a) => Proxy a -> URI -> IO (Either SomeException a)
 fetchGetJSON proxy = fetchIO proxy [accept =: applicationJSON] JSON GET
 
 fetchGetText :: URI -> IO (Either SomeException StrictText)
