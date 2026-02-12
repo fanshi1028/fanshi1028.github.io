@@ -5,10 +5,9 @@
 module Utils.JSON where
 
 import Data.Functor
-import Data.Hashable
 import Data.List
 import Data.Scientific
-import Data.Text (StrictText, toLower)
+import Data.Text (toLower)
 import Data.Time
 import Data.Time.Format.ISO8601
 import Data.Vector qualified as V
@@ -66,12 +65,6 @@ instance FromJSVal Natural where
         | x >= 0 -> Just $ toEnum x
         | otherwise -> Nothing
       Nothing -> Nothing
-
-instance Hashable Value where
-  hashWithSalt s = hashWithSalt s . fromMisoString @StrictText . encodePretty
-
-instance Hashable JSVal where
-  hashWithSalt s = hashWithSalt s . fromMisoString @StrictText . unsafePerformIO . jsonStringify
 
 -- NOTE: HACK TEMP FIXME
 instance Show JSVal where

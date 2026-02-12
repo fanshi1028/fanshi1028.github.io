@@ -19,7 +19,6 @@ import DataSource.SimpleFetch
 import Haxl.Core
 import Haxl.DataSource.ConcurrentIO
 import Miso hiding (consoleLog, consoleLog')
-import Miso qualified (consoleLog)
 import Miso.Lens hiding ((*~))
 import Miso.Navigator
 
@@ -88,10 +87,6 @@ fetchData sink = do
 
     misoRunAction $ SetLatest15minUVIndexGeoJSON geoJSON
 
-    dataFetch (GetUVIndexDataURI geoJSON)
-      >>= getLatest15minUVIndex t
-      >>= misoRunAction . SetLatest15minUVIndex
-
     uncachedRequest $ GetSpecialWeatherTips t
 
   saveCacheToLocalStorage $ dataCache env'
@@ -112,7 +107,6 @@ updateModel = \case
   SetDisplayTemperature b -> displayTemperature .= b
   SetDisplayRainfall b -> displayRainfall .= b
   SetLatest15minUVIndexGeoJSON geoJSON -> io_ . runMapLibre $ addGeoJSONSource (ms "latest15minUVIndex") geoJSON
-  SetLatest15minUVIndex d -> io_ $ Miso.consoleLog . ms $ show d -- TEMP FIXME
   ToggleDisplayHardSurfaceSoccerPitch7 -> io_ . runMapLibre $ toggle_hssp7
 
 dashboardComponent :: Component parent Model Action

@@ -80,13 +80,5 @@ fetchGetCSVNamed _ uri =
 fetchGetBlob :: URI -> IO (Either SomeException Blob)
 fetchGetBlob = fetchIO Proxy [accept =: ms "application/octect-stream"] BLOB GET
 
-corsProxy :: URI -> URI
-corsProxy uri' =
-  nullURI
-    { uriScheme = "https:",
-      uriAuthority = Just $ nullURIAuth {uriRegName = "cors-anywhere.com"},
-      uriPath = "/" <> uriToString id uri' ""
-    }
-
 renderQueryTextToString :: QueryText -> String
 renderQueryTextToString = unpack . toStrict . TL.decodeUtf8 . toLazyByteString . renderQueryText True
