@@ -16,7 +16,7 @@ import Utils.Haxl
 import Prelude hiding ((+))
 
 data SimpleFetch a where
-  FetchJSON :: forall a. (FromJSVal a) => URI -> SimpleFetch a
+  FetchJSON :: forall a. (FromJSVal a, Typeable a) => URI -> SimpleFetch a
   FetchText :: URI -> SimpleFetch StrictText
   FetchCSV :: forall a. (FromRecord a) => Bool -> URI -> SimpleFetch (Vector a)
 
