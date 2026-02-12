@@ -18,6 +18,7 @@ import Haxl.Core.Monad
 import Haxl.Prelude hiding (forM_)
 import Miso (ms)
 import Miso.DSL
+import Miso.FFI
 import Miso.JSON
 import Miso.String (fromMisoString)
 import System.IO.Unsafe
@@ -35,10 +36,14 @@ cachedRequestWithLocalStorage (showp -> key) = do
   isNull v >>= \case
     True -> pure . Left . toException . NotFound . pack $ key <> ": not found in localStorage"
     False -> do
-      txt <- fromJSValUnchecked v
-      jsonParse txt >>= fromJSVal <&> \case
-        Nothing -> Left . logicBugToException . UnexpectedType $ "LocalStorage " <> pack key <> ": " <> fromMisoString txt
-        Just r -> Right r
+      fromJSVal v >>= \case
+        Nothing -> do
+          unexpected <- jsonStringify v
+          pure . Left . internalErrorToException . UnexpectedType $ "impossible! LocalStorage " <> pack key <> ": returned non-string value " <> fromMisoString unexpected
+        Just txt ->
+          jsonParse txt >>= fromJSVal <&> \case
+            Nothing -> Left . logicBugToException . UnexpectedType $ "LocalStorage " <> pack key <> ": " <> fromMisoString txt
+            Just r -> Right r
 
 saveCacheToLocalStorage :: HaxlDataCache u w -> IO ()
 saveCacheToLocalStorage (DataCache cache) = H.mapM_ goSubCache cache
@@ -47,7 +52,7 @@ saveCacheToLocalStorage (DataCache cache) = H.mapM_ goSubCache cache
     goSubCache (_ty, SubCache showReq showRes hm) =
       H.mapM_
         ( \(showReq -> reqStr, (DataCacheItem IVar {ivarRef = !ref} _)) ->
-            let logError err = void $ (jsg "console" # "log") $ ms $ reqStr <> ":" <> displayException err
+            let logError err = consoleError $ ms $ reqStr <> ":" <> displayException err
              in liftIO (readIORef ref) >>= \case
                   IVarEmpty _ -> pure ()
                   IVarFull (Ok a _) -> void $ do

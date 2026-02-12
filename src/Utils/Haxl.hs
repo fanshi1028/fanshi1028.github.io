@@ -16,12 +16,13 @@ import Data.Vector hiding ((!))
 import Haxl.Core hiding (fetch)
 import Haxl.Core.Monad
 import Miso hiding (Decoder, URI, consoleLog, defaultOptions, go, on)
+import Miso.FFI qualified as FFI (consoleLog)
 import Miso.JSON hiding (decode)
 import Network.HTTP.Types hiding (Header)
 import Network.URI
 
 consoleLog :: MisoString -> GenHaxl u w ()
-consoleLog = void . unsafeLiftIO . (jsg (ms "console") # (ms "log"))
+consoleLog = unsafeLiftIO . FFI.consoleLog
 
 consoleLog' :: (ToJSON v) => v -> GenHaxl u w ()
 consoleLog' = consoleLog . encodePretty

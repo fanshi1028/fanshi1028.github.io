@@ -106,9 +106,14 @@ createMap = do
     map' <- mapLibreLib # "createMap" $ mapLibreId
     withAsync
       ( forever $ do
-          loaded <- (map' # "loaded") () >>= fromJSValUnchecked
-          when loaded $ putMVar mapLibreMVar $ MapLibre map'
-          threadDelay 100000
+          loaded <- (map' # "loaded") ()
+          fromJSVal loaded >>= \case
+            Nothing -> do
+              unexpected <- jsonStringify loaded
+              consoleError $ "Unexpected(createMap): expected loaded to be Bool but got " <> unexpected
+            Just loaded' -> do
+              when loaded' $ putMVar mapLibreMVar $ MapLibre map'
+              threadDelay 100000
       )
       $ \_ -> readMVar mapLibreMVar
 
@@ -124,16 +129,22 @@ getUVIndexDataURI geoJSON = do
   liftIO $ do
     dataURIMVar <- newEmptyMVar
     callback <- syncCallback1 $ \url ->
-      fromJSValUnchecked url <&> parseAbsoluteURI >>= \case
+      fromJSVal url >>= \case
         Nothing -> do
-          invalidURI <-
-            fromJSVal url >>= \case
-              Just url' -> pure url'
-              Nothing -> jsonStringify url
+          unexpected <- jsonStringify url
           putMVar dataURIMVar . Left $
-            toException . InvalidParameter . fromMisoString $
-              "impossible: getDataURI callback expect valid uri but got " <> invalidURI
-        Just data_uri -> putMVar dataURIMVar $ Right data_uri
+            toException . UnexpectedType $
+              "impossible: getDataURI callback expects a string as uri but got " <> fromMisoString unexpected
+        Just urlString -> case parseAbsoluteURI urlString of
+          Nothing -> do
+            invalidURI <-
+              fromJSVal url >>= \case
+                Just url' -> pure url'
+                Nothing -> jsonStringify url
+            putMVar dataURIMVar . Left $
+              toException . InvalidParameter . fromMisoString $
+                "impossible: getDataURI callback expect valid uri but got " <> invalidURI
+          Just data_uri -> putMVar dataURIMVar $ Right data_uri
     _ <- mapLibreLib # "getDataURI" $ (geoJSON, callback)
     r <- takeMVar dataURIMVar
     pure r
@@ -171,7 +182,7 @@ toggle_hssp7 = do
     hssp7Lib <- mapLibreLib ! "hard_surface_soccer_pitch_7"
     mapLibre <- readMVar mapLibreMVar
     (hssp7Lib # "getFeatures") () >>= fromJSVal @(Maybe JSVal) >>= \case
-      Nothing -> void $ jsg "console" # ("error" :: MisoString) $ ("impossible: hard_surface_soccer_pitch_7 getFeatures return unexpected result" :: MisoString)
+      Nothing -> consoleError "impossible: hard_surface_soccer_pitch_7 getFeatures return unexpected result"
       Just Nothing -> do
         processCoords <- syncCallback2 $ \hssp7_data setCoords ->
           fromJSVal @[JSVal] hssp7_data >>= \case
@@ -185,6 +196,6 @@ toggle_hssp7 = do
                     )
                     hssp7s
                 ]
-            Nothing -> void $ jsg "console" # "error" $ ("impossible: hard_surface_soccer_pitch_7 data is not an array" :: MisoString)
+            Nothing -> consoleError "impossible: hard_surface_soccer_pitch_7 data is not an array"
         void $ hssp7Lib # "toggleLayer" $ (mapLibre, processCoords)
       Just _ -> void $ hssp7Lib # "toggleLayer" $ [mapLibre]
