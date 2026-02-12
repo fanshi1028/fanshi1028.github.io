@@ -182,7 +182,7 @@ toggle_hssp7 = do
     hssp7Lib <- mapLibreLib ! "hard_surface_soccer_pitch_7"
     mapLibre <- readMVar mapLibreMVar
     (hssp7Lib # "getFeatures") () >>= fromJSVal @(Maybe JSVal) >>= \case
-      Nothing -> void $ jsg "console" # ("error" :: MisoString) $ ("impossible: hard_surface_soccer_pitch_7 getFeatures return unexpected result" :: MisoString)
+      Nothing -> consoleError "impossible: hard_surface_soccer_pitch_7 getFeatures return unexpected result"
       Just Nothing -> do
         processCoords <- syncCallback2 $ \hssp7_data setCoords ->
           fromJSVal @[JSVal] hssp7_data >>= \case
@@ -196,6 +196,6 @@ toggle_hssp7 = do
                     )
                     hssp7s
                 ]
-            Nothing -> void $ jsg "console" # "error" $ ("impossible: hard_surface_soccer_pitch_7 data is not an array" :: MisoString)
+            Nothing -> consoleError "impossible: hard_surface_soccer_pitch_7 data is not an array"
         void $ hssp7Lib # "toggleLayer" $ (mapLibre, processCoords)
       Just _ -> void $ hssp7Lib # "toggleLayer" $ [mapLibre]

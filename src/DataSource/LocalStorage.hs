@@ -18,6 +18,7 @@ import Haxl.Core.Monad
 import Haxl.Prelude hiding (forM_)
 import Miso (ms)
 import Miso.DSL
+import Miso.FFI
 import Miso.JSON
 import Miso.String (fromMisoString)
 import System.IO.Unsafe
@@ -51,7 +52,7 @@ saveCacheToLocalStorage (DataCache cache) = H.mapM_ goSubCache cache
     goSubCache (_ty, SubCache showReq showRes hm) =
       H.mapM_
         ( \(showReq -> reqStr, (DataCacheItem IVar {ivarRef = !ref} _)) ->
-            let logError err = void $ (jsg "console" # "log") $ ms $ reqStr <> ":" <> displayException err
+            let logError err = consoleError $ ms $ reqStr <> ":" <> displayException err
              in liftIO (readIORef ref) >>= \case
                   IVarEmpty _ -> pure ()
                   IVarFull (Ok a _) -> void $ do
