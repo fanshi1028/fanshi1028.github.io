@@ -46,8 +46,6 @@ failedResponseToException = \case
         Nothing -> [T.show code, T.show headers, fromMisoString err]
         Just msg -> [T.show code, T.show msg, T.show headers, fromMisoString err]
 
-fetchIO :: (forall a. (FromJSVal a) => Proxy a -> [(MisoString, MisoString)] -> CONTENT_TYPE -> StdMethod -> URI -> IO (Either SomeException a))
-fetchIO _ headers contentType' method req = do
 fetchIO :: (forall a. (FromJSVal a, Typeable a) => Proxy a -> [(MisoString, MisoString)] -> CONTENT_TYPE -> StdMethod -> URI -> IO (Either SomeException a))
 fetchIO proxy headers contentType' method req = do
   resultMVar <- newEmptyMVar
