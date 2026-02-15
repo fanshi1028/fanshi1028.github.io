@@ -6,7 +6,6 @@ module DataSource.LocalStorage where
 
 import Control.Monad
 import Control.Monad.IO.Class
-import Data.Functor
 import Data.HashTable.IO qualified as H
 import Data.Hashable
 import Data.Text hiding (show)

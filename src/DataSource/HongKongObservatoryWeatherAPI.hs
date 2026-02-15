@@ -18,7 +18,6 @@ import Network.URI.Static
 import Utils.Haxl
 import Utils.IntervalPeriod
 
-
 -- NOTE: Weather Information API
 data HKOWeatherInformationReq a where
   GetLocalWeatherForecast :: IntervalPeriod 60 -> HKOWeatherInformationReq LocalWeatherForecast
