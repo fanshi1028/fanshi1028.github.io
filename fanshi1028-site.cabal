@@ -45,6 +45,7 @@ common lib
     http-types,
     lens,
     miso,
+    miso-aeson,
     mtl,
     network-uri,
     retry,

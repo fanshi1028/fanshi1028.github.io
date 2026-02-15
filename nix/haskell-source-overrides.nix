@@ -15,5 +15,12 @@
     sha256 = "sha256-d1zUtplbcsHKiBOt1q4iOtxcjGagJbOAmuNRwzecSrM=";
   };
 
+  miso-aeson = fetchFromGitHub {
+    owner = "haskell-miso";
+    repo = "miso-aeson";
+    rev = "d491d91b3437a43dd4410a716ee9d4531b6cf309";
+    sha256 = "sha256-VvCMbZBewybVu1daBGb9PCv5YVCmy0cUIQA2yFW+wEY=";
+  };
+
   hashtables = "1.4.2";
 }

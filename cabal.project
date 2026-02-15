@@ -53,5 +53,11 @@ source-repository-package
   location: https://github.com/fanshi1028/hs-ieee754.git
   tag: 01ddbabf11f5fc143503fc134d740668c6a90294
 
+source-repository-package
+  type: git
+  location: https://github.com/haskell-miso/miso-aeson.git
+  -- lastest commit on <2026-01-06 Tue>
+  tag: d491d91b3437a43dd4410a716ee9d4531b6cf309
+
 -- NOTE: disable due to this  bug https://github.com/haskell/cabal/issues/11115
 semaphore: False
