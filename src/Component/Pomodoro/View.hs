@@ -29,7 +29,7 @@ import Data.List.NonEmpty as NE
 import Data.Maybe
 import Data.Time
 import GHC.Natural
-import Miso hiding (Transition)
+import Miso
 import Miso.CSS hiding (ms, rem)
 import Miso.Html as HTML
 import Miso.Html.Property as P

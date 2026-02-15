@@ -16,7 +16,7 @@ import Data.Maybe
 import Data.Time
 import GHC.Generics
 import GHC.Natural
-import Miso hiding (Transition)
+import Miso
 import Miso.JSON hiding ((.=))
 import Miso.JSON qualified as JSON (Result (Success))
 import Miso.Lens

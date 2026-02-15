@@ -83,6 +83,3 @@ instance ToJSVal Natural where
 instance FromJSON JSVal where
   parseJSON = pure . unsafePerformIO . toJSVal_Value
 
--- NOTE: Miso's (.:) is hopeless as is doesn't return the missing key in the error
-(.:) :: (FromJSON a) => Object -> MisoString -> Parser a
-m .: k = maybe (Parser . Left $ "key not found: " <> k) parseJSON (M.lookup k m)

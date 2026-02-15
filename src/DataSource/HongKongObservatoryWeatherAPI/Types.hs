@@ -13,7 +13,7 @@ import Data.Scientific
 import Data.Time
 import GHC.Generics
 import Miso.DSL hiding (Object)
-import Miso.JSON hiding ((.:))
+import Miso.JSON
 import Miso.String
 import Numeric.Natural
 import Numeric.Units.Dimensional
