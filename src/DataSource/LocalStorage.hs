@@ -39,8 +39,8 @@ cachedRequestWithLocalStorage (showp -> key) = do
         Nothing -> do
           unexpected <- jsonStringify v
           pure . Left . internalErrorToException . UnexpectedType $ "impossible! LocalStorage " <> pack key <> ": returned non-string value " <> fromMisoString unexpected
-        Just v' -> pure $ case parseEither parseJSON v' of
-          Left err -> Left . internalErrorToException . UnexpectedType $ "LocalStorage " <> pack key <> ": " <> fromMisoString err
+        Just str -> pure $ case eitherDecode str of
+          Left err -> Left . internalErrorToException . UnexpectedType $ "LocalStorage " <> pack key <> ": " <> fromMisoString err <> ", " <> fromMisoString str
           Right r -> Right r
 
 saveCacheToLocalStorage :: HaxlDataCache u w -> IO ()
