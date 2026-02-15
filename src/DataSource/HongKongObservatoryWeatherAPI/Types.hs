@@ -1,7 +1,9 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE NoFieldSelectors #-}
 
 module DataSource.HongKongObservatoryWeatherAPI.Types where
@@ -264,11 +266,11 @@ instance FromJSON Rainfall where
     min'' <-
       o .:? "min" <&> \case
         Just min' -> Finite $ min' *~ unit
-        Nothing -> NegInf
+        Nothing -> Finite $ 0 *~ unit
     max'' <-
       o .:? "max" <&> \case
         Just max' -> Finite $ max' *~ unit
-        Nothing -> PosInf
+        Nothing -> Finite $ 0 *~ unit
     pure $ Rainfall (min'' <=..<= max'') place main'
 
 instance ToJSVal Rainfall where
@@ -287,7 +289,7 @@ instance ToJSVal Rainfall where
         NegInf -> error "toJSVal: unexpected NegInf upper bound interval in Rainfall"
         PosInf -> pure ()
       toJSVal o
-    _ -> error "toJSVal: unexpected interval in Rainfall"
+    (show -> unexpectd) -> error $ "toJSVal: unexpected interval in Rainfall " <> unexpectd
 
 data UVIndexData = UVIndexData
   { place :: MisoString, -- location
@@ -417,7 +419,7 @@ instance FromJSON CurrentWeatherReport where
                 _ -> typeMismatch "warningMessage" (Object o)
             )
     rainstormReminder <- o .:? "rainstormReminder"
-    specialWxTips <- o .: "specialWxTips" .!= []
+    specialWxTips <- o .:? "specialWxTips" .!= []
     tcmessage <-
       o .: "tcmessage"
         <|> ( o .: "tcmessage" >>= \case

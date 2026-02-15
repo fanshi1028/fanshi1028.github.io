@@ -31,6 +31,7 @@ flag prerender-wasm
 
 common lib
   build-depends:
+    aeson,
     async,
     base <5,
     base64,

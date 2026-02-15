@@ -21,7 +21,6 @@ import Miso.FFI qualified as FFI (consoleLog)
 import Miso.JSON hiding (Object, decode)
 import Network.HTTP.Types hiding (Header)
 import Network.URI
-import Utils.JSON
 
 consoleLog :: MisoString -> GenHaxl u w ()
 consoleLog = unsafeLiftIO . FFI.consoleLog
@@ -73,7 +72,8 @@ fetch url method maybeBody requestHeaders successful errorful type_ = do
         ( \a ->
             fromJSVal a >>= \case
               Just res@(Response _ _ _ a') -> case parseEither parseJSON a' of
-                Left err -> errorful $ Left err
+                Left err -> do
+                  errorful . Left $ err <> ms " " <> ms (show a')
                 Right a'' -> successful $ a'' <$ res
               Nothing -> do
                 unexpected <- jsonStringify a
@@ -118,7 +118,7 @@ fetchIO proxy headers contentType' method req = do
       successCB (Response _ _ _ v) = putMVar resultMVar $ Right v
       failCB (Left err) =
         putMVar resultMVar . Left . logicBugToException . UnexpectedType . fromMisoString $
-          (ms (showsTypeRep (typeRep proxy) " expected but ") <> err)
+          (ms (showsTypeRep (typeRep proxy) " expected but got err instead: ") <> err)
       failCB (Right res@(Response _ _ _ v)) = do
         v' <- toJSVal_Value v >>= jsonStringify
         putMVar resultMVar . Left . failedResponseToException $

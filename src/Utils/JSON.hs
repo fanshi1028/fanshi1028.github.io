@@ -1,25 +1,28 @@
+{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
 module Utils.JSON where
 
+import Data.Aeson qualified as Aeson
+import Data.Aeson.Types qualified as Aeson
 import Data.Function
-import Data.List
-import Data.Map.Strict as M
 import Data.Scientific
 import Data.Text (toLower)
 import Data.Time
 import Data.Time.Format.ISO8601
 import Data.Vector qualified as V
+import Miso.Aeson
 import Miso.DSL hiding (Object)
 import Miso.JSON
-import Miso.String (MisoString, fromMisoString)
+import Miso.String (MisoString, fromMisoString, ms)
 import Numeric.Natural
 import System.IO.Unsafe
-import Text.ParserCombinators.ReadP
 
-newtype TimeData = TimeData ZonedTime deriving (Show)
+newtype TimeData = TimeData ZonedTime
+  deriving (Show)
 
 instance Eq TimeData where
   (==) (TimeData a) (TimeData b) = ((==) `on` zonedTimeToUTC) a b
@@ -55,16 +58,10 @@ instance ToJSVal DayOfWeek where
       Saturday -> "saturday"
       Sunday -> "sunday"
 
-instance FromJSON Scientific where
-  parseJSON v = do
-    v' <- fromMisoString <$> parseJSON v
-    case find ((== "") . snd) $ readP_to_S scientificP v' of
-      Nothing -> typeMismatch "Scientific" v
-      Just (r, _) -> pure r
+deriving via (UnAesonised Scientific) instance FromJSON Scientific
 
 instance ToJSVal Scientific where
-  toJSVal = toJSVal . show
-
+  toJSVal = toJSVal_Value . aesonToJSON . Aeson.toJSON
 
 -- NOTE: HACK TEMP FIXME
 instance Show JSVal where
@@ -83,3 +80,16 @@ instance ToJSVal Natural where
 instance FromJSON JSVal where
   parseJSON = pure . unsafePerformIO . toJSVal_Value
 
+newtype Aesonised a = Aesonised a
+
+instance (FromJSON a) => Aeson.FromJSON (Aesonised a) where
+  parseJSON (aesonToJSON -> v) = case parseEither parseJSON v of
+    Left err -> Aeson.parseFail $ fromMisoString err
+    Right r -> pure $ Aesonised r
+
+newtype UnAesonised a = UnAesonised a
+
+instance (Aeson.FromJSON a) => FromJSON (UnAesonised a) where
+  parseJSON v'@(jsonToAeson -> v) = case Aeson.parseEither Aeson.parseJSON v of
+    Left err -> typeMismatch (ms err) v'
+    Right r -> pure $ UnAesonised r
