@@ -48,9 +48,7 @@ mapLibreMVar = unsafePerformIO newEmptyMVar
 
 mapLibreComponent :: Component parent () Void
 mapLibreComponent =
-  ( component () absurd $ \_ ->
-      div_ [id_ "FIXME: need to wrap the div with id ${mapLibreId} to TEMP fix the 'conatianer not found' for maplibre", class_ "h-full"] [div_ [id_ mapLibreId, class_ "h-full"] []]
-  )
+  (component () absurd $ \_ -> div_ [id_ mapLibreId, class_ "h-full"] [])
     { scripts,
       styles
     }
