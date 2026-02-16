@@ -46,11 +46,16 @@ newtype MapLibre = MapLibre JSVal deriving newtype (ToJSVal, ToObject)
 mapLibreMVar :: MVar MapLibre
 mapLibreMVar = unsafePerformIO newEmptyMVar
 
-mapLibreComponent :: Component parent () Void
+data Action = CleanUpMapLibre
+
+mapLibreComponent :: Component parent () Action
 mapLibreComponent =
-  (component () absurd $ \_ -> div_ [id_ mapLibreId, class_ "h-full"] [])
+  ( component () (\CleanUpMapLibre -> io_ $ cleanUpMap) $
+      \() -> div_ [id_ mapLibreId, class_ "h-full"] []
+  )
     { scripts,
-      styles
+      styles,
+      unmount = Just CleanUpMapLibre
     }
   where
 #ifdef LOCALDEV

@@ -89,7 +89,6 @@ updateModel :: Action -> Effect parent Model Action
 updateModel = \case
   InitAction -> issue FetchWeatherData
   InitMapLibre -> io_ $ runMapLibre createMap
-  CleanUpMapLibre -> io_ cleanUpMap
   FetchWeatherData -> withSink fetchData
   SetLocation loc -> do
     io_ . runMapLibre $ addMarkerAndEaseToLocation loc

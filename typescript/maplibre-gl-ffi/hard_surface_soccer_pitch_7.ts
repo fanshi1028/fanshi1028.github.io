@@ -58,12 +58,10 @@ export const hard_surface_soccer_pitch_7 = {
             'hard_surface_soccer_pitch_7 toggleLayer: feature is empty / all null.'
           )
         } else {
-          if (map.getSource(source) == undefined) {
-            map.addSource(source, {
-              type: 'geojson',
-              data: { type: 'FeatureCollection', features },
-            })
-          }
+          map.addSource(source, {
+            type: 'geojson',
+            data: { type: 'FeatureCollection', features },
+          })
           map.addLayer(layerCfg)
         }
       })
