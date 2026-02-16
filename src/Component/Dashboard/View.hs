@@ -323,10 +323,10 @@ view9DayWeatherForecast
 viewModel :: Model -> View Model Action
 viewModel (Model mELocation mCurrentWeatherReport mLocalWeatherForecast m9DayWeatherForecast ifDisplayRainfall ifDisplayTemperature) =
   div_
-    [class_ "flex flex-col gap-8 bg-neutral-600 text-neutral-200"]
+    [class_ "h-min-content flex flex-col gap-8 bg-neutral-600 text-neutral-200"]
     [ div_
         [ class_ $ case mELocation of
-            Just (Right _) -> "h-4/5 w-full"
+            Just (Right _) -> "h-screen w-full pb-24 -mb-24"
             _ -> "",
           onCreated InitMapLibre
         ]
