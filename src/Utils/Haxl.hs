@@ -2,6 +2,7 @@ module Utils.Haxl where
 
 import Control.Concurrent
 import Control.Exception (Exception (toException), SomeException)
+import Control.Monad
 import Data.ByteString.Builder
 import Data.ByteString.Lazy qualified as BSL (fromStrict)
 import Data.Csv
@@ -12,12 +13,12 @@ import Data.Text.Encoding as T
 import Data.Text.Lazy (toStrict)
 import Data.Text.Lazy.Encoding as TL
 import Data.Typeable
-import Data.Vector hiding ((!))
+import Data.Vector hiding (create, forM_, (!))
 import Haxl.Core hiding (fetch)
 import Haxl.Core.Monad
-import Miso hiding (Decoder, URI, consoleLog, defaultOptions, go, on)
+import Miso hiding (Decoder, URI, consoleLog, defaultOptions, fetch, go, on)
 import Miso.FFI qualified as FFI (consoleLog)
-import Miso.JSON hiding (decode)
+import Miso.JSON hiding (Object, decode)
 import Network.HTTP.Types hiding (Header)
 import Network.URI
 
@@ -46,29 +47,96 @@ failedResponseToException = \case
         Nothing -> [T.show code, T.show headers, fromMisoString err]
         Just msg -> [T.show code, T.show msg, T.show headers, fromMisoString err]
 
-fetchIO :: (forall a. (FromJSVal a, Typeable a) => Proxy a -> [(MisoString, MisoString)] -> CONTENT_TYPE -> StdMethod -> URI -> IO (Either SomeException a))
+-- TEMP FIXME: copied from Miso but replaced fromJSValUnchecked with fromJSVal
+fetch ::
+  (FromJSON success, FromJSON error) =>
+  -- | url
+  MisoString ->
+  -- | method
+  MisoString ->
+  -- | body
+  Maybe JSVal ->
+  -- | headers
+  [(MisoString, MisoString)] ->
+  -- | successful callback
+  (Response success -> IO ()) ->
+  -- | errorful callback
+  (Either MisoString (Response error) -> IO ()) ->
+  -- | content type
+  CONTENT_TYPE ->
+  IO ()
+fetch url method maybeBody requestHeaders successful errorful type_ = do
+  successful_ <-
+    toJSVal
+      =<< asyncCallback1
+        ( \a ->
+            fromJSVal a >>= \case
+              Just res@(Response _ _ _ a') -> case parseEither parseJSON a' of
+                Left err -> do
+                  errorful . Left $ err <> ms " " <> ms (show a')
+                Right a'' -> successful $ a'' <$ res
+              Nothing -> do
+                unexpected <- jsonStringify a
+                errorful $ Left $ ms "impossible! Unexpected Response format: " <> unexpected
+        )
+  errorful_ <-
+    toJSVal
+      =<< asyncCallback1
+        ( \a ->
+            fromJSVal a >>= \case
+              Just res@(Response _ _ _ a') -> case parseEither parseJSON a' of
+                Left err -> errorful $ Left err
+                Right a'' -> errorful . Right $ a'' <$ res
+              Nothing -> do
+                unexpected <- jsonStringify a
+                errorful $ Left $ ms "impossible! Unexpected Response format: " <> unexpected
+        )
+  moduleMiso <- jsg $ ms "miso"
+  url_ <- toJSVal url
+  method_ <- toJSVal method
+  body_ <- toJSVal maybeBody
+  Object headers_ <- do
+    o <- create
+    forM_ requestHeaders $ \(k, v) -> set k v o
+    pure o
+  typ <- toJSVal type_
+  void $
+    moduleMiso # (ms "fetchCore") $
+      [ url_,
+        method_,
+        body_,
+        headers_,
+        successful_,
+        errorful_,
+        typ
+      ]
+
+fetchIO :: (forall a. (FromJSON a, Typeable a) => Proxy a -> [(MisoString, MisoString)] -> CONTENT_TYPE -> StdMethod -> URI -> IO (Either SomeException a))
 fetchIO proxy headers contentType' method req = do
   resultMVar <- newEmptyMVar
   let url = ms $ uriToString id req ""
       successCB (Response _ _ _ v) = putMVar resultMVar $ Right v
-      failCB res@(Response _ _ _ v) = do
-        v' <- jsonStringify v
+      failCB (Left err) =
+        putMVar resultMVar . Left . logicBugToException . UnexpectedType . fromMisoString $
+          (ms (showsTypeRep (typeRep proxy) " expected but got err instead: ") <> err)
+      failCB (Right res@(Response _ _ _ v)) = do
+        v' <- toJSVal_Value v >>= jsonStringify
         putMVar resultMVar . Left . failedResponseToException $
           (ms (showsTypeRep (typeRep proxy) " expected but got ") <> v') <$ res
   fetch url (ms $ renderStdMethod method) Nothing headers successCB failCB contentType'
   readMVar resultMVar
 
-fetchGetJSON :: (FromJSVal a, Typeable a) => Proxy a -> URI -> IO (Either SomeException a)
+fetchGetJSON :: (FromJSON a, Typeable a) => Proxy a -> URI -> IO (Either SomeException a)
 fetchGetJSON proxy = fetchIO proxy [accept =: applicationJSON] JSON GET
 
-fetchGetText :: URI -> IO (Either SomeException StrictText)
+fetchGetText :: URI -> IO (Either SomeException MisoString)
 fetchGetText = fetchIO Proxy [accept =: textPlain] TEXT GET
 
 fetchGetCSV :: (FromRecord a) => Proxy a -> HasHeader -> URI -> IO (Either SomeException (Vector a))
 fetchGetCSV _ hasHeader uri =
   fetchIO Proxy [accept =: ms "text/csv"] TEXT GET uri <&> \case
     Left err -> Left err
-    Right txt -> case decode hasHeader . BSL.fromStrict $ T.encodeUtf8 txt of
+    Right txt -> case decode hasHeader . BSL.fromStrict $ T.encodeUtf8 $ fromMisoString txt of
       Left err -> Left . toException . MonadFail $ pack err
       Right r -> Right r
 
@@ -76,12 +144,10 @@ fetchGetCSVNamed :: (FromNamedRecord a) => Proxy a -> URI -> IO (Either SomeExce
 fetchGetCSVNamed _ uri =
   fetchIO Proxy [accept =: ms "text/csv"] TEXT GET uri <&> \case
     Left err -> Left err
-    Right txt -> case decodeByName . BSL.fromStrict $ T.encodeUtf8 txt of
+    Right txt -> case decodeByName . BSL.fromStrict . T.encodeUtf8 $ fromMisoString txt of
       Left err -> Left . toException . MonadFail $ pack err
       Right r -> Right r
 
-fetchGetBlob :: URI -> IO (Either SomeException Blob)
-fetchGetBlob = fetchIO Proxy [accept =: ms "application/octect-stream"] BLOB GET
 
 renderQueryTextToString :: QueryText -> String
 renderQueryTextToString = unpack . toStrict . TL.decodeUtf8 . toLazyByteString . renderQueryText True

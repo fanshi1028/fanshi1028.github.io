@@ -241,7 +241,7 @@ prdView modal button prd =
         case prd._launchReadiness of
           [] -> [p_ [class_ "prose 2xl:prose-lg text-neutral-800"] ["No dependencies for launch"]]
           _ ->
-            let keyMilestoneView (KeyMilestone name checkList deadline) =
+            let keyMilestoneView (KeyMilestone name checkList _deadline) =
                   li_
                     []
                     [ h3_ [class_ h3Cls] [text $ ms name],

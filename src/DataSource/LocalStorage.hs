@@ -35,15 +35,17 @@ cachedRequestWithLocalStorage (showp -> key) = do
   v <- (jsg "window" ! "localStorage") # "getItem" $ [pack key]
   isNull v >>= \case
     True -> pure . Left . toException . NotFound . pack $ key <> ": not found in localStorage"
-    False -> do
+    False ->
       fromJSVal v >>= \case
         Nothing -> do
           unexpected <- jsonStringify v
           pure . Left . internalErrorToException . UnexpectedType $ "impossible! LocalStorage " <> pack key <> ": returned non-string value " <> fromMisoString unexpected
-        Just txt ->
-          jsonParse txt >>= fromJSVal <&> \case
-            Nothing -> Left . logicBugToException . UnexpectedType $ "LocalStorage " <> pack key <> ": " <> fromMisoString txt
-            Just r -> Right r
+        Just str ->
+          jsonParse str
+            >>= fromJSVal
+            <&> \case
+              Nothing -> Left . internalErrorToException . JSONError $ "impossible! LocalStorage " <> pack key <> ": fail to parse, " <> fromMisoString str
+              Just r -> Right r
 
 saveCacheToLocalStorage :: HaxlDataCache u w -> IO ()
 saveCacheToLocalStorage (DataCache cache) = H.mapM_ goSubCache cache

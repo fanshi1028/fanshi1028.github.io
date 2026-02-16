@@ -31,6 +31,7 @@ flag prerender-wasm
 
 common lib
   build-depends:
+    aeson,
     async,
     base <5,
     base64,
@@ -45,6 +46,7 @@ common lib
     http-types,
     lens,
     miso,
+    miso-aeson,
     mtl,
     network-uri,
     retry,
