@@ -6,6 +6,7 @@ module DataSource.LocalStorage where
 
 import Control.Monad
 import Control.Monad.IO.Class
+import Data.Functor
 import Data.HashTable.IO qualified as H
 import Data.Hashable
 import Data.Text hiding (show)
@@ -29,7 +30,7 @@ showReqResultSerialised = (showp, fromMisoString . unsafePerformIO . (jsonString
 dataFetchWithSerialise :: forall u r a w. (DataSource u r, Hashable (r a), Typeable (r a), ShowP r, ToJSVal a) => r a -> GenHaxl u w a
 dataFetchWithSerialise = dataFetchWithShow showReqResultSerialised
 
-cachedRequestWithLocalStorage :: (ShowP r, FromJSON a) => r a -> IO (Either SomeException a)
+cachedRequestWithLocalStorage :: (ShowP r, FromJSVal a) => r a -> IO (Either SomeException a)
 cachedRequestWithLocalStorage (showp -> key) = do
   v <- (jsg "window" ! "localStorage") # "getItem" $ [pack key]
   isNull v >>= \case
@@ -39,9 +40,12 @@ cachedRequestWithLocalStorage (showp -> key) = do
         Nothing -> do
           unexpected <- jsonStringify v
           pure . Left . internalErrorToException . UnexpectedType $ "impossible! LocalStorage " <> pack key <> ": returned non-string value " <> fromMisoString unexpected
-        Just str -> pure $ case eitherDecode str of
-          Left err -> Left . internalErrorToException . UnexpectedType $ "LocalStorage " <> pack key <> ": " <> fromMisoString err <> ", " <> fromMisoString str
-          Right r -> Right r
+        Just str ->
+          jsonParse str
+            >>= fromJSVal
+            <&> \case
+              Nothing -> Left . internalErrorToException . JSONError $ "impossible! LocalStorage " <> pack key <> ": fail to parse, " <> fromMisoString str
+              Just r -> Right r
 
 saveCacheToLocalStorage :: HaxlDataCache u w -> IO ()
 saveCacheToLocalStorage (DataCache cache) = H.mapM_ goSubCache cache
@@ -62,7 +66,7 @@ saveCacheToLocalStorage (DataCache cache) = H.mapM_ goSubCache cache
         hm
 
 data LocalStorage req a where
-  FetchFromLocalStorage :: forall req a. (FromJSON a) => req a -> LocalStorage req a
+  FetchFromLocalStorage :: forall req a. (FromJSVal a) => req a -> LocalStorage req a
 
 deriving instance (Show (req a)) => Show (LocalStorage req a)
 
@@ -83,5 +87,5 @@ instance (DataSourceName req) => DataSourceName (LocalStorage req) where
 instance (DataSource u req) => DataSource u (LocalStorage req) where
   fetch = backgroundFetchPar $ \(FetchFromLocalStorage req) -> cachedRequestWithLocalStorage req
 
-fetchCacheable :: (Typeable a, FromJSON a, ToJSVal a, Request req a, DataSource u req, DataSource u (LocalStorage req)) => req a -> GenHaxl u w a
+fetchCacheable :: (Typeable a, FromJSVal a, ToJSVal a, Request req a, DataSource u req, DataSource u (LocalStorage req)) => req a -> GenHaxl u w a
 fetchCacheable req = uncachedRequest (FetchFromLocalStorage req) `catchAny` dataFetchWithSerialise req

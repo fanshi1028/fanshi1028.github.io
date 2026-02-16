@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -14,6 +15,7 @@ import Data.Time
 import Data.Time.Calendar.Julian
 import Data.Typeable
 import DataSource.LocalStorage
+import GHC.Generics
 import Haxl.Core hiding (throw)
 import Miso.DSL
 import Miso.JSON
@@ -84,7 +86,9 @@ instance DataSource u CommonSpatialDataInfrastructurePortalReq where
 getLatest15minUVIndexGeoJSON :: UTCTime -> GenHaxl u w JSVal
 getLatest15minUVIndexGeoJSON = fetchCacheable . GetLatest15minUVIndexGeoJSON . utcTimeToIntervalPeriod Proxy
 
-data UVIndexRecord = UVIndexRecord TimeData Double deriving (Show, Eq)
+data UVIndexRecord = UVIndexRecord TimeData Double
+  deriving stock (Show, Eq, Generic)
+  deriving anyclass (ToJSVal, FromJSVal)
 
 instance FromNamedRecord UVIndexRecord where
   parseNamedRecord m = do
@@ -137,10 +141,3 @@ instance FromJSON UVIndexRecord where
     UVIndexRecord
       <$> o .: "time"
       <*> o .: "record"
-
-instance ToJSVal UVIndexRecord where
-  toJSVal (UVIndexRecord t record') = do
-    o <- create
-    setProp "time" t o
-    setProp "record" record' o
-    toJSVal o

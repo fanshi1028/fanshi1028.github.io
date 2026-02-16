@@ -34,7 +34,7 @@ data LocalWeatherForecast = LocalWeatherForecast
     updateTime :: TimeData -- Update Time YYYY-MM-DD'T'hh:mm:ssZ Example: 2020-09-01T08:19:00+08:00
   }
   deriving stock (Eq, Show, Generic)
-  deriving anyclass (FromJSON, ToJSVal)
+  deriving anyclass (FromJSON, ToJSVal, FromJSVal)
 
 data SoilTemp = SoilTemp
   { place :: MisoString, -- location
@@ -42,7 +42,8 @@ data SoilTemp = SoilTemp
     recordTime :: TimeData, -- record time YYYY-MMDD'T'hh:mm:ssZ Example: 2020-09- 01T08:19:00+08:00
     depth :: Length Scientific
   }
-  deriving stock (Eq, Show)
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (ToJSVal, FromJSVal)
 
 instance FromJSON SoilTemp where
   parseJSON = withObject "SoilTemp" $ \o -> do
@@ -58,25 +59,13 @@ instance FromJSON SoilTemp where
           )
     pure $ SoilTemp place temp recordTime depth
 
-instance ToJSVal SoilTemp where
-  toJSVal (SoilTemp place value recordTime depth) = do
-    o <- create
-    setProp "place" place o
-    setProp "value" (toDegreeCelsiusAbsolute value) o
-    setProp @MisoString "unit" "C" o
-    setProp "recordTime" recordTime o
-    o_depth <- create
-    setProp "value" (depth /~ meter) o_depth
-    setProp @MisoString "unit" "meter" o_depth
-    setProp "depth" o_depth o
-    toJSVal o
-
 data SeaTemp = SeaTemp
   { place :: MisoString, -- location
     value :: ThermodynamicTemperature Scientific, -- value
     recordTime :: TimeData -- record time YYYY-MMDD'T'hh:mm:ssZ Example: 2020-09- 01T08:19:00+08:00
   }
-  deriving stock (Eq, Show)
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (ToJSVal, FromJSVal)
 
 instance FromJSON SeaTemp where
   parseJSON = withObject "SeaTemp" $ \o ->
@@ -84,15 +73,6 @@ instance FromJSON SeaTemp where
       <$> o .: "place"
       <*> parseJSON_DegreeCelsius (Object o)
       <*> o .: "recordTime"
-
-instance ToJSVal SeaTemp where
-  toJSVal (SeaTemp place value recordTime) = do
-    o <- create
-    setProp "place" place o
-    setProp "value" (toDegreeCelsiusAbsolute value) o
-    setProp @MisoString "unit" "C" o
-    setProp "recordTime" recordTime o
-    toJSVal o
 
 data WeatherForecast = WeatherForecast
   { forecastDate :: Day, -- Forecast Date YYYYMMDD
@@ -113,7 +93,8 @@ data WeatherForecast = WeatherForecast
     psr :: MisoString, -- TEMP FIXME
     forecastIcon :: Natural
   }
-  deriving stock (Eq, Show)
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (ToJSVal, FromJSVal)
 
 parseJSON_Unit :: (FromJSON a, Num a) => (MisoString -> (Either MisoString (Unit m d a))) -> Value -> Parser (Quantity d a)
 parseJSON_Unit parseUnit = withObject "value with unit" $ \v -> do
@@ -165,39 +146,6 @@ instance FromJSON WeatherForecast where
         psr
         forecastIcon
 
-instance ToJSVal WeatherForecast where
-  toJSVal (WeatherForecast {..}) = do
-    o <- create
-    setProp "forecastDate" (formatTime defaultTimeLocale "%Y%m%d" forecastDate) o
-    setProp "week" week o
-    setProp "forecastWind" forecastWind o
-    setProp "forecastWeather" forecastWeather o
-    setProp "ForecastIcon" forecastIcon o
-    case (lowerBound' forecastTempInterval, upperBound' forecastTempInterval) of
-      ((Finite lb, Closed), (Finite ub, Closed)) -> do
-        o_forecastMintemp <- create
-        setProp "value" (toDegreeCelsiusAbsolute lb) o_forecastMintemp
-        setProp @MisoString "unit" "C" o_forecastMintemp
-        setProp "forecastMintemp" o_forecastMintemp o
-        o_forecastMaxtemp <- create
-        setProp "value" (toDegreeCelsiusAbsolute ub) o_forecastMaxtemp
-        setProp @MisoString "unit" "C" o_forecastMaxtemp
-        setProp "forecastMaxtemp" o_forecastMaxtemp o
-      _ -> error "toJSVal WeatherForecast: unexpected forecast Temp interval"
-    case (lowerBound' forecastRHInterval, upperBound' forecastRHInterval) of
-      ((Finite lb, Closed), (Finite ub, Closed)) -> do
-        o_forecastMinRH <- create
-        setProp "value" (lb /~ percent) o_forecastMinRH
-        setProp @MisoString "unit" "percent" o_forecastMinRH
-        setProp "forecastMinrh" o_forecastMinRH o
-        o_forecastMaxRH <- create
-        setProp "value" (ub /~ percent) o_forecastMaxRH
-        setProp @MisoString "unit" "percent" o_forecastMaxRH
-        setProp "forecastMaxrh" o_forecastMaxRH o
-      _ -> error "toJSVal WeatherForecast: unexpected forecast rh interval"
-    setProp "PSR" psr o
-    toJSVal o
-
 data NineDayWeatherForecast = NineDayWeatherForecast
   { weatherForecast :: [WeatherForecast], -- Weather Forecast
     soilTemp :: [SoilTemp], -- Soil Temperature, NOTE: doc didn't say it is a list, but you know...
@@ -209,7 +157,7 @@ data NineDayWeatherForecast = NineDayWeatherForecast
     updateTime :: TimeData
   }
   deriving stock (Eq, Show, Generic)
-  deriving anyclass (FromJSON, ToJSVal)
+  deriving anyclass (FromJSON, ToJSVal, FromJSVal)
 
 data DataWithInterval a = DataWithInterval
   { --  Start Time YYYY-MM-DD'T'hh:mm:ssZ Example: 2020-09-01T08:19:00+08:00 endTime End Time
@@ -217,7 +165,7 @@ data DataWithInterval a = DataWithInterval
     interval :: Interval TimeData,
     _data :: [a]
   }
-  deriving stock (Eq, Show)
+  deriving stock (Eq, Show, Generic)
 
 instance (FromJSON a) => FromJSON (DataWithInterval a) where
   parseJSON = withObject "DataWithInterval" $ \o -> do
@@ -225,30 +173,24 @@ instance (FromJSON a) => FromJSON (DataWithInterval a) where
     t2 <- Finite <$> o .: "endTime"
     DataWithInterval (t1 <=..< t2) <$> o .: "data"
 
-instance (ToJSVal a) => ToJSVal (DataWithInterval a) where
-  toJSVal (DataWithInterval interval' d) = do
-    o <- create
-    case (lowerBound' interval', upperBound' interval') of
-      ((Finite lb, Closed), (Finite ub, Open)) -> do
-        setProp "startTime" lb o
-        setProp "endTime" ub o
-        setProp "data" d o
-        toJSVal o
-      _ -> error "unexpected DataWithInterval toJSON failed"
+deriving anyclass instance (ToJSVal a) => ToJSVal (DataWithInterval a)
+
+deriving anyclass instance (FromJSVal a) => FromJSVal (DataWithInterval a)
 
 data Lightning = Lightning
   { place :: MisoString, -- location
     occur :: Bool
   }
   deriving stock (Eq, Show, Generic)
-  deriving anyclass (FromJSON, ToJSVal)
+  deriving anyclass (FromJSON, ToJSVal, FromJSVal)
 
 data Rainfall = Rainfall
   { interval :: Interval (Length Scientific), -- Minimum & Maximum rainfall record
     place :: MisoString, -- location
     main :: Bool -- Maintenance flag (TRUE/FALSE)
   }
-  deriving stock (Eq, Show)
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (ToJSVal, FromJSVal)
 
 instance FromJSON Rainfall where
   parseJSON = withObject "Rainfall" $ \o -> do
@@ -273,24 +215,6 @@ instance FromJSON Rainfall where
         Nothing -> Finite $ 0 *~ unit
     pure $ Rainfall (min'' <=..<= max'') place main'
 
-instance ToJSVal Rainfall where
-  toJSVal (Rainfall interval' place main) = case (lowerBound' interval', upperBound' interval') of
-    ((lb, Closed), (ub, Closed)) -> do
-      o <- create
-      setProp "place" place o
-      setProp "main" main o
-      setProp @MisoString "unit" "mm" o
-      case lb of
-        Finite lb' -> setProp "min" (lb' /~ milli meter) o
-        NegInf -> pure ()
-        PosInf -> error "toJSVal: unexpected PosInf lower bound interval in Rainfall"
-      case ub of
-        Finite ub' -> setProp "max" (ub' /~ milli meter) o
-        NegInf -> error "toJSVal: unexpected NegInf upper bound interval in Rainfall"
-        PosInf -> pure ()
-      toJSVal o
-    (show -> unexpectd) -> error $ "toJSVal: unexpected interval in Rainfall " <> unexpectd
-
 data UVIndexData = UVIndexData
   { place :: MisoString, -- location
     value :: Scientific, -- value
@@ -298,13 +222,14 @@ data UVIndexData = UVIndexData
     message :: Maybe MisoString -- message
   }
   deriving stock (Show, Eq, Generic)
-  deriving anyclass (FromJSON, ToJSVal)
+  deriving anyclass (FromJSON, ToJSVal, FromJSVal)
 
 data UVIndex = UVIndex
   { _data :: [UVIndexData],
     recordDesc :: MisoString -- record description
   }
-  deriving stock (Show, Eq)
+  deriving stock (Show, Eq, Generic)
+  deriving anyclass (ToJSVal, FromJSVal)
 
 instance FromJSON UVIndex where
   parseJSON v =
@@ -317,52 +242,36 @@ instance FromJSON UVIndex where
       v
       <|> (withObject "UVIndex" $ \o -> UVIndex <$> o .: "data" <*> o .: "recordDesc") v
 
-instance ToJSVal UVIndex where
-  toJSVal (UVIndex _d recordDesc) = do
-    o <- create
-    setProp "data" _d o
-    setProp "recordDesc" recordDesc o
-    toJSVal o
-
 data DataWithRecordTime a = DataWithRecordTime
   { recordTime :: TimeData, -- record time YYYY-MMDD'T'hh:mm:ssZ Example: 2020-09- 01T08:19:00+08:00
     _data :: [a]
   }
-  deriving stock (Eq, Show)
+  deriving stock (Show, Eq, Generic)
+
+deriving anyclass instance (ToJSVal a) => (ToJSVal (DataWithRecordTime a))
+
+deriving anyclass instance (FromJSVal a) => (FromJSVal (DataWithRecordTime a))
 
 instance (FromJSON a) => FromJSON (DataWithRecordTime a) where
   parseJSON = withObject "DataWithRecordTime" $ \o ->
     DataWithRecordTime <$> o .: "recordTime" <*> o .: "data"
 
-instance (ToJSVal a) => ToJSVal (DataWithRecordTime a) where
-  toJSVal (DataWithRecordTime recordTime _d) = do
-    o <- create
-    setProp "recordTime" recordTime o
-    setProp "data" _d o
-    toJSVal o
-
 data Temperature = Temperature
   { place :: MisoString, -- location
     value :: ThermodynamicTemperature Scientific -- value
   }
-  deriving stock (Eq, Show)
+  deriving stock (Show, Eq, Generic)
+  deriving anyclass (ToJSVal, FromJSVal)
 
 instance FromJSON Temperature where
   parseJSON = withObject "Temperature" $ \o -> Temperature <$> o .: "place" <*> parseJSON_DegreeCelsius (Object o)
-
-instance ToJSVal Temperature where
-  toJSVal (Temperature place value) = do
-    o <- create
-    setProp "place" place o
-    setProp "value" (toDegreeCelsiusAbsolute value) o
-    setProp @MisoString "unit" "C" o
-    toJSVal o
 
 data Humidity = Humidity
   { place :: MisoString, -- location
     value :: Dimensionless Scientific -- value
   }
-  deriving stock (Eq, Show)
+  deriving stock (Show, Eq, Generic)
+  deriving anyclass (ToJSVal, FromJSVal)
 
 instance FromJSON Humidity where
   parseJSON = withObject "Humidity" $ \o -> do
@@ -375,14 +284,6 @@ instance FromJSON Humidity where
         )
         $ Object o
     pure $ Humidity place value
-
-instance ToJSVal Humidity where
-  toJSVal (Humidity place value) = do
-    o <- create
-    setProp "place" place o
-    setProp "value" (value /~ percent) o
-    setProp @MisoString "unit" "percent" o
-    toJSVal o
 
 data CurrentWeatherReport = CurrentWeatherReport
   { lightning :: Maybe (DataWithInterval Lightning),
@@ -402,7 +303,8 @@ data CurrentWeatherReport = CurrentWeatherReport
     temperature :: DataWithRecordTime Temperature, -- Temperature
     humidity :: DataWithRecordTime Humidity -- Humidity
   }
-  deriving stock (Eq, Show)
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (ToJSVal, FromJSVal)
 
 instance FromJSON CurrentWeatherReport where
   parseJSON = withObject "CurrentWeatherReport" $ \o -> do
@@ -450,24 +352,3 @@ instance FromJSON CurrentWeatherReport where
         rainfallJanuaryToLastMonth
         temperature
         humidity
-
-instance ToJSVal CurrentWeatherReport where
-  toJSVal (CurrentWeatherReport {..}) = do
-    o <- create
-    setProp "lightning" lightning o
-    setProp "rainfall" rainfall o
-    setProp "icon" icon o
-    setProp "iconUpdateTime" iconUpdateTime o
-    setProp "uvindex" uvindex o
-    setProp "updateTime" updateTime o
-    setProp "warningMessage" warningMessage o
-    setProp "rainstormReminder" rainstormReminder o
-    setProp "specialWxTips" specialWxTips o
-    setProp "tcmessage" tcmessage o
-    setProp "mintempFrom00To09" mintempFrom00To09 o
-    setProp "rainfallFrom00To12" rainfallFrom00To12 o
-    setProp "rainfallLastMonth" rainfallLastMonth o
-    setProp "rainfallJanuaryToLastMonth" rainfallJanuaryToLastMonth o
-    setProp "temperature" temperature o
-    setProp "humidity" humidity o
-    toJSVal o
