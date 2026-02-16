@@ -17,7 +17,7 @@ import DataSource.MisoRun
 import DataSource.SimpleFetch
 import Haxl.Core
 import Haxl.DataSource.ConcurrentIO
-import Miso hiding (consoleLog, consoleLog')
+import Miso
 import Miso.Lens hiding ((*~))
 import Miso.Navigator
 
