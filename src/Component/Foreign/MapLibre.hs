@@ -18,7 +18,6 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Reader
 import Data.Functor
-import Data.Void
 import Miso hiding (URI, get, (<#))
 import Miso.Html.Element
 import Miso.Html.Property
@@ -46,11 +45,16 @@ newtype MapLibre = MapLibre JSVal deriving newtype (ToJSVal, ToObject)
 mapLibreMVar :: MVar MapLibre
 mapLibreMVar = unsafePerformIO newEmptyMVar
 
-mapLibreComponent :: Component parent () Void
+data Action = CleanUpMapLibre
+
+mapLibreComponent :: Component parent () Action
 mapLibreComponent =
-  (component () absurd $ \_ -> div_ [id_ mapLibreId, class_ "h-full"] [])
+  ( component () (\CleanUpMapLibre -> io_ $ cleanUpMap) $
+      \() -> div_ [id_ mapLibreId, class_ "h-full"] []
+  )
     { scripts,
-      styles
+      styles,
+      unmount = Just CleanUpMapLibre
     }
   where
 #ifdef LOCALDEV

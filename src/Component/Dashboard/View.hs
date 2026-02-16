@@ -38,7 +38,6 @@ data Action
   = InitAction
   | FetchWeatherData
   | InitMapLibre
-  | CleanUpMapLibre
   | SetLocation Geolocation
   | SetCurrentWeatherReport CurrentWeatherReport
   | SetLocalWeatherForecast LocalWeatherForecast
@@ -327,10 +326,9 @@ viewModel (Model mELocation mCurrentWeatherReport mLocalWeatherForecast m9DayWea
     [class_ "flex flex-col gap-8 bg-neutral-600 text-neutral-200"]
     [ div_
         [ class_ $ case mELocation of
-            Just (Right _) -> "h-screen w-full"
+            Just (Right _) -> "h-4/5 w-full"
             _ -> "",
-          onCreated InitMapLibre,
-          onDestroyed CleanUpMapLibre
+          onCreated InitMapLibre
         ]
         ["mapLibreComponent" +> mapLibreComponent],
       -- case  errCode of

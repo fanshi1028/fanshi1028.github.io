@@ -17,7 +17,7 @@ import DataSource.MisoRun
 import DataSource.SimpleFetch
 import Haxl.Core
 import Haxl.DataSource.ConcurrentIO
-import Miso hiding (consoleLog, consoleLog')
+import Miso
 import Miso.Lens hiding ((*~))
 import Miso.Navigator
 
@@ -89,7 +89,6 @@ updateModel :: Action -> Effect parent Model Action
 updateModel = \case
   InitAction -> issue FetchWeatherData
   InitMapLibre -> io_ $ runMapLibre createMap
-  CleanUpMapLibre -> io_ cleanUpMap
   FetchWeatherData -> withSink fetchData
   SetLocation loc -> do
     io_ . runMapLibre $ addMarkerAndEaseToLocation loc

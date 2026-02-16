@@ -66,7 +66,7 @@ export const hard_surface_soccer_pitch_7 = {
         }
       })
     } else {
-      if (!map.getLayer(layer)) map.addLayer(layerCfg)
+      if (map.getLayer(layer) === undefined) map.addLayer(layerCfg)
       else map.removeLayer(layer)
     }
   },

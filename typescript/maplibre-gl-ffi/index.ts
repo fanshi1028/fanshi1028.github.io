@@ -48,7 +48,7 @@ const renderUVIndexGeoJSON = (
 ) => {
   if (typeof data !== 'string') {
     if (data.type == 'FeatureCollection') {
-      const hi = data.features[0]?.properties
+      // const hi = data.features[0]?.properties
       // Data_url : "https://data.weather.gov.hk/weatherAPI/hko_data/csdi/dataset/latest_15min_uvindex_csdi_0.csv"
       // GmlID : "latest_15min_uvindex.1"
       // OBJECTID : 1 Region_en : "Hong Kong"
