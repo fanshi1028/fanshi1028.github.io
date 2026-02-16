@@ -58,12 +58,14 @@ const renderUVIndexGeoJSON = (
       // gml_id : "latest_15min_uvindex.0"
     }
   }
-  map.addSource(id, { type: 'geojson', data }).addLayer({
-    id,
-    source: id,
-    type: 'line',
-    paint: { 'line-color': '#198EC8' },
-  })
+  if (map.getSource(id) == undefined) {
+    map.addSource(id, { type: 'geojson', data }).addLayer({
+      id,
+      source: id,
+      type: 'line',
+      paint: { 'line-color': '#198EC8' },
+    })
+  }
 }
 
 declare global {
