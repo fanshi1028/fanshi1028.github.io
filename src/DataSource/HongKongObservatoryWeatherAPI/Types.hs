@@ -222,7 +222,15 @@ data UVIndexData = UVIndexData
     message :: Maybe MisoString -- message
   }
   deriving stock (Show, Eq, Generic)
-  deriving anyclass (FromJSON, ToJSVal, FromJSVal)
+  deriving anyclass (ToJSVal, FromJSVal)
+
+instance FromJSON UVIndexData where
+  parseJSON = withObject "UVIndexData" $ \o ->
+    UVIndexData
+      <$> o .: "place"
+      <*> o .: "value"
+      <*> o .: "desc"
+      <*> o .:? "message"
 
 data UVIndex = UVIndex
   { _data :: [UVIndexData],
