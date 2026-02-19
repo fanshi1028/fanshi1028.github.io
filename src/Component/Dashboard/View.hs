@@ -73,12 +73,12 @@ viewCurrentWeatherReport
       temperature
       humidity
     ) =
-    div_ [class_ "flex flex-col gap-6"] $
-      [ div_ [class_ "flex flex-row gap-2"] $
-          [ h2_ [] ["Current Weather Report"],
-            p_ [] [text . ms $ "updated at " <> show (zonedTimeToLocalTime updateTime)]
+    div_ [class_ "flex flex-col items-center gap-6"] $
+      [ div_ [class_ "flex flex-col"] $
+          [ h2_ [class_ "peer text-lg"] ["Current Weather Report"],
+            p_ [class_ "peer-hover:visible invisible text-xs font-light"] [text . ms $ "updated at " <> show (zonedTimeToLocalTime updateTime)]
           ],
-        div_ [class_ "flex flex-col gap-3"] $
+        div_ [class_ "flex flex-col md:flex-row md:flex-wrap gap-3"] $
           [ case mLightning of
               Nothing -> div_ [class_ "hidden"] []
               Just (DataWithInterval lightningsInterval lightnings) ->
