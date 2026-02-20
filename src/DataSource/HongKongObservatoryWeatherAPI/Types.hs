@@ -23,7 +23,8 @@ import Numeric.Units.Dimensional
 import Numeric.Units.Dimensional.NonSI
 import Numeric.Units.Dimensional.SIUnits hiding (fromDegreeCelsiusAbsolute, toDegreeCelsiusAbsolute)
 import Utils.Dimensional
-import Utils.JSON
+import Utils.JSON ()
+import Utils.Time
 
 data LocalWeatherForecast = LocalWeatherForecast
   { generalSituation :: MisoString, -- General Situation

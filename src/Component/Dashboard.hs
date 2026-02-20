@@ -7,6 +7,7 @@ module Component.Dashboard (dashboardComponent) where
 import Component.Dashboard.View
 import Component.Foreign.MapLibre
 import Data.Function
+import Data.Time
 import DataSource.BrowserGeolocationAPI
 import DataSource.CommonSpatialDataInfrastructurePortal
 import DataSource.HongKongObservatoryWeatherAPI
@@ -32,6 +33,9 @@ haxlEnvflags =
 
 location :: Lens Model (Maybe (Either GeolocationError Geolocation))
 location = lens _location $ \record x -> record {_location = x}
+
+time :: Lens Model (Maybe UTCTime)
+time = lens _time $ \record x -> record {_time = x}
 
 currentWeatherReport :: Lens Model (Maybe CurrentWeatherReport)
 currentWeatherReport = lens _currentWeatherReport $ \record x -> record {_currentWeatherReport = x}
@@ -65,6 +69,7 @@ fetchData sink = do
 
   _ <- runHaxl (env' {flags = haxlEnvflags}) $ do
     t <- uncachedRequest GetCurrentTime
+    misoRunAction $ SetCurrentTime t
 
     getLocalWeatherForecast t >>= misoRunAction . SetLocalWeatherForecast
 
@@ -93,6 +98,7 @@ updateModel = \case
   SetLocation loc -> do
     io_ . runMapLibre $ addMarkerAndEaseToLocation loc
     location .= Just (Right loc)
+  SetCurrentTime t -> time .= Just t
   SetLocalWeatherForecast w -> localWeatherForecast .= Just w
   SetCurrentWeatherReport w -> currentWeatherReport .= Just w
   Set9DayWeatherForecast w -> nineDayWeatherForecast .= Just w

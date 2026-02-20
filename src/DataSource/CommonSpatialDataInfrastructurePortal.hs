@@ -21,6 +21,7 @@ import Text.XML.Light
 import Utils.Haxl
 import Utils.IntervalPeriod
 import Utils.JSON ()
+import Utils.Time
 
 -- NOTE: CSDI Portal API
 data CommonSpatialDataInfrastructurePortalReq a where
