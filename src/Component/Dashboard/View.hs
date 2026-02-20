@@ -120,28 +120,28 @@ viewCurrentWeatherReport
           ]
       ]
     where
-      viewUVIndex (UVIndex [] desc) = div_ [class_ "hidden"] [text $ ms desc]
-      viewUVIndex (UVIndex _data desc) =
+      viewUVIndex NoUVIndexData = div_ [class_ "hidden"] ["No uvindex data"]
+      viewUVIndex (UVIndex _data) =
         div_ [] $
           [ h3_ [class_ "sr-only"] ["UV Index"],
             div_ [] $
-              [ p_ [] [text $ ms desc],
-                ul_ [] $
+              [ ul_ [] $
                   foldl'
-                    ( \acc -> \(UVIndexData place value desc' mMessage) ->
-                        li_
-                          [class_ "flex flex-col gap-2"]
-                          [ div_
-                              [class_ "flex flex-row gap-2"]
-                              [ label_ [] [text $ ms place],
-                                div_ [] [text . ms $ show value],
-                                div_ [] [text $ ms desc']
-                              ],
-                            div_ [] $ case mMessage of
-                              Nothing -> []
-                              Just message -> [text $ ms message]
-                          ]
-                          : acc
+                    ( \acc -> \case
+                        UVIndexData place value desc' mMessage ->
+                          li_
+                            [class_ "flex flex-col gap-2"]
+                            [ div_
+                                [class_ "flex flex-row gap-2"]
+                                [ label_ [] [text $ ms place],
+                                  div_ [] [text . ms $ show value],
+                                  div_ [] [text $ ms desc']
+                                ],
+                              div_ [] $ case mMessage of
+                                Nothing -> []
+                                Just message -> [text $ ms message]
+                            ]
+                            : acc
                     )
                     []
                     _data

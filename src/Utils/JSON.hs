@@ -11,6 +11,7 @@ import Data.Aeson.Types qualified as Aeson
 import Data.Function
 import Data.Functor
 import Data.Interval
+import Data.List.NonEmpty
 import Data.Scientific
 import Data.Text (toLower)
 import Data.Time
@@ -83,6 +84,18 @@ instance (FromJSVal a) => FromJSVal (V.Vector a) where
 
 instance (ToJSVal a) => ToJSVal (V.Vector a) where
   toJSVal = toJSVal . V.toList
+
+instance (FromJSVal a) => FromJSVal (NonEmpty a) where
+  fromJSVal v = (>>= nonEmpty) <$> fromJSVal v
+
+instance (ToJSVal a) => ToJSVal (NonEmpty a) where
+  toJSVal = toJSVal . toList
+
+instance (FromJSON a) => FromJSON (NonEmpty a) where
+  parseJSON v =
+    nonEmpty <$> parseJSON v >>= \case
+      Nothing -> typeMismatch "non empty list" v
+      Just r -> pure r
 
 instance ToJSVal Natural where
   toJSVal = toJSVal @Int . fromIntegral
