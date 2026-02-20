@@ -56,7 +56,6 @@ common lib
     unliftio,
     validation-selective,
     vector,
-    xml,
 
   hs-source-dirs:
     src
