@@ -233,7 +233,7 @@ instance FromJSON UVIndexData where
       <*> o .: "desc"
       <*> o .:? "message"
 
-data UVIndex = NoUVIndexData | UVIndex (NonEmpty UVIndexData)
+data UVIndex = UVIndex (NonEmpty UVIndexData) | NoUVIndexData
   deriving stock (Show, Eq, Generic)
   deriving anyclass (ToJSVal, FromJSVal)
 
