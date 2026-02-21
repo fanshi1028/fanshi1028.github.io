@@ -1,32 +1,27 @@
-module Utils.Haxl where
+module Utils.Haxl
+  ( renderQueryToString,
+    fetchGetJSON,
+    fetchGetText,
+    fetchGetCSV,
+  )
+where
 
 import Control.Concurrent
 import Control.Exception (Exception (toException), SomeException)
 import Control.Monad
-import Data.ByteString.Builder
 import Data.ByteString.Lazy qualified as BSL (fromStrict)
 import Data.Csv
 import Data.Functor
-import Data.Text hiding (concat, elem, foldl', foldr, reverse, show)
-import Data.Text qualified as T
-import Data.Text.Encoding as T
-import Data.Text.Lazy (toStrict)
-import Data.Text.Lazy.Encoding as TL
+import Data.Text (intercalate, pack, unpack)
+import Data.Text qualified as T (show)
+import Data.Text.Encoding
 import Data.Typeable
 import Data.Vector hiding (create, forM_, (!))
 import Haxl.Core hiding (fetch)
-import Haxl.Core.Monad
 import Miso hiding (Decoder, URI, consoleLog, defaultOptions, fetch, go, on)
-import Miso.FFI qualified as FFI (consoleLog)
 import Miso.JSON hiding (Object, decode)
 import Network.HTTP.Types hiding (Header)
 import Network.URI
-
-consoleLog :: MisoString -> GenHaxl u w ()
-consoleLog = unsafeLiftIO . FFI.consoleLog
-
-consoleLog' :: (ToJSON v) => v -> GenHaxl u w ()
-consoleLog' = consoleLog . encodePretty
 
 failedResponseToException :: Response MisoString -> SomeException
 failedResponseToException = \case
@@ -136,7 +131,7 @@ fetchGetCSV :: (FromRecord a) => Proxy a -> HasHeader -> URI -> IO (Either SomeE
 fetchGetCSV _ hasHeader uri =
   fetchIO Proxy [accept =: ms "text/csv"] TEXT GET uri <&> \case
     Left err -> Left err
-    Right txt -> case decode hasHeader . BSL.fromStrict $ T.encodeUtf8 $ fromMisoString txt of
+    Right txt -> case decode hasHeader . BSL.fromStrict $ encodeUtf8 $ fromMisoString txt of
       Left err -> Left . toException . MonadFail $ pack err
       Right r -> Right r
 
@@ -144,10 +139,9 @@ fetchGetCSVNamed :: (FromNamedRecord a) => Proxy a -> URI -> IO (Either SomeExce
 fetchGetCSVNamed _ uri =
   fetchIO Proxy [accept =: ms "text/csv"] TEXT GET uri <&> \case
     Left err -> Left err
-    Right txt -> case decodeByName . BSL.fromStrict . T.encodeUtf8 $ fromMisoString txt of
+    Right txt -> case decodeByName . BSL.fromStrict . encodeUtf8 $ fromMisoString txt of
       Left err -> Left . toException . MonadFail $ pack err
       Right r -> Right r
 
-
-renderQueryTextToString :: QueryText -> String
-renderQueryTextToString = unpack . toStrict . TL.decodeUtf8 . toLazyByteString . renderQueryText True
+renderQueryToString :: (QueryLike q) => q -> String
+renderQueryToString = unpack . decodeUtf8 . renderQuery True . toQuery

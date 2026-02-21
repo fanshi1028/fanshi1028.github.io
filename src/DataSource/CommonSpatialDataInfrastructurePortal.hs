@@ -16,7 +16,6 @@ import Haxl.Core hiding (throw)
 import Miso.DSL
 import Miso.JSON
 import Network.URI
-import Network.URI.Static
 import Utils.Haxl
 import Utils.IntervalPeriod
 import Utils.JSON ()
@@ -46,21 +45,19 @@ instance DataSourceName CommonSpatialDataInfrastructurePortalReq where
 
 csdiPortalReqToURI :: CommonSpatialDataInfrastructurePortalReq a -> URI
 csdiPortalReqToURI =
-  let commonURI =
-        [uri|https://portal.csdi.gov.hk/server/services/common|]
-      commonQuery = [("service", Just "wfs"), ("request", Just "GetFeature"), ("outputFormat", Just "geojson")]
+  let commonQuery :: [(StrictText, StrictText)] = [("service", "wfs"), ("request", "GetFeature"), ("outputFormat", "geojson")]
+      mkURIHelper dataId query' =
+        nullURI
+          { uriScheme = "https:",
+            uriAuthority = Just $ nullURIAuth {uriRegName = "portal.csdi.gov.hk"},
+            uriPath = "/server/services/common/" <> dataId <> "/MapServer/WFSServer",
+            uriQuery = renderQueryToString $ commonQuery <> query'
+          }
    in \case
         GetLatest15minUVIndexGeoJSON _ ->
-          [relativeReference|/hko_rcd_1634894904080_80327/MapServer/WFSServer|]
-            `relativeTo` commonURI
-              { uriQuery =
-                  renderQueryTextToString $ commonQuery <> [("typenames", Just "latest_15min_uvindex"), ("count", Just "25")]
-              }
+          mkURIHelper "hko_rcd_1634894904080_80327" [("typenames", "latest_15min_uvindex"), ("count", "25")]
         GetDistrictBoundary _ ->
-          [relativeReference|/had_rcd_1634523272907_75218/MapServer/WFSServer|]
-            `relativeTo` commonURI
-              { uriQuery = renderQueryTextToString $ commonQuery <> [("typenames", Just "DCD"), ("count", Just "50")]
-              }
+          mkURIHelper "had_rcd_1634523272907_75218" [("typenames", "DCD"), ("count", "50")]
 
 instance DataSource u CommonSpatialDataInfrastructurePortalReq where
   fetch =
