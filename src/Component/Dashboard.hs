@@ -75,7 +75,10 @@ fetchData sink = do
 
     get9DayWeatherForecast t >>= misoRunAction . Set9DayWeatherForecast
 
-    uncachedRequest GetCurrentPosition >>= misoRunAction . SetLocation
+    loc <- uncachedRequest GetCurrentPosition
+    misoRunAction $ SetLocation loc
+
+    getDistrictByLocation loc
 
     getDistrictBoundary t >>= misoRunAction . AddGeoJSON DistrictBoundary
 

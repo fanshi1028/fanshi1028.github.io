@@ -15,7 +15,9 @@ import GHC.Generics
 import Haxl.Core hiding (throw)
 import Miso.DSL
 import Miso.JSON
+import Miso.Navigator
 import Network.URI
+import Text.XML.Light
 import Utils.Haxl
 import Utils.IntervalPeriod
 import Utils.JSON ()
@@ -25,6 +27,7 @@ import Utils.Time
 data CommonSpatialDataInfrastructurePortalReq a where
   GetLatest15minUVIndexGeoJSON :: IntervalPeriod 15 -> CommonSpatialDataInfrastructurePortalReq JSVal
   GetDistrictBoundary :: IntervalPeriod 1440 -> CommonSpatialDataInfrastructurePortalReq JSVal
+  GetDistrictByLocation :: Geolocation -> CommonSpatialDataInfrastructurePortalReq JSVal
 
 deriving instance Eq (CommonSpatialDataInfrastructurePortalReq a)
 
@@ -32,6 +35,7 @@ instance Hashable (CommonSpatialDataInfrastructurePortalReq a) where
   hashWithSalt s req = hashWithSalt @Int s $ case req of
     GetLatest15minUVIndexGeoJSON p -> 1 `hashWithSalt` p
     GetDistrictBoundary p -> 2 `hashWithSalt` p
+    GetDistrictByLocation (Geolocation lat lon acc) -> 3 `hashWithSalt` lat `hashWithSalt` lon `hashWithSalt` acc
 
 deriving instance Show (CommonSpatialDataInfrastructurePortalReq a)
 
@@ -45,7 +49,12 @@ instance DataSourceName CommonSpatialDataInfrastructurePortalReq where
 
 csdiPortalReqToURI :: CommonSpatialDataInfrastructurePortalReq a -> URI
 csdiPortalReqToURI =
-  let commonQuery :: [(StrictText, StrictText)] = [("service", "wfs"), ("request", "GetFeature"), ("outputFormat", "geojson")]
+  let commonQuery :: [(StrictText, StrictText)] =
+        [ ("service", "wfs"),
+          ("request", "GetFeature"),
+          ("outputFormat", "geojson"),
+          ("srsName", "EPSG:4326")
+        ]
       mkURIHelper dataId query' =
         nullURI
           { uriScheme = "https:",
@@ -57,7 +66,23 @@ csdiPortalReqToURI =
         GetLatest15minUVIndexGeoJSON _ ->
           mkURIHelper "hko_rcd_1634894904080_80327" [("typenames", "latest_15min_uvindex"), ("count", "25")]
         GetDistrictBoundary _ ->
-          mkURIHelper "had_rcd_1634523272907_75218" [("typenames", "DCD"), ("count", "50")]
+          mkURIHelper "had_rcd_1634523272907_75218" [("typenames", "DCD"), ("count", "25")]
+        GetDistrictByLocation (Geolocation lat lon _) ->
+          mkURIHelper
+            "had_rcd_1634523272907_75218"
+            [ ("typenames", "DCD"),
+              ("count", "2"),
+              ( "filter",
+                pack . showElement $
+                  unode "Filter" $
+                    [ unode "Contains" $
+                        [ unode "gml:Point" $
+                            unode "gml:coordinates" $
+                              show lat <> "," <> show lon
+                        ]
+                    ]
+              )
+            ]
 
 instance DataSource u CommonSpatialDataInfrastructurePortalReq where
   fetch =
@@ -67,12 +92,16 @@ instance DataSource u CommonSpatialDataInfrastructurePortalReq where
       \req -> case req of
         GetLatest15minUVIndexGeoJSON _ -> fetchGetJSON Proxy $ csdiPortalReqToURI req
         GetDistrictBoundary _ -> fetchGetJSON Proxy $ csdiPortalReqToURI req
+        GetDistrictByLocation _ -> fetchGetJSON Proxy $ csdiPortalReqToURI req
 
 getLatest15minUVIndexGeoJSON :: UTCTime -> GenHaxl u w JSVal
 getLatest15minUVIndexGeoJSON = fetchCacheable . GetLatest15minUVIndexGeoJSON . utcTimeToIntervalPeriod Proxy
 
 getDistrictBoundary :: UTCTime -> GenHaxl u w JSVal
 getDistrictBoundary = fetchCacheable . GetDistrictBoundary . utcTimeToIntervalPeriod Proxy
+
+getDistrictByLocation :: Geolocation -> GenHaxl u w JSVal
+getDistrictByLocation = dataFetch . GetDistrictByLocation
 
 data UVIndexRecord = UVIndexRecord TimeData Double
   deriving stock (Show, Eq, Generic)
