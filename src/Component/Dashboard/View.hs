@@ -24,6 +24,9 @@ import Utils.Time
 import View.SVG.LoadSpinner
 import Prelude hiding (show)
 
+data GeoJSONDataId = Latest15minUVIndex | DistrictBoundary
+  deriving stock (Eq, Show)
+
 data Model
   = Model
   { _time :: Maybe UTCTime,
@@ -45,7 +48,7 @@ data Action
   | SetCurrentWeatherReport CurrentWeatherReport
   | SetLocalWeatherForecast LocalWeatherForecast
   | Set9DayWeatherForecast NineDayWeatherForecast
-  | SetLatest15minUVIndexGeoJSON JSVal
+  | AddGeoJSON GeoJSONDataId JSVal
   | SetDisplayTemperature Bool
   | SetDisplayRainfall Bool
   | ToggleDisplayHardSurfaceSoccerPitch7

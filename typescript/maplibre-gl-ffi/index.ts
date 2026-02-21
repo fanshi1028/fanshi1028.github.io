@@ -41,7 +41,7 @@ const getDataURI = (
   }
 }
 
-const renderUVIndexGeoJSON = (
+const addAndRenderGeoJSON = (
   map: Map,
   id: string,
   data: GeoJSONSourceSpecification['data']
@@ -73,7 +73,7 @@ declare global {
 globalThis.maplibregl_ffi = {
   createMap,
   addMarkerAndEaseToLocation,
-  renderUVIndexGeoJSON,
+  addAndRenderGeoJSON,
   getDataURI,
   hard_surface_soccer_pitch_7,
 }

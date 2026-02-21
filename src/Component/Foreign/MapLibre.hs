@@ -126,7 +126,7 @@ addGeoJSONSource sourceId v = do
   mapLibreLib <- ask
   void . liftIO $ do
     mapLibre <- readMVar mapLibreMVar
-    mapLibreLib # "renderUVIndexGeoJSON" $ (mapLibre, sourceId, v)
+    mapLibreLib # "addAndRenderGeoJSON" $ (mapLibre, sourceId, v)
 
 data LngLat = LngLat (Quantity DPlaneAngle Double) (Quantity DPlaneAngle Double)
   deriving stock (Show)

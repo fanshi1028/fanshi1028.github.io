@@ -77,14 +77,15 @@ fetchData sink = do
 
     uncachedRequest GetCurrentPosition >>= misoRunAction . SetLocation
 
+    getDistrictBoundary t >>= misoRunAction . AddGeoJSON DistrictBoundary
+
     getCurrentWeatherReport t >>= misoRunAction . SetCurrentWeatherReport
 
     uncachedRequest $ GetWeatherWarningSummary t
     uncachedRequest $ GetWeatherWarningInfo t
 
-    geoJSON <- getLatest15minUVIndexGeoJSON t
-
-    misoRunAction $ SetLatest15minUVIndexGeoJSON geoJSON
+    getLatest15minUVIndexGeoJSON t
+      >>= misoRunAction . AddGeoJSON Latest15minUVIndex
 
     uncachedRequest $ GetSpecialWeatherTips t
 
@@ -104,7 +105,7 @@ updateModel = \case
   Set9DayWeatherForecast w -> nineDayWeatherForecast .= Just w
   SetDisplayTemperature b -> displayTemperature .= b
   SetDisplayRainfall b -> displayRainfall .= b
-  SetLatest15minUVIndexGeoJSON geoJSON -> io_ . runMapLibre $ addGeoJSONSource (ms "latest15minUVIndex") geoJSON
+  AddGeoJSON dataId geoJSON -> io_ . runMapLibre $ addGeoJSONSource (ms $ show dataId) geoJSON
   ToggleDisplayHardSurfaceSoccerPitch7 -> io_ . runMapLibre $ toggle_hssp7
 
 dashboardComponent :: Component parent Model Action
