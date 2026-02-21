@@ -11,6 +11,7 @@ module DataSource.HongKongObservatoryWeatherAPI.Types where
 import Control.Applicative
 import Data.Functor
 import Data.Interval
+import Data.List.NonEmpty
 import Data.Scientific
 import Data.Time
 import GHC.Generics
@@ -22,7 +23,8 @@ import Numeric.Units.Dimensional
 import Numeric.Units.Dimensional.NonSI
 import Numeric.Units.Dimensional.SIUnits hiding (fromDegreeCelsiusAbsolute, toDegreeCelsiusAbsolute)
 import Utils.Dimensional
-import Utils.JSON
+import Utils.JSON ()
+import Utils.Time
 
 data LocalWeatherForecast = LocalWeatherForecast
   { generalSituation :: MisoString, -- General Situation
@@ -232,23 +234,26 @@ instance FromJSON UVIndexData where
       <*> o .: "desc"
       <*> o .:? "message"
 
-data UVIndex = UVIndex
-  { _data :: [UVIndexData],
-    recordDesc :: MisoString -- record description
-  }
+data UVIndex = UVIndex (NonEmpty UVIndexData) | NoUVIndexData
   deriving stock (Show, Eq, Generic)
   deriving anyclass (ToJSVal, FromJSVal)
 
 instance FromJSON UVIndex where
   parseJSON v =
-    ( withText "UVIndex" $
-        -- NOTE: it just return empty string at night!! not mentioned in doc, so nice!
-        \case
-          "" -> pure $ UVIndex [] "nighttime no uv!"
-          t -> typeMismatch "empty string" $ String t
+    ( withObject "UVIndex" $ \o -> do
+        o .: "recordDesc" >>= \case
+          "During the past hour" -> UVIndex <$> o .: "data"
+          -- NOTE: Seems like the text is always "During the past hour"
+          txt -> typeMismatch "string (During the past hour)" $ String txt
     )
       v
-      <|> (withObject "UVIndex" $ \o -> UVIndex <$> o .: "data" <*> o .: "recordDesc") v
+      <|> ( withText "UVIndex" $
+              -- NOTE: it just return empty string at night!! not mentioned in doc, so nice!
+              \case
+                "" -> pure NoUVIndexData
+                t -> typeMismatch "empty string" $ String t
+          )
+        v
 
 data DataWithRecordTime a = DataWithRecordTime
   { recordTime :: TimeData, -- record time YYYY-MMDD'T'hh:mm:ssZ Example: 2020-09- 01T08:19:00+08:00

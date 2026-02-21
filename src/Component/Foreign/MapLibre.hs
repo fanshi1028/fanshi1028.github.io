@@ -8,7 +8,8 @@ module Component.Foreign.MapLibre
     cleanUpMap,
     runMapLibre,
     addMarkerAndEaseToLocation,
-    addGeoJSONSource,
+    addDistrictBoudaryLayer,
+    focusDistrict,
     toggle_hssp7,
   )
 where
@@ -18,6 +19,7 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Reader
 import Data.Functor
+import Data.Text
 import Miso hiding (URI, get, (<#))
 import Miso.Html.Element
 import Miso.Html.Property
@@ -41,6 +43,9 @@ mapLibreId = "mapLibreId-14yMVNtDA3GBoGwMHBcDu5bhKUHu/9gcFx41dNF+2Zg="
 newtype MapLibreLib = MapLibreLib JSVal deriving newtype (ToJSVal, ToObject)
 
 newtype MapLibre = MapLibre JSVal deriving newtype (ToJSVal, ToObject)
+
+mapLibreLibMVar :: MVar MapLibreLib
+mapLibreLibMVar = unsafePerformIO newEmptyMVar
 
 mapLibreMVar :: MVar MapLibre
 mapLibreMVar = unsafePerformIO newEmptyMVar
@@ -83,7 +88,6 @@ addMarkerAndEaseToLocation (geolocationToLngLat -> loc) = do
 
 runMapLibre :: ReaderT MapLibreLib IO a -> IO a
 runMapLibre m = do
-  mapLibreLibMVar <- newEmptyMVar
   mapLibreLib <-
     tryReadMVar mapLibreLibMVar >>= \case
       Just r -> pure r
@@ -121,12 +125,21 @@ cleanUpMap =
     Just mapLibre -> void $ mapLibre # "remove" $ ()
     Nothing -> consoleWarn "cleanUpMap: no map to be cleaned up"
 
-addGeoJSONSource :: (ToJSVal a) => MisoString -> a -> ReaderT MapLibreLib IO ()
-addGeoJSONSource sourceId v = do
+addDistrictBoudaryLayer :: JSVal -> ReaderT MapLibreLib IO ()
+addDistrictBoudaryLayer geoJSON = do
   mapLibreLib <- ask
   void . liftIO $ do
     mapLibre <- readMVar mapLibreMVar
-    mapLibreLib # "renderUVIndexGeoJSON" $ (mapLibre, sourceId, v)
+    mapLibreLib # "addDistrictBoudaryLayer" $ (mapLibre, geoJSON)
+
+focusDistrict :: Either StrictText JSVal -> ReaderT MapLibreLib IO ()
+focusDistrict toFocus = do
+  mapLibreLib <- ask
+  void . liftIO $ do
+    mapLibre <- readMVar mapLibreMVar
+    case toFocus of
+      Left areaCode -> mapLibreLib # "focusDistrict" $ (mapLibre, areaCode)
+      Right geoJSON -> mapLibreLib # "focusDistrictByGeoJSON" $ (mapLibre, geoJSON)
 
 data LngLat = LngLat (Quantity DPlaneAngle Double) (Quantity DPlaneAngle Double)
   deriving stock (Show)

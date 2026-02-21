@@ -8,40 +8,20 @@ module Utils.JSON where
 
 import Data.Aeson qualified as Aeson
 import Data.Aeson.Types qualified as Aeson
-import Data.Function
 import Data.Functor
 import Data.Interval
+import Data.List.NonEmpty
 import Data.Scientific
 import Data.Text (toLower)
 import Data.Time
-import Data.Time.Format.ISO8601
 import Data.Vector qualified as V
 import Miso.Aeson
 import Miso.DSL hiding (Object)
 import Miso.JSON
-import Miso.String (MisoString, fromMisoString, ms)
+import Miso.String (fromMisoString, ms)
 import Numeric.Natural
 import Numeric.Units.Dimensional
 import System.IO.Unsafe
-import Utils.Dimensional
-
-newtype TimeData = TimeData ZonedTime
-  deriving (Show)
-
-instance Eq TimeData where
-  (==) (TimeData a) (TimeData b) = ((==) `on` zonedTimeToUTC) a b
-
-instance Ord TimeData where
-  compare (TimeData a) (TimeData b) = (compare `on` zonedTimeToUTC) a b
-
-instance FromJSON TimeData where
-  parseJSON v = TimeData <$> withText "TimeData" (iso8601ParseM . fromMisoString) v
-
-instance ToJSVal TimeData where
-  toJSVal (TimeData zt) = toJSVal $ iso8601Show zt
-
-instance FromJSVal TimeData where
-  fromJSVal v = (>>= (fmap TimeData . iso8601ParseM . fromMisoString)) <$> fromJSVal v
 
 instance FromJSON DayOfWeek where
   parseJSON = withText "DayOfWeek" $ \t -> case toLower $ fromMisoString t of
@@ -74,15 +54,29 @@ instance ToJSVal Scientific where
 instance FromJSVal Scientific where
   fromJSVal v = (>>= (Aeson.parseMaybe Aeson.parseJSON . jsonToAeson)) <$> fromJSVal_Value v
 
--- NOTE: HACK TEMP FIXME
+-- NOTE: was Hacking it like: fromMisoString . unsafePerformIO . jsonStringify
+-- But it is too heavy for some sized objects
+-- NOTE: never cached request with any JSVal as input!
 instance Show JSVal where
-  show = fromMisoString . unsafePerformIO . jsonStringify
+  show _ = "JSVal"
 
 instance (FromJSVal a) => FromJSVal (V.Vector a) where
   fromJSVal v = fmap V.fromList <$> fromJSVal v
 
 instance (ToJSVal a) => ToJSVal (V.Vector a) where
   toJSVal = toJSVal . V.toList
+
+instance (FromJSVal a) => FromJSVal (NonEmpty a) where
+  fromJSVal v = (>>= nonEmpty) <$> fromJSVal v
+
+instance (ToJSVal a) => ToJSVal (NonEmpty a) where
+  toJSVal = toJSVal . toList
+
+instance (FromJSON a) => FromJSON (NonEmpty a) where
+  parseJSON v =
+    nonEmpty <$> parseJSON v >>= \case
+      Nothing -> typeMismatch "non empty list" v
+      Just r -> pure r
 
 instance ToJSVal Natural where
   toJSVal = toJSVal @Int . fromIntegral

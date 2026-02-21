@@ -52,9 +52,9 @@ hkoWeatherInformationReqToURI :: HKOWeatherInformationReq a -> URI
 hkoWeatherInformationReqToURI req =
   [uri|https://data.weather.gov.hk/weatherAPI/opendata/weather.php|]
     { uriQuery =
-        renderQueryTextToString
+        renderQueryToString
           [ ( pack "dataType",
-              Just . pack $ case req of
+              pack $ case req of
                 GetLocalWeatherForecast _ -> "flw"
                 Get9DayWeatherForecast _ -> "fnd"
                 GetCurrentWeatherReport _ -> "rhrread"

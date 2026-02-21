@@ -6,35 +6,36 @@
 -- NOTE: https://www.hko.gov.hk/en/abouthko/opendata_intro.htm
 module DataSource.CommonSpatialDataInfrastructurePortal where
 
-import Data.Csv hiding (decode, encode, lookup, (.:))
-import Data.Csv qualified as CSV ((.:))
 import Data.Hashable
 import Data.Text hiding (show)
-import Data.Text.Read
 import Data.Time
-import Data.Time.Calendar.Julian
 import Data.Typeable
 import DataSource.LocalStorage
 import GHC.Generics
 import Haxl.Core hiding (throw)
 import Miso.DSL
 import Miso.JSON
+import Miso.Navigator
 import Network.URI
-import Network.URI.Static
 import Text.XML.Light
 import Utils.Haxl
 import Utils.IntervalPeriod
-import Utils.JSON
+import Utils.JSON ()
+import Utils.Time
 
 -- NOTE: CSDI Portal API
 data CommonSpatialDataInfrastructurePortalReq a where
   GetLatest15minUVIndexGeoJSON :: IntervalPeriod 15 -> CommonSpatialDataInfrastructurePortalReq JSVal
+  GetDistrictBoundary :: IntervalPeriod 1440 -> CommonSpatialDataInfrastructurePortalReq JSVal
+  GetDistrictByLocation :: Geolocation -> CommonSpatialDataInfrastructurePortalReq JSVal
 
 deriving instance Eq (CommonSpatialDataInfrastructurePortalReq a)
 
 instance Hashable (CommonSpatialDataInfrastructurePortalReq a) where
   hashWithSalt s req = hashWithSalt @Int s $ case req of
     GetLatest15minUVIndexGeoJSON p -> 1 `hashWithSalt` p
+    GetDistrictBoundary p -> 2 `hashWithSalt` p
+    GetDistrictByLocation (Geolocation lat lon acc) -> 3 `hashWithSalt` lat `hashWithSalt` lon `hashWithSalt` acc
 
 deriving instance Show (CommonSpatialDataInfrastructurePortalReq a)
 
@@ -47,33 +48,41 @@ instance DataSourceName CommonSpatialDataInfrastructurePortalReq where
   dataSourceName _ = pack "CSDI Portal API"
 
 csdiPortalReqToURI :: CommonSpatialDataInfrastructurePortalReq a -> URI
-csdiPortalReqToURI (GetLatest15minUVIndexGeoJSON _) =
-  [uri|https://portal.csdi.gov.hk/server/services/common/hko_rcd_1634894904080_80327/MapServer/WFSServer|]
-    { uriQuery =
-        renderQueryTextToString
-          [ ("service", Just "wfs"),
-            ("request", Just "GetFeature"),
-            ("typenames", Just "latest_15min_uvindex"),
-            ("outputFormat", Just "geojson"),
-            ("maxFeatures", Just "10"),
-            ("srsName", Just "EPSG:4326"),
-            ( "filter",
-              Just . pack . showElement $
-                -- "<Filter><Intersects><PropertyName>SHAPE</PropertyName><gml:Envelope srsName='EPSG:4326'><gml:lowerCorner>22.15 113.81</gml:lowerCorner><gml:upperCorner>22.62 114.45</gml:upperCorner></gml:Envelope></Intersects></Filter>"
-                unode "Filter" $
-                  [ unode "Intersects" $
-                      [ unode @String "PropertyName" "SHAPE",
-                        unode "gml:Envelope" $
-                          ( [Attr (unqual "srsName") "EPSG:4326"],
-                            [ unode @String "gml:lowerCorner" "22.15 113.81",
-                              unode @String "gml:upperCorner" "22.62 114.45"
-                            ]
-                          )
-                      ]
-                  ]
-            )
-          ]
-    }
+csdiPortalReqToURI =
+  let commonQuery :: [(StrictText, StrictText)] =
+        [ ("service", "wfs"),
+          ("request", "GetFeature"),
+          ("outputFormat", "geojson"),
+          ("srsName", "EPSG:4326")
+        ]
+      mkURIHelper dataId query' =
+        nullURI
+          { uriScheme = "https:",
+            uriAuthority = Just $ nullURIAuth {uriRegName = "portal.csdi.gov.hk"},
+            uriPath = "/server/services/common/" <> dataId <> "/MapServer/WFSServer",
+            uriQuery = renderQueryToString $ commonQuery <> query'
+          }
+   in \case
+        GetLatest15minUVIndexGeoJSON _ ->
+          mkURIHelper "hko_rcd_1634894904080_80327" [("typenames", "latest_15min_uvindex"), ("count", "25")]
+        GetDistrictBoundary _ ->
+          mkURIHelper "had_rcd_1634523272907_75218" [("typenames", "DCD"), ("count", "25")]
+        GetDistrictByLocation (Geolocation lat lon _) ->
+          mkURIHelper
+            "had_rcd_1634523272907_75218"
+            [ ("typenames", "DCD"),
+              ("count", "2"),
+              ( "filter",
+                pack . showElement $
+                  unode "Filter" $
+                    [ unode "Contains" $
+                        [ unode "gml:Point" $
+                            unode "gml:coordinates" $
+                              show lat <> "," <> show lon
+                        ]
+                    ]
+              )
+            ]
 
 instance DataSource u CommonSpatialDataInfrastructurePortalReq where
   fetch =
@@ -82,59 +91,21 @@ instance DataSource u CommonSpatialDataInfrastructurePortalReq where
     $
       \req -> case req of
         GetLatest15minUVIndexGeoJSON _ -> fetchGetJSON Proxy $ csdiPortalReqToURI req
+        GetDistrictBoundary _ -> fetchGetJSON Proxy $ csdiPortalReqToURI req
+        GetDistrictByLocation _ -> fetchGetJSON Proxy $ csdiPortalReqToURI req
 
 getLatest15minUVIndexGeoJSON :: UTCTime -> GenHaxl u w JSVal
 getLatest15minUVIndexGeoJSON = fetchCacheable . GetLatest15minUVIndexGeoJSON . utcTimeToIntervalPeriod Proxy
 
+getDistrictBoundary :: UTCTime -> GenHaxl u w JSVal
+getDistrictBoundary = fetchCacheable . GetDistrictBoundary . utcTimeToIntervalPeriod Proxy
+
+getDistrictByLocation :: Geolocation -> GenHaxl u w JSVal
+getDistrictByLocation = dataFetch . GetDistrictByLocation
+
 data UVIndexRecord = UVIndexRecord TimeData Double
   deriving stock (Show, Eq, Generic)
   deriving anyclass (ToJSVal, FromJSVal)
-
-instance FromNamedRecord UVIndexRecord where
-  parseNamedRecord m = do
-    fromJulianValid
-      <$> m CSV..: "Date time (Year)"
-      <*> m CSV..: "Date time (Month)"
-      <*> m CSV..: "Date time (Day)"
-      >>= \case
-        Nothing -> fail "Invalid Day"
-        Just day -> do
-          timeOfDay <-
-            TimeOfDay
-              <$> m CSV..: "Date time (Hour)"
-              <*> m CSV..: "Date time (Minute)"
-              -- sec <- m .: "Date time (Second)"
-              <*> pure 0
-          tz <-
-            stripPrefix "UTC+" <$> m CSV..: "Date time (Time Zone)" >>= \case
-              Nothing -> fail "expected prefix: 'UTC+' for 'Date time (Time Zone)'"
-              Just i -> case decimal i of
-                Left err -> fail err
-                Right (i', "") -> pure $ hoursToTimeZone i'
-                Right (_, leftover) -> fail $ "unexpected suffix for " <> unpack leftover <> " 'Date time (Time Zone)'"
-          idx <- m CSV..: "past 15-minute mean UV Index"
-          pure $ UVIndexRecord (TimeData $ ZonedTime (LocalTime day timeOfDay) tz) idx
-
-instance FromRecord UVIndexRecord where
-  parseRecord m =
-    fromJulianValid <$> m .! 0 <*> m .! 1 <*> m .! 2 >>= \case
-      Nothing -> fail "Invalid Day"
-      Just day -> do
-        timeOfDay <-
-          TimeOfDay
-            <$> m .! 3
-            <*> m .! 4
-            -- sec <- m .! 5
-            <*> pure 0
-        tz <-
-          stripPrefix "UTC+" <$> m .! 6 >>= \case
-            Nothing -> fail "expected prefix: 'UTC+' for 'Date time (Time Zone)'"
-            Just i -> case decimal i of
-              Left err -> fail err
-              Right (i', "") -> pure $ hoursToTimeZone i'
-              Right (_, leftover) -> fail $ "unexpected suffix for " <> unpack leftover <> " 'Date time (Time Zone)'"
-        idx <- m .! 7
-        pure $ UVIndexRecord (TimeData $ ZonedTime (LocalTime day timeOfDay) tz) idx
 
 instance FromJSON UVIndexRecord where
   parseJSON = withObject "UVIndexRecord" $ \o ->

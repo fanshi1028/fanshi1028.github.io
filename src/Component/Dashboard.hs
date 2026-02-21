@@ -7,6 +7,8 @@ module Component.Dashboard (dashboardComponent) where
 import Component.Dashboard.View
 import Component.Foreign.MapLibre
 import Data.Function
+import Data.Text
+import Data.Time
 import DataSource.BrowserGeolocationAPI
 import DataSource.CommonSpatialDataInfrastructurePortal
 import DataSource.HongKongObservatoryWeatherAPI
@@ -32,6 +34,12 @@ haxlEnvflags =
 
 location :: Lens Model (Maybe (Either GeolocationError Geolocation))
 location = lens _location $ \record x -> record {_location = x}
+
+focusedDistrict :: Lens Model (Maybe StrictText)
+focusedDistrict = lens _focusedDistrict $ \record x -> record {_focusedDistrict = x}
+
+time :: Lens Model (Maybe UTCTime)
+time = lens _time $ \record x -> record {_time = x}
 
 currentWeatherReport :: Lens Model (Maybe CurrentWeatherReport)
 currentWeatherReport = lens _currentWeatherReport $ \record x -> record {_currentWeatherReport = x}
@@ -66,20 +74,24 @@ fetchData sink = do
   _ <- runHaxl (env' {flags = haxlEnvflags}) $ do
     t <- uncachedRequest GetCurrentTime
 
+    misoRunAction $ SetCurrentTime t
+
+    getDistrictBoundary t >>= misoRunAction . AddGeoJSON FocusedDistrictBoundary
+
     getLocalWeatherForecast t >>= misoRunAction . SetLocalWeatherForecast
 
     get9DayWeatherForecast t >>= misoRunAction . Set9DayWeatherForecast
 
-    uncachedRequest GetCurrentPosition >>= misoRunAction . SetLocation
+    loc <- uncachedRequest GetCurrentPosition
+    misoRunAction $ SetLocation loc
+
+    getDistrictByLocation loc >>= misoRunAction . FocusDistrict . Right
 
     getCurrentWeatherReport t >>= misoRunAction . SetCurrentWeatherReport
 
     uncachedRequest $ GetWeatherWarningSummary t
     uncachedRequest $ GetWeatherWarningInfo t
 
-    geoJSON <- getLatest15minUVIndexGeoJSON t
-
-    misoRunAction $ SetLatest15minUVIndexGeoJSON geoJSON
 
     uncachedRequest $ GetSpecialWeatherTips t
 
@@ -93,12 +105,14 @@ updateModel = \case
   SetLocation loc -> do
     io_ . runMapLibre $ addMarkerAndEaseToLocation loc
     location .= Just (Right loc)
+  FocusDistrict toFocus -> io_ . runMapLibre $ focusDistrict toFocus -- TEMP FIXME setFocusDistrict!
+  SetCurrentTime t -> time .= Just t
   SetLocalWeatherForecast w -> localWeatherForecast .= Just w
   SetCurrentWeatherReport w -> currentWeatherReport .= Just w
   Set9DayWeatherForecast w -> nineDayWeatherForecast .= Just w
   SetDisplayTemperature b -> displayTemperature .= b
   SetDisplayRainfall b -> displayRainfall .= b
-  SetLatest15minUVIndexGeoJSON geoJSON -> io_ . runMapLibre $ addGeoJSONSource (ms "latest15minUVIndex") geoJSON
+  AddGeoJSON FocusedDistrictBoundary geoJSON -> io_ . runMapLibre $ addDistrictBoudaryLayer geoJSON
   ToggleDisplayHardSurfaceSoccerPitch7 -> io_ . runMapLibre $ toggle_hssp7
 
 dashboardComponent :: Component parent Model Action
