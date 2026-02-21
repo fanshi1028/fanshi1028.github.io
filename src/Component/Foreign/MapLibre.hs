@@ -8,7 +8,8 @@ module Component.Foreign.MapLibre
     cleanUpMap,
     runMapLibre,
     addMarkerAndEaseToLocation,
-    addGeoJSONSource,
+    addDistrictBoudaryLayer,
+    focusDistrict,
     toggle_hssp7,
   )
 where
@@ -18,6 +19,7 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Reader
 import Data.Functor
+import Data.Text
 import Miso hiding (URI, get, (<#))
 import Miso.Html.Element
 import Miso.Html.Property
@@ -123,12 +125,21 @@ cleanUpMap =
     Just mapLibre -> void $ mapLibre # "remove" $ ()
     Nothing -> consoleWarn "cleanUpMap: no map to be cleaned up"
 
-addGeoJSONSource :: (ToJSVal a) => MisoString -> a -> ReaderT MapLibreLib IO ()
-addGeoJSONSource sourceId v = do
+addDistrictBoudaryLayer :: JSVal -> ReaderT MapLibreLib IO ()
+addDistrictBoudaryLayer geoJSON = do
   mapLibreLib <- ask
   void . liftIO $ do
     mapLibre <- readMVar mapLibreMVar
-    mapLibreLib # "addAndRenderGeoJSON" $ (mapLibre, sourceId, v)
+    mapLibreLib # "addDistrictBoudaryLayer" $ (mapLibre, geoJSON)
+
+focusDistrict :: Either StrictText JSVal -> ReaderT MapLibreLib IO ()
+focusDistrict toFocus = do
+  mapLibreLib <- ask
+  void . liftIO $ do
+    mapLibre <- readMVar mapLibreMVar
+    case toFocus of
+      Left areaCode -> mapLibreLib # "focusDistrict" $ (mapLibre, areaCode)
+      Right geoJSON -> mapLibreLib # "focusDistrictByGeoJSON" $ (mapLibre, geoJSON)
 
 data LngLat = LngLat (Quantity DPlaneAngle Double) (Quantity DPlaneAngle Double)
   deriving stock (Show)

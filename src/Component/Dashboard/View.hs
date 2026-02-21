@@ -24,13 +24,15 @@ import Utils.Time
 import View.SVG.LoadSpinner
 import Prelude hiding (show)
 
-data GeoJSONDataId = Latest15minUVIndex | DistrictBoundary
+
+data GeoJSONDataId = FocusedDistrictBoundary
   deriving stock (Eq, Show)
 
 data Model
   = Model
   { _time :: Maybe UTCTime,
     _location :: Maybe (Either GeolocationError Geolocation),
+    _focusedDistrict :: Maybe StrictText, -- TEMP FIXME better type?
     _currentWeatherReport :: Maybe CurrentWeatherReport,
     _localWeatherForecast :: Maybe LocalWeatherForecast,
     _9DayWeatherForecast :: Maybe NineDayWeatherForecast,
@@ -44,6 +46,7 @@ data Action
   | FetchWeatherData
   | InitMapLibre
   | SetLocation Geolocation
+  | FocusDistrict (Either StrictText JSVal)
   | SetCurrentTime UTCTime
   | SetCurrentWeatherReport CurrentWeatherReport
   | SetLocalWeatherForecast LocalWeatherForecast
@@ -55,7 +58,7 @@ data Action
   deriving stock (Eq, Show)
 
 defaultModel :: Model
-defaultModel = Model Nothing Nothing Nothing Nothing Nothing False False
+defaultModel = Model Nothing Nothing Nothing Nothing Nothing Nothing False False
 
 viewCurrentWeatherReport :: Bool -> Bool -> Maybe UTCTime -> CurrentWeatherReport -> View Model Action
 viewCurrentWeatherReport
@@ -331,7 +334,7 @@ view9DayWeatherForecast
         p_ [class_ "prose text-neutral-200"] [text $ "Soil temperature is " <> ms (show $ toDegreeCelsiusAbsolute value) <> " °C at " <> ms (showIn meter depth) <> " in " <> place <> " " <> ms (showRelativeTime mCurrentTime recordTime)]
 
 viewModel :: Model -> View Model Action
-viewModel (Model mCurrentTime mELocation mCurrentWeatherReport mLocalWeatherForecast m9DayWeatherForecast ifDisplayRainfall ifDisplayTemperature) =
+viewModel (Model mCurrentTime mELocation mFocusedDistrict mCurrentWeatherReport mLocalWeatherForecast m9DayWeatherForecast ifDisplayRainfall ifDisplayTemperature) =
   div_
     [class_ "h-min-content flex flex-col gap-8 bg-neutral-600 text-neutral-200"]
     [ div_
