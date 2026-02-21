@@ -42,6 +42,9 @@ newtype MapLibreLib = MapLibreLib JSVal deriving newtype (ToJSVal, ToObject)
 
 newtype MapLibre = MapLibre JSVal deriving newtype (ToJSVal, ToObject)
 
+mapLibreLibMVar :: MVar MapLibreLib
+mapLibreLibMVar = unsafePerformIO newEmptyMVar
+
 mapLibreMVar :: MVar MapLibre
 mapLibreMVar = unsafePerformIO newEmptyMVar
 
@@ -83,7 +86,6 @@ addMarkerAndEaseToLocation (geolocationToLngLat -> loc) = do
 
 runMapLibre :: ReaderT MapLibreLib IO a -> IO a
 runMapLibre m = do
-  mapLibreLibMVar <- newEmptyMVar
   mapLibreLib <-
     tryReadMVar mapLibreLibMVar >>= \case
       Just r -> pure r
