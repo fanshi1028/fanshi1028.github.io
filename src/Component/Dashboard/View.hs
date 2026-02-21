@@ -177,7 +177,7 @@ viewCurrentWeatherReport
         div_ [] $
           [ h3_ [class_ "sr-only"] ["Temperature"],
             button_
-              [ onClick . SetDisplayRainfall $ not ifDisplayTemperature,
+              [ onClick . SetDisplayTemperature $ not ifDisplayTemperature,
                 class_ "hover:animate-wiggle border px-4 py-2"
               ]
               $ [p_ [] [text $ (if ifDisplayTemperature then "Hide" else "Show") <> " Temperature"]],
