@@ -31,7 +31,7 @@ deriving instance Eq (CommonSpatialDataInfrastructurePortalReq a)
 instance Hashable (CommonSpatialDataInfrastructurePortalReq a) where
   hashWithSalt s req = hashWithSalt @Int s $ case req of
     GetLatest15minUVIndexGeoJSON p -> 1 `hashWithSalt` p
-    GetDistrictBoundary p -> 1 `hashWithSalt` p
+    GetDistrictBoundary p -> 2 `hashWithSalt` p
 
 deriving instance Show (CommonSpatialDataInfrastructurePortalReq a)
 
