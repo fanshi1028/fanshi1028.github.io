@@ -18,11 +18,10 @@ import Data.Vector qualified as V
 import Miso.Aeson
 import Miso.DSL hiding (Object)
 import Miso.JSON
-import Miso.String (MisoString, fromMisoString, ms)
+import Miso.String (fromMisoString, ms)
 import Numeric.Natural
 import Numeric.Units.Dimensional
 import System.IO.Unsafe
-import Utils.Dimensional
 
 instance FromJSON DayOfWeek where
   parseJSON = withText "DayOfWeek" $ \t -> case toLower $ fromMisoString t of
