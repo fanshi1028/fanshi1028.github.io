@@ -83,7 +83,7 @@ csdiPortalReqToURI =
                     [ unode "Contains" $
                         [ unode "gml:Point" $
                             unode "gml:coordinates" $
-                              show lat <> "," <> show lng
+                              show (lat /~ degree) <> "," <> show (lng /~ degree)
                         ]
                     ]
               )
@@ -106,7 +106,7 @@ getDistrictBoundary :: UTCTime -> GenHaxl u w JSVal
 getDistrictBoundary = fetchCacheable . GetDistrictBoundary . utcTimeToIntervalPeriod Proxy
 
 getDistrictByLocation :: Geolocation -> GenHaxl u w JSVal
-getDistrictByLocation = dataFetch . GetDistrictByLocation . geolocationToLngLat
+getDistrictByLocation = fetchCacheable . GetDistrictByLocation . geolocationToLngLat
 
 data UVIndexRecord = UVIndexRecord TimeData Double
   deriving stock (Show, Eq, Generic)
