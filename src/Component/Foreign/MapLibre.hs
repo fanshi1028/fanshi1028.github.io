@@ -12,6 +12,8 @@ module Component.Foreign.MapLibre
     addMarkerAndEaseToLocation,
     focusDistrict,
     toggle_hssp7,
+    LngLat (..),
+    geolocationToLngLat,
   )
 where
 
@@ -19,6 +21,7 @@ import Control.Concurrent
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Reader
+import Data.Fixed
 import Data.Functor
 import Data.Text
 import Miso hiding (URI, get, (<#))
@@ -127,23 +130,23 @@ cleanUpMap =
     Just mapLibre -> void $ mapLibre # "remove" $ ()
     Nothing -> consoleWarn "cleanUpMap: no map to be cleaned up"
 
-geolocationToLngLat :: Geolocation -> LngLat
-geolocationToLngLat (Geolocation lat lon _acc) = LngLat (lon *~ degree) (lat *~ degree)
+geolocationToLngLat :: (Fractional a) => Geolocation -> LngLat a
+geolocationToLngLat (Geolocation lat lon _) = realToFrac <$> LngLat (lon *~ degree) (lat *~ degree)
 
 addMarkerAndEaseToLocation :: Geolocation -> IO ()
 addMarkerAndEaseToLocation =
   void
     . callMapLibreFunctionWithMap "addMarkerAndEaseToLocation"
-    . geolocationToLngLat
+    . geolocationToLngLat @Double
 
 focusDistrict :: StrictText -> IO ()
 focusDistrict = void . callMapLibreFunctionWithMap "focusDistrict"
 
-data LngLat = LngLat (Quantity DPlaneAngle Double) (Quantity DPlaneAngle Double)
-  deriving stock (Show)
+data LngLat a = LngLat (Quantity DPlaneAngle a) (Quantity DPlaneAngle a)
+  deriving stock (Eq, Show, Functor)
 
-instance ToJSVal LngLat where
-  toJSVal (LngLat lng lat) = toJSVal (lng /~ degree, lat /~ degree)
+instance (ToJSVal a, Real a) => ToJSVal (LngLat a) where
+  toJSVal (fmap (realToFrac @_ @Double) -> LngLat lng lat) = toJSVal (lng /~ degree, lat /~ degree)
 
 fromWGS84Str :: String -> Maybe (Quantity DPlaneAngle Double)
 fromWGS84Str str =
