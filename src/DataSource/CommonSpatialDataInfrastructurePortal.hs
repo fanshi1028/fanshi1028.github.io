@@ -72,7 +72,7 @@ csdiPortalReqToURI =
           mkURIHelper "hko_rcd_1634894904080_80327" [("typenames", "latest_15min_uvindex"), ("count", "25")]
         GetDistrictBoundary _ ->
           mkURIHelper "had_rcd_1634523272907_75218" [("typenames", "DCD"), ("count", "25")]
-        GetDistrictByLocation (LngLat lng lat) ->
+        GetDistrictByLocation (fmap (realToFrac @_ @Double) -> LngLat lng lat) ->
           mkURIHelper
             "had_rcd_1634523272907_75218"
             [ ("typenames", "DCD"),
