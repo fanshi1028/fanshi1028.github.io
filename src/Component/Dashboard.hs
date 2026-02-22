@@ -33,7 +33,7 @@ haxlEnvflags =
     }
 #endif
 
-location :: Lens Model (Maybe (Either GeolocationError Geolocation))
+location :: Lens Model (Maybe (Either GeolocationError LngLat))
 location = lens _location $ \record x -> record {_location = x}
 
 focusedDistrict :: Lens Model (Maybe StrictText)
@@ -84,7 +84,7 @@ fetchData sink = do
     get9DayWeatherForecast t >>= misoRunAction . Set9DayWeatherForecast
 
     loc <- uncachedRequest GetCurrentPosition
-    misoRunAction $ SetLocation loc
+    misoRunAction $ SetLocation $ geolocationToLngLat loc
 
     getDistrictByLocation loc >>= misoRunAction . FocusDistrict . Right
 

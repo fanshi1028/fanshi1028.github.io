@@ -12,6 +12,8 @@ module Component.Foreign.MapLibre
     addMarkerAndEaseToLocation,
     focusDistrict,
     toggle_hssp7,
+    geolocationToLngLat,
+    LngLat,
   )
 where
 
@@ -130,17 +132,14 @@ cleanUpMap =
 geolocationToLngLat :: Geolocation -> LngLat
 geolocationToLngLat (Geolocation lat lon _acc) = LngLat (lon *~ degree) (lat *~ degree)
 
-addMarkerAndEaseToLocation :: Geolocation -> IO ()
-addMarkerAndEaseToLocation =
-  void
-    . callMapLibreFunctionWithMap "addMarkerAndEaseToLocation"
-    . geolocationToLngLat
+addMarkerAndEaseToLocation :: LngLat -> IO ()
+addMarkerAndEaseToLocation = void . callMapLibreFunctionWithMap "addMarkerAndEaseToLocation"
 
 focusDistrict :: StrictText -> IO ()
 focusDistrict = void . callMapLibreFunctionWithMap "focusDistrict"
 
 data LngLat = LngLat (Quantity DPlaneAngle Double) (Quantity DPlaneAngle Double)
-  deriving stock (Show)
+  deriving stock (Eq, Show)
 
 instance ToJSVal LngLat where
   toJSVal (LngLat lng lat) = toJSVal (lng /~ degree, lat /~ degree)
