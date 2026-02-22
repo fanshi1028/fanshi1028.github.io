@@ -32,7 +32,7 @@ import Utils.Time
 data CommonSpatialDataInfrastructurePortalReq a where
   GetLatest15minUVIndexGeoJSON :: IntervalPeriod 15 -> CommonSpatialDataInfrastructurePortalReq JSVal
   GetDistrictBoundary :: IntervalPeriod 1440 -> CommonSpatialDataInfrastructurePortalReq JSVal
-  GetDistrictByLocation :: LngLat (Fixed E6) -> CommonSpatialDataInfrastructurePortalReq JSVal
+  GetDistrictByLocation :: LngLat (Fixed 100000) -> CommonSpatialDataInfrastructurePortalReq JSVal
 
 deriving instance Eq (CommonSpatialDataInfrastructurePortalReq a)
 
