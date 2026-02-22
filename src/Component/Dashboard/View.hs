@@ -31,7 +31,7 @@ data GeoJSONDataId = FocusedDistrictBoundary
 data Model
   = Model
   { _time :: Maybe UTCTime,
-    _location :: Maybe (Either GeolocationError LngLat),
+    _location :: Maybe (Either GeolocationError Geolocation),
     _focusedDistrict :: Maybe StrictText, -- TEMP FIXME better type?
     _currentWeatherReport :: Maybe CurrentWeatherReport,
     _localWeatherForecast :: Maybe LocalWeatherForecast,
@@ -46,7 +46,7 @@ data Action
   | InitAction
   | FetchWeatherData
   | InitMapLibre
-  | SetLocation LngLat
+  | SetLocation Geolocation
   | FocusDistrict (Either StrictText JSVal)
   | SetCurrentTime UTCTime
   | SetCurrentWeatherReport CurrentWeatherReport
