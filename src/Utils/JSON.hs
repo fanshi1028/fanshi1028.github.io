@@ -54,11 +54,8 @@ instance ToJSVal Scientific where
 instance FromJSVal Scientific where
   fromJSVal v = (>>= (Aeson.parseMaybe Aeson.parseJSON . jsonToAeson)) <$> fromJSVal_Value v
 
--- NOTE: was Hacking it like: fromMisoString . unsafePerformIO . jsonStringify
--- But it is too heavy for some sized objects
--- NOTE: never cached request with any JSVal as input!
 instance Show JSVal where
-  show _ = "JSVal"
+  show = fromMisoString . unsafePerformIO . jsonStringify
 
 instance (FromJSVal a) => FromJSVal (V.Vector a) where
   fromJSVal v = fmap V.fromList <$> fromJSVal v

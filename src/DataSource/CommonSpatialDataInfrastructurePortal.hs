@@ -2,10 +2,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE ViewPatterns #-}
 
 -- NOTE: https://www.hko.gov.hk/en/abouthko/opendata_intro.htm
 module DataSource.CommonSpatialDataInfrastructurePortal where
 
+import Component.Foreign.MapLibre
+import Data.Fixed
 import Data.Hashable
 import Data.Text hiding (show)
 import Data.Time
@@ -17,6 +20,8 @@ import Miso.DSL
 import Miso.JSON
 import Miso.Navigator
 import Network.URI
+import Numeric.Units.Dimensional
+import Numeric.Units.Dimensional.SIUnits
 import Text.XML.Light
 import Utils.Haxl
 import Utils.IntervalPeriod
@@ -27,7 +32,7 @@ import Utils.Time
 data CommonSpatialDataInfrastructurePortalReq a where
   GetLatest15minUVIndexGeoJSON :: IntervalPeriod 15 -> CommonSpatialDataInfrastructurePortalReq JSVal
   GetDistrictBoundary :: IntervalPeriod 1440 -> CommonSpatialDataInfrastructurePortalReq JSVal
-  GetDistrictByLocation :: Geolocation -> CommonSpatialDataInfrastructurePortalReq JSVal
+  GetDistrictByLocation :: LngLat (Fixed 100000) -> CommonSpatialDataInfrastructurePortalReq JSVal
 
 deriving instance Eq (CommonSpatialDataInfrastructurePortalReq a)
 
@@ -35,7 +40,7 @@ instance Hashable (CommonSpatialDataInfrastructurePortalReq a) where
   hashWithSalt s req = hashWithSalt @Int s $ case req of
     GetLatest15minUVIndexGeoJSON p -> 1 `hashWithSalt` p
     GetDistrictBoundary p -> 2 `hashWithSalt` p
-    GetDistrictByLocation (Geolocation lat lon acc) -> 3 `hashWithSalt` lat `hashWithSalt` lon `hashWithSalt` acc
+    GetDistrictByLocation (fmap (realToFrac @_ @Double) -> LngLat lng lat) -> 3 `hashWithSalt` (lng /~ degree) `hashWithSalt` (lat /~ degree)
 
 deriving instance Show (CommonSpatialDataInfrastructurePortalReq a)
 
@@ -67,7 +72,7 @@ csdiPortalReqToURI =
           mkURIHelper "hko_rcd_1634894904080_80327" [("typenames", "latest_15min_uvindex"), ("count", "25")]
         GetDistrictBoundary _ ->
           mkURIHelper "had_rcd_1634523272907_75218" [("typenames", "DCD"), ("count", "25")]
-        GetDistrictByLocation (Geolocation lat lon _) ->
+        GetDistrictByLocation (fmap (realToFrac @_ @Double) -> LngLat lng lat) ->
           mkURIHelper
             "had_rcd_1634523272907_75218"
             [ ("typenames", "DCD"),
@@ -78,7 +83,7 @@ csdiPortalReqToURI =
                     [ unode "Contains" $
                         [ unode "gml:Point" $
                             unode "gml:coordinates" $
-                              show lat <> "," <> show lon
+                              show (lat /~ degree) <> "," <> show (lng /~ degree)
                         ]
                     ]
               )
@@ -101,7 +106,7 @@ getDistrictBoundary :: UTCTime -> GenHaxl u w JSVal
 getDistrictBoundary = fetchCacheable . GetDistrictBoundary . utcTimeToIntervalPeriod Proxy
 
 getDistrictByLocation :: Geolocation -> GenHaxl u w JSVal
-getDistrictByLocation = dataFetch . GetDistrictByLocation
+getDistrictByLocation = fetchCacheable . GetDistrictByLocation . geolocationToLngLat
 
 data UVIndexRecord = UVIndexRecord TimeData Double
   deriving stock (Show, Eq, Generic)

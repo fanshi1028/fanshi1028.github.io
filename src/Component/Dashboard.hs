@@ -6,6 +6,7 @@ module Component.Dashboard (dashboardComponent) where
 
 import Component.Dashboard.View
 import Component.Foreign.MapLibre
+import Control.Monad
 import Data.Function
 import Data.Text
 import Data.Time
@@ -99,20 +100,31 @@ fetchData sink = do
 
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
+  NoOp -> pure ()
   InitAction -> issue FetchWeatherData
-  InitMapLibre -> io_ $ runMapLibre createMap
+  InitMapLibre -> io_ . void $ createMap
   FetchWeatherData -> withSink fetchData
   SetLocation loc -> do
-    io_ . runMapLibre $ addMarkerAndEaseToLocation loc
+    io_ $ addMarkerAndEaseToLocation loc
     location .= Just (Right loc)
-  FocusDistrict toFocus -> io_ . runMapLibre $ focusDistrict toFocus -- TEMP FIXME setFocusDistrict!
+  FocusDistrict (Left code) -> do
+    io_ $ focusDistrict code
+    focusedDistrict .= Just code
+  FocusDistrict (Right geoJSON) -> sync $ do
+    districtId <- callMapLibreFunction (ms "getDistrictAreaCode") [geoJSON]
+    isUndefined districtId >>= \case
+      True -> NoOp <$ consoleWarn (ms "getDistrictAreaCode returned undefined, skipped FocusDistrict")
+      False ->
+        fromJSVal districtId >>= \case
+          Nothing -> NoOp <$ consoleWarn (ms "getDistrictAreaCode returned non string result, skipped FocusDistrict")
+          Just code -> pure $ FocusDistrict $ Left code
   SetCurrentTime t -> time .= Just t
   SetLocalWeatherForecast w -> localWeatherForecast .= Just w
   SetCurrentWeatherReport w -> currentWeatherReport .= Just w
   Set9DayWeatherForecast w -> nineDayWeatherForecast .= Just w
   SetDisplayTemperature b -> displayTemperature .= b
   SetDisplayRainfall b -> displayRainfall .= b
-  AddGeoJSON FocusedDistrictBoundary geoJSON -> io_ . runMapLibre $ addDistrictBoudaryLayer geoJSON
+  AddGeoJSON FocusedDistrictBoundary geoJSON -> io_ . void $ callMapLibreFunctionWithMap (ms "addDistrictBoudaryLayer") geoJSON
   ToggleDisplayHardSurfaceSoccerPitch7 -> io_ . runMapLibre $ toggle_hssp7
 
 dashboardComponent :: Component parent Model Action

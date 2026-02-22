@@ -4,13 +4,16 @@
 
 module Component.Foreign.MapLibre
   ( mapLibreComponent,
+    callMapLibreFunction,
+    callMapLibreFunctionWithMap,
     createMap,
     cleanUpMap,
     runMapLibre,
     addMarkerAndEaseToLocation,
-    addDistrictBoudaryLayer,
     focusDistrict,
     toggle_hssp7,
+    LngLat (..),
+    geolocationToLngLat,
   )
 where
 
@@ -18,6 +21,7 @@ import Control.Concurrent
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Reader
+import Data.Fixed
 import Data.Functor
 import Data.Text
 import Miso hiding (URI, get, (<#))
@@ -77,15 +81,6 @@ mapLibreComponent =
 #endif
 #endif
 
-geolocationToLngLat :: Geolocation -> LngLat
-geolocationToLngLat (Geolocation lat lon _acc) = LngLat (lon *~ degree) (lat *~ degree)
-
-addMarkerAndEaseToLocation :: Geolocation -> ReaderT MapLibreLib IO ()
-addMarkerAndEaseToLocation (geolocationToLngLat -> loc) = do
-  mapLibreLib <- ask
-  mapLibre <- liftIO $ readMVar mapLibreMVar
-  void . liftIO $ mapLibreLib # "addMarkerAndEaseToLocation" $ (loc, mapLibre)
-
 runMapLibre :: ReaderT MapLibreLib IO a -> IO a
 runMapLibre m = do
   mapLibreLib <-
@@ -101,23 +96,33 @@ runMapLibre m = do
         $ \_ -> readMVar mapLibreLibMVar
   runReaderT m mapLibreLib
 
-createMap :: ReaderT MapLibreLib IO ()
-createMap = do
+callMapLibreFunction :: (ToArgs args) => MisoString -> args -> IO JSVal
+callMapLibreFunction fun args = runMapLibre $ do
   mapLibreLib <- ask
-  void . liftIO $ do
-    map' <- mapLibreLib # "createMap" $ mapLibreId
-    withAsync
-      ( forever $ do
-          loaded <- (map' # "loaded") ()
-          fromJSVal loaded >>= \case
-            Nothing -> do
-              unexpected <- jsonStringify loaded
-              consoleError $ "Unexpected(createMap): expected loaded to be Bool but got " <> unexpected
-            Just loaded' -> do
-              when loaded' $ putMVar mapLibreMVar $ MapLibre map'
-              threadDelay 100000
-      )
-      $ \_ -> readMVar mapLibreMVar
+  liftIO (mapLibreLib # fun $ args)
+
+callMapLibreFunctionWithMap :: (ToJSVal arg) => MisoString -> arg -> IO JSVal
+callMapLibreFunctionWithMap fun arg = runMapLibre $ do
+  mapLibreLib <- ask
+  liftIO $ do
+    mapLibre <- readMVar mapLibreMVar
+    mapLibreLib # fun $ (mapLibre, arg)
+
+createMap :: IO MapLibre
+createMap = do
+  map' <- callMapLibreFunction "createMap" mapLibreId
+  withAsync
+    ( forever $ do
+        loaded <- (map' # "loaded") ()
+        fromJSVal loaded >>= \case
+          Nothing -> do
+            unexpected <- jsonStringify loaded
+            consoleError $ "Unexpected(createMap): expected loaded to be Bool but got " <> unexpected
+          Just loaded' -> do
+            when loaded' $ putMVar mapLibreMVar $ MapLibre map'
+            threadDelay 100000
+    )
+    $ \_ -> readMVar mapLibreMVar
 
 cleanUpMap :: IO ()
 cleanUpMap =
@@ -125,27 +130,23 @@ cleanUpMap =
     Just mapLibre -> void $ mapLibre # "remove" $ ()
     Nothing -> consoleWarn "cleanUpMap: no map to be cleaned up"
 
-addDistrictBoudaryLayer :: JSVal -> ReaderT MapLibreLib IO ()
-addDistrictBoudaryLayer geoJSON = do
-  mapLibreLib <- ask
-  void . liftIO $ do
-    mapLibre <- readMVar mapLibreMVar
-    mapLibreLib # "addDistrictBoudaryLayer" $ (mapLibre, geoJSON)
+geolocationToLngLat :: (Fractional a) => Geolocation -> LngLat a
+geolocationToLngLat (Geolocation lat lon _) = realToFrac <$> LngLat (lon *~ degree) (lat *~ degree)
 
-focusDistrict :: Either StrictText JSVal -> ReaderT MapLibreLib IO ()
-focusDistrict toFocus = do
-  mapLibreLib <- ask
-  void . liftIO $ do
-    mapLibre <- readMVar mapLibreMVar
-    case toFocus of
-      Left areaCode -> mapLibreLib # "focusDistrict" $ (mapLibre, areaCode)
-      Right geoJSON -> mapLibreLib # "focusDistrictByGeoJSON" $ (mapLibre, geoJSON)
+addMarkerAndEaseToLocation :: Geolocation -> IO ()
+addMarkerAndEaseToLocation =
+  void
+    . callMapLibreFunctionWithMap "addMarkerAndEaseToLocation"
+    . geolocationToLngLat @Double
 
-data LngLat = LngLat (Quantity DPlaneAngle Double) (Quantity DPlaneAngle Double)
-  deriving stock (Show)
+focusDistrict :: StrictText -> IO ()
+focusDistrict = void . callMapLibreFunctionWithMap "focusDistrict"
 
-instance ToJSVal LngLat where
-  toJSVal (LngLat lng lat) = toJSVal (lng /~ degree, lat /~ degree)
+data LngLat a = LngLat (Quantity DPlaneAngle a) (Quantity DPlaneAngle a)
+  deriving stock (Eq, Show, Functor)
+
+instance (ToJSVal a, Real a) => ToJSVal (LngLat a) where
+  toJSVal (fmap (realToFrac @_ @Double) -> LngLat lng lat) = toJSVal (lng /~ degree, lat /~ degree)
 
 fromWGS84Str :: String -> Maybe (Quantity DPlaneAngle Double)
 fromWGS84Str str =

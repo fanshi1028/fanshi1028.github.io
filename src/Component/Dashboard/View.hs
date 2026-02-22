@@ -42,7 +42,8 @@ data Model
   deriving (Eq)
 
 data Action
-  = InitAction
+  = NoOp
+  | InitAction
   | FetchWeatherData
   | InitMapLibre
   | SetLocation Geolocation
