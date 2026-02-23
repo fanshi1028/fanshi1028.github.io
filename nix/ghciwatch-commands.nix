@@ -1,29 +1,24 @@
 {
   lib,
   writeShellApplication,
-  cabal-install,
+  wasm32-wasi-cabal,
   bun,
   ghciwatch,
 }:
-let
-  cabal = cabal-install.meta.mainProgram;
-  wasm = cabal == "wasm32-wasi-cabal";
-in
 writeShellApplication {
   runtimeInputs = [
-    cabal-install
+    wasm32-wasi-cabal
     ghciwatch
     bun
     # tailwindcss
   ];
   text = ''
-    ghciwatch \
-     --command "${cabal} repl exe:fanshi1028-site -flocal-dev \
-     ${lib.optionalString wasm "--repl-options=-fghci-browser"}" \
+    ${ghciwatch.meta.mainProgram} \
+     --command "${wasm32-wasi-cabal.meta.mainProgram} repl exe:fanshi1028-site -flocal-dev \
+           --repl-options=-fghci-browser --repl-options=-fghci-browser-port=8080" \
      --clear \
      --watch src \
      --watch app \
-     --before-reload-shell "bun build typescript/maplibre-gl-ffi/index.ts --root typescript/maplibre-gl-ffi --outdir ./typescript/maplibre-gl-ffi" \
      --test-ghci Main.main "$@"
   '';
   name = "ghciwatch-site";
