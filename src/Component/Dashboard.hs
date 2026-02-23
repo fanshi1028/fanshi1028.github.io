@@ -7,6 +7,7 @@ module Component.Dashboard (dashboardComponent) where
 import Component.Dashboard.View
 import Component.Foreign.MapLibre
 import Control.Monad
+import Data.Foldable
 import Data.Function
 import Data.Text
 import Data.Time
@@ -124,7 +125,9 @@ updateModel = \case
   Set9DayWeatherForecast w -> nineDayWeatherForecast .= Just w
   SetDisplayTemperature b -> displayTemperature .= b
   SetDisplayRainfall b -> displayRainfall .= b
-  AddGeoJSON FocusedDistrictBoundary geoJSON -> io_ . void $ callMapLibreFunctionWithMap (ms "addDistrictBoudaryLayer") geoJSON
+  AddGeoJSON FocusedDistrictBoundary geoJSON -> do
+    io_ . void $ callMapLibreFunctionWithMap (ms "addDistrictBoudaryLayer") geoJSON
+    use focusedDistrict >>= traverse_ (io_ . focusDistrict)
   ToggleDisplayHardSurfaceSoccerPitch7 -> io_ . runMapLibre $ toggle_hssp7
 
 dashboardComponent :: Component parent Model Action
