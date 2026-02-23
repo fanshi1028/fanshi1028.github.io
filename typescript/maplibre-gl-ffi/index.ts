@@ -63,24 +63,24 @@ const getGeoJSONFeatures = (data: GeoJSON.GeoJSON) =>
       )
     : data.features
 
-const districtBoudaryLayerId = 'districtBoudaryLayerId'
+const districtBoundaryLayerId = 'districtBoundaryLayerId'
 
-const addDistrictBoudaryLayer = (map: Map, data: GeoJSON.GeoJSON) =>
+const addDistrictBoundaryLayer = (map: Map, data: GeoJSON.GeoJSON) =>
   map
-    .addSource(districtBoudaryLayerId, { type: 'geojson', data })
+    .addSource(districtBoundaryLayerId, { type: 'geojson', data })
     .addLayer({
-      id: districtBoudaryLayerId,
-      source: districtBoudaryLayerId,
+      id: districtBoundaryLayerId,
+      source: districtBoundaryLayerId,
       type: 'line',
       paint: { 'line-color': '#198EC8' },
     })
-    .setFilter(districtBoudaryLayerId, ['literal', false])
+    .setFilter(districtBoundaryLayerId, ['literal', false])
 
 const focusDistrict = (map: Map, areaCode: string) =>
-  map.getLayer(districtBoudaryLayerId)
-    ? map.setFilter(districtBoudaryLayerId, ['==', 'AREA_CODE', areaCode])
+  map.getLayer(districtBoundaryLayerId)
+    ? map.setFilter(districtBoundaryLayerId, ['==', 'AREA_CODE', areaCode])
     : console.debug(
-        `layer ${districtBoudaryLayerId} not exists yet. skip focusDistrict.`
+        `layer ${districtBoundaryLayerId} not exists yet. skip focusDistrict.`
       )
 
 // NOTE: assume "one" district result!
@@ -112,7 +112,7 @@ globalThis.maplibregl_ffi = {
   addMarkerAndEaseToLocation,
   focusDistrict,
   getDistrictAreaCode,
-  addDistrictBoudaryLayer,
+  addDistrictBoundaryLayer,
   getDataURI,
   hard_surface_soccer_pitch_7,
 }

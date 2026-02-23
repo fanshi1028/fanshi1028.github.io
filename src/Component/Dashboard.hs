@@ -126,7 +126,7 @@ updateModel = \case
   SetDisplayTemperature b -> displayTemperature .= b
   SetDisplayRainfall b -> displayRainfall .= b
   AddGeoJSON FocusedDistrictBoundary geoJSON -> do
-    io_ . void $ callMapLibreFunctionWithMap (ms "addDistrictBoudaryLayer") geoJSON
+    io_ . void $ callMapLibreFunctionWithMap (ms "addDistrictBoundaryLayer") geoJSON
     use focusedDistrict >>= traverse_ (io_ . focusDistrict)
   ToggleDisplayHardSurfaceSoccerPitch7 -> io_ . runMapLibre $ toggle_hssp7
 
