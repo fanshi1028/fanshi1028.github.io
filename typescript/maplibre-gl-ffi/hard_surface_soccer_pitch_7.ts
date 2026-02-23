@@ -3,10 +3,7 @@ import { Map, LngLat, type LngLatLike, type AddLayerObject } from 'maplibre-gl'
 import { type Feature } from 'geojson'
 
 import hssp7_data from './facility-hssp7.json'
-
-function isNotNull<T>(item: T | null): item is T {
-  return item !== null
-}
+import { isNotNull } from './utils'
 
 const source = 'source-sX6NHU7YLnDLbBuJ'
 const layer = 'layer-OC+IXVSzo2f/d5ZO'
@@ -52,18 +49,16 @@ export const hard_surface_soccer_pitch_7 = {
             },
           }
         })
-
-        if (features.length == 0) {
-          console.error(
-            'hard_surface_soccer_pitch_7 toggleLayer: feature is empty / all null.'
-          )
-        } else {
-          map.addSource(source, {
-            type: 'geojson',
-            data: { type: 'FeatureCollection', features },
-          })
-          map.addLayer(layerCfg)
-        }
+        features.length == 0
+          ? console.error(
+              'hard_surface_soccer_pitch_7 toggleLayer: feature is empty / all null.'
+            )
+          : map
+              .addSource(source, {
+                type: 'geojson',
+                data: { type: 'FeatureCollection', features },
+              })
+              .addLayer(layerCfg)
       })
     } else {
       if (map.getLayer(layer) === undefined) map.addLayer(layerCfg)
