@@ -21,7 +21,6 @@ import Control.Concurrent
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Reader
-import Data.Fixed
 import Data.Functor
 import Data.Text
 import Miso hiding (URI, get, (<#))
@@ -35,6 +34,7 @@ import Numeric.Units.Dimensional.SIUnits
 import System.IO.Unsafe (unsafePerformIO)
 import Text.Read
 import UnliftIO.Async
+import Utils.JS
 import Prelude hiding (show, (!!), (+))
 
 #ifdef LOCALDEV
@@ -115,9 +115,7 @@ createMap = do
     ( forever $ do
         loaded <- (map' # "loaded") ()
         fromJSVal loaded >>= \case
-          Nothing -> do
-            unexpected <- jsonStringify loaded
-            consoleError $ "Unexpected(createMap): expected loaded to be Bool but got " <> unexpected
+          Nothing -> consoleError' ("Unexpected(createMap): expected loaded to be Bool but got %o" :: MisoString, loaded)
           Just loaded' -> do
             when loaded' $ putMVar mapLibreMVar $ MapLibre map'
             threadDelay 100000
@@ -161,15 +159,14 @@ fromWGS84Str str =
         [x] -> Just x
         _ -> Nothing
 
-toggle_hssp7 :: ReaderT MapLibreLib IO ()
-toggle_hssp7 = do
+toggle_hssp7 :: IO ()
+toggle_hssp7 = runMapLibre $ do
   mapLibreLib <- ask
   void . liftIO $ do
     hssp7Lib <- mapLibreLib ! "hard_surface_soccer_pitch_7"
     mapLibre <- readMVar mapLibreMVar
-    (hssp7Lib # "getFeatures") () >>= fromJSVal @(Maybe JSVal) >>= \case
-      Nothing -> consoleError "impossible: hard_surface_soccer_pitch_7 getFeatures return unexpected result"
-      Just Nothing -> do
+    (hssp7Lib # "getFeatures") () >>= isNull >>= \case
+      True -> do
         processCoords <- syncCallback2 $ \hssp7_data setCoords ->
           fromJSVal @[JSVal] hssp7_data >>= \case
             Just hssp7s ->
@@ -182,6 +179,6 @@ toggle_hssp7 = do
                     )
                     hssp7s
                 ]
-            Nothing -> consoleError "impossible: hard_surface_soccer_pitch_7 data is not an array"
+            Nothing -> consoleError' ("impossible! hard_surface_soccer_pitch_7 data is not an array: %o" :: MisoString, hssp7_data)
         void $ hssp7Lib # "toggleLayer" $ (mapLibre, processCoords)
-      Just _ -> void $ hssp7Lib # "toggleLayer" $ [mapLibre]
+      False -> void $ hssp7Lib # "toggleLayer" $ [mapLibre]

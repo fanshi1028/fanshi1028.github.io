@@ -4,7 +4,7 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
-module Utils.JSON where
+module Utils.JS where
 
 import Data.Aeson qualified as Aeson
 import Data.Aeson.Types qualified as Aeson
@@ -169,3 +169,6 @@ instance (Ord a, FromJSVal a) => FromJSVal (Interval a) where
     mUo <- fmap boundaryFromBool <$> (v ! "upper" ! "open" >>= fromJSVal)
     let mUpper = (,) <$> mUe <*> mUo
     pure $ interval <$> mLower <*> mUpper
+
+consoleError' :: (ToArgs a) => a -> IO ()
+consoleError' args = void $ jsg "console" # "log" $ args

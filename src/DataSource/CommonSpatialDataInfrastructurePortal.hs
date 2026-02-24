@@ -25,7 +25,7 @@ import Numeric.Units.Dimensional.SIUnits
 import Text.XML.Light
 import Utils.Haxl
 import Utils.IntervalPeriod
-import Utils.JSON ()
+import Utils.JS ()
 import Utils.Time
 
 -- NOTE: CSDI Portal API
