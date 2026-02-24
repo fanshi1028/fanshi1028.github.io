@@ -125,10 +125,8 @@ updateModel = \case
   Set9DayWeatherForecast w -> nineDayWeatherForecast .= Just w
   SetDisplayTemperature b -> displayTemperature .= b
   SetDisplayRainfall b -> displayRainfall .= b
-  AddGeoJSON FocusedDistrictBoundary geoJSON -> do
-    io_ . void $ callMapLibreFunctionWithMap (ms "addDistrictBoundaryLayer") geoJSON
-    use focusedDistrict >>= traverse_ (io_ . focusDistrict)
   ToggleDisplayHardSurfaceSoccerPitch7 -> io_ . runMapLibre $ toggle_hssp7
+  AddGeoJSON FocusedDistrictBoundary geoJSON -> io_ . void $ callMapLibreFunctionWithMap (ms "addDistrictBoundaryLayer") geoJSON
 
 dashboardComponent :: Component parent Model Action
 dashboardComponent = (component defaultModel updateModel viewModel) {mount = Just InitAction}

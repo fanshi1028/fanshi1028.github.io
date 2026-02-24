@@ -76,12 +76,25 @@ const addDistrictBoundaryLayer = (map: Map, data: GeoJSON.GeoJSON) =>
     })
     .setFilter(districtBoundaryLayerId, ['literal', false])
 
-const focusDistrict = (map: Map, areaCode: string) =>
-  map.getLayer(districtBoundaryLayerId)
-    ? map.setFilter(districtBoundaryLayerId, ['==', 'AREA_CODE', areaCode])
-    : console.debug(
-        `layer ${districtBoundaryLayerId} not exists yet. skip focusDistrict.`
+const focusDistrict = (map: Map, areaCode: string) => {
+  const go = (retry = 5) => {
+    if (retry <= 0) {
+      console.warn(
+        `layer ${districtBoundaryLayerId} not exists yet. no retry left. abort focusDistrict.`
       )
+    } else {
+      if (map.getLayer(districtBoundaryLayerId))
+        map.setFilter(districtBoundaryLayerId, ['==', 'AREA_CODE', areaCode])
+      else {
+        console.debug(
+          `layer ${districtBoundaryLayerId} not exists yet. ${retry} retries left. defer focusDistrict.`
+        )
+        setTimeout(() => go(retry - 1), 150)
+      }
+    }
+  }
+  go()
+}
 
 // NOTE: assume "one" district result!
 const getDistrictAreaCode = (data: GeoJSON.GeoJSON): string | undefined => {
