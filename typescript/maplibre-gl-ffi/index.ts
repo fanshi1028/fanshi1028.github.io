@@ -40,13 +40,6 @@ const getDataURI = (
   }
 }
 
-const getGeoJSONFeatureProperty = (data: GeoJSON.GeoJSON, prop: string) =>
-  data.type != 'Feature'
-    ? console.error(
-        'unexpected: GeoJSON is not a Feature. abort getGeoJSONFeatureProperty. \ngot data: %o',
-        data
-      )
-    : data.properties?.[prop]
 
 const getGeoJSONFeatures = (data: GeoJSON.GeoJSON) =>
   data.type != 'FeatureCollection'
@@ -90,24 +83,16 @@ const focusDistrict = (map: Map, areaCode: string) => {
 }
 
 // NOTE: assume "one" district result!
-const getDistrictAreaCode = (data: GeoJSON.GeoJSON): string | undefined => {
+const getDistrict = (data: GeoJSON.GeoJSON): any | undefined => {
   const features = getGeoJSONFeatures(data)
   if (!features || features.length != 1 || !features[0]) {
     console.error(
-      'unexpected: features should be 1 truthy feature. abort getDistrictAreaCode. \ngot features: %o',
+      'unexpected: features should be 1 truthy feature. abort getDistrict. \ngot features: %o',
       features
     )
     return
   }
-  const code = getGeoJSONFeatureProperty(features[0], 'AREA_CODE')
-  if (typeof code != 'string') {
-    console.error(
-      'unexpected: feature returned non-string AREA_CODE. abort getDistrictAreaCode. \ngot code: code',
-      features
-    )
-    return
-  }
-  return code
+  return features[0].properties
 }
 
 declare global {
@@ -118,7 +103,7 @@ globalThis.maplibregl_ffi = {
   createMap,
   addMarkerAndEaseToLocation,
   focusDistrict,
-  getDistrictAreaCode,
+  getDistrict,
   addDistrictBoundaryLayer,
   getDataURI,
   hard_surface_soccer_pitch_7,

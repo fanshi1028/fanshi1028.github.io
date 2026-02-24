@@ -4,12 +4,15 @@
 module Component.Dashboard.View where
 
 import Component.Foreign.MapLibre
+import Data.Foldable (find)
 import Data.Function
 import Data.Interval
 import Data.Maybe
-import Data.Text hiding (foldl')
+import Data.Scientific as SCI
+import Data.Text hiding (find, foldl')
 import Data.Time
 import DataSource.HongKongObservatoryWeatherAPI.Types
+import GHC.Generics
 import Miso
 import Miso.Html.Element
 import Miso.Html.Event
@@ -24,6 +27,19 @@ import Utils.Time
 import View.SVG.LoadSpinner
 import Prelude hiding (show)
 
+data District = District
+  { _AREA_CODE :: MisoString,
+    _NAME_EN :: MisoString,
+    _NAME_TC :: MisoString
+  }
+  deriving stock (Eq, Show, Generic)
+
+instance FromJSVal District where
+  fromJSVal v = do
+    mAreaCode <- v ! "AREA_CODE" >>= fromJSVal
+    mNameEN <- v ! "NAME_EN" >>= fromJSVal
+    mNameTC <- v ! "NAME_TC" >>= fromJSVal
+    pure $ District <$> mAreaCode <*> mNameEN <*> mNameTC
 
 data GeoJSONDataId = FocusedDistrictBoundary
   deriving stock (Eq, Show)
@@ -32,7 +48,7 @@ data Model
   = Model
   { _time :: Maybe UTCTime,
     _location :: Maybe (Either GeolocationError Geolocation),
-    _focusedDistrict :: Maybe StrictText, -- TEMP FIXME better type?
+    _focusedDistrict :: Maybe District,
     _currentWeatherReport :: Maybe CurrentWeatherReport,
     _localWeatherForecast :: Maybe LocalWeatherForecast,
     _9DayWeatherForecast :: Maybe NineDayWeatherForecast,
@@ -47,7 +63,7 @@ data Action
   | FetchWeatherData
   | InitMapLibre
   | SetLocation Geolocation
-  | FocusDistrict (Either StrictText JSVal)
+  | FocusDistrict (Either District JSVal)
   | SetCurrentTime UTCTime
   | SetCurrentWeatherReport CurrentWeatherReport
   | SetLocalWeatherForecast LocalWeatherForecast
@@ -61,10 +77,12 @@ data Action
 defaultModel :: Model
 defaultModel = Model Nothing Nothing Nothing Nothing Nothing Nothing False False
 
-viewCurrentWeatherReport :: Bool -> Bool -> Maybe UTCTime -> CurrentWeatherReport -> View Model Action
+viewCurrentWeatherReport :: Bool -> Bool -> Maybe Geolocation -> Maybe District -> Maybe UTCTime -> CurrentWeatherReport -> View Model Action
 viewCurrentWeatherReport
   ifDisplayRainfall
   ifDisplayTemperature
+  mCurrentLocation
+  mFocusedDistrict
   mCurrentTime
   ( CurrentWeatherReport
       mLightning
@@ -161,21 +179,18 @@ viewCurrentWeatherReport
       viewHumidity (DataWithRecordTime recordTime _data) =
         div_ [] $
           [ h3_ [class_ "sr-only"] ["Humidity"],
-            div_ [] $
-              [ div_ [] [text . ms $ showRelativeTime mCurrentTime recordTime],
-                ul_ [class_ "flex flex-col gap-2"] $
-                  foldl'
-                    ( \acc (Humidity place value) ->
-                        li_
-                          [class_ "flex flex-row gap-2"]
-                          [ label_ [] [text $ ms place <> ":"],
-                            div_ [] [text . ms $ showIn percent value]
-                          ]
-                          : acc
-                    )
-                    []
-                    _data
-              ]
+            ul_ [class_ "flex flex-col gap-2"] $
+              foldl'
+                ( \acc (Humidity place value) ->
+                    li_
+                      []
+                      [ div_ [class_ "peer"] [text . ms $ "💧 " <> showIn percent value],
+                        p_ [class_ "peer-hover:visible invisible font-light text-sm"] [text $ "at " <> place <> " " <> ms (showRelativeTime mCurrentTime recordTime)]
+                      ]
+                      : acc
+                )
+                []
+                _data
           ]
       viewTemperature (DataWithRecordTime recordTime _data) =
         div_ [] $
@@ -201,45 +216,71 @@ viewCurrentWeatherReport
                     _data
               ]
           ]
+      timeIntervalDisplayText timeInterval = case (lowerBound timeInterval, upperBound timeInterval) of
+        (Finite lb, Finite ub) -> case showInterval mCurrentTime lb ub of
+          Left err -> err
+          Right str -> ms str
+        impossible -> "impossible! unexpected time interval for rainfall data: " <> ms (show impossible)
       viewRainfall (DataWithInterval timeInterval _data) =
-        div_ [] $
-          [ h3_ [class_ "sr-only"] ["Rainfall"],
-            button_
-              [ onClick . SetDisplayRainfall $ not ifDisplayRainfall,
-                class_ "hover:animate-wiggle border px-4 py-2"
-              ]
-              $ [p_ [] [text $ (if ifDisplayRainfall then "Hide" else "Show") <> " Rainfall"]],
-            div_ [class_ $ if ifDisplayRainfall then "" else "hidden"] $
-              [ div_ [] $
-                  [ text . ms $ case (lowerBound timeInterval, upperBound timeInterval) of
-                      -- TEMP FIXME
-                      (Finite lb, Finite ub) -> showTime lb <> " - " <> showTime ub
-                      _ -> "impossible: unexpected time interval for rainfall data"
-                  ],
-                ul_ [class_ "flex flex-col gap-2"] $
-                  foldl'
-                    ( \acc ->
-                        -- NOTE: does item order matter here?
-                        (: acc) . \(Rainfall ll place main) ->
-                          li_ [] $
-                            [ div_ [class_ "flex flex-row gap-2"] $
-                                [ label_ [] [text . ms $ place <> ":"],
-                                  div_ [] $
-                                    [ text . ms $ case (lowerBound ll, upperBound ll) of
-                                        -- FIXME Rainfall interval better type
-                                        (NegInf, Finite rf) -> pack (showIn (milli meter) rf)
-                                        (Finite rf1, Finite rf2) -> pack (showIn (milli meter) rf1 <> " - " <> showIn (milli meter) rf2)
-                                        (_, PosInf) -> "impossible: upperBound pos inf"
-                                        (_, NegInf) -> "impossible: upperBound neg inf"
-                                        (PosInf, _) -> "impossible: lowerBound pos inf"
-                                    ]
+        let rainfallDiplay (Rainfall ll place _main) = case (lowerBound ll, upperBound ll) of
+              -- FIXME Rainfall interval better type
+              (NegInf, _) -> Left @MisoString "impossible: lowerBound neg inf"
+              (PosInf, _) -> Left "impossible: upperBound pos inf"
+              (_, NegInf) -> Left "impossible: upperBound neg inf"
+              (_, PosInf) -> Left "impossible: lowerBound pos inf"
+              (Finite a, Finite b)
+                | a > b -> Left "impossible: lowerBound > upperBound"
+                | SCI.toRealFloat @Double (b /~ milli meter) == 0 -> Right "No rain"
+                | otherwise ->
+                    Right $
+                      div_ [class_ "flex flex-row gap-2"] $
+                        [ label_ [] [text . ms $ place <> ":"],
+                          div_ [] $ [text . ms $ pack ("🌧 " <> showIn (milli meter) a <> " - " <> showIn (milli meter) b)]
+                        ]
+         in div_ [] $
+              [ h3_ [class_ "sr-only"] ["Rainfall"],
+                case mFocusedDistrict of
+                  Just (District _ nameEN@(fromMisoString -> nameEN') _) ->
+                    let isSubstringOf sub txt = case breakOn sub txt of
+                          (((== txt) -> True), "") -> False
+                          _ -> True
+                     in case find
+                          ( \(Rainfall _ place@(fromMisoString -> place') _) ->
+                              -- TEMP HACK FIXME: kind of fuzzy match, I am lazy to check all the district's string. I hope it works for all.
+                              place == nameEN || place' `isSubstringOf` nameEN' || nameEN' `isSubstringOf` place'
+                          )
+                          _data of
+                          Just i -> case rainfallDiplay i of
+                            Left err -> div_ [] [text err]
+                            Right ele ->
+                              div_ [] $
+                                [ div_ [class_ "peer"] [ele],
+                                  div_ [class_ "peer-hover:visible invisible text-xs font-light"] $
+                                    [text $ "at " <> nameEN <> " " <> timeIntervalDisplayText timeInterval]
                                 ]
-                            ]
-                    )
-                    []
-                    _data
+                          Nothing ->
+                            div_ [] $
+                              [ text $ "Error: No district matched " <> nameEN,
+                                ul_ [] $ foldl' (\acc (Rainfall _ place _) -> li_ [] [text place] : acc) [] _data
+                              ]
+                  Nothing ->
+                    button_ [onClick . SetDisplayRainfall $ not ifDisplayRainfall, class_ "hover:animate-wiggle border px-4 py-2"] $
+                      [ p_ [] [text $ (if ifDisplayRainfall then "Hide" else "Show") <> " Rainfall"],
+                        div_ [class_ $ if ifDisplayRainfall then "" else "hidden"] $
+                          [ div_ [class_ "peer-hover:visible invisible text-xs font-light"] $
+                              [text $ timeIntervalDisplayText timeInterval],
+                            case foldl'
+                              ( \acc i -> (: acc) . (li_ []) . (: []) $ case rainfallDiplay i of
+                                  Left err -> text err
+                                  Right i' -> i' -- NOTE: does item order matter here?
+                              )
+                              []
+                              _data of
+                              [] -> div_ [] ["No Raining record"]
+                              eles -> ul_ [class_ "flex flex-col gap-2"] eles
+                          ]
+                      ]
               ]
-          ]
 
 viewLocalWeatherForecast :: Maybe UTCTime -> LocalWeatherForecast -> View Model Action
 viewLocalWeatherForecast
@@ -335,7 +376,7 @@ view9DayWeatherForecast
         p_ [class_ "prose text-neutral-200"] [text $ "Soil temperature is " <> ms (show $ toDegreeCelsiusAbsolute value) <> " °C at " <> ms (showIn meter depth) <> " in " <> place <> " " <> ms (showRelativeTime mCurrentTime recordTime)]
 
 viewModel :: Model -> View Model Action
-viewModel (Model mCurrentTime mELocation mFocusedDistrict mCurrentWeatherReport mLocalWeatherForecast m9DayWeatherForecast ifDisplayRainfall ifDisplayTemperature) =
+viewModel (Model mCurrentTime mELocation mFocusedDistrict mCurrentWeatherReport mLocalWeatherForecast m9DayWeatherForecast rainfallDisplayMode ifDisplayTemperature) =
   div_
     [class_ "h-min-content flex flex-col gap-8 bg-neutral-600 text-neutral-200"]
     [ div_
@@ -356,7 +397,7 @@ viewModel (Model mCurrentTime mELocation mFocusedDistrict mCurrentWeatherReport 
               "CurrentWeatherReport"
             ]
         )
-        (viewCurrentWeatherReport ifDisplayRainfall ifDisplayTemperature mCurrentTime)
+        (viewCurrentWeatherReport rainfallDisplayMode ifDisplayTemperature (mELocation >>= either (const Nothing) Just) mFocusedDistrict mCurrentTime)
         mCurrentWeatherReport,
       maybe
         ( div_

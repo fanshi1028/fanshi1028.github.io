@@ -8,7 +8,6 @@ import Component.Dashboard.View
 import Component.Foreign.MapLibre
 import Control.Monad
 import Data.Function
-import Data.Text
 import Data.Time
 import DataSource.BrowserGeolocationAPI
 import DataSource.CommonSpatialDataInfrastructurePortal
@@ -23,6 +22,7 @@ import Haxl.DataSource.ConcurrentIO
 import Miso
 import Miso.Lens hiding ((*~))
 import Miso.Navigator
+import Utils.JS
 
 haxlEnvflags :: Flags
 haxlEnvflags =
@@ -36,7 +36,7 @@ haxlEnvflags =
 location :: Lens Model (Maybe (Either GeolocationError Geolocation))
 location = lens _location $ \record x -> record {_location = x}
 
-focusedDistrict :: Lens Model (Maybe StrictText)
+focusedDistrict :: Lens Model (Maybe District)
 focusedDistrict = lens _focusedDistrict $ \record x -> record {_focusedDistrict = x}
 
 time :: Lens Model (Maybe UTCTime)
@@ -51,8 +51,10 @@ localWeatherForecast = lens _localWeatherForecast $ \record x -> record {_localW
 nineDayWeatherForecast :: Lens Model (Maybe NineDayWeatherForecast)
 nineDayWeatherForecast = lens _9DayWeatherForecast $ \record x -> record {_9DayWeatherForecast = x}
 
-displayTemperature, displayRainfall :: Lens Model Bool
+displayTemperature :: Lens Model Bool
 displayTemperature = lens _displayTemperature $ \record x -> record {_displayTemperature = x}
+
+displayRainfall :: Lens Model Bool
 displayRainfall = lens _displayRainfall $ \record x -> record {_displayRainfall = x}
 
 fetchData :: Sink Action -> IO ()
@@ -107,17 +109,14 @@ updateModel = \case
   SetLocation loc -> do
     io_ $ addMarkerAndEaseToLocation loc
     location .= Just (Right loc)
-  FocusDistrict (Left code) -> do
+  FocusDistrict (Left district@(District code _ _)) -> do
     io_ $ focusDistrict code
-    focusedDistrict .= Just code
+    focusedDistrict .= Just district
   FocusDistrict (Right geoJSON) -> sync $ do
-    districtId <- callMapLibreFunction (ms "getDistrictAreaCode") [geoJSON]
-    isUndefined districtId >>= \case
-      True -> NoOp <$ consoleWarn (ms "getDistrictAreaCode returned undefined, skipped FocusDistrict")
-      False ->
-        fromJSVal districtId >>= \case
-          Nothing -> NoOp <$ consoleWarn (ms "getDistrictAreaCode returned non string result, skipped FocusDistrict")
-          Just code -> pure $ FocusDistrict $ Left code
+    district <- callMapLibreFunction (ms "getDistrict") [geoJSON]
+    fromJSVal district >>= \case
+      Nothing -> NoOp <$ consoleError' (ms "getDistrict fromJSVal failed, skipped FocusDistrict", district)
+      Just district' -> pure $ FocusDistrict $ Left district'
   SetCurrentTime t -> time .= Just t
   SetLocalWeatherForecast w -> localWeatherForecast .= Just w
   SetCurrentWeatherReport w -> currentWeatherReport .= Just w

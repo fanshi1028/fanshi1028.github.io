@@ -1,14 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module Utils.Time (showRelativeTime, showTime, TimeData) where
+module Utils.Time (showRelativeTime, showInterval, showTime, TimeData) where
 
 import Data.Function
 import Data.Time
 import Data.Time.Format.ISO8601
 import Miso.DSL hiding (Object)
 import Miso.JSON
-import Miso.String (fromMisoString)
+import Miso.String (MisoString, fromMisoString)
 
 newtype TimeData = TimeData ZonedTime
   deriving (Show)
@@ -40,6 +40,20 @@ showRelativeTime' currentTime (TimeData t@(diffUTCTime currentTime . zonedTimeTo
 showRelativeTime :: Maybe UTCTime -> TimeData -> String
 showRelativeTime Nothing = showTime
 showRelativeTime (Just currentTime) = showRelativeTime' currentTime
+
+showInterval :: Maybe UTCTime -> TimeData -> TimeData -> Either MisoString String
+showInterval mCurrentTime (TimeData zt1@(ZonedTime (LocalTime d1 t1) tz1)) (TimeData zt2@(ZonedTime (LocalTime d2 t2) tz2))
+  | tz1 /= tz2 = Left "impossible! expected same time zone for showInterval"
+  | d1 == d2 =
+      Right $
+        ( case mCurrentTime of
+            Nothing -> iso8601Show d1
+            Just currentTime -> if localDay (utcToLocalTime tz1 currentTime) == d1 then "" else iso8601Show d1 <> ": "
+        )
+          <> formatTime defaultTimeLocale "%H:%M" t1
+          <> " - "
+          <> formatTime defaultTimeLocale "%H:%M" t2
+  | otherwise = Right $ show (zonedTimeToLocalTime zt1) <> " - " <> show (zonedTimeToLocalTime zt2)
 
 showTime :: TimeData -> String
 showTime (TimeData t) = show $ zonedTimeToLocalTime t

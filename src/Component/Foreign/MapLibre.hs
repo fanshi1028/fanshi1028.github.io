@@ -137,7 +137,7 @@ addMarkerAndEaseToLocation =
     . callMapLibreFunctionWithMap "addMarkerAndEaseToLocation"
     . geolocationToLngLat @Double
 
-focusDistrict :: StrictText -> IO ()
+focusDistrict :: MisoString -> IO ()
 focusDistrict = void . callMapLibreFunctionWithMap "focusDistrict"
 
 data LngLat a = LngLat (Quantity DPlaneAngle a) (Quantity DPlaneAngle a)
