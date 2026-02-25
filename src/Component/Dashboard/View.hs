@@ -4,9 +4,9 @@
 module Component.Dashboard.View where
 
 import Component.Foreign.MapLibre
-import Data.Foldable (find)
 import Data.Function
 import Data.Interval
+import Data.List
 import Data.Maybe
 import Data.Scientific as SCI
 import Data.Text hiding (find, foldl')
@@ -18,6 +18,7 @@ import Miso.Html.Element
 import Miso.Html.Event
 import Miso.Html.Property hiding (label_)
 import Miso.Navigator
+import Numeric.Natural
 import Numeric.Units.Dimensional hiding ((*), (-))
 import Numeric.Units.Dimensional.NonSI
 import Numeric.Units.Dimensional.SIUnits hiding (toDegreeCelsiusAbsolute)
@@ -47,6 +48,7 @@ data GeoJSONDataId = FocusedDistrictBoundary | WeatherStations
 data Model
   = Model
   { _time :: Maybe UTCTime,
+    _timeSliderValue :: Natural,
     _location :: Maybe (Either GeolocationError Geolocation),
     _focusedDistrict :: Maybe District,
     _currentWeatherReport :: Maybe CurrentWeatherReport,
@@ -65,6 +67,7 @@ data Action
   | SetLocation Geolocation
   | FocusDistrict (Either District JSVal)
   | SetCurrentTime UTCTime
+  | SetTimeSliderValue MisoString
   | SetCurrentWeatherReport CurrentWeatherReport
   | SetLocalWeatherForecast LocalWeatherForecast
   | Set9DayWeatherForecast NineDayWeatherForecast
@@ -75,15 +78,16 @@ data Action
   deriving stock (Eq, Show)
 
 defaultModel :: Model
-defaultModel = Model Nothing Nothing Nothing Nothing Nothing Nothing False False
+defaultModel = Model Nothing 0 Nothing Nothing Nothing Nothing Nothing False False
 
-viewCurrentWeatherReport :: Bool -> Bool -> Maybe Geolocation -> Maybe District -> Maybe UTCTime -> CurrentWeatherReport -> View Model Action
+viewCurrentWeatherReport :: Bool -> Bool -> Maybe Geolocation -> Maybe District -> Maybe UTCTime -> Natural -> CurrentWeatherReport -> View Model Action
 viewCurrentWeatherReport
   ifDisplayRainfall
   ifDisplayTemperature
   mCurrentLocation
   mFocusedDistrict
   mCurrentTime
+  timeSliderValue
   ( CurrentWeatherReport
       mLightning
       rainfall
@@ -308,8 +312,8 @@ viewLocalWeatherForecast
       outlook
       updateTime
     ) =
-    div_ [class_ "flex flex-col gap-6"] $
-      [ h2_ [] ["Local Weather Forecast"],
+    details_ [class_ "flex flex-col gap-6"] $
+      [ summary_ [] ["Local Weather Forecast"],
         div_ [class_ "flex flex-col gap-4"] $
           let displayNonEmptyText = \case
                 "" -> div_ [class_ "hidden"] []
@@ -324,31 +328,35 @@ viewLocalWeatherForecast
               ]
       ]
 
-view9DayWeatherForecast :: Maybe UTCTime -> NineDayWeatherForecast -> View Model Action
+view9DayWeatherForecast :: Maybe UTCTime -> Natural -> NineDayWeatherForecast -> View Model Action
 view9DayWeatherForecast
   mCurrentTime
+  timeSliderValue
   ( NineDayWeatherForecast
       weatherForecasts
       soilTemps
       seaTemp
       generalSituation
       updateTime
-    ) =
-    case foldl' (\acc weatherForecast -> viewWeatherForecast weatherForecast : acc) [] weatherForecasts of
-      [] -> div_ [class_ "hidden"] []
-      viewWeatherForecasts ->
-        div_ [class_ "flex flex-col gap-6"] $
-          [ h2_ [] [text "9 Day Weather Forecast"],
-            p_ [] [text . ms $ "Updated " <> showRelativeTime mCurrentTime updateTime],
-            ul_ [] viewWeatherForecasts,
-            case generalSituation of
-              "" -> div_ [class_ "hidden"] []
-              _ -> div_ [class_ "prose text-neutral-200"] [text $ ms generalSituation],
-            case foldl' (\acc soilTemp -> viewSoilTemp soilTemp : acc) [] soilTemps of
-              [] -> div_ [class_ "hidden"] []
-              viewSoilTemps -> ul_ [class_ "flex flex-col gap-2"] viewSoilTemps,
-            viewSeaTemp seaTemp
-          ]
+    )
+    | timeSliderValue == 0 = div_ [class_ "hidden"] []
+    | otherwise =
+        case weatherForecasts !? fromIntegral timeSliderValue of
+          Nothing -> div_ [] [text . ms $ "impossible timeSliderValue: " <> show timeSliderValue]
+          Just forecast ->
+            div_ [class_ "flex flex-col gap-6"] $
+              [ h2_ [class_ "sr-only"] [text "9 Day Weather Forecast"],
+                p_ [] [text . ms $ "Updated " <> showRelativeTime mCurrentTime updateTime],
+                -- ul_ [] viewWeatherForecasts,
+                viewWeatherForecast forecast,
+                case generalSituation of
+                  "" -> div_ [class_ "hidden"] []
+                  _ -> div_ [class_ "prose text-neutral-200"] [text $ ms generalSituation],
+                case foldl' (\acc soilTemp -> viewSoilTemp soilTemp : acc) [] soilTemps of
+                  [] -> div_ [class_ "hidden"] []
+                  viewSoilTemps -> ul_ [class_ "flex flex-col gap-2"] viewSoilTemps,
+                viewSeaTemp seaTemp
+              ]
     where
       viewWeatherForecast
         ( WeatherForecast
@@ -390,7 +398,7 @@ view9DayWeatherForecast
         p_ [class_ "prose text-neutral-200"] [text $ "Soil temperature is " <> ms (show $ toDegreeCelsiusAbsolute value) <> " °C at " <> ms (showIn meter depth) <> " in " <> place <> " " <> ms (showRelativeTime mCurrentTime recordTime)]
 
 viewModel :: Model -> View Model Action
-viewModel (Model mCurrentTime mELocation mFocusedDistrict mCurrentWeatherReport mLocalWeatherForecast m9DayWeatherForecast rainfallDisplayMode ifDisplayTemperature) =
+viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict mCurrentWeatherReport mLocalWeatherForecast m9DayWeatherForecast rainfallDisplayMode ifDisplayTemperature) =
   div_
     [class_ "h-min-content flex flex-col gap-8 bg-neutral-600 text-neutral-200"]
     [ div_
@@ -404,24 +412,41 @@ viewModel (Model mCurrentTime mELocation mFocusedDistrict mCurrentWeatherReport 
       --   PERMISSION_DENIED -> _
       --   POSITION_UNAVAILABLE -> _
       --   TIMEOUT -> "timeout while getting your location"
-      maybe
-        ( div_
-            [class_ "flex gap-2 justify-center"]
-            [ loadSpinner ["size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
-              "CurrentWeatherReport"
-            ]
-        )
-        (viewCurrentWeatherReport rainfallDisplayMode ifDisplayTemperature (mELocation >>= either (const Nothing) Just) mFocusedDistrict mCurrentTime)
-        mCurrentWeatherReport,
-      maybe
-        ( div_
-            [class_ "flex gap-2 justify-center"]
-            [ loadSpinner ["size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
-              "LocalWeatherForecast"
-            ]
-        )
-        (viewLocalWeatherForecast mCurrentTime)
-        mLocalWeatherForecast,
+      case timeSliderValue of
+        0 ->
+          maybe
+            ( div_
+                [class_ "flex gap-2 justify-center"]
+                [ loadSpinner ["size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
+                  "CurrentWeatherReport"
+                ]
+            )
+            ( viewCurrentWeatherReport
+                rainfallDisplayMode
+                ifDisplayTemperature
+                ( mELocation
+                    >>= either
+                      (const Nothing)
+                      Just
+                )
+                mFocusedDistrict
+                mCurrentTime
+                timeSliderValue
+            )
+            mCurrentWeatherReport
+        _ -> div_ [class_ "hidden"] [],
+      case timeSliderValue of
+        0 ->
+          maybe
+            ( div_
+                [class_ "flex gap-2 justify-center"]
+                [ loadSpinner ["size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
+                  "LocalWeatherForecast"
+                ]
+            )
+            (viewLocalWeatherForecast mCurrentTime)
+            mLocalWeatherForecast
+        _ -> div_ [class_ "hidden"] [],
       maybe
         ( div_
             [class_ "flex gap-2 justify-center"]
@@ -429,10 +454,18 @@ viewModel (Model mCurrentTime mELocation mFocusedDistrict mCurrentWeatherReport 
               "NineDayWeatherForecast"
             ]
         )
-        (view9DayWeatherForecast mCurrentTime)
+        (view9DayWeatherForecast mCurrentTime timeSliderValue)
         m9DayWeatherForecast,
       div_ [class_ "z-10 absolute flex flex-col items-start gap-2 p-2"] $
-        [ button_ [onClick FetchWeatherData, class_ "hidden bg-neutral-200 text-neutral-600 p-2 rounded"] [text "TEMP FIXME Test: refetch"],
+        [ input_
+            [ onInput SetTimeSliderValue,
+              type_ "range",
+              min_ "0",
+              max_ "8",
+              step_ "1",
+              value_ (ms $ show timeSliderValue)
+            ],
+          button_ [onClick FetchWeatherData, class_ "hidden bg-neutral-200 text-neutral-600 p-2 rounded"] [text "TEMP FIXME Test: refetch"],
           button_
             [onClick $ ToggleDisplayHardSurfaceSoccerPitch7, class_ "group bg-neutral-200 text-neutral-600 p-2 rounded inline-block relative"]
             [ "Toggle Football Pitches",

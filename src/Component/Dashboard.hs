@@ -8,6 +8,7 @@ import Component.Dashboard.View
 import Component.Foreign.MapLibre
 import Control.Monad
 import Data.Function
+import Data.Maybe
 import Data.Time
 import DataSource.BrowserGeolocationAPI
 import DataSource.CommonSpatialDataInfrastructurePortal
@@ -22,6 +23,8 @@ import Haxl.DataSource.ConcurrentIO
 import Miso
 import Miso.Lens hiding ((*~))
 import Miso.Navigator
+import Numeric.Natural
+import Text.Read
 import Utils.JS
 
 haxlEnvflags :: Flags
@@ -41,6 +44,9 @@ focusedDistrict = lens _focusedDistrict $ \record x -> record {_focusedDistrict 
 
 time :: Lens Model (Maybe UTCTime)
 time = lens _time $ \record x -> record {_time = x}
+
+timeSliderValue :: Lens Model Natural
+timeSliderValue = lens _timeSliderValue $ \record x -> record {_timeSliderValue = x}
 
 currentWeatherReport :: Lens Model (Maybe CurrentWeatherReport)
 currentWeatherReport = lens _currentWeatherReport $ \record x -> record {_currentWeatherReport = x}
@@ -119,6 +125,7 @@ updateModel = \case
       Nothing -> NoOp <$ consoleError' (ms "getDistrict fromJSVal failed, skipped FocusDistrict", district)
       Just district' -> pure $ FocusDistrict $ Left district'
   SetCurrentTime t -> time .= Just t
+  SetTimeSliderValue v -> timeSliderValue .= fromMaybe 0 (readMaybe $ fromMisoString v)
   SetLocalWeatherForecast w -> localWeatherForecast .= Just w
   SetCurrentWeatherReport w -> currentWeatherReport .= Just w
   Set9DayWeatherForecast w -> nineDayWeatherForecast .= Just w
