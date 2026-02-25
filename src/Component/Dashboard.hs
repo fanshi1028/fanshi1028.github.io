@@ -28,7 +28,7 @@ haxlEnvflags :: Flags
 haxlEnvflags =
   defaultFlags
 #ifndef PRODUCTION
-    { trace = 0,
+    { trace = 1,
       report = profilingReportFlags
     }
 #endif
