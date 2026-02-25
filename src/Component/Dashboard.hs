@@ -8,7 +8,7 @@ import Component.Dashboard.View
 import Component.Foreign.MapLibre
 import Control.Monad
 import Data.Function
-import Data.Text
+import Data.Maybe
 import Data.Time
 import DataSource.BrowserGeolocationAPI
 import DataSource.CommonSpatialDataInfrastructurePortal
@@ -23,12 +23,15 @@ import Haxl.DataSource.ConcurrentIO
 import Miso
 import Miso.Lens hiding ((*~))
 import Miso.Navigator
+import Numeric.Natural
+import Text.Read
+import Utils.JS
 
 haxlEnvflags :: Flags
 haxlEnvflags =
   defaultFlags
 #ifndef PRODUCTION
-    { trace = 0,
+    { trace = 1,
       report = profilingReportFlags
     }
 #endif
@@ -36,11 +39,14 @@ haxlEnvflags =
 location :: Lens Model (Maybe (Either GeolocationError Geolocation))
 location = lens _location $ \record x -> record {_location = x}
 
-focusedDistrict :: Lens Model (Maybe StrictText)
+focusedDistrict :: Lens Model (Maybe District)
 focusedDistrict = lens _focusedDistrict $ \record x -> record {_focusedDistrict = x}
 
 time :: Lens Model (Maybe UTCTime)
 time = lens _time $ \record x -> record {_time = x}
+
+timeSliderValue :: Lens Model Natural
+timeSliderValue = lens _timeSliderValue $ \record x -> record {_timeSliderValue = x}
 
 currentWeatherReport :: Lens Model (Maybe CurrentWeatherReport)
 currentWeatherReport = lens _currentWeatherReport $ \record x -> record {_currentWeatherReport = x}
@@ -51,8 +57,10 @@ localWeatherForecast = lens _localWeatherForecast $ \record x -> record {_localW
 nineDayWeatherForecast :: Lens Model (Maybe NineDayWeatherForecast)
 nineDayWeatherForecast = lens _9DayWeatherForecast $ \record x -> record {_9DayWeatherForecast = x}
 
-displayTemperature, displayRainfall :: Lens Model Bool
+displayTemperature :: Lens Model Bool
 displayTemperature = lens _displayTemperature $ \record x -> record {_displayTemperature = x}
+
+displayRainfall :: Lens Model Bool
 displayRainfall = lens _displayRainfall $ \record x -> record {_displayRainfall = x}
 
 fetchData :: Sink Action -> IO ()
@@ -93,6 +101,7 @@ fetchData sink = do
     uncachedRequest $ GetWeatherWarningSummary t
     uncachedRequest $ GetWeatherWarningInfo t
 
+    getWeatherStations t >>= misoRunAction . AddGeoJSON WeatherStations
 
     uncachedRequest $ GetSpecialWeatherTips t
 
@@ -107,25 +116,24 @@ updateModel = \case
   SetLocation loc -> do
     io_ $ addMarkerAndEaseToLocation loc
     location .= Just (Right loc)
-  FocusDistrict (Left code) -> do
+  FocusDistrict (Left district@(District code _ _)) -> do
     io_ $ focusDistrict code
-    focusedDistrict .= Just code
+    focusedDistrict .= Just district
   FocusDistrict (Right geoJSON) -> sync $ do
-    districtId <- callMapLibreFunction (ms "getDistrictAreaCode") [geoJSON]
-    isUndefined districtId >>= \case
-      True -> NoOp <$ consoleWarn (ms "getDistrictAreaCode returned undefined, skipped FocusDistrict")
-      False ->
-        fromJSVal districtId >>= \case
-          Nothing -> NoOp <$ consoleWarn (ms "getDistrictAreaCode returned non string result, skipped FocusDistrict")
-          Just code -> pure $ FocusDistrict $ Left code
+    district <- callMapLibreFunction (ms "getDistrict") [geoJSON]
+    fromJSVal district >>= \case
+      Nothing -> NoOp <$ consoleError' (ms "getDistrict fromJSVal failed, skipped FocusDistrict", district)
+      Just district' -> pure $ FocusDistrict $ Left district'
   SetCurrentTime t -> time .= Just t
+  SetTimeSliderValue v -> timeSliderValue .= fromMaybe 0 (readMaybe $ fromMisoString v)
   SetLocalWeatherForecast w -> localWeatherForecast .= Just w
   SetCurrentWeatherReport w -> currentWeatherReport .= Just w
   Set9DayWeatherForecast w -> nineDayWeatherForecast .= Just w
   SetDisplayTemperature b -> displayTemperature .= b
   SetDisplayRainfall b -> displayRainfall .= b
-  AddGeoJSON FocusedDistrictBoundary geoJSON -> io_ . void $ callMapLibreFunctionWithMap (ms "addDistrictBoudaryLayer") geoJSON
-  ToggleDisplayHardSurfaceSoccerPitch7 -> io_ . runMapLibre $ toggle_hssp7
+  AddGeoJSON FocusedDistrictBoundary geoJSON -> io_ . void $ callMapLibreFunctionWithMap (ms "addDistrictBoundaryLayer") geoJSON
+  AddGeoJSON WeatherStations geoJSON -> io_ . void $ callMapLibreFunctionWithMap (ms "addWeatherStationsLayer") geoJSON
+  ToggleDisplayHardSurfaceSoccerPitch7 -> io_ toggle_hssp7
 
 dashboardComponent :: Component parent Model Action
 dashboardComponent = (component defaultModel updateModel viewModel) {mount = Just InitAction}

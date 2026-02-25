@@ -25,14 +25,15 @@ import Numeric.Units.Dimensional.SIUnits
 import Text.XML.Light
 import Utils.Haxl
 import Utils.IntervalPeriod
-import Utils.JSON ()
+import Utils.JS ()
 import Utils.Time
 
 -- NOTE: CSDI Portal API
 data CommonSpatialDataInfrastructurePortalReq a where
   GetLatest15minUVIndexGeoJSON :: IntervalPeriod 15 -> CommonSpatialDataInfrastructurePortalReq JSVal
-  GetDistrictBoundary :: IntervalPeriod 1440 -> CommonSpatialDataInfrastructurePortalReq JSVal
+  GetDistrictBoundary :: OncePer30Days -> CommonSpatialDataInfrastructurePortalReq JSVal
   GetDistrictByLocation :: LngLat (Fixed 100000) -> CommonSpatialDataInfrastructurePortalReq JSVal
+  GetWeatherStations :: OncePer30Days -> CommonSpatialDataInfrastructurePortalReq JSVal
 
 deriving instance Eq (CommonSpatialDataInfrastructurePortalReq a)
 
@@ -41,6 +42,7 @@ instance Hashable (CommonSpatialDataInfrastructurePortalReq a) where
     GetLatest15minUVIndexGeoJSON p -> 1 `hashWithSalt` p
     GetDistrictBoundary p -> 2 `hashWithSalt` p
     GetDistrictByLocation (fmap (realToFrac @_ @Double) -> LngLat lng lat) -> 3 `hashWithSalt` (lng /~ degree) `hashWithSalt` (lat /~ degree)
+    GetWeatherStations p -> 4 `hashWithSalt` p
 
 deriving instance Show (CommonSpatialDataInfrastructurePortalReq a)
 
@@ -88,6 +90,7 @@ csdiPortalReqToURI =
                     ]
               )
             ]
+        GetWeatherStations _ -> mkURIHelper "hko_rcd_1634995599372_15888" [("typenames", "HKONWS"), ("count", "100")]
 
 instance DataSource u CommonSpatialDataInfrastructurePortalReq where
   fetch =
@@ -98,6 +101,7 @@ instance DataSource u CommonSpatialDataInfrastructurePortalReq where
         GetLatest15minUVIndexGeoJSON _ -> fetchGetJSON Proxy $ csdiPortalReqToURI req
         GetDistrictBoundary _ -> fetchGetJSON Proxy $ csdiPortalReqToURI req
         GetDistrictByLocation _ -> fetchGetJSON Proxy $ csdiPortalReqToURI req
+        GetWeatherStations _ -> fetchGetJSON Proxy $ csdiPortalReqToURI req
 
 getLatest15minUVIndexGeoJSON :: UTCTime -> GenHaxl u w JSVal
 getLatest15minUVIndexGeoJSON = fetchCacheable . GetLatest15minUVIndexGeoJSON . utcTimeToIntervalPeriod Proxy
@@ -107,6 +111,9 @@ getDistrictBoundary = fetchCacheable . GetDistrictBoundary . utcTimeToIntervalPe
 
 getDistrictByLocation :: Geolocation -> GenHaxl u w JSVal
 getDistrictByLocation = fetchCacheable . GetDistrictByLocation . geolocationToLngLat
+
+getWeatherStations :: UTCTime -> GenHaxl u w JSVal
+getWeatherStations = fetchCacheable . GetWeatherStations . utcTimeToIntervalPeriod Proxy
 
 data UVIndexRecord = UVIndexRecord TimeData Double
   deriving stock (Show, Eq, Generic)

@@ -40,76 +40,77 @@ const getDataURI = (
   }
 }
 
-const getGeoJSONFeatureProperty = (data: GeoJSON.GeoJSON, prop: string) => {
-  if (data.type != 'Feature') {
-    console.warn('GeoJSON is not a Feature, skipped getGeoJSONFeatureId')
-    return
-  }
-  return data.properties?.[prop]
-}
 
-const getGeoJSONFeatures = (data: GeoJSON.GeoJSON) => {
-  if (data.type != 'FeatureCollection') {
-    console.warn(
-      'GeoJSON is not a FeatureCollection, skipped getGeoJSONFeatures'
-    )
-    return
-  }
-  return data.features
-}
+const getGeoJSONFeatures = (data: GeoJSON.GeoJSON) =>
+  data.type != 'FeatureCollection'
+    ? console.error(
+        'unexpected: GeoJSON is not a FeatureCollection. abort getGeoJSONFeatures. \ngot data: %o',
+        data
+      )
+    : data.features
 
-const districtBoudaryLayerId = 'districtBoudaryLayerId'
+const districtBoundaryLayerId = 'districtBoundaryLayerId'
 
-const addDistrictBoudaryLayer = (map: Map, data: GeoJSON.GeoJSON) => {
+const addDistrictBoundaryLayer = (map: Map, data: GeoJSON.GeoJSON) =>
   map
-    .addSource(districtBoudaryLayerId, { type: 'geojson', data })
+    .addSource(districtBoundaryLayerId, { type: 'geojson', data })
     .addLayer({
-      id: districtBoudaryLayerId,
-      source: districtBoudaryLayerId,
+      id: districtBoundaryLayerId,
+      source: districtBoundaryLayerId,
       type: 'line',
       paint: { 'line-color': '#198EC8' },
     })
-    .setFilter(districtBoudaryLayerId, ['literal', false])
-}
+    .setFilter(districtBoundaryLayerId, ['literal', false])
 
-const focusDistrict = (map: Map, areaCode: string) =>
-  map.getLayer(districtBoudaryLayerId)
-    ? map.setFilter(districtBoudaryLayerId, ['==', 'AREA_CODE', areaCode])
-    : console.warn(
-        `layer ${districtBoudaryLayerId} not exists yet. skip focusDistrict.`
-      )
-
-const getDistrictAreaCode = (data: GeoJSON.GeoJSON): string | undefined => {
-  const features = getGeoJSONFeatures(data)
-  if (features) {
-    // NOTE: assume filtered down to the one district result
-    if (features.length == 0) {
+const focusDistrict = (map: Map, areaCode: string) => {
+  const go = (retry = 5) => {
+    if (retry <= 0) {
       console.warn(
-        'unexpected: no districts returned. abort focusDistrictByGeoJSON.'
-      )
-    } else if (features.length > 1) {
-      console.warn(
-        'unexpected: multiple districts returned. abort focusDistrictByGeoJSON.'
+        `layer ${districtBoundaryLayerId} not exists yet. no retry left. abort focusDistrict.`
       )
     } else {
-      if (!features[0])
-        console.warn(
-          'unexpected: district returned has no area_code. abort focusDistrictByGeoJSON.'
-        )
+      if (map.getLayer(districtBoundaryLayerId))
+        map.setFilter(districtBoundaryLayerId, ['==', 'AREA_CODE', areaCode])
       else {
-        const code = getGeoJSONFeatureProperty(features[0], 'AREA_CODE')
-        if (typeof code != 'string') {
-          console.warn(
-            `unexpected: district returned non-string AREA_CODE: ${JSON.stringify(code)} . abort focusDistrictByGeoJSON.`
-          )
-        } else return code
+        console.debug(
+          `layer ${districtBoundaryLayerId} not exists yet. ${retry} retries left. defer focusDistrict.`
+        )
+        setTimeout(() => go(retry - 1), 150)
       }
     }
-  } else
-    console.warn(
-      'unexpected: features not found. abort focusDistrictByGeoJSON.'
-    )
+  }
+  go()
 }
+
+// NOTE: assume "one" district result!
+const getDistrict = (data: GeoJSON.GeoJSON): any | undefined => {
+  const features = getGeoJSONFeatures(data)
+  if (!features || features.length != 1 || !features[0]) {
+    console.error(
+      'unexpected: features should be 1 truthy feature. abort getDistrict. \ngot features: %o',
+      features
+    )
+    return
+  }
+  return features[0].properties
+}
+
+const sourceId = Symbol('weather-stations')
+
+const addWeatherStationsLayer = (map: Map, data: GeoJSON.GeoJSON) =>
+  map.addSource(sourceId.toString(), { type: 'geojson', data }).addLayer({
+    id: sourceId.toString(),
+    source: sourceId.toString(),
+    type: 'symbol',
+    layout: {
+      'icon-image': 'information',
+      'text-field': ['get', 'Name_tc'],
+      'text-offset': [0, 1.25],
+      'text-anchor': 'top',
+      'text-font': ['Noto Sans Regular'],
+    },
+  })
+
 declare global {
   var maplibregl_ffi: unknown
 }
@@ -118,8 +119,9 @@ globalThis.maplibregl_ffi = {
   createMap,
   addMarkerAndEaseToLocation,
   focusDistrict,
-  getDistrictAreaCode,
-  addDistrictBoudaryLayer,
+  getDistrict,
+  addDistrictBoundaryLayer,
+  addWeatherStationsLayer,
   getDataURI,
   hard_surface_soccer_pitch_7,
 }

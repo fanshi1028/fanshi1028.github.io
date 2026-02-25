@@ -96,7 +96,7 @@
                     ++ (with ghc-wasm.packages.${system}; [
                       all_9_14
                       (callPackage ./nix/ghciwatch-commands.nix {
-                        cabal-install = wasm32-wasi-cabal-9_14;
+                        wasm32-wasi-cabal = wasm32-wasi-cabal-9_14;
                       })
                     ])
                   ))

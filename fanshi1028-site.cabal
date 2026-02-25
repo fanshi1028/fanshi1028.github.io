@@ -53,6 +53,7 @@ common lib
     scientific,
     text,
     time,
+    transformers,
     unliftio,
     validation-selective,
     vector,
@@ -84,7 +85,7 @@ common lib
       Utils.Dimensional
       Utils.Haxl
       Utils.IntervalPeriod
-      Utils.JSON
+      Utils.JS
       Utils.Time
       View.ProductRequirementDocument
       View.ProductRequirementDocument.Dashboard
@@ -117,7 +118,7 @@ library
     Utils.Dimensional
     Utils.Haxl
     Utils.IntervalPeriod
-    Utils.JSON
+    Utils.JS
     Utils.Time
     View.ProductRequirementDocument
     View.ProductRequirementDocument.Dashboard

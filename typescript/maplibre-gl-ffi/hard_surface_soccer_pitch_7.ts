@@ -1,21 +1,17 @@
-import { Map, LngLat, type LngLatLike, type AddLayerObject } from 'maplibre-gl'
+import { Map, LngLat, type AddLayerObject } from 'maplibre-gl'
 
 import { type Feature } from 'geojson'
 
 import hssp7_data from './facility-hssp7.json'
+import { isNotNull } from './utils'
 
-function isNotNull<T>(item: T | null): item is T {
-  return item !== null
-}
-
-const source = 'source-sX6NHU7YLnDLbBuJ'
-const layer = 'layer-OC+IXVSzo2f/d5ZO'
+const sourceId = Symbol('facility-hssp7')
 
 let features: Feature[] | null = null
 
 const layerCfg: AddLayerObject = {
-  id: layer,
-  source,
+  id: sourceId.toString(),
+  source: sourceId.toString(),
   type: 'symbol',
   layout: {
     'icon-image': 'soccer',
@@ -32,42 +28,42 @@ export const hard_surface_soccer_pitch_7 = {
   },
   toggleLayer(
     map: Map,
-    processCoords?: (
-      data: typeof hssp7_data,
-      setCoords: (coords: (LngLatLike | null)[]) => void
-    ) => void
+    // NOTE: help function provided from haskell side to help with reloading the data
+    fromWGS84StrPair?: (lngStr: string, latStr: string) => LngLat | null
   ) {
-    if (features === null) {
-      processCoords?.(hssp7_data, (coords) => {
-        features = coords.filter(isNotNull).map((d, i) => {
-          return {
-            type: 'Feature' as const,
-            geometry: {
-              type: 'Point' as const,
-              coordinates: LngLat.convert(d).toArray(),
-            },
-            properties: {
-              title: hssp7_data[i]?.Name_en,
-              // title: hssp7[i]?.Name_cn,
-            },
-          }
+    if (fromWGS84StrPair && features === null) {
+      features = hssp7_data
+        .map((d) => {
+          const coord = fromWGS84StrPair(d.Longitude, d.Latitude)
+          return coord
+            ? {
+                type: 'Feature' as const,
+                geometry: {
+                  type: 'Point' as const,
+                  coordinates: LngLat.convert(coord).toArray(),
+                },
+                properties: {
+                  title: d.Name_en,
+                  // title: d.Name_cn,
+                },
+              }
+            : null
         })
-
-        if (features.length == 0) {
-          console.error(
+        .filter(isNotNull)
+      features.length == 0
+        ? console.error(
             'hard_surface_soccer_pitch_7 toggleLayer: feature is empty / all null.'
           )
-        } else {
-          map.addSource(source, {
-            type: 'geojson',
-            data: { type: 'FeatureCollection', features },
-          })
-          map.addLayer(layerCfg)
-        }
-      })
+        : map
+            .addSource(sourceId.toString(), {
+              type: 'geojson',
+              data: { type: 'FeatureCollection', features },
+            })
+            .addLayer(layerCfg)
     } else {
-      if (map.getLayer(layer) === undefined) map.addLayer(layerCfg)
-      else map.removeLayer(layer)
+      if (map.getLayer(sourceId.toString()) === undefined)
+        map.addLayer(layerCfg)
+      else map.removeLayer(sourceId.toString())
     }
   },
 }
