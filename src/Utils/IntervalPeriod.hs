@@ -22,3 +22,7 @@ utcTimeToIntervalPeriod proxy t =
    in IntervalPeriod (utctDay t) (floor @Rational $ dayTime / ttl /~ one)
 
 type TwiceADay = IntervalPeriod 720
+
+type OncePerDay = IntervalPeriod 1440
+
+type OncePer30Days = IntervalPeriod 43200

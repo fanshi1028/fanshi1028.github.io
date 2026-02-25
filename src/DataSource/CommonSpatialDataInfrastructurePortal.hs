@@ -31,7 +31,7 @@ import Utils.Time
 -- NOTE: CSDI Portal API
 data CommonSpatialDataInfrastructurePortalReq a where
   GetLatest15minUVIndexGeoJSON :: IntervalPeriod 15 -> CommonSpatialDataInfrastructurePortalReq JSVal
-  GetDistrictBoundary :: IntervalPeriod 1440 -> CommonSpatialDataInfrastructurePortalReq JSVal
+  GetDistrictBoundary :: OncePer30Days -> CommonSpatialDataInfrastructurePortalReq JSVal
   GetDistrictByLocation :: LngLat (Fixed 100000) -> CommonSpatialDataInfrastructurePortalReq JSVal
 
 deriving instance Eq (CommonSpatialDataInfrastructurePortalReq a)
