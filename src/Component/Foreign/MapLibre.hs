@@ -21,12 +21,13 @@ import Control.Concurrent
 import Control.Monad
 import Control.Monad.IO.Class
 import Control.Monad.Reader
+import Control.Monad.Trans.Maybe
 import Data.Functor
-import Data.Text
+import Data.Maybe
 import Miso hiding (URI, get, (<#))
 import Miso.Html.Element
 import Miso.Html.Property
-import Miso.JSON
+import Miso.JSON ()
 import Miso.Navigator
 import Numeric.Units.Dimensional
 import Numeric.Units.Dimensional.Quantities
@@ -167,18 +168,12 @@ toggle_hssp7 = runMapLibre $ do
     mapLibre <- readMVar mapLibreMVar
     (hssp7Lib # "getFeatures") () >>= isNull >>= \case
       True -> do
-        processCoords <- syncCallback2 $ \hssp7_data setCoords ->
-          fromJSVal @[JSVal] hssp7_data >>= \case
-            Just hssp7s ->
-              void . call setCoords global $
-                [ traverse
-                    ( \hssp7 -> do
-                        mLng <- hssp7 ! "Longitude" >>= fromJSVal <&> (>>= fromWGS84Str)
-                        mLat <- hssp7 ! "Latitude" >>= fromJSVal <&> (>>= fromWGS84Str)
-                        pure $ LngLat <$> mLng <*> mLat
-                    )
-                    hssp7s
-                ]
-            Nothing -> consoleError' ("impossible! hard_surface_soccer_pitch_7 data is not an array: %o" :: MisoString, hssp7_data)
-        void $ hssp7Lib # "toggleLayer" $ (mapLibre, processCoords)
+        fromWGS84StrPair <- syncCallback2' $ \lngStr latStr ->
+          runMaybeT
+            ( LngLat
+                <$> MaybeT ((>>= fromWGS84Str) <$> fromJSVal lngStr)
+                <*> MaybeT ((>>= fromWGS84Str) <$> fromJSVal latStr)
+            )
+            >>= toJSVal
+        void $ hssp7Lib # "toggleLayer" $ (mapLibre, fromWGS84StrPair)
       False -> void $ hssp7Lib # "toggleLayer" $ [mapLibre]

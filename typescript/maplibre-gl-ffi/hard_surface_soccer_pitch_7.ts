@@ -1,4 +1,4 @@
-import { Map, LngLat, type LngLatLike, type AddLayerObject } from 'maplibre-gl'
+import { Map, LngLat, type AddLayerObject } from 'maplibre-gl'
 
 import { type Feature } from 'geojson'
 
@@ -29,35 +29,38 @@ export const hard_surface_soccer_pitch_7 = {
   },
   toggleLayer(
     map: Map,
-    processCoords?: (
-      data: typeof hssp7_data,
-      setCoords: (coords: (LngLatLike | null)[]) => void
-    ) => void
+    // NOTE: help function provided from haskell side to help with reloading the data
+    fromWGS84StrPair?: (lngStr: string, latStr: string) => LngLat | null
   ) {
-    if (features === null) {
-      processCoords?.(hssp7_data, (coords) => {
-        features = coords.filter(isNotNull).map((d, i) => ({
-          type: 'Feature',
-          geometry: {
-            type: 'Point',
-            coordinates: LngLat.convert(d).toArray(),
-          },
-          properties: {
-            title: hssp7_data[i]?.Name_en,
-            // title: hssp7[i]?.Name_cn,
-          },
-        }))
-        features.length == 0
-          ? console.error(
-              'hard_surface_soccer_pitch_7 toggleLayer: feature is empty / all null.'
-            )
-          : map
-              .addSource(source, {
-                type: 'geojson',
-                data: { type: 'FeatureCollection', features },
-              })
-              .addLayer(layerCfg)
-      })
+    if (fromWGS84StrPair && features === null) {
+      features = hssp7_data
+        .map((d) => {
+          const coord = fromWGS84StrPair(d.Longitude, d.Latitude)
+          return coord
+            ? {
+                type: 'Feature' as const,
+                geometry: {
+                  type: 'Point' as const,
+                  coordinates: LngLat.convert(coord).toArray(),
+                },
+                properties: {
+                  title: d.Name_en,
+                  // title: d.Name_cn,
+                },
+              }
+            : null
+        })
+        .filter(isNotNull)
+      features.length == 0
+        ? console.error(
+            'hard_surface_soccer_pitch_7 toggleLayer: feature is empty / all null.'
+          )
+        : map
+            .addSource(source, {
+              type: 'geojson',
+              data: { type: 'FeatureCollection', features },
+            })
+            .addLayer(layerCfg)
     } else {
       if (map.getLayer(layer) === undefined) map.addLayer(layerCfg)
       else map.removeLayer(layer)
