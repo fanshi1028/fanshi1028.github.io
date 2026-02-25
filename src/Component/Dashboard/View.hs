@@ -222,7 +222,7 @@ viewCurrentWeatherReport
           Right str -> ms str
         impossible -> "impossible! unexpected time interval for rainfall data: " <> ms (show impossible)
       viewRainfall (DataWithInterval timeInterval _data) =
-        let rainfallDiplay (Rainfall ll place _main) = case (lowerBound ll, upperBound ll) of
+        let rainfallDisplay (Rainfall ll place _main) = case (lowerBound ll, upperBound ll) of
               -- FIXME Rainfall interval better type
               (NegInf, _) -> Left @MisoString "impossible: lowerBound neg inf"
               (PosInf, _) -> Left "impossible: upperBound pos inf"
@@ -250,7 +250,7 @@ viewCurrentWeatherReport
                               place == nameEN || place' `isSubstringOf` nameEN' || nameEN' `isSubstringOf` place'
                           )
                           _data of
-                          Just i -> case rainfallDiplay i of
+                          Just i -> case rainfallDisplay i of
                             Left err -> div_ [] [text err]
                             Right ele ->
                               div_ [] $
@@ -270,7 +270,7 @@ viewCurrentWeatherReport
                           [ div_ [class_ "peer-hover:visible invisible text-xs font-light"] $
                               [text $ timeIntervalDisplayText timeInterval],
                             case foldl'
-                              ( \acc i -> (: acc) . (li_ []) . (: []) $ case rainfallDiplay i of
+                              ( \acc i -> (: acc) . (li_ []) . (: []) $ case rainfallDisplay i of
                                   Left err -> text err
                                   Right i' -> i' -- NOTE: does item order matter here?
                               )
