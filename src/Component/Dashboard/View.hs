@@ -195,26 +195,41 @@ viewCurrentWeatherReport
       viewTemperature (DataWithRecordTime recordTime _data) =
         div_ [] $
           [ h3_ [class_ "sr-only"] ["Temperature"],
-            button_
-              [ onClick . SetDisplayTemperature $ not ifDisplayTemperature,
-                class_ "hover:animate-wiggle border px-4 py-2"
-              ]
-              $ [p_ [] [text $ (if ifDisplayTemperature then "Hide" else "Show") <> " Temperature"]],
-            div_ [class_ $ if ifDisplayTemperature then "" else "hidden"] $
-              [ div_ [] [text . ms $ showRelativeTime mCurrentTime recordTime],
-                ul_ [class_ "flex flex-col gap-2"] $
-                  foldl'
-                    ( \acc (Temperature place value) ->
-                        li_
-                          [class_ "flex flex-row gap-2"]
-                          [ label_ [] [text $ ms place <> ":"],
-                            div_ [] [text . ms $ show (toDegreeCelsiusAbsolute value) <> " °C"]
+            let temperatureDisplay (Temperature place value) = ms (show $ toDegreeCelsiusAbsolute value) <> " °C at " <> place
+             in case mFocusedDistrict of
+                  Just (District _ nameEN@(fromMisoString -> nameEN') _) ->
+                    -- TEMP HACK FIXME: kind of fuzzy match, I am lazy to check all the district's string. I hope it works for all.
+                    let stripDistrict (strip -> txt) = strip . fromMaybe txt $ stripSuffix "District" txt
+                        isSubstringOf (stripDistrict -> sub) (stripDistrict -> txt) = case breakOn sub txt of
+                          (((== txt) -> True), "") -> False
+                          _ -> True
+                     in case find
+                          (\(Temperature place@(fromMisoString -> place') _) -> place == nameEN || place' `isSubstringOf` nameEN' || nameEN' `isSubstringOf` place')
+                          _data of
+                          Just i ->
+                            div_ [] $
+                              [ div_ [class_ "peer"] [text $ temperatureDisplay i],
+                                div_ [class_ "peer-hover:visible invisible text-xs font-light"] $
+                                  [text $ ms (showRelativeTime mCurrentTime recordTime)]
+                              ]
+                          Nothing ->
+                            div_ [] $
+                              [ text $ "Error: No district matched " <> nameEN,
+                                ul_ [] $ foldl' (\acc (Temperature place _) -> li_ [] [text place] : acc) [] _data
+                              ]
+                  Nothing ->
+                    div_ [] $
+                      [ button_
+                          [ onClick . SetDisplayTemperature $ not ifDisplayTemperature,
+                            class_ "hover:animate-wiggle border px-4 py-2"
                           ]
-                          : acc
-                    )
-                    []
-                    _data
-              ]
+                          $ [text $ (if ifDisplayTemperature then "Hide" else "Show") <> " Temperature"],
+                        div_ [class_ $ if ifDisplayTemperature then "" else "hidden"] $
+                          [ text . ms $ showRelativeTime mCurrentTime recordTime,
+                            ul_ [class_ "flex flex-col gap-2"] $
+                              foldl' (\acc i -> li_ [class_ "flex flex-row gap-2"] [text $ temperatureDisplay i] : acc) [] _data
+                          ]
+                      ]
           ]
       timeIntervalDisplayText timeInterval = case (lowerBound timeInterval, upperBound timeInterval) of
         (Finite lb, Finite ub) -> case showInterval mCurrentTime lb ub of
@@ -241,14 +256,13 @@ viewCurrentWeatherReport
               [ h3_ [class_ "sr-only"] ["Rainfall"],
                 case mFocusedDistrict of
                   Just (District _ nameEN@(fromMisoString -> nameEN') _) ->
-                    let isSubstringOf sub txt = case breakOn sub txt of
+                    -- TEMP FIXME: kind of fuzzy match and this is wrong, data is not recorded by district
+                    let stripDistrict (strip -> txt) = strip . fromMaybe txt $ stripSuffix "District" txt
+                        isSubstringOf (stripDistrict -> sub) (stripDistrict -> txt) = case breakOn sub txt of
                           (((== txt) -> True), "") -> False
                           _ -> True
                      in case find
-                          ( \(Rainfall _ place@(fromMisoString -> place') _) ->
-                              -- TEMP HACK FIXME: kind of fuzzy match, I am lazy to check all the district's string. I hope it works for all.
-                              place == nameEN || place' `isSubstringOf` nameEN' || nameEN' `isSubstringOf` place'
-                          )
+                          (\(Rainfall _ place@(fromMisoString -> place') _) -> place == nameEN || place' `isSubstringOf` nameEN' || nameEN' `isSubstringOf` place')
                           _data of
                           Just i -> case rainfallDisplay i of
                             Left err -> div_ [] [text err]
