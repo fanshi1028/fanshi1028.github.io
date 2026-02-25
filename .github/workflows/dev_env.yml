@@ -2,7 +2,7 @@ name: Build and deploy
 
 on:
   push:
-    branches: develop
+    branches: dev_env_914
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
