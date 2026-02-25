@@ -95,6 +95,7 @@ fetchData sink = do
     uncachedRequest $ GetWeatherWarningSummary t
     uncachedRequest $ GetWeatherWarningInfo t
 
+    getWeatherStations t >>= misoRunAction . AddGeoJSON WeatherStations
 
     uncachedRequest $ GetSpecialWeatherTips t
 
@@ -124,6 +125,7 @@ updateModel = \case
   SetDisplayTemperature b -> displayTemperature .= b
   SetDisplayRainfall b -> displayRainfall .= b
   AddGeoJSON FocusedDistrictBoundary geoJSON -> io_ . void $ callMapLibreFunctionWithMap (ms "addDistrictBoundaryLayer") geoJSON
+  AddGeoJSON WeatherStations geoJSON -> io_ . void $ callMapLibreFunctionWithMap (ms "addWeatherStationsLayer") geoJSON
   ToggleDisplayHardSurfaceSoccerPitch7 -> io_ toggle_hssp7
 
 dashboardComponent :: Component parent Model Action

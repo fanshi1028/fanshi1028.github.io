@@ -94,6 +94,21 @@ const getDistrict = (data: GeoJSON.GeoJSON): any | undefined => {
   }
   return features[0].properties
 }
+const weatherStationsLayerId = 'weatherStationsLayerId'
+
+const addWeatherStationsLayer = (map: Map, data: GeoJSON.GeoJSON) =>
+  map.addSource(weatherStationsLayerId, { type: 'geojson', data }).addLayer({
+    id: weatherStationsLayerId,
+    source: weatherStationsLayerId,
+    type: 'symbol',
+    layout: {
+      'icon-image': 'information',
+      'text-field': ['get', 'Name_tc'],
+      'text-offset': [0, 1.25],
+      'text-anchor': 'top',
+      'text-font': ['Noto Sans Regular'],
+    },
+  })
 
 declare global {
   var maplibregl_ffi: unknown
@@ -105,6 +120,7 @@ globalThis.maplibregl_ffi = {
   focusDistrict,
   getDistrict,
   addDistrictBoundaryLayer,
+  addWeatherStationsLayer,
   getDataURI,
   hard_surface_soccer_pitch_7,
 }

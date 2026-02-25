@@ -41,7 +41,7 @@ instance FromJSVal District where
     mNameTC <- v ! "NAME_TC" >>= fromJSVal
     pure $ District <$> mAreaCode <*> mNameEN <*> mNameTC
 
-data GeoJSONDataId = FocusedDistrictBoundary
+data GeoJSONDataId = FocusedDistrictBoundary | WeatherStations
   deriving stock (Eq, Show)
 
 data Model
