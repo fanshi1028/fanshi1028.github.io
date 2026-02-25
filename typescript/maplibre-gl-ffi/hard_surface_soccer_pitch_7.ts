@@ -5,14 +5,13 @@ import { type Feature } from 'geojson'
 import hssp7_data from './facility-hssp7.json'
 import { isNotNull } from './utils'
 
-const source = 'source-sX6NHU7YLnDLbBuJ'
-const layer = 'layer-OC+IXVSzo2f/d5ZO'
+const sourceId = Symbol('facility-hssp7')
 
 let features: Feature[] | null = null
 
 const layerCfg: AddLayerObject = {
-  id: layer,
-  source,
+  id: sourceId.toString(),
+  source: sourceId.toString(),
   type: 'symbol',
   layout: {
     'icon-image': 'soccer',
@@ -56,14 +55,15 @@ export const hard_surface_soccer_pitch_7 = {
             'hard_surface_soccer_pitch_7 toggleLayer: feature is empty / all null.'
           )
         : map
-            .addSource(source, {
+            .addSource(sourceId.toString(), {
               type: 'geojson',
               data: { type: 'FeatureCollection', features },
             })
             .addLayer(layerCfg)
     } else {
-      if (map.getLayer(layer) === undefined) map.addLayer(layerCfg)
-      else map.removeLayer(layer)
+      if (map.getLayer(sourceId.toString()) === undefined)
+        map.addLayer(layerCfg)
+      else map.removeLayer(sourceId.toString())
     }
   },
 }

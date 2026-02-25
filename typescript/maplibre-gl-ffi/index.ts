@@ -94,12 +94,13 @@ const getDistrict = (data: GeoJSON.GeoJSON): any | undefined => {
   }
   return features[0].properties
 }
-const weatherStationsLayerId = 'weatherStationsLayerId'
+
+const sourceId = Symbol('weather-stations')
 
 const addWeatherStationsLayer = (map: Map, data: GeoJSON.GeoJSON) =>
-  map.addSource(weatherStationsLayerId, { type: 'geojson', data }).addLayer({
-    id: weatherStationsLayerId,
-    source: weatherStationsLayerId,
+  map.addSource(sourceId.toString(), { type: 'geojson', data }).addLayer({
+    id: sourceId.toString(),
+    source: sourceId.toString(),
     type: 'symbol',
     layout: {
       'icon-image': 'information',
