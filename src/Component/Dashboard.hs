@@ -110,7 +110,7 @@ fetchData sink = do
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
   NoOp -> pure ()
-  InitAction -> issue FetchWeatherData
+  InitAction -> sync $ pure FetchWeatherData
   InitMapLibre -> io_ . void $ createMap
   FetchWeatherData -> withSink fetchData
   SetLocation loc -> do
