@@ -345,7 +345,7 @@ view9DayWeatherForecast
   ( NineDayWeatherForecast
       weatherForecasts
       _idc_about_soilTemps
-      seaTemp
+      _idc_about_seaTemp
       generalSituation
       updateTime
     ) =
@@ -357,8 +357,7 @@ view9DayWeatherForecast
             summary_ [] [viewWeatherForecast forecast],
             case generalSituation of
               "" -> div_ [class_ "hidden"] []
-              _ -> div_ [class_ "prose"] [text $ ms generalSituation],
-            viewSeaTemp seaTemp
+              _ -> div_ [class_ "prose"] [text $ ms generalSituation]
           ]
     where
       viewWeatherForecast
@@ -397,8 +396,6 @@ view9DayWeatherForecast
                 "" -> div_ [class_ "hidden"] []
                 _ -> div_ [] [text . ms $ psr <> " probability of significant rain"]
             ]
-      viewSeaTemp (SeaTemp place value recordTime) =
-        p_ [class_ "prose"] [text $ "Sea temperature is " <> ms (show $ toDegreeCelsiusAbsolute value) <> " °C in " <> place <> " " <> ms (showRelativeTime mCurrentTime recordTime)]
 
 viewModel :: Model -> View Model Action
 viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict mCurrentWeatherReport mLocalWeatherForecast m9DayWeatherForecast rainfallDisplayMode ifDisplayTemperature) =
