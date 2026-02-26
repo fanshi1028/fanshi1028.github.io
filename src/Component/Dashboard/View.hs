@@ -348,25 +348,23 @@ view9DayWeatherForecast
       seaTemp
       generalSituation
       updateTime
-    )
-    | timeSliderValue == 0 = div_ [class_ "hidden"] []
-    | otherwise =
-        case weatherForecasts !? fromIntegral timeSliderValue of
-          Nothing -> div_ [] [text . ms $ "impossible timeSliderValue: " <> show timeSliderValue]
-          Just forecast ->
-            div_ [class_ "flex flex-col gap-6"] $
-              [ h2_ [class_ "sr-only"] [text "9 Day Weather Forecast"],
-                p_ [] [text . ms $ "Updated " <> showRelativeTime mCurrentTime updateTime],
-                -- ul_ [] viewWeatherForecasts,
-                viewWeatherForecast forecast,
-                case generalSituation of
-                  "" -> div_ [class_ "hidden"] []
-                  _ -> div_ [class_ "prose"] [text $ ms generalSituation],
-                case foldl' (\acc soilTemp -> viewSoilTemp soilTemp : acc) [] soilTemps of
-                  [] -> div_ [class_ "hidden"] []
-                  viewSoilTemps -> ul_ [class_ "flex flex-col gap-2"] viewSoilTemps,
-                viewSeaTemp seaTemp
-              ]
+    ) =
+    case weatherForecasts !? fromIntegral timeSliderValue of
+      Nothing -> div_ [] [text . ms $ "impossible timeSliderValue: " <> show timeSliderValue]
+      Just forecast ->
+        div_ [class_ "flex flex-col gap-6"] $
+          [ h2_ [class_ "sr-only"] [text "9 Day Weather Forecast"],
+            p_ [] [text . ms $ "Updated " <> showRelativeTime mCurrentTime updateTime],
+            -- ul_ [] viewWeatherForecasts,
+            viewWeatherForecast forecast,
+            case generalSituation of
+              "" -> div_ [class_ "hidden"] []
+              _ -> div_ [class_ "prose"] [text $ ms generalSituation],
+            case foldl' (\acc soilTemp -> viewSoilTemp soilTemp : acc) [] soilTemps of
+              [] -> div_ [class_ "hidden"] []
+              viewSoilTemps -> ul_ [class_ "flex flex-col gap-2"] viewSoilTemps,
+            viewSeaTemp seaTemp
+          ]
     where
       viewWeatherForecast
         ( WeatherForecast
