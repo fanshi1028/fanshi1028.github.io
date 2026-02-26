@@ -80,6 +80,21 @@ data Action
 defaultModel :: Model
 defaultModel = Model Nothing 0 Nothing Nothing Nothing Nothing Nothing False False
 
+makePopover :: View model action -> View model action
+makePopover content =
+  span_
+    [ classes_
+        [ "invisible group-hover:visible",
+          "transition-opacity opacity-0  group-hover:opacity-100",
+          "absolute z-40 left-1/4 top-[120%] -mt-px",
+          "bg-neutral-600 text-neutral-200 text-nowrap px-2 rounded",
+          -- NOTE: arrow
+          "after:border-solid after:border-8 after:border-transparent after:border-b-neutral-600",
+          "after:content-[''] after:absolute after:left-2 after:bottom-full after:-mb-px"
+        ]
+    ]
+    [content]
+
 viewCurrentWeatherReport :: Bool -> Bool -> Maybe Geolocation -> Maybe District -> Maybe UTCTime -> Natural -> CurrentWeatherReport -> View Model Action
 viewCurrentWeatherReport
   ifDisplayRainfall
@@ -107,9 +122,9 @@ viewCurrentWeatherReport
       humidity
     ) =
     div_ [class_ "flex flex-col items-center gap-6"] $
-      [ div_ [class_ "flex flex-col"] $
-          [ h2_ [class_ "peer text-lg"] ["Current Weather Report"],
-            p_ [class_ "peer-hover:visible invisible text-xs font-light"] [text . ms $ "updated " <> showRelativeTime mCurrentTime updateTime]
+      [ div_ [class_ "flex flex-col group relative"] $
+          [ h2_ [class_ "text-lg"] ["Current Weather Report"],
+            makePopover . text . ms $ "updated " <> showRelativeTime mCurrentTime updateTime
           ],
         div_ [class_ "flex flex-col md:flex-row md:flex-wrap gap-3"] $
           [ case mLightning of
@@ -187,9 +202,9 @@ viewCurrentWeatherReport
               foldl'
                 ( \acc (Humidity place value) ->
                     li_
-                      []
-                      [ div_ [class_ "peer"] [text . ms $ "💧 " <> showIn percent value],
-                        p_ [class_ "peer-hover:visible invisible text-xs font-light"] [text $ "at " <> place <> " " <> ms (showRelativeTime mCurrentTime recordTime)]
+                      [class_ "group relative"]
+                      [ text . ms $ "💧 " <> showIn percent value,
+                        makePopover . text $ "at " <> place <> " " <> ms (showRelativeTime mCurrentTime recordTime)
                       ]
                       : acc
                 )
@@ -211,10 +226,9 @@ viewCurrentWeatherReport
                           (\(Temperature place@(fromMisoString -> place') _) -> place == nameEN || place' `isSubstringOf` nameEN' || nameEN' `isSubstringOf` place')
                           _data of
                           Just i ->
-                            div_ [] $
-                              [ div_ [class_ "peer"] [text $ temperatureDisplay i],
-                                div_ [class_ "peer-hover:visible invisible text-xs font-light"] $
-                                  [text $ ms (showRelativeTime mCurrentTime recordTime)]
+                            div_ [class_ "relative group"] $
+                              [ text $ temperatureDisplay i,
+                                makePopover . text $ ms (showRelativeTime mCurrentTime recordTime)
                               ]
                           Nothing ->
                             div_ [] $
@@ -271,11 +285,8 @@ viewCurrentWeatherReport
                           Just i -> case rainfallDisplay i of
                             Left err -> div_ [] [text err]
                             Right ele ->
-                              div_ [] $
-                                [ div_ [class_ "peer"] [ele],
-                                  div_ [class_ "peer-hover:visible invisible text-xs font-light"] $
-                                    [text $ "at " <> nameEN <> " " <> timeIntervalDisplayText timeInterval]
-                                ]
+                              div_ [class_ "relative group"] $
+                                [ele, makePopover . text $ "at " <> nameEN <> " " <> timeIntervalDisplayText timeInterval]
                           Nothing ->
                             div_ [] $
                               [ text $ "Error: No district matched " <> nameEN,
@@ -284,9 +295,8 @@ viewCurrentWeatherReport
                   Nothing ->
                     button_ [onClick . SetDisplayRainfall $ not ifDisplayRainfall, class_ "hover:animate-wiggle border px-4 py-2"] $
                       [ p_ [] [text $ (if ifDisplayRainfall then "Hide" else "Show") <> " Rainfall"],
-                        div_ [class_ $ if ifDisplayRainfall then "" else "hidden"] $
-                          [ div_ [class_ "peer-hover:visible invisible text-xs font-light"] $
-                              [text $ timeIntervalDisplayText timeInterval],
+                        div_ [classes_ [if ifDisplayRainfall then "" else "hidden", "relative group"]] $
+                          [ makePopover . text $ timeIntervalDisplayText timeInterval,
                             case foldl'
                               ( \acc i -> (: acc) . (li_ []) . (: []) $ case rainfallDisplay i of
                                   Left err -> text err
@@ -417,9 +427,9 @@ viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict mCurre
           div_ [] $
             [ maybe
                 ( div_
-                    [class_ "flex justify-center relative"]
+                    [class_ "flex justify-center relative group"]
                     [ loadSpinner ["size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
-                      p_ [class_ "absolute peer-hover:visible invisible text-xs font-light bg-neutral-200 text-neutral-600"] ["CurrentWeatherReport Loading"]
+                      makePopover "CurrentWeatherReport Loading"
                     ]
                 )
                 ( viewCurrentWeatherReport
@@ -437,9 +447,9 @@ viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict mCurre
                 mCurrentWeatherReport,
               maybe
                 ( div_
-                    [class_ "flex justify-center relative"]
-                    [ loadSpinner ["peer size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
-                      p_ [class_ "absolute peer-hover:visible invisible text-xs font-light bg-neutral-200 text-neutral-600"] ["LocalWeatherForecast Loading"]
+                    [class_ "flex justify-center relative group"]
+                    [ loadSpinner ["size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
+                      makePopover "LocalWeatherForecast Loading"
                     ]
                 )
                 (viewLocalWeatherForecast mCurrentTime)
@@ -447,9 +457,9 @@ viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict mCurre
             ]
         _ ->
           maybe
-            ( div_ [class_ "flex justify-center relative"] $
+            ( div_ [class_ "flex justify-center relative group"] $
                 [ loadSpinner ["size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
-                  p_ [class_ "absolute peer-hover:visible invisible text-xs font-light text-xs font-light bg-neutral-200 text-neutral-600"] ["NineDayWeatherForecast Loading"]
+                  makePopover "NineDayWeatherForecast Loading"
                 ]
             )
             (view9DayWeatherForecast mCurrentTime timeSliderValue)
@@ -466,19 +476,8 @@ viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict mCurre
           button_ [onClick FetchWeatherData, class_ "hidden bg-neutral-200 text-neutral-600 p-2 rounded"] [text "TEMP FIXME Test: refetch"],
           button_
             [onClick $ ToggleDisplayHardSurfaceSoccerPitch7, class_ "group bg-neutral-200 text-neutral-600 p-2 rounded inline-block relative"]
-            [ "⚽",
-              span_
-                [ classes_
-                    [ "invisible group-hover:visible",
-                      "transition-opacity opacity-0  group-hover:opacity-100",
-                      "absolute z-20 left-1/4 top-[120%] -mt-px",
-                      "bg-neutral-600 text-neutral-200 text-nowrap px-2 rounded",
-                      -- NOTE: arrow
-                      "after:border-solid after:border-8 after:border-transparent after:border-b-neutral-600",
-                      "after:content-[''] after:absolute after:left-2 after:bottom-full after:-mb-px"
-                    ]
-                ]
-                ["Toggle hard-surface 7-a-side football pitches"]
+            [ p_ [class_ "font-bold text-lg"] ["⚽"],
+              makePopover "Toggle hard-surface 7-a-side football pitches"
             ]
         ]
     ]
