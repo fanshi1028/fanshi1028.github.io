@@ -214,40 +214,39 @@ viewCurrentWeatherReport
       viewTemperature (DataWithRecordTime recordTime _data) =
         div_ [] $
           [ h3_ [class_ "sr-only"] ["Temperature"],
-            let temperatureDisplay (Temperature place value) = ms (show $ toDegreeCelsiusAbsolute value) <> " °C at " <> place
-             in case mFocusedDistrict of
-                  Just (District _ nameEN@(fromMisoString -> nameEN') _) ->
-                    -- TEMP HACK FIXME: kind of fuzzy match, I am lazy to check all the district's string. I hope it works for all.
-                    let stripDistrict (strip -> txt) = strip . fromMaybe txt $ stripSuffix "District" txt
-                        isSubstringOf (stripDistrict -> sub) (stripDistrict -> txt) = case breakOn sub txt of
-                          (((== txt) -> True), "") -> False
-                          _ -> True
-                     in case find
-                          (\(Temperature place@(fromMisoString -> place') _) -> place == nameEN || place' `isSubstringOf` nameEN' || nameEN' `isSubstringOf` place')
-                          _data of
-                          Just i ->
-                            div_ [class_ "relative group"] $
-                              [ text $ temperatureDisplay i,
-                                makePopover . text $ ms (showRelativeTime mCurrentTime recordTime)
-                              ]
-                          Nothing ->
-                            div_ [] $
-                              [ text $ "Error: No district matched " <> nameEN,
-                                ul_ [] $ foldl' (\acc (Temperature place _) -> li_ [] [text place] : acc) [] _data
-                              ]
-                  Nothing ->
-                    div_ [] $
-                      [ button_
-                          [ onClick . SetDisplayTemperature $ not ifDisplayTemperature,
-                            class_ "hover:animate-wiggle border px-4 py-2"
+            case mFocusedDistrict of
+              Just (District _ nameEN@(fromMisoString -> nameEN') _) ->
+                -- TEMP HACK FIXME: kind of fuzzy match, I am lazy to check all the district's string. I hope it works for all.
+                let stripDistrict (strip -> txt) = strip . fromMaybe txt $ stripSuffix "District" txt
+                    isSubstringOf (stripDistrict -> sub) (stripDistrict -> txt) = case breakOn sub txt of
+                      (((== txt) -> True), "") -> False
+                      _ -> True
+                 in case find
+                      (\(Temperature place@(fromMisoString -> place') _) -> place == nameEN || place' `isSubstringOf` nameEN' || nameEN' `isSubstringOf` place')
+                      _data of
+                      Just i@(Temperature place value) ->
+                        div_ [class_ "relative group"] $
+                          [ text $ ms ("🌡 " <> show (toDegreeCelsiusAbsolute value)) <> " °C",
+                            makePopover . text $ ms (showRelativeTime mCurrentTime recordTime) <> " at " <> place
                           ]
-                          $ [text $ (if ifDisplayTemperature then "Hide" else "Show") <> " Temperature"],
-                        div_ [class_ $ if ifDisplayTemperature then "" else "hidden"] $
-                          [ text . ms $ showRelativeTime mCurrentTime recordTime,
-                            ul_ [class_ "flex flex-col gap-2"] $
-                              foldl' (\acc i -> li_ [class_ "flex flex-row gap-2"] [text $ temperatureDisplay i] : acc) [] _data
+                      Nothing ->
+                        div_ [] $
+                          [ text $ "Error: No district matched " <> nameEN,
+                            ul_ [] $ foldl' (\acc (Temperature place _) -> li_ [] [text place] : acc) [] _data
                           ]
+              Nothing ->
+                div_ [] $
+                  [ button_
+                      [ onClick . SetDisplayTemperature $ not ifDisplayTemperature,
+                        class_ "hover:animate-wiggle border px-4 py-2"
                       ]
+                      $ [text $ (if ifDisplayTemperature then "Hide" else "Show") <> " Temperature"],
+                    div_ [class_ $ if ifDisplayTemperature then "" else "hidden"] $
+                      [ text . ms $ showRelativeTime mCurrentTime recordTime,
+                        ul_ [class_ "flex flex-col gap-2"] $
+                          foldl' (\acc (Temperature place value) -> li_ [class_ "flex flex-row gap-2"] [text $ ms ("🌡 " <> show (toDegreeCelsiusAbsolute value)) <> " °C" <> place] : acc) [] _data
+                      ]
+                  ]
           ]
       timeIntervalDisplayText timeInterval = case (lowerBound timeInterval, upperBound timeInterval) of
         (Finite lb, Finite ub) -> case showInterval mCurrentTime lb ub of
@@ -384,12 +383,12 @@ view9DayWeatherForecast
                 _ -> div_ [] [text . ms $ forecastWeather],
               div_ [] $
                 [ text . ms $ case (lowerBound forecastTempInterval, upperBound forecastTempInterval) of
-                    (Finite lb, Finite ub) -> show (toDegreeCelsiusAbsolute lb) <> " - " <> show (toDegreeCelsiusAbsolute ub) <> " °C"
+                    (Finite lb, Finite ub) -> "🌡 " <> show (toDegreeCelsiusAbsolute lb) <> " - " <> show (toDegreeCelsiusAbsolute ub) <> " °C"
                     _ -> "impossible: unexpected temperature interval for forecast data"
                 ],
               div_ [] $
                 [ text . ms $ case (lowerBound forecastRHInterval, upperBound forecastRHInterval) of
-                    (Finite lb, Finite ub) -> show (lb /~ percent) <> " - " <> pack (showIn percent ub)
+                    (Finite lb, Finite ub) -> "💧 " <> show (lb /~ percent) <> " - " <> pack (showIn percent ub)
                     _ -> "impossible: unexpected relative humidity interval for forecast data"
                 ],
               case psr of
