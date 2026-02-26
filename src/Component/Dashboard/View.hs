@@ -466,7 +466,7 @@ viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict mCurre
           button_ [onClick FetchWeatherData, class_ "hidden bg-neutral-200 text-neutral-600 p-2 rounded"] [text "TEMP FIXME Test: refetch"],
           button_
             [onClick $ ToggleDisplayHardSurfaceSoccerPitch7, class_ "group bg-neutral-200 text-neutral-600 p-2 rounded inline-block relative"]
-            [ "Toggle Football Pitches",
+            [ "⚽",
               span_
                 [ classes_
                     [ "invisible group-hover:visible",
