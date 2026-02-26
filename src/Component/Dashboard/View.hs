@@ -189,7 +189,7 @@ viewCurrentWeatherReport
                     li_
                       []
                       [ div_ [class_ "peer"] [text . ms $ "💧 " <> showIn percent value],
-                        p_ [class_ "peer-hover:visible invisible font-light text-sm"] [text $ "at " <> place <> " " <> ms (showRelativeTime mCurrentTime recordTime)]
+                        p_ [class_ "peer-hover:visible invisible text-xs font-light"] [text $ "at " <> place <> " " <> ms (showRelativeTime mCurrentTime recordTime)]
                       ]
                       : acc
                 )
@@ -414,48 +414,46 @@ viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict mCurre
       --   TIMEOUT -> "timeout while getting your location"
       case timeSliderValue of
         0 ->
-          maybe
-            ( div_
-                [class_ "flex gap-2 justify-center"]
-                [ loadSpinner ["size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
-                  "CurrentWeatherReport"
-                ]
-            )
-            ( viewCurrentWeatherReport
-                rainfallDisplayMode
-                ifDisplayTemperature
-                ( mELocation
-                    >>= either
-                      (const Nothing)
-                      Just
+          div_ [] $
+            [ maybe
+                ( div_
+                    [class_ "flex justify-center relative"]
+                    [ loadSpinner ["size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
+                      p_ [class_ "absolute peer-hover:visible invisible text-xs font-light bg-neutral-200 text-neutral-600"] ["CurrentWeatherReport Loading"]
+                    ]
                 )
-                mFocusedDistrict
-                mCurrentTime
-                timeSliderValue
-            )
-            mCurrentWeatherReport
-        _ -> div_ [class_ "hidden"] [],
-      case timeSliderValue of
-        0 ->
+                ( viewCurrentWeatherReport
+                    rainfallDisplayMode
+                    ifDisplayTemperature
+                    ( mELocation
+                        >>= either
+                          (const Nothing)
+                          Just
+                    )
+                    mFocusedDistrict
+                    mCurrentTime
+                    timeSliderValue
+                )
+                mCurrentWeatherReport,
+              maybe
+                ( div_
+                    [class_ "flex justify-center relative"]
+                    [ loadSpinner ["peer size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
+                      p_ [class_ "absolute peer-hover:visible invisible text-xs font-light bg-neutral-200 text-neutral-600"] ["LocalWeatherForecast Loading"]
+                    ]
+                )
+                (viewLocalWeatherForecast mCurrentTime)
+                mLocalWeatherForecast
+            ]
+        _ ->
           maybe
-            ( div_
-                [class_ "flex gap-2 justify-center"]
+            ( div_ [class_ "flex justify-center relative"] $
                 [ loadSpinner ["size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
-                  "LocalWeatherForecast"
+                  p_ [class_ "absolute peer-hover:visible invisible text-xs font-light text-xs font-light bg-neutral-200 text-neutral-600"] ["NineDayWeatherForecast Loading"]
                 ]
             )
-            (viewLocalWeatherForecast mCurrentTime)
-            mLocalWeatherForecast
-        _ -> div_ [class_ "hidden"] [],
-      maybe
-        ( div_
-            [class_ "flex gap-2 justify-center"]
-            [ loadSpinner ["size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
-              "NineDayWeatherForecast"
-            ]
-        )
-        (view9DayWeatherForecast mCurrentTime timeSliderValue)
-        m9DayWeatherForecast,
+            (view9DayWeatherForecast mCurrentTime timeSliderValue)
+            m9DayWeatherForecast,
       div_ [class_ "z-10 absolute flex flex-col items-start gap-2 p-2"] $
         [ input_
             [ onInput SetTimeSliderValue,
