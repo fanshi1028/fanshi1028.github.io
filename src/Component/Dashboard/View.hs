@@ -121,7 +121,7 @@ viewCurrentWeatherReport
       temperature
       humidity
     ) =
-    div_ [class_ "flex flex-col items-center gap-6"] $
+    div_ [class_ "flex flex-col items-center gap-6 p-6"] $
       [ div_ [class_ "flex flex-col group relative"] $
           [ h2_ [class_ "text-lg"] ["Current Weather Report"],
             makePopover . text . ms $ "updated " <> showRelativeTime mCurrentTime updateTime
@@ -352,10 +352,9 @@ view9DayWeatherForecast
     case weatherForecasts !? fromIntegral timeSliderValue of
       Nothing -> div_ [] [text . ms $ "impossible timeSliderValue: " <> show timeSliderValue]
       Just forecast ->
-        div_ [class_ "flex flex-col gap-6"] $
+        details_ [class_ "flex flex-col gap-6 p-6"] $
           [ h2_ [class_ "sr-only"] [text "9 Day Weather Forecast"],
-            -- ul_ [] viewWeatherForecasts,
-            viewWeatherForecast forecast,
+            summary_ [] [viewWeatherForecast forecast],
             case generalSituation of
               "" -> div_ [class_ "hidden"] []
               _ -> div_ [class_ "prose"] [text $ ms generalSituation],
@@ -421,7 +420,7 @@ viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict mCurre
       --   PERMISSION_DENIED -> _
       --   POSITION_UNAVAILABLE -> _
       --   TIMEOUT -> "timeout while getting your location"
-      div_ [class_ "z-10 absolute flex flex-col items-start gap-2 p-2"] $
+      div_ [class_ "z-10 absolute flex flex-col items-start gap-2 p-2 max-w-xs"] $
         [ input_
             [ onInput SetTimeSliderValue,
               type_ "range",
