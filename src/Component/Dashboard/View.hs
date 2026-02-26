@@ -344,7 +344,7 @@ view9DayWeatherForecast
   timeSliderValue
   ( NineDayWeatherForecast
       weatherForecasts
-      soilTemps
+      _idc_about_soilTemps
       seaTemp
       generalSituation
       updateTime
@@ -358,9 +358,6 @@ view9DayWeatherForecast
             case generalSituation of
               "" -> div_ [class_ "hidden"] []
               _ -> div_ [class_ "prose"] [text $ ms generalSituation],
-            case foldl' (\acc soilTemp -> viewSoilTemp soilTemp : acc) [] soilTemps of
-              [] -> div_ [class_ "hidden"] []
-              viewSoilTemps -> ul_ [class_ "flex flex-col gap-2"] viewSoilTemps,
             viewSeaTemp seaTemp
           ]
     where
@@ -402,8 +399,6 @@ view9DayWeatherForecast
             ]
       viewSeaTemp (SeaTemp place value recordTime) =
         p_ [class_ "prose"] [text $ "Sea temperature is " <> ms (show $ toDegreeCelsiusAbsolute value) <> " °C in " <> place <> " " <> ms (showRelativeTime mCurrentTime recordTime)]
-      viewSoilTemp (SoilTemp place value recordTime depth) =
-        p_ [class_ "prose"] [text $ "Soil temperature is " <> ms (show $ toDegreeCelsiusAbsolute value) <> " °C at " <> ms (showIn meter depth) <> " in " <> place <> " " <> ms (showRelativeTime mCurrentTime recordTime)]
 
 viewModel :: Model -> View Model Action
 viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict mCurrentWeatherReport mLocalWeatherForecast m9DayWeatherForecast rainfallDisplayMode ifDisplayTemperature) =
