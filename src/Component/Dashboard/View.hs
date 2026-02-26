@@ -327,7 +327,7 @@ viewLocalWeatherForecast
         div_ [class_ "flex flex-col gap-4"] $
           let displayNonEmptyText = \case
                 "" -> div_ [class_ "hidden"] []
-                t -> div_ [class_ "prose text-neutral-200"] [text $ ms t]
+                t -> div_ [class_ "prose"] [text $ ms t]
            in [ p_ [] [text . ms $ "Updated " <> showRelativeTime mCurrentTime updateTime],
                 displayNonEmptyText generalSituation,
                 displayNonEmptyText tcInfo,
@@ -361,7 +361,7 @@ view9DayWeatherForecast
                 viewWeatherForecast forecast,
                 case generalSituation of
                   "" -> div_ [class_ "hidden"] []
-                  _ -> div_ [class_ "prose text-neutral-200"] [text $ ms generalSituation],
+                  _ -> div_ [class_ "prose"] [text $ ms generalSituation],
                 case foldl' (\acc soilTemp -> viewSoilTemp soilTemp : acc) [] soilTemps of
                   [] -> div_ [class_ "hidden"] []
                   viewSoilTemps -> ul_ [class_ "flex flex-col gap-2"] viewSoilTemps,
@@ -403,9 +403,9 @@ view9DayWeatherForecast
                 _ -> div_ [] [text . ms $ psr <> " probability of significant rain"]
             ]
       viewSeaTemp (SeaTemp place value recordTime) =
-        p_ [class_ "prose text-neutral-200"] [text $ "Sea temperature is " <> ms (show $ toDegreeCelsiusAbsolute value) <> " °C in " <> place <> " " <> ms (showRelativeTime mCurrentTime recordTime)]
+        p_ [class_ "prose"] [text $ "Sea temperature is " <> ms (show $ toDegreeCelsiusAbsolute value) <> " °C in " <> place <> " " <> ms (showRelativeTime mCurrentTime recordTime)]
       viewSoilTemp (SoilTemp place value recordTime depth) =
-        p_ [class_ "prose text-neutral-200"] [text $ "Soil temperature is " <> ms (show $ toDegreeCelsiusAbsolute value) <> " °C at " <> ms (showIn meter depth) <> " in " <> place <> " " <> ms (showRelativeTime mCurrentTime recordTime)]
+        p_ [class_ "prose"] [text $ "Soil temperature is " <> ms (show $ toDegreeCelsiusAbsolute value) <> " °C at " <> ms (showIn meter depth) <> " in " <> place <> " " <> ms (showRelativeTime mCurrentTime recordTime)]
 
 viewModel :: Model -> View Model Action
 viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict mCurrentWeatherReport mLocalWeatherForecast m9DayWeatherForecast rainfallDisplayMode ifDisplayTemperature) =
@@ -413,7 +413,7 @@ viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict mCurre
     [class_ "h-min-content flex flex-col gap-8 bg-neutral-600 text-neutral-200"]
     [ div_
         [ class_ $ case mELocation of
-            Just (Right _) -> "h-screen w-full pb-24 -mb-24"
+            Just (Right _) -> "h-screen w-full"
             _ -> "",
           onCreated InitMapLibre
         ]
@@ -422,48 +422,6 @@ viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict mCurre
       --   PERMISSION_DENIED -> _
       --   POSITION_UNAVAILABLE -> _
       --   TIMEOUT -> "timeout while getting your location"
-      case timeSliderValue of
-        0 ->
-          div_ [] $
-            [ maybe
-                ( div_
-                    [class_ "flex justify-center relative group"]
-                    [ loadSpinner ["size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
-                      makePopover "CurrentWeatherReport Loading"
-                    ]
-                )
-                ( viewCurrentWeatherReport
-                    rainfallDisplayMode
-                    ifDisplayTemperature
-                    ( mELocation
-                        >>= either
-                          (const Nothing)
-                          Just
-                    )
-                    mFocusedDistrict
-                    mCurrentTime
-                    timeSliderValue
-                )
-                mCurrentWeatherReport,
-              maybe
-                ( div_
-                    [class_ "flex justify-center relative group"]
-                    [ loadSpinner ["size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
-                      makePopover "LocalWeatherForecast Loading"
-                    ]
-                )
-                (viewLocalWeatherForecast mCurrentTime)
-                mLocalWeatherForecast
-            ]
-        _ ->
-          maybe
-            ( div_ [class_ "flex justify-center relative group"] $
-                [ loadSpinner ["size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
-                  makePopover "NineDayWeatherForecast Loading"
-                ]
-            )
-            (view9DayWeatherForecast mCurrentTime timeSliderValue)
-            m9DayWeatherForecast,
       div_ [class_ "z-10 absolute flex flex-col items-start gap-2 p-2"] $
         [ input_
             [ onInput SetTimeSliderValue,
@@ -475,9 +433,51 @@ viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict mCurre
             ],
           button_ [onClick FetchWeatherData, class_ "hidden bg-neutral-200 text-neutral-600 p-2 rounded"] [text "TEMP FIXME Test: refetch"],
           button_
-            [onClick $ ToggleDisplayHardSurfaceSoccerPitch7, class_ "group bg-neutral-200 text-neutral-600 p-2 rounded inline-block relative"]
+            [onClick $ ToggleDisplayHardSurfaceSoccerPitch7, class_ "group bg-neutral-200 text-neutral-600 p-2 rounded inline-block relative shadow shadow-neutral-600"]
             [ p_ [class_ "font-bold text-lg"] ["⚽"],
               makePopover "Toggle hard-surface 7-a-side football pitches"
-            ]
+            ],
+          div_ [class_ "bg-neutral-200 text-neutral-600 px-6 rounded shadow shadow-neutral-600"] $ case timeSliderValue of
+            0 ->
+              [ maybe
+                  ( div_
+                      [class_ "flex justify-center relative group"]
+                      [ loadSpinner ["size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
+                        makePopover "CurrentWeatherReport Loading"
+                      ]
+                  )
+                  ( viewCurrentWeatherReport
+                      rainfallDisplayMode
+                      ifDisplayTemperature
+                      ( mELocation
+                          >>= either
+                            (const Nothing)
+                            Just
+                      )
+                      mFocusedDistrict
+                      mCurrentTime
+                      timeSliderValue
+                  )
+                  mCurrentWeatherReport,
+                maybe
+                  ( div_
+                      [class_ "flex justify-center relative group"]
+                      [ loadSpinner ["size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
+                        makePopover "LocalWeatherForecast Loading"
+                      ]
+                  )
+                  (viewLocalWeatherForecast mCurrentTime)
+                  mLocalWeatherForecast
+              ]
+            _ ->
+              [ maybe
+                  ( div_ [class_ "flex justify-center relative group"] $
+                      [ loadSpinner ["size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
+                        makePopover "NineDayWeatherForecast Loading"
+                      ]
+                  )
+                  (view9DayWeatherForecast mCurrentTime timeSliderValue)
+                  m9DayWeatherForecast
+              ]
         ]
     ]

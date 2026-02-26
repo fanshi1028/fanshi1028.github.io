@@ -16,7 +16,7 @@ loadSpinner clss =
       viewBox_ "0 0 12 12"
     ]
     [ circle_
-        [ class_ "fill-transparent stroke-2 stroke-neutral-200",
+        [ class_ "fill-transparent stroke-2 stroke-neutral-600",
           cx_ "6",
           cy_ "6",
           r_ "5",
