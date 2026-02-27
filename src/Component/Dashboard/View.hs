@@ -256,10 +256,6 @@ viewCurrentWeatherReport
       viewRainfall (DataWithInterval timeInterval _data) =
         let rainfallDisplay (Rainfall ll place _main) = case (lowerBound ll, upperBound ll) of
               -- FIXME Rainfall interval better type
-              (NegInf, _) -> Left @MisoString "impossible: lowerBound neg inf"
-              (PosInf, _) -> Left "impossible: upperBound pos inf"
-              (_, NegInf) -> Left "impossible: upperBound neg inf"
-              (_, PosInf) -> Left "impossible: lowerBound pos inf"
               (Finite a, Finite b)
                 | a > b -> Left "impossible: lowerBound > upperBound"
                 | SCI.toRealFloat @Double (b /~ milli meter) == 0 -> Right "No rain"
@@ -269,6 +265,7 @@ viewCurrentWeatherReport
                         [ label_ [] [text . ms $ place <> ":"],
                           div_ [] $ [text . ms $ pack ("🌧 " <> showIn (milli meter) a <> " - " <> showIn (milli meter) b)]
                         ]
+              _ -> Left $ "impossible rainfall interval: " <> ms (show ll)
          in div_ [] $
               [ h3_ [class_ "sr-only"] ["Rainfall"],
                 case mFocusedDistrict of
