@@ -122,11 +122,8 @@ viewCurrentWeatherReport
       temperature
       humidity
     ) =
-    div_ [class_ "flex flex-col items-center"] $
-      [ div_ [class_ "flex flex-col group relative"] $
-          [ h2_ [class_ "text-lg"] ["Current Weather Report"],
-            makePopover . text . ms $ "updated " <> showRelativeTime mCurrentTime updateTime
-          ],
+    div_ [class_ "flex flex-col gap-2"] $
+      [ div_ [class_ "group relative"] $ [h2_ [class_ "text-lg"] ["Today"], makePopover . text . ms $ "updated " <> showRelativeTime mCurrentTime updateTime],
         div_ [class_ "flex flex-col md:flex-row md:flex-wrap gap-3"] $
           [ case mLightning of
               Nothing -> div_ [class_ "hidden"] []
@@ -331,16 +328,18 @@ view9DayWeatherForecast
       generalSituation
       updateTime
     ) =
-    case weatherForecasts !? fromIntegral timeSliderValue of
-      Nothing -> div_ [] [text . ms $ "impossible timeSliderValue: " <> show timeSliderValue]
-      Just forecast ->
-        details_ [class_ "flex flex-col gap-6 p-6"] $
-          [ h2_ [class_ "sr-only"] [text "9 Day Weather Forecast"],
-            summary_ [] [viewWeatherForecast forecast],
-            case generalSituation of
-              "" -> div_ [class_ "hidden"] []
-              _ -> div_ [class_ "prose"] [text $ ms generalSituation]
-          ]
+    div_ [] $
+      [ h2_ [class_ "sr-only"] [text "Weather Forecast"],
+        case weatherForecasts !? fromIntegral timeSliderValue of
+          Nothing -> text . ms $ "impossible timeSliderValue: " <> show timeSliderValue
+          Just forecast ->
+            div_ [class_ "flex flex-col gap-4"] $
+              [ viewWeatherForecast forecast,
+                case generalSituation of
+                  "" -> div_ [class_ "hidden"] []
+                  _ -> div_ [class_ "prose"] [text $ ms generalSituation]
+              ]
+      ]
     where
       viewWeatherForecast
         ( WeatherForecast
@@ -355,15 +354,9 @@ view9DayWeatherForecast
           ) =
           div_ [class_ "flex flex-col gap-2"] $
             [ div_ [class_ "group relative"] $
-                [ text . ms $ show weekDay <> " " <> show forecastDate,
+                [ h2_ [class_ "text-lg"] [text . ms $ show weekDay <> " " <> show forecastDate],
                   makePopover . text . ms $ "Updated " <> showRelativeTime mCurrentTime updateTime
                 ],
-              case forecastWind of
-                "" -> div_ [class_ "hidden"] []
-                _ -> div_ [] [text . ms $ forecastWind],
-              case forecastWeather of
-                "" -> div_ [class_ "hidden"] []
-                _ -> div_ [] [text . ms $ forecastWeather],
               div_ [] $
                 [ text . ms $ case (lowerBound forecastTempInterval, upperBound forecastTempInterval) of
                     (Finite lb, Finite ub) -> "🌡 " <> show (toDegreeCelsiusAbsolute lb) <> " - " <> show (toDegreeCelsiusAbsolute ub) <> " °C"
@@ -376,7 +369,13 @@ view9DayWeatherForecast
                 ],
               case psr of
                 "" -> div_ [class_ "hidden"] []
-                _ -> div_ [] [text . ms $ psr <> " probability of significant rain"]
+                _ -> div_ [] [text . ms $ psr <> " probability of significant rain"],
+              case forecastWind of
+                "" -> div_ [class_ "hidden"] []
+                _ -> div_ [] [text . ms $ forecastWind],
+              case forecastWeather of
+                "" -> div_ [class_ "hidden"] []
+                _ -> div_ [] [text . ms $ forecastWeather]
             ]
 
 viewModel :: Model -> View Model Action
