@@ -122,7 +122,7 @@ viewCurrentWeatherReport
       temperature
       humidity
     ) =
-    div_ [class_ "flex flex-col items-center p-6"] $
+    div_ [class_ "flex flex-col items-center"] $
       [ div_ [class_ "flex flex-col group relative"] $
           [ h2_ [class_ "text-lg"] ["Current Weather Report"],
             makePopover . text . ms $ "updated " <> showRelativeTime mCurrentTime updateTime
@@ -150,8 +150,7 @@ viewCurrentWeatherReport
                             lightnings
                       ]
                   ],
-            div_ [class_ "flex flex-row flex-wrap gap-2"] $ [viewRainfall rainfall, viewTemperature temperature, viewHumidity humidity],
-            viewUVIndex uvindex,
+            div_ [class_ "flex flex-row flex-wrap gap-2"] $ [viewRainfall rainfall, viewTemperature temperature, viewHumidity humidity, viewUVIndex uvindex],
             case foldl' (\acc msg -> li_ [] [text (ms msg)] : acc) [] warningMessage of
               [] -> div_ [class_ "hidden"] []
               lis -> div_ [] $ [h3_ [class_ "sr-only"] ["Warning Message"], ul_ [class_ "flex flex-col gap-2"] lis],
@@ -396,61 +395,63 @@ viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict mCurre
       --   POSITION_UNAVAILABLE -> _
       --   TIMEOUT -> "timeout while getting your location"
       div_ [class_ "z-10 absolute flex flex-col items-start gap-2 p-2 max-w-xs"] $
-        [ input_
-            [ onInput SetTimeSliderValue,
-              type_ "range",
-              min_ "0",
-              max_ "8",
-              step_ "1",
-              value_ (ms $ show timeSliderValue)
-            ],
-          button_ [onClick FetchWeatherData, class_ "hidden bg-neutral-200 text-neutral-600 p-2 rounded"] [text "TEMP FIXME Test: refetch"],
+        [ button_ [onClick FetchWeatherData, class_ "hidden bg-neutral-200 text-neutral-600 p-2 rounded"] [text "TEMP FIXME Test: refetch"],
           button_
             [onClick $ ToggleDisplayHardSurfaceSoccerPitch7, class_ "group bg-neutral-200 text-neutral-600 p-2 rounded inline-block relative shadow shadow-neutral-600"]
             [ p_ [class_ "font-bold text-lg"] ["⚽"],
               makePopover "Toggle hard-surface 7-a-side football pitches"
             ],
-          div_ [class_ "bg-neutral-200 text-neutral-600 px-6 rounded shadow shadow-neutral-600"] $ case timeSliderValue of
-            0 ->
-              [ maybe
-                  ( div_
-                      [class_ "flex justify-center relative group"]
-                      [ loadSpinner ["size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
-                        makePopover "CurrentWeatherReport Loading"
-                      ]
-                  )
-                  ( viewCurrentWeatherReport
-                      rainfallDisplayMode
-                      ifDisplayTemperature
-                      ( mELocation
-                          >>= either
-                            (const Nothing)
-                            Just
+          div_ [class_ "flex flex-col gap-2 bg-neutral-200 text-neutral-600 py-4 px-6 rounded shadow shadow-neutral-600"] $
+            [ input_
+                [ onInput SetTimeSliderValue,
+                  type_ "range",
+                  min_ "0",
+                  max_ "8",
+                  step_ "1",
+                  value_ (ms $ show timeSliderValue)
+                ],
+              div_ [] $ case timeSliderValue of
+                0 ->
+                  [ maybe
+                      ( div_
+                          [class_ "flex justify-center relative group"]
+                          [ loadSpinner ["size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
+                            makePopover "CurrentWeatherReport Loading"
+                          ]
                       )
-                      mFocusedDistrict
-                      mCurrentTime
-                      timeSliderValue
-                  )
-                  mCurrentWeatherReport,
-                maybe
-                  ( div_
-                      [class_ "flex justify-center relative group"]
-                      [ loadSpinner ["size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
-                        makePopover "LocalWeatherForecast Loading"
-                      ]
-                  )
-                  (viewLocalWeatherForecast mCurrentTime)
-                  mLocalWeatherForecast
-              ]
-            _ ->
-              [ maybe
-                  ( div_ [class_ "flex justify-center relative group"] $
-                      [ loadSpinner ["size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
-                        makePopover "NineDayWeatherForecast Loading"
-                      ]
-                  )
-                  (view9DayWeatherForecast mCurrentTime timeSliderValue)
-                  m9DayWeatherForecast
-              ]
+                      ( viewCurrentWeatherReport
+                          rainfallDisplayMode
+                          ifDisplayTemperature
+                          ( mELocation
+                              >>= either
+                                (const Nothing)
+                                Just
+                          )
+                          mFocusedDistrict
+                          mCurrentTime
+                          timeSliderValue
+                      )
+                      mCurrentWeatherReport,
+                    maybe
+                      ( div_
+                          [class_ "flex justify-center relative group"]
+                          [ loadSpinner ["size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
+                            makePopover "LocalWeatherForecast Loading"
+                          ]
+                      )
+                      (viewLocalWeatherForecast mCurrentTime)
+                      mLocalWeatherForecast
+                  ]
+                _ ->
+                  [ maybe
+                      ( div_ [class_ "flex justify-center relative group"] $
+                          [ loadSpinner ["size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
+                            makePopover "NineDayWeatherForecast Loading"
+                          ]
+                      )
+                      (view9DayWeatherForecast mCurrentTime timeSliderValue)
+                      m9DayWeatherForecast
+                  ]
+            ]
         ]
     ]
