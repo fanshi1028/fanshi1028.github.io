@@ -325,20 +325,14 @@ view9DayWeatherForecast
       weatherForecasts
       _idc_about_soilTemps
       _idc_about_seaTemp
-      generalSituation
+      _idc_generalSituation
       updateTime
     ) =
     div_ [] $
       [ h2_ [class_ "sr-only"] [text "Weather Forecast"],
         case weatherForecasts !? fromIntegral timeSliderValue of
           Nothing -> text . ms $ "impossible timeSliderValue: " <> show timeSliderValue
-          Just forecast ->
-            div_ [class_ "flex flex-col gap-4"] $
-              [ viewWeatherForecast forecast,
-                case generalSituation of
-                  "" -> div_ [class_ "hidden"] []
-                  _ -> div_ [class_ "prose"] [text $ ms generalSituation]
-              ]
+          Just forecast -> viewWeatherForecast forecast
       ]
     where
       viewWeatherForecast
