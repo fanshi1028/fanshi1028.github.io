@@ -296,26 +296,20 @@ viewLocalWeatherForecast
       generalSituation
       tcInfo
       fireDangerWarning
-      forecastPeriod
-      forecastDesc
-      outlook
+      _idc_forecastPeriod
+      _idc_forecastDesc
+      _idc_outlook
       updateTime
     ) =
-    details_ [class_ "flex flex-col gap-6"] $
-      [ summary_ [] ["Local Weather Forecast"],
-        div_ [class_ "flex flex-col gap-4"] $
-          let displayNonEmptyText = \case
-                "" -> div_ [class_ "hidden"] []
-                t -> div_ [class_ "prose"] [text $ ms t]
-           in [ p_ [] [text . ms $ "Updated " <> showRelativeTime mCurrentTime updateTime],
-                displayNonEmptyText generalSituation,
-                displayNonEmptyText tcInfo,
-                displayNonEmptyText fireDangerWarning,
-                displayNonEmptyText forecastPeriod,
-                displayNonEmptyText forecastDesc,
-                displayNonEmptyText outlook
-              ]
-      ]
+    div_ [class_ "flex flex-col gap-6 group relative"] $
+      let displayNonEmptyText = \case
+            "" -> div_ [class_ "hidden"] []
+            t -> div_ [class_ "prose"] [text $ ms t]
+       in [ displayNonEmptyText generalSituation,
+            displayNonEmptyText tcInfo,
+            displayNonEmptyText fireDangerWarning,
+            makePopover . text . ms $ "Updated " <> showRelativeTime mCurrentTime updateTime
+          ]
 
 view9DayWeatherForecast :: Maybe UTCTime -> Natural -> NineDayWeatherForecast -> View Model Action
 view9DayWeatherForecast
@@ -409,7 +403,7 @@ viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict mCurre
                   step_ "1",
                   value_ (ms $ show timeSliderValue)
                 ],
-              div_ [] $ case timeSliderValue of
+              div_ [class_ "flex flex-col gap-4"] $ case timeSliderValue of
                 0 ->
                   [ maybe
                       ( div_
