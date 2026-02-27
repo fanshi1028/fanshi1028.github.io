@@ -367,9 +367,17 @@ view9DayWeatherForecast
                     (Finite lb, Finite ub) -> "💧 " <> show (lb /~ percent) <> " - " <> pack (showIn percent ub)
                     _ -> "impossible: unexpected relative humidity interval for forecast data"
                 ],
-              case psr of
-                "" -> div_ [class_ "hidden"] []
-                _ -> div_ [] [text . ms $ psr <> " probability of significant rain"],
+              div_ [class_ "flex flex-row gap-2 relative group"] $
+                [ "🌧",
+                  input_
+                    [ type_ "range",
+                      min_ . ms . show . fromEnum $ minBound @ProbabilityOfSignificantRain,
+                      max_ . ms . show . fromEnum $ maxBound @ProbabilityOfSignificantRain,
+                      value_ . ms . show $ fromEnum psr,
+                      disabled_
+                    ],
+                  makePopover . text . ms $ show psr <> " probability of significant rain"
+                ],
               case forecastWind of
                 "" -> div_ [class_ "hidden"] []
                 _ -> div_ [] [text . ms $ forecastWind],

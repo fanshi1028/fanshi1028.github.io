@@ -11,13 +11,14 @@ module DataSource.HongKongObservatoryWeatherAPI.Types where
 import Control.Applicative
 import Data.Functor
 import Data.Interval
+import Data.List
 import Data.List.NonEmpty
 import Data.Scientific
 import Data.Time
 import GHC.Generics
 import Miso.DSL hiding (Object)
 import Miso.JSON
-import Miso.String
+import Miso.String hiding (findIndex)
 import Numeric.Natural
 import Numeric.Units.Dimensional
 import Numeric.Units.Dimensional.NonSI
@@ -76,6 +77,16 @@ instance FromJSON SeaTemp where
       <*> parseJSON_DegreeCelsius (Object o)
       <*> o .: "recordTime"
 
+-- NOTE: Response value description: https://www.hko.gov.hk/en/wxinfo/currwx/fnd.htm?tablenote=true
+data ProbabilityOfSignificantRain
+  = High
+  | MediumHigh
+  | Medium
+  | MediumLow
+  | Low
+  deriving stock (Eq, Show, Generic, Enum, Bounded)
+  deriving anyclass (ToJSVal, FromJSVal)
+
 data WeatherForecast = WeatherForecast
   { forecastDate :: Day, -- Forecast Date YYYYMMDD
     week :: DayOfWeek, -- Week
@@ -83,16 +94,7 @@ data WeatherForecast = WeatherForecast
     forecastWeather :: MisoString, -- Forecast Weather
     forecastTempInterval :: Interval (ThermodynamicTemperature Scientific), -- Forecast Temperature
     forecastRHInterval :: Interval (Dimensionless Scientific), -- Forecast  Relative Humidity
-    ------------------------------------------------------------------------------------------------
-    -- Probability of Significant Rain Response value:                                            --
-    --    High                                                                                    --
-    --    Medium High                                                                             --
-    --    Medium                                                                                  --
-    --    Medium Low                                                                              --
-    --    Low                                                                                     --
-    -- Response value description: https://www.hko.gov.hk/en/wxinfo/currwx/fnd.htm?tablenote=true --
-    ------------------------------------------------------------------------------------------------
-    psr :: MisoString, -- TEMP FIXME
+    psr :: ProbabilityOfSignificantRain,
     forecastIcon :: Natural
   }
   deriving stock (Eq, Show, Generic)
@@ -133,10 +135,10 @@ instance FromJSON WeatherForecast where
       max' <- o .: "forecastMaxrh" >>= parseJSON_Unit parsePercent
       pure $ Finite min' <=..<= Finite max'
     psr <-
-      o .: "PSR" >>= \case
-        txt
-          | txt `elem` ["High", "Medium High", "Medium", "Medium Low", "Low"] -> pure $ fromMisoString txt -- TEMP FIXME
-          | otherwise -> typeMismatch "PSR" $ String txt
+      o .: "PSR" >>= \txt ->
+        case findIndex (txt ==) ["High", "Medium High", "Medium", "Medium Low", "Low"] of
+          Nothing -> typeMismatch "PSR" $ String txt
+          Just idx -> pure $ toEnum idx
     pure $
       WeatherForecast
         forecastDate
