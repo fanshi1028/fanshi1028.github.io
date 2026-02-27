@@ -79,11 +79,11 @@ instance FromJSON SeaTemp where
 
 -- NOTE: Response value description: https://www.hko.gov.hk/en/wxinfo/currwx/fnd.htm?tablenote=true
 data ProbabilityOfSignificantRain
-  = High
-  | MediumHigh
-  | Medium
+  = Low
   | MediumLow
-  | Low
+  | Medium
+  | MediumHigh
+  | High
   deriving stock (Eq, Show, Enum, Bounded)
 
 instance FromJSVal ProbabilityOfSignificantRain where
@@ -141,7 +141,7 @@ instance FromJSON WeatherForecast where
       pure $ Finite min' <=..<= Finite max'
     psr <-
       o .: "PSR" >>= \txt ->
-        case findIndex (txt ==) ["High", "Medium High", "Medium", "Medium Low", "Low"] of
+        case findIndex (txt ==) ["Low", "Medium Low", "Medium", "Medium High", "High"] of
           Nothing -> typeMismatch "PSR" $ String txt
           Just idx -> pure $ toEnum idx
     pure $
