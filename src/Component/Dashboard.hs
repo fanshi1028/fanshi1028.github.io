@@ -63,6 +63,9 @@ displayTemperature = lens _displayTemperature $ \record x -> record {_displayTem
 displayRainfall :: Lens Model Bool
 displayRainfall = lens _displayRainfall $ \record x -> record {_displayRainfall = x}
 
+displayWeatherPanel :: Lens Model Bool
+displayWeatherPanel = lens _displayWeatherPanel $ \record x -> record {_displayWeatherPanel = x}
+
 fetchData :: Sink Action -> IO ()
 fetchData sink = do
   ioState <- mkConcurrentIOState
@@ -134,6 +137,7 @@ updateModel = \case
   AddGeoJSON FocusedDistrictBoundary geoJSON -> io_ . void $ callMapLibreFunctionWithMap (ms "addDistrictBoundaryLayer") geoJSON
   AddGeoJSON WeatherStations geoJSON -> io_ . void $ callMapLibreFunctionWithMap (ms "addWeatherStationsLayer") geoJSON
   ToggleDisplayHardSurfaceSoccerPitch7 -> io_ toggle_hssp7
+  ToggleDisplayWeatherPanel -> displayWeatherPanel %= not
 
 dashboardComponent :: Component parent Model Action
 dashboardComponent = (component defaultModel updateModel viewModel) {mount = Just InitAction}
