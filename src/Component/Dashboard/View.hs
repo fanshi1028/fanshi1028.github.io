@@ -137,7 +137,7 @@ viewCurrentWeatherReport
                       [ div_ [] $
                           [ text . ms $ case (lowerBound lightningsInterval, upperBound lightningsInterval) of
                               (Finite lb, Finite ub) -> show lb <> " - " <> show ub
-                              _ -> "impossible: unexpected time interval for rainfall data"
+                              _ -> "impossible: unexpected time interval for lightning data"
                           ],
                         ul_ [] $
                           foldl'
