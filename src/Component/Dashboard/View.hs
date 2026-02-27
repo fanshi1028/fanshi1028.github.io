@@ -121,7 +121,7 @@ viewCurrentWeatherReport
       temperature
       humidity
     ) =
-    div_ [class_ "flex flex-col items-center gap-6 p-6"] $
+    div_ [class_ "flex flex-col items-center p-6"] $
       [ div_ [class_ "flex flex-col group relative"] $
           [ h2_ [class_ "text-lg"] ["Current Weather Report"],
             makePopover . text . ms $ "updated " <> showRelativeTime mCurrentTime updateTime
@@ -149,10 +149,12 @@ viewCurrentWeatherReport
                             lightnings
                       ]
                   ],
-            viewRainfall rainfall,
-            viewUVIndex uvindex,
-            viewTemperature temperature,
-            viewHumidity humidity,
+            div_ [class_ "flex flex-row flex-wrap gap-2"] $
+              [ viewRainfall rainfall,
+                viewTemperature temperature,
+                viewHumidity humidity,
+                viewUVIndex uvindex
+              ],
             case foldl' (\acc msg -> li_ [] [text (ms msg)] : acc) [] warningMessage of
               [] -> div_ [class_ "hidden"] []
               lis -> div_ [] $ [h3_ [class_ "sr-only"] ["Warning Message"], ul_ [class_ "flex flex-col gap-2"] lis],
@@ -254,18 +256,21 @@ viewCurrentWeatherReport
           Right str -> ms str
         impossible -> "impossible! unexpected time interval for rainfall data: " <> ms (show impossible)
       viewRainfall (DataWithInterval timeInterval _data) =
-        let rainfallDisplay (Rainfall ll place _main) = case (lowerBound ll, upperBound ll) of
+        let rainfallDisplay withPlaceLabel (Rainfall ll place _main) = case (lowerBound ll, upperBound ll) of
               -- FIXME Rainfall interval better type
               (Finite a, Finite b)
-                | a > b -> Left "impossible: lowerBound > upperBound"
-                | SCI.toRealFloat @Double (b /~ milli meter) == 0 -> Right "No rain"
+                | a > b -> div_ [] ["impossible rainfall: lowerBound > upperBound"]
+                | SCI.toRealFloat @Double (b /~ milli meter) == 0 ->
+                    div_ [class_ "flex flex-row gap-2 min-w-fit"] $
+                      [ if withPlaceLabel then label_ [] [text . ms $ place <> ":"] else div_ [class_ "hidden"] [],
+                        div_ [class_ "relative size-8"] [div_ [class_ "absolute text-2xl font-bold"] $ [text "🌧"], div_ [class_ "absolute text-2xl font-extralight text-red-400"] $ [text "❌"]]
+                      ]
                 | otherwise ->
-                    Right $
-                      div_ [class_ "flex flex-row gap-2"] $
-                        [ label_ [] [text . ms $ place <> ":"],
-                          div_ [] $ [text . ms $ pack ("🌧 " <> showIn (milli meter) a <> " - " <> showIn (milli meter) b)]
-                        ]
-              _ -> Left $ "impossible rainfall interval: " <> ms (show ll)
+                    div_ [class_ "flex flex-row gap-2"] $
+                      [ if withPlaceLabel then label_ [] [text . ms $ place <> ":"] else div_ [class_ "hidden"] [],
+                        div_ [] $ [text . ms $ pack ("🌧 " <> showIn (milli meter) a <> " - " <> showIn (milli meter) b)]
+                      ]
+              _ -> div_ [] [text $ "impossible rainfall interval: " <> ms (show ll)]
          in div_ [] $
               [ h3_ [class_ "sr-only"] ["Rainfall"],
                 case mFocusedDistrict of
@@ -278,11 +283,9 @@ viewCurrentWeatherReport
                      in case find
                           (\(Rainfall _ place@(fromMisoString -> place') _) -> place == nameEN || place' `isSubstringOf` nameEN' || nameEN' `isSubstringOf` place')
                           _data of
-                          Just i -> case rainfallDisplay i of
-                            Left err -> div_ [] [text err]
-                            Right ele ->
-                              div_ [class_ "relative group"] $
-                                [ele, makePopover . text $ "at " <> nameEN <> " " <> timeIntervalDisplayText timeInterval]
+                          Just i ->
+                            div_ [class_ "relative group"] $
+                              [rainfallDisplay False i, makePopover . text $ "at " <> nameEN <> " " <> timeIntervalDisplayText timeInterval]
                           Nothing ->
                             div_ [] $
                               [ text $ "Error: No district matched " <> nameEN,
@@ -293,13 +296,8 @@ viewCurrentWeatherReport
                       [ p_ [] [text $ (if ifDisplayRainfall then "Hide" else "Show") <> " Rainfall"],
                         div_ [classes_ [if ifDisplayRainfall then "" else "hidden", "relative group"]] $
                           [ makePopover . text $ timeIntervalDisplayText timeInterval,
-                            case foldl'
-                              ( \acc i -> (: acc) . (li_ []) . (: []) $ case rainfallDisplay i of
-                                  Left err -> text err
-                                  Right i' -> i' -- NOTE: does item order matter here?
-                              )
-                              []
-                              _data of
+                            -- NOTE: does item order matter here?
+                            case foldl' (\acc i -> li_ [] [rainfallDisplay True i] : acc) [] _data of
                               [] -> div_ [] ["No Raining record"]
                               eles -> ul_ [class_ "flex flex-col gap-2"] eles
                           ]
