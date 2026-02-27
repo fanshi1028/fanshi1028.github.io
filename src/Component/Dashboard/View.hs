@@ -7,6 +7,7 @@ import Component.Foreign.MapLibre
 import Data.Function
 import Data.Interval
 import Data.List
+import Data.List.NonEmpty
 import Data.Maybe
 import Data.Scientific as SCI
 import Data.Text hiding (find, foldl')
@@ -149,12 +150,8 @@ viewCurrentWeatherReport
                             lightnings
                       ]
                   ],
-            div_ [class_ "flex flex-row flex-wrap gap-2"] $
-              [ viewRainfall rainfall,
-                viewTemperature temperature,
-                viewHumidity humidity,
-                viewUVIndex uvindex
-              ],
+            div_ [class_ "flex flex-row flex-wrap gap-2"] $ [viewRainfall rainfall, viewTemperature temperature, viewHumidity humidity],
+            viewUVIndex uvindex,
             case foldl' (\acc msg -> li_ [] [text (ms msg)] : acc) [] warningMessage of
               [] -> div_ [class_ "hidden"] []
               lis -> div_ [] $ [h3_ [class_ "sr-only"] ["Warning Message"], ul_ [class_ "flex flex-col gap-2"] lis],
@@ -171,32 +168,27 @@ viewCurrentWeatherReport
       ]
     where
       viewUVIndex NoUVIndexData = div_ [class_ "hidden"] ["No uvindex data"]
-      viewUVIndex (UVIndex _data) =
+      viewUVIndex (UVIndex (UVIndexData place value desc' mMessage :| [])) =
         div_ [] $
           [ h3_ [class_ "sr-only"] ["UV Index"],
-            div_ [] $
-              [ ul_ [] $
-                  foldl'
-                    ( \acc -> \case
-                        UVIndexData place value desc' mMessage ->
-                          li_
-                            [class_ "flex flex-col gap-2"]
-                            [ div_
-                                [class_ "flex flex-row gap-2"]
-                                [ label_ [] [text $ ms place],
-                                  div_ [] [text . ms $ show value],
-                                  div_ [] [text $ ms desc']
-                                ],
-                              div_ [] $ case mMessage of
-                                Nothing -> []
-                                Just message -> [text $ ms message]
-                            ]
-                            : acc
-                    )
-                    []
-                    _data
+            div_
+              [class_ "flex flex-col gap-2"]
+              [ div_
+                  [class_ "group relative"]
+                  [ div_
+                      [class_ "flex flex-row gap-2"]
+                      [ text "🌞",
+                        input_ [type_ "range", min_ "0", max_ "11", disabled_, value_ . ms $ show value],
+                        text desc'
+                      ],
+                    makePopover . text $ "UV Index " <> ms (show value) <> " at " <> ms place
+                  ],
+                div_ [] $ case mMessage of
+                  Nothing -> []
+                  Just message -> [text $ ms message]
               ]
           ]
+      viewUVIndex (UVIndex _data) = div_ [] $ [h3_ [class_ "sr-only"] ["UV Index"], "Unexpected: FIXME more then one UV Index data"]
       viewHumidity (DataWithRecordTime recordTime _data) =
         div_ [] $
           [ h3_ [class_ "sr-only"] ["Humidity"],
