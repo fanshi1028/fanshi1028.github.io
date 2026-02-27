@@ -84,8 +84,13 @@ data ProbabilityOfSignificantRain
   | Medium
   | MediumLow
   | Low
-  deriving stock (Eq, Show, Generic, Enum, Bounded)
-  deriving anyclass (ToJSVal, FromJSVal)
+  deriving stock (Eq, Show, Enum, Bounded)
+
+instance FromJSVal ProbabilityOfSignificantRain where
+  fromJSVal v = fmap toEnum <$> fromJSVal v
+
+instance ToJSVal ProbabilityOfSignificantRain where
+  toJSVal = toJSVal . fromEnum
 
 data WeatherForecast = WeatherForecast
   { forecastDate :: Day, -- Forecast Date YYYYMMDD
