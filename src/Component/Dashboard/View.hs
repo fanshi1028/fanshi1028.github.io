@@ -246,7 +246,7 @@ viewCurrentWeatherReport
         (Finite lb, Finite ub) -> case showInterval mCurrentTime lb ub of
           Left err -> err
           Right str -> ms str
-        impossible -> "impossible! unexpected time interval for rainfall data: " <> ms (show impossible)
+        impossible -> "impossible! unexpected time interval for data: " <> ms (show impossible)
       viewRainfall (DataWithInterval timeInterval _data) =
         let rainfallDisplay withPlaceLabel (Rainfall ll place _main) = case (lowerBound ll, upperBound ll) of
               -- FIXME Rainfall interval better type
