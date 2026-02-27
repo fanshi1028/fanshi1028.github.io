@@ -253,10 +253,7 @@ viewCurrentWeatherReport
               (Finite a, Finite b)
                 | a > b -> div_ [] ["impossible rainfall: lowerBound > upperBound"]
                 | SCI.toRealFloat @Double (b /~ milli meter) == 0 ->
-                    div_ [class_ "flex flex-row gap-2 min-w-fit"] $
-                      [ if withPlaceLabel then label_ [] [text . ms $ place <> ":"] else div_ [class_ "hidden"] [],
-                        div_ [class_ "relative size-8"] [div_ [class_ "absolute text-2xl font-bold"] $ [text "🌧"], div_ [class_ "absolute text-2xl font-extralight text-red-400"] $ [text "❌"]]
-                      ]
+                    div_ [class_ "flex flex-row gap-2 min-w-fit"] $ [if withPlaceLabel then label_ [] [text . ms $ place <> ":"] else div_ [class_ "hidden"] [], "🌧 0 mm"]
                 | otherwise ->
                     div_ [class_ "flex flex-row gap-2"] $
                       [ if withPlaceLabel then label_ [] [text . ms $ place <> ":"] else div_ [class_ "hidden"] [],
