@@ -34,6 +34,102 @@ isSubstringOf (stripDistrict -> sub) (stripDistrict -> txt) = case breakOn sub t
   (((== txt) -> True), "") -> False
   _ -> True
 
+timeIntervalDisplayText :: Maybe UTCTime -> Interval TimeData -> MisoString
+timeIntervalDisplayText mCurrentTime timeInterval = case (lowerBound timeInterval, upperBound timeInterval) of
+  (Finite lb, Finite ub) -> case showInterval mCurrentTime lb ub of
+    Left err -> err
+    Right str -> ms str
+  impossible -> "impossible! unexpected time interval for data: " <> ms (show impossible)
+
+viewUVIndex :: UVIndex -> View model action
+viewUVIndex NoUVIndexData = div_ [class_ "hidden"] ["No uvindex data"]
+viewUVIndex (UVIndex (UVIndexData place value desc' mMessage :| [])) =
+  div_ [] $
+    [ h3_ [class_ "sr-only"] ["UV Index"],
+      div_
+        [class_ "flex flex-col gap-2"]
+        [ div_
+            [class_ "group relative"]
+            [ div_
+                [class_ "flex flex-row gap-2"]
+                [ text "🌞",
+                  input_ [type_ "range", min_ "0", max_ "11", disabled_, value_ . ms $ show value],
+                  text desc'
+                ],
+              makePopover
+                (Popover PlaceArrowStart PlacePopoverBottom)
+                [ text $ "UV index is " <> ms (show value),
+                  br_ [],
+                  text $ "at " <> ms place
+                ]
+            ],
+          div_ [] $ case mMessage of
+            Nothing -> []
+            Just message -> [text $ ms message]
+        ]
+    ]
+viewUVIndex (UVIndex _data) = div_ [] $ [h3_ [class_ "sr-only"] ["UV Index"], "Unexpected: FIXME more then one UV Index data"]
+
+viewHumidity :: Maybe UTCTime -> DataWithRecordTime Humidity -> View model action
+viewHumidity mCurrentTime (DataWithRecordTime recordTime _data) =
+  div_ [] $
+    [ h3_ [class_ "sr-only"] ["Humidity"],
+      ul_ [class_ "flex flex-col gap-2"] $
+        foldl'
+          ( \acc (Humidity place value) ->
+              li_
+                [class_ "group relative"]
+                [ text . ms $ "💧 " <> showIn percent value,
+                  makePopover
+                    (Popover PlaceArrowEnd PlacePopoverBottom)
+                    [ text . ms $ showRelativeTime mCurrentTime recordTime,
+                      br_ [],
+                      text $ "at " <> place
+                    ]
+                ]
+                : acc
+          )
+          []
+          _data
+    ]
+
+viewTemperature :: Maybe UTCTime -> Maybe District -> DataWithRecordTime Temperature -> Bool -> View model Action
+viewTemperature mCurrentTime mFocusedDistrict (DataWithRecordTime recordTime _data) ifDisplayTemperature =
+  div_ [] $
+    [ h3_ [class_ "sr-only"] ["Temperature"],
+      case mFocusedDistrict of
+        Just (District _ nameEN@(fromMisoString -> nameEN') _) ->
+          case find (\(Temperature place@(fromMisoString -> place') _) -> place == nameEN || place' `isSubstringOf` nameEN' || nameEN' `isSubstringOf` place') _data of
+            Just (Temperature place value) ->
+              div_ [class_ "relative group"] $
+                [ text $ ms ("🌡 " <> show (toDegreeCelsiusAbsolute value)) <> " °C",
+                  makePopover
+                    (Popover PlaceArrowStart PlacePopoverBottom)
+                    [ text . ms $ showRelativeTime mCurrentTime recordTime,
+                      br_ [],
+                      text $ "at " <> place
+                    ]
+                ]
+            Nothing ->
+              div_ [] $
+                [ text $ "Error: No district matched " <> nameEN,
+                  ul_ [] $ foldl' (\acc (Temperature place _) -> li_ [] [text place] : acc) [] _data
+                ]
+        Nothing ->
+          div_ [] $
+            [ button_
+                [ onClick . SetDisplayTemperature $ not ifDisplayTemperature,
+                  class_ "hover:animate-wiggle border px-4 py-2"
+                ]
+                $ [text $ (if ifDisplayTemperature then "Hide" else "Show") <> " Temperature"],
+              div_ [class_ $ if ifDisplayTemperature then "" else "hidden"] $
+                [ text . ms $ showRelativeTime mCurrentTime recordTime,
+                  ul_ [class_ "flex flex-col gap-2"] $
+                    foldl' (\acc (Temperature place value) -> li_ [class_ "flex flex-row gap-2"] [text $ ms ("🌡 " <> show (toDegreeCelsiusAbsolute value)) <> " °C" <> place] : acc) [] _data
+                ]
+            ]
+    ]
+
 rainfallDisplay :: Bool -> Rainfall -> View model action
 rainfallDisplay withPlaceLabel (Rainfall ll place _main) = case (lowerBound ll, upperBound ll) of
   -- FIXME Rainfall interval better type
@@ -47,6 +143,43 @@ rainfallDisplay withPlaceLabel (Rainfall ll place _main) = case (lowerBound ll, 
             div_ [] $ [text . ms $ pack ("🌧 " <> showIn (milli meter) a <> " - " <> showIn (milli meter) b)]
           ]
   _ -> div_ [] [text $ "impossible rainfall interval: " <> ms (show ll)]
+
+viewRainfall :: Maybe UTCTime -> Maybe District -> DataWithInterval Rainfall -> Bool -> View model Action
+viewRainfall mCurrentTime mFocusedDistrict (DataWithInterval timeInterval _data) ifDisplayRainfall =
+  div_ [] $
+    [ h3_ [class_ "sr-only"] ["Rainfall"],
+      case mFocusedDistrict of
+        Just (District _ nameEN@(fromMisoString -> nameEN') _) ->
+          case find
+            (\(Rainfall _ place@(fromMisoString -> place') _) -> place == nameEN || place' `isSubstringOf` nameEN' || nameEN' `isSubstringOf` place')
+            _data of
+            Just i ->
+              div_ [class_ "relative group"] $
+                [ rainfallDisplay False i,
+                  makePopover
+                    (Popover PlaceArrowStart PlacePopoverBottom)
+                    [ text $ timeIntervalDisplayText mCurrentTime timeInterval,
+                      br_ [],
+                      text $ "at " <> nameEN
+                    ]
+                ]
+            Nothing ->
+              div_ [] $
+                [ text $ "Error: No district matched " <> nameEN,
+                  ul_ [] $ foldl' (\acc (Rainfall _ place _) -> li_ [] [text place] : acc) [] _data
+                ]
+        Nothing ->
+          button_ [onClick . SetDisplayRainfall $ not ifDisplayRainfall, class_ "hover:animate-wiggle border px-4 py-2"] $
+            [ p_ [] [text $ (if ifDisplayRainfall then "Hide" else "Show") <> " Rainfall"],
+              div_ [classes_ [if ifDisplayRainfall then "" else "hidden", "relative group"]] $
+                [ makePopover (Popover PlaceArrowStart PlacePopoverBottom) [text $ timeIntervalDisplayText mCurrentTime timeInterval],
+                  -- NOTE: does item order matter here?
+                  case foldl' (\acc i -> li_ [] [rainfallDisplay True i] : acc) [] _data of
+                    [] -> div_ [] ["No Raining record"]
+                    eles -> ul_ [class_ "flex flex-col gap-2"] eles
+                ]
+            ]
+    ]
 
 viewCurrentWeatherReport :: Bool -> Bool -> Maybe District -> Maybe UTCTime -> CurrentWeatherReport -> View Model Action
 viewCurrentWeatherReport
@@ -103,7 +236,12 @@ viewCurrentWeatherReport
                             lightnings
                       ]
                   ],
-            div_ [class_ "flex flex-row flex-wrap gap-2"] $ [viewRainfall rainfall, viewTemperature temperature, viewHumidity humidity, viewUVIndex uvindex],
+            div_ [class_ "flex flex-row flex-wrap gap-2"] $
+              [ viewRainfall mCurrentTime mFocusedDistrict rainfall ifDisplayRainfall,
+                viewTemperature mCurrentTime mFocusedDistrict temperature ifDisplayTemperature,
+                viewHumidity mCurrentTime humidity,
+                viewUVIndex uvindex
+              ],
             case foldl' (\acc msg -> li_ [] [text (ms msg)] : acc) [] warningMessage of
               [] -> div_ [class_ "hidden"] []
               lis -> div_ [] $ [h3_ [class_ "sr-only"] ["Warning Message"], ul_ [class_ "flex flex-col gap-2"] lis],
@@ -118,130 +256,6 @@ viewCurrentWeatherReport
               lis -> div_ [] $ [h3_ [class_ "sr-only"] ["TC Message"], ul_ [class_ "flex flex-col gap-2"] lis]
           ]
       ]
-    where
-      viewUVIndex NoUVIndexData = div_ [class_ "hidden"] ["No uvindex data"]
-      viewUVIndex (UVIndex (UVIndexData place value desc' mMessage :| [])) =
-        div_ [] $
-          [ h3_ [class_ "sr-only"] ["UV Index"],
-            div_
-              [class_ "flex flex-col gap-2"]
-              [ div_
-                  [class_ "group relative"]
-                  [ div_
-                      [class_ "flex flex-row gap-2"]
-                      [ text "🌞",
-                        input_ [type_ "range", min_ "0", max_ "11", disabled_, value_ . ms $ show value],
-                        text desc'
-                      ],
-                    makePopover
-                      (Popover PlaceArrowStart PlacePopoverBottom)
-                      [ text $ "UV index is " <> ms (show value),
-                        br_ [],
-                        text $ "at " <> ms place
-                      ]
-                  ],
-                div_ [] $ case mMessage of
-                  Nothing -> []
-                  Just message -> [text $ ms message]
-              ]
-          ]
-      viewUVIndex (UVIndex _data) = div_ [] $ [h3_ [class_ "sr-only"] ["UV Index"], "Unexpected: FIXME more then one UV Index data"]
-      viewHumidity (DataWithRecordTime recordTime _data) =
-        div_ [] $
-          [ h3_ [class_ "sr-only"] ["Humidity"],
-            ul_ [class_ "flex flex-col gap-2"] $
-              foldl'
-                ( \acc (Humidity place value) ->
-                    li_
-                      [class_ "group relative"]
-                      [ text . ms $ "💧 " <> showIn percent value,
-                        makePopover
-                          (Popover PlaceArrowEnd PlacePopoverBottom)
-                          [ text . ms $ showRelativeTime mCurrentTime recordTime,
-                            br_ [],
-                            text $ "at " <> place
-                          ]
-                      ]
-                      : acc
-                )
-                []
-                _data
-          ]
-      viewTemperature (DataWithRecordTime recordTime _data) =
-        div_ [] $
-          [ h3_ [class_ "sr-only"] ["Temperature"],
-            case mFocusedDistrict of
-              Just (District _ nameEN@(fromMisoString -> nameEN') _) ->
-                case find (\(Temperature place@(fromMisoString -> place') _) -> place == nameEN || place' `isSubstringOf` nameEN' || nameEN' `isSubstringOf` place') _data of
-                  Just (Temperature place value) ->
-                    div_ [class_ "relative group"] $
-                      [ text $ ms ("🌡 " <> show (toDegreeCelsiusAbsolute value)) <> " °C",
-                        makePopover
-                          (Popover PlaceArrowStart PlacePopoverBottom)
-                          [ text . ms $ showRelativeTime mCurrentTime recordTime,
-                            br_ [],
-                            text $ "at " <> place
-                          ]
-                      ]
-                  Nothing ->
-                    div_ [] $
-                      [ text $ "Error: No district matched " <> nameEN,
-                        ul_ [] $ foldl' (\acc (Temperature place _) -> li_ [] [text place] : acc) [] _data
-                      ]
-              Nothing ->
-                div_ [] $
-                  [ button_
-                      [ onClick . SetDisplayTemperature $ not ifDisplayTemperature,
-                        class_ "hover:animate-wiggle border px-4 py-2"
-                      ]
-                      $ [text $ (if ifDisplayTemperature then "Hide" else "Show") <> " Temperature"],
-                    div_ [class_ $ if ifDisplayTemperature then "" else "hidden"] $
-                      [ text . ms $ showRelativeTime mCurrentTime recordTime,
-                        ul_ [class_ "flex flex-col gap-2"] $
-                          foldl' (\acc (Temperature place value) -> li_ [class_ "flex flex-row gap-2"] [text $ ms ("🌡 " <> show (toDegreeCelsiusAbsolute value)) <> " °C" <> place] : acc) [] _data
-                      ]
-                  ]
-          ]
-      timeIntervalDisplayText timeInterval = case (lowerBound timeInterval, upperBound timeInterval) of
-        (Finite lb, Finite ub) -> case showInterval mCurrentTime lb ub of
-          Left err -> err
-          Right str -> ms str
-        impossible -> "impossible! unexpected time interval for data: " <> ms (show impossible)
-      viewRainfall (DataWithInterval timeInterval _data) =
-        div_ [] $
-          [ h3_ [class_ "sr-only"] ["Rainfall"],
-            case mFocusedDistrict of
-              Just (District _ nameEN@(fromMisoString -> nameEN') _) ->
-                case find
-                  (\(Rainfall _ place@(fromMisoString -> place') _) -> place == nameEN || place' `isSubstringOf` nameEN' || nameEN' `isSubstringOf` place')
-                  _data of
-                  Just i ->
-                    div_ [class_ "relative group"] $
-                      [ rainfallDisplay False i,
-                        makePopover
-                          (Popover PlaceArrowStart PlacePopoverBottom)
-                          [ text $ timeIntervalDisplayText timeInterval,
-                            br_ [],
-                            text $ "at " <> nameEN
-                          ]
-                      ]
-                  Nothing ->
-                    div_ [] $
-                      [ text $ "Error: No district matched " <> nameEN,
-                        ul_ [] $ foldl' (\acc (Rainfall _ place _) -> li_ [] [text place] : acc) [] _data
-                      ]
-              Nothing ->
-                button_ [onClick . SetDisplayRainfall $ not ifDisplayRainfall, class_ "hover:animate-wiggle border px-4 py-2"] $
-                  [ p_ [] [text $ (if ifDisplayRainfall then "Hide" else "Show") <> " Rainfall"],
-                    div_ [classes_ [if ifDisplayRainfall then "" else "hidden", "relative group"]] $
-                      [ makePopover (Popover PlaceArrowStart PlacePopoverBottom) [text $ timeIntervalDisplayText timeInterval],
-                        -- NOTE: does item order matter here?
-                        case foldl' (\acc i -> li_ [] [rainfallDisplay True i] : acc) [] _data of
-                          [] -> div_ [] ["No Raining record"]
-                          eles -> ul_ [class_ "flex flex-col gap-2"] eles
-                      ]
-                  ]
-          ]
 
 viewLocalWeatherForecast :: Maybe UTCTime -> LocalWeatherForecast -> View Model Action
 viewLocalWeatherForecast
