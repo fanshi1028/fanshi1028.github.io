@@ -1,5 +1,4 @@
 {-# LANGUAGE ApplicativeDo #-}
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE ViewPatterns #-}
 
 module Component.Dashboard (dashboardComponent) where
@@ -25,16 +24,8 @@ import Miso.Lens hiding ((*~))
 import Miso.Navigator
 import Numeric.Natural
 import Text.Read
+import Utils.Haxl
 import Utils.JS
-
-haxlEnvflags :: Flags
-haxlEnvflags =
-  defaultFlags
-#ifndef PRODUCTION
-    { trace = 1,
-      report = profilingReportFlags
-    }
-#endif
 
 location :: Lens Model (Maybe (Either GeolocationError Geolocation))
 location = lens _location $ \record x -> record {_location = x}

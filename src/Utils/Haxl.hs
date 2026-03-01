@@ -1,8 +1,11 @@
+{-# LANGUAGE CPP #-}
+
 module Utils.Haxl
   ( renderQueryToString,
     fetchGetJSON,
     fetchGetText,
     fetchGetCSV,
+    haxlEnvflags,
   )
 where
 
@@ -22,6 +25,15 @@ import Miso hiding (Decoder, URI, consoleLog, defaultOptions, fetch, go, on)
 import Miso.JSON hiding (Object, decode)
 import Network.HTTP.Types hiding (Header)
 import Network.URI
+
+haxlEnvflags :: Flags
+haxlEnvflags =
+  defaultFlags
+#ifndef PRODUCTION
+    { trace = 1,
+      report = profilingReportFlags
+    }
+#endif
 
 failedResponseToException :: Response MisoString -> SomeException
 failedResponseToException = \case
