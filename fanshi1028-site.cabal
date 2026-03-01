@@ -73,6 +73,7 @@ common lib
       Component.Dashboard.Types
       Component.Dashboard.View
       Component.Dashboard.View.CurrentWeather
+      Component.Dashboard.View.WeatherForcast
       Component.Foreign.MapLibre
       Component.Pomodoro
       Component.Pomodoro.View
@@ -109,6 +110,7 @@ library
     Component.Dashboard.Types
     Component.Dashboard.View
     Component.Dashboard.View.CurrentWeather
+    Component.Dashboard.View.WeatherForcast
     Component.Foreign.MapLibre
     Component.Pomodoro
     Component.Pomodoro.View
