@@ -4,6 +4,7 @@
 module Component.Dashboard.View where
 
 import Component.Foreign.MapLibre
+import Component.Popover
 import Data.Function
 import Data.Interval
 import Data.List
@@ -83,20 +84,28 @@ data Action
 defaultModel :: Model
 defaultModel = Model Nothing 0 Nothing Nothing Nothing Nothing Nothing False False False
 
-makePopover :: View model action -> View model action
-makePopover content =
-  span_
-    [ classes_
-        [ "invisible group-hover:visible",
-          "transition-opacity opacity-0  group-hover:opacity-100",
-          "absolute z-40 left-1/4 top-[120%] -mt-px",
-          "bg-neutral-600 text-neutral-200 text-nowrap px-2 rounded",
-          -- NOTE: arrow
-          "after:border-solid after:border-8 after:border-transparent after:border-b-neutral-600",
-          "after:content-[''] after:absolute after:left-2 after:bottom-full after:-mb-px"
-        ]
-    ]
-    [content]
+stripDistrict :: Text -> Text
+stripDistrict (strip -> txt) = strip . fromMaybe txt $ stripSuffix "District" txt
+
+-- TEMP HACK FIXME: kind of fuzzy match, I am lazy to check all the district's string. I hope it works for all.
+isSubstringOf :: Text -> Text -> Bool
+isSubstringOf (stripDistrict -> sub) (stripDistrict -> txt) = case breakOn sub txt of
+  (((== txt) -> True), "") -> False
+  _ -> True
+
+rainfallDisplay :: Bool -> Rainfall -> View model action
+rainfallDisplay withPlaceLabel (Rainfall ll place _main) = case (lowerBound ll, upperBound ll) of
+  -- FIXME Rainfall interval better type
+  (Finite a, Finite b)
+    | a > b -> div_ [] ["impossible rainfall: lowerBound > upperBound"]
+    | SCI.toRealFloat @Double (b /~ milli meter) == 0 ->
+        div_ [class_ "flex flex-row gap-2 min-w-fit"] $ [if withPlaceLabel then label_ [] [text . ms $ place <> ":"] else div_ [class_ "hidden"] [], "🌧 0 mm"]
+    | otherwise ->
+        div_ [class_ "flex flex-row gap-2"] $
+          [ if withPlaceLabel then label_ [] [text . ms $ place <> ":"] else div_ [class_ "hidden"] [],
+            div_ [] $ [text . ms $ pack ("🌧 " <> showIn (milli meter) a <> " - " <> showIn (milli meter) b)]
+          ]
+  _ -> div_ [] [text $ "impossible rainfall interval: " <> ms (show ll)]
 
 viewCurrentWeatherReport :: Bool -> Bool -> Maybe Geolocation -> Maybe District -> Maybe UTCTime -> Natural -> CurrentWeatherReport -> View Model Action
 viewCurrentWeatherReport
@@ -124,8 +133,14 @@ viewCurrentWeatherReport
       temperature
       humidity
     ) =
-    div_ [class_ "flex flex-col gap-2"] $
-      [ div_ [class_ "group relative"] $ [h2_ [class_ "text-lg"] ["Today"], makePopover . text . ms $ "updated " <> showRelativeTime mCurrentTime updateTime],
+    div_ [class_ "flex flex-col items-start gap-2"] $
+      [ div_ [class_ "group relative"] $
+          [ h2_ [class_ "text-lg"] ["Today"],
+            makePopover
+              (Popover PlaceArrowStart PlacePopoverBottom)
+              [ text . ms $ "updated " <> showRelativeTime mCurrentTime updateTime
+              ]
+          ],
         div_ [class_ "flex flex-col md:flex-row md:flex-wrap gap-3"] $
           [ case mLightning of
               Nothing -> div_ [class_ "hidden"] []
@@ -179,7 +194,12 @@ viewCurrentWeatherReport
                         input_ [type_ "range", min_ "0", max_ "11", disabled_, value_ . ms $ show value],
                         text desc'
                       ],
-                    makePopover . text $ "UV Index " <> ms (show value) <> " at " <> ms place
+                    makePopover
+                      (Popover PlaceArrowStart PlacePopoverBottom)
+                      [ text $ "UV index is " <> ms (show value),
+                        br_ [],
+                        text $ "at " <> ms place
+                      ]
                   ],
                 div_ [] $ case mMessage of
                   Nothing -> []
@@ -196,7 +216,12 @@ viewCurrentWeatherReport
                     li_
                       [class_ "group relative"]
                       [ text . ms $ "💧 " <> showIn percent value,
-                        makePopover . text $ "at " <> place <> " " <> ms (showRelativeTime mCurrentTime recordTime)
+                        makePopover
+                          (Popover PlaceArrowEnd PlacePopoverBottom)
+                          [ text . ms $ showRelativeTime mCurrentTime recordTime,
+                            br_ [],
+                            text $ "at " <> place
+                          ]
                       ]
                       : acc
                 )
@@ -208,24 +233,22 @@ viewCurrentWeatherReport
           [ h3_ [class_ "sr-only"] ["Temperature"],
             case mFocusedDistrict of
               Just (District _ nameEN@(fromMisoString -> nameEN') _) ->
-                -- TEMP HACK FIXME: kind of fuzzy match, I am lazy to check all the district's string. I hope it works for all.
-                let stripDistrict (strip -> txt) = strip . fromMaybe txt $ stripSuffix "District" txt
-                    isSubstringOf (stripDistrict -> sub) (stripDistrict -> txt) = case breakOn sub txt of
-                      (((== txt) -> True), "") -> False
-                      _ -> True
-                 in case find
-                      (\(Temperature place@(fromMisoString -> place') _) -> place == nameEN || place' `isSubstringOf` nameEN' || nameEN' `isSubstringOf` place')
-                      _data of
-                      Just i@(Temperature place value) ->
-                        div_ [class_ "relative group"] $
-                          [ text $ ms ("🌡 " <> show (toDegreeCelsiusAbsolute value)) <> " °C",
-                            makePopover . text $ ms (showRelativeTime mCurrentTime recordTime) <> " at " <> place
+                case find (\(Temperature place@(fromMisoString -> place') _) -> place == nameEN || place' `isSubstringOf` nameEN' || nameEN' `isSubstringOf` place') _data of
+                  Just (Temperature place value) ->
+                    div_ [class_ "relative group"] $
+                      [ text $ ms ("🌡 " <> show (toDegreeCelsiusAbsolute value)) <> " °C",
+                        makePopover
+                          (Popover PlaceArrowStart PlacePopoverBottom)
+                          [ text . ms $ showRelativeTime mCurrentTime recordTime,
+                            br_ [],
+                            text $ "at " <> place
                           ]
-                      Nothing ->
-                        div_ [] $
-                          [ text $ "Error: No district matched " <> nameEN,
-                            ul_ [] $ foldl' (\acc (Temperature place _) -> li_ [] [text place] : acc) [] _data
-                          ]
+                      ]
+                  Nothing ->
+                    div_ [] $
+                      [ text $ "Error: No district matched " <> nameEN,
+                        ul_ [] $ foldl' (\acc (Temperature place _) -> li_ [] [text place] : acc) [] _data
+                      ]
               Nothing ->
                 div_ [] $
                   [ button_
@@ -246,50 +269,40 @@ viewCurrentWeatherReport
           Right str -> ms str
         impossible -> "impossible! unexpected time interval for data: " <> ms (show impossible)
       viewRainfall (DataWithInterval timeInterval _data) =
-        let rainfallDisplay withPlaceLabel (Rainfall ll place _main) = case (lowerBound ll, upperBound ll) of
-              -- FIXME Rainfall interval better type
-              (Finite a, Finite b)
-                | a > b -> div_ [] ["impossible rainfall: lowerBound > upperBound"]
-                | SCI.toRealFloat @Double (b /~ milli meter) == 0 ->
-                    div_ [class_ "flex flex-row gap-2 min-w-fit"] $ [if withPlaceLabel then label_ [] [text . ms $ place <> ":"] else div_ [class_ "hidden"] [], "🌧 0 mm"]
-                | otherwise ->
-                    div_ [class_ "flex flex-row gap-2"] $
-                      [ if withPlaceLabel then label_ [] [text . ms $ place <> ":"] else div_ [class_ "hidden"] [],
-                        div_ [] $ [text . ms $ pack ("🌧 " <> showIn (milli meter) a <> " - " <> showIn (milli meter) b)]
-                      ]
-              _ -> div_ [] [text $ "impossible rainfall interval: " <> ms (show ll)]
-         in div_ [] $
-              [ h3_ [class_ "sr-only"] ["Rainfall"],
-                case mFocusedDistrict of
-                  Just (District _ nameEN@(fromMisoString -> nameEN') _) ->
-                    -- TEMP FIXME: kind of fuzzy match and this is wrong, data is not recorded by district
-                    let stripDistrict (strip -> txt) = strip . fromMaybe txt $ stripSuffix "District" txt
-                        isSubstringOf (stripDistrict -> sub) (stripDistrict -> txt) = case breakOn sub txt of
-                          (((== txt) -> True), "") -> False
-                          _ -> True
-                     in case find
-                          (\(Rainfall _ place@(fromMisoString -> place') _) -> place == nameEN || place' `isSubstringOf` nameEN' || nameEN' `isSubstringOf` place')
-                          _data of
-                          Just i ->
-                            div_ [class_ "relative group"] $
-                              [rainfallDisplay False i, makePopover . text $ "at " <> nameEN <> " " <> timeIntervalDisplayText timeInterval]
-                          Nothing ->
-                            div_ [] $
-                              [ text $ "Error: No district matched " <> nameEN,
-                                ul_ [] $ foldl' (\acc (Rainfall _ place _) -> li_ [] [text place] : acc) [] _data
-                              ]
-                  Nothing ->
-                    button_ [onClick . SetDisplayRainfall $ not ifDisplayRainfall, class_ "hover:animate-wiggle border px-4 py-2"] $
-                      [ p_ [] [text $ (if ifDisplayRainfall then "Hide" else "Show") <> " Rainfall"],
-                        div_ [classes_ [if ifDisplayRainfall then "" else "hidden", "relative group"]] $
-                          [ makePopover . text $ timeIntervalDisplayText timeInterval,
-                            -- NOTE: does item order matter here?
-                            case foldl' (\acc i -> li_ [] [rainfallDisplay True i] : acc) [] _data of
-                              [] -> div_ [] ["No Raining record"]
-                              eles -> ul_ [class_ "flex flex-col gap-2"] eles
+        div_ [] $
+          [ h3_ [class_ "sr-only"] ["Rainfall"],
+            case mFocusedDistrict of
+              Just (District _ nameEN@(fromMisoString -> nameEN') _) ->
+                case find
+                  (\(Rainfall _ place@(fromMisoString -> place') _) -> place == nameEN || place' `isSubstringOf` nameEN' || nameEN' `isSubstringOf` place')
+                  _data of
+                  Just i ->
+                    div_ [class_ "relative group"] $
+                      [ rainfallDisplay False i,
+                        makePopover
+                          (Popover PlaceArrowStart PlacePopoverBottom)
+                          [ text $ timeIntervalDisplayText timeInterval,
+                            br_ [],
+                            text $ "at " <> nameEN
                           ]
                       ]
-              ]
+                  Nothing ->
+                    div_ [] $
+                      [ text $ "Error: No district matched " <> nameEN,
+                        ul_ [] $ foldl' (\acc (Rainfall _ place _) -> li_ [] [text place] : acc) [] _data
+                      ]
+              Nothing ->
+                button_ [onClick . SetDisplayRainfall $ not ifDisplayRainfall, class_ "hover:animate-wiggle border px-4 py-2"] $
+                  [ p_ [] [text $ (if ifDisplayRainfall then "Hide" else "Show") <> " Rainfall"],
+                    div_ [classes_ [if ifDisplayRainfall then "" else "hidden", "relative group"]] $
+                      [ makePopover (Popover PlaceArrowStart PlacePopoverBottom) [text $ timeIntervalDisplayText timeInterval],
+                        -- NOTE: does item order matter here?
+                        case foldl' (\acc i -> li_ [] [rainfallDisplay True i] : acc) [] _data of
+                          [] -> div_ [] ["No Raining record"]
+                          eles -> ul_ [class_ "flex flex-col gap-2"] eles
+                      ]
+                  ]
+          ]
 
 viewLocalWeatherForecast :: Maybe UTCTime -> LocalWeatherForecast -> View Model Action
 viewLocalWeatherForecast
@@ -310,7 +323,11 @@ viewLocalWeatherForecast
        in [ displayNonEmptyText generalSituation,
             displayNonEmptyText tcInfo,
             displayNonEmptyText fireDangerWarning,
-            makePopover . text . ms $ "Updated " <> showRelativeTime mCurrentTime updateTime
+            makePopover
+              (Popover PlaceArrowStart PlacePopoverBottom)
+              [ text . ms $
+                  "Updated " <> showRelativeTime mCurrentTime updateTime
+              ]
           ]
 
 view9DayWeatherForecast :: Maybe UTCTime -> Natural -> NineDayWeatherForecast -> View Model Action
@@ -342,7 +359,11 @@ view9DayWeatherForecast
               div_ [class_ "flex flex-col gap-2"] $
                 [ div_ [class_ "group relative"] $
                     [ h2_ [class_ "text-lg"] [text . ms $ show weekDay <> " " <> show forecastDate],
-                      makePopover . text . ms $ "Updated " <> showRelativeTime mCurrentTime updateTime
+                      makePopover
+                        (Popover PlaceArrowStart PlacePopoverBottom)
+                        [ text . ms $
+                            "Updated " <> showRelativeTime mCurrentTime updateTime
+                        ]
                     ],
                   div_ [] $
                     [ text . ms $ case (lowerBound forecastTempInterval, upperBound forecastTempInterval) of
@@ -363,7 +384,11 @@ view9DayWeatherForecast
                           value_ . ms . show $ fromEnum psr,
                           disabled_
                         ],
-                      makePopover . text . ms $ show psr <> " probability of significant rain"
+                      makePopover
+                        (Popover PlaceArrowStart PlacePopoverBottom)
+                        [ text . ms $
+                            show psr <> " probability of significant rain"
+                        ]
                     ],
                   case forecastWind of
                     "" -> div_ [class_ "hidden"] []
@@ -396,14 +421,14 @@ viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict mCurre
             [ button_
                 [onClick ToggleDisplayHardSurfaceSoccerPitch7, class_ "group bg-neutral-200 text-neutral-600 p-2 rounded inline-block relative shadow shadow-neutral-600"]
                 [ p_ [class_ "font-bold text-lg"] ["⚽"],
-                  makePopover "Toggle hard-surface 7-a-side football pitches"
+                  makePopover (Popover PlaceArrowStart PlacePopoverBottom) ["Toggle hard-surface 7-a-side football pitches"]
                 ],
               button_
                 [ onClick ToggleDisplayWeatherPanel,
                   class_ "group bg-neutral-200 text-neutral-600 p-2 rounded inline-block relative shadow shadow-neutral-600"
                 ]
                 [ p_ [class_ "font-bold text-lg"] ["🌞"],
-                  makePopover "Toggle weather info panel"
+                  makePopover (Popover PlaceArrowStart PlacePopoverBottom) ["Toggle weather info panel"]
                 ]
             ],
           div_
@@ -426,7 +451,7 @@ viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict mCurre
                         ( div_
                             [class_ "flex justify-center relative group"]
                             [ loadSpinner ["size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
-                              makePopover "CurrentWeatherReport Loading"
+                              makePopover (Popover PlaceArrowStart PlacePopoverBottom) $ ["CurrentWeatherReport Loading"]
                             ]
                         )
                         ( viewCurrentWeatherReport
@@ -446,7 +471,7 @@ viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict mCurre
                         ( div_
                             [class_ "flex justify-center relative group"]
                             [ loadSpinner ["size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
-                              makePopover "LocalWeatherForecast Loading"
+                              makePopover (Popover PlaceArrowStart PlacePopoverBottom) $ ["LocalWeatherForecast Loading"]
                             ]
                         )
                         (viewLocalWeatherForecast mCurrentTime)
@@ -456,7 +481,7 @@ viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict mCurre
                     [ maybe
                         ( div_ [class_ "flex justify-center relative group"] $
                             [ loadSpinner ["size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20"],
-                              makePopover "NineDayWeatherForecast Loading"
+                              makePopover (Popover PlaceArrowStart PlacePopoverBottom) ["NineDayWeatherForecast Loading"]
                             ]
                         )
                         (view9DayWeatherForecast mCurrentTime $ timeSliderValue - 1)

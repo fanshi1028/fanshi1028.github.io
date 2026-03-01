@@ -74,6 +74,7 @@ common lib
       Component.Foreign.MapLibre
       Component.Pomodoro
       Component.Pomodoro.View
+      Component.Popover
       DataSource.BrowserGeolocationAPI
       DataSource.CommonSpatialDataInfrastructurePortal
       DataSource.HongKongObservatoryWeatherAPI
@@ -107,6 +108,7 @@ library
     Component.Foreign.MapLibre
     Component.Pomodoro
     Component.Pomodoro.View
+    Component.Popover
     DataSource.BrowserGeolocationAPI
     DataSource.CommonSpatialDataInfrastructurePortal
     DataSource.HongKongObservatoryWeatherAPI
