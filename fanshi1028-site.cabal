@@ -70,7 +70,9 @@ common lib
       Component.Clock
       Component.Clock.View
       Component.Dashboard
+      Component.Dashboard.Types
       Component.Dashboard.View
+      Component.Dashboard.View.CurrentWeather
       Component.Foreign.MapLibre
       Component.Pomodoro
       Component.Pomodoro.View
@@ -104,7 +106,9 @@ library
     Component.Clock
     Component.Clock.View
     Component.Dashboard
+    Component.Dashboard.Types
     Component.Dashboard.View
+    Component.Dashboard.View.CurrentWeather
     Component.Foreign.MapLibre
     Component.Pomodoro
     Component.Pomodoro.View

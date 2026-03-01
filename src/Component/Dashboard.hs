@@ -3,6 +3,7 @@
 
 module Component.Dashboard (dashboardComponent) where
 
+import Component.Dashboard.Types
 import Component.Dashboard.View
 import Component.Foreign.MapLibre
 import Control.Monad
