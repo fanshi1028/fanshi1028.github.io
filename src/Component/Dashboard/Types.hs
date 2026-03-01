@@ -3,31 +3,15 @@
 
 module Component.Dashboard.Types where
 
-import Component.Foreign.MapLibre
-import Component.Popover
 import Data.Function
-import Data.Interval
-import Data.List
-import Data.List.NonEmpty
 import Data.Maybe
-import Data.Scientific as SCI
-import Data.Text hiding (find, foldl')
 import Data.Time
 import DataSource.HongKongObservatoryWeatherAPI.Types
 import GHC.Generics
 import Miso
-import Miso.Html.Element
-import Miso.Html.Event
-import Miso.Html.Property hiding (label_)
 import Miso.Navigator
 import Numeric.Natural
-import Numeric.Units.Dimensional hiding ((*), (-))
-import Numeric.Units.Dimensional.NonSI
-import Numeric.Units.Dimensional.SIUnits hiding (toDegreeCelsiusAbsolute)
-import Utils.Dimensional
 import Utils.JS ()
-import Utils.Time
-import View.SVG.LoadSpinner
 import Prelude hiding (show)
 
 data District = District

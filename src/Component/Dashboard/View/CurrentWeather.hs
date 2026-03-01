@@ -14,13 +14,10 @@ import Data.Scientific as SCI
 import Data.Text hiding (find, foldl')
 import Data.Time
 import DataSource.HongKongObservatoryWeatherAPI.Types
-import GHC.Generics
 import Miso
 import Miso.Html.Element
 import Miso.Html.Event
 import Miso.Html.Property hiding (label_)
-import Miso.Navigator
-import Numeric.Natural
 import Numeric.Units.Dimensional hiding ((*), (-))
 import Numeric.Units.Dimensional.NonSI
 import Numeric.Units.Dimensional.SIUnits hiding (toDegreeCelsiusAbsolute)
@@ -52,14 +49,12 @@ rainfallDisplay withPlaceLabel (Rainfall ll place _main) = case (lowerBound ll, 
           ]
   _ -> div_ [] [text $ "impossible rainfall interval: " <> ms (show ll)]
 
-viewCurrentWeatherReport :: Bool -> Bool -> Maybe Geolocation -> Maybe District -> Maybe UTCTime -> Natural -> CurrentWeatherReport -> View Model Action
+viewCurrentWeatherReport :: Bool -> Bool -> Maybe District -> Maybe UTCTime -> CurrentWeatherReport -> View Model Action
 viewCurrentWeatherReport
   ifDisplayRainfall
   ifDisplayTemperature
-  mCurrentLocation
   mFocusedDistrict
   mCurrentTime
-  timeSliderValue
   ( CurrentWeatherReport
       mLightning
       rainfall
