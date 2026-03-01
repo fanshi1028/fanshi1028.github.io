@@ -459,7 +459,7 @@ viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict mCurre
                               makePopover "NineDayWeatherForecast Loading"
                             ]
                         )
-                        (view9DayWeatherForecast mCurrentTime timeSliderValue)
+                        (view9DayWeatherForecast mCurrentTime $ timeSliderValue - 1)
                         m9DayWeatherForecast
                     ]
               ]
