@@ -22,7 +22,6 @@ import Numeric.Units.Dimensional hiding ((*), (-))
 import Numeric.Units.Dimensional.NonSI
 import Numeric.Units.Dimensional.SIUnits hiding (toDegreeCelsiusAbsolute)
 import Utils.Dimensional
-import Utils.JS ()
 import Utils.Time
 import Prelude hiding (show)
 
@@ -242,4 +241,30 @@ viewCurrentWeatherReport
                           eles -> ul_ [class_ "flex flex-col gap-2"] eles
                       ]
                   ]
+          ]
+
+viewLocalWeatherForecast :: Maybe UTCTime -> LocalWeatherForecast -> View Model Action
+viewLocalWeatherForecast
+  mCurrentTime
+  ( LocalWeatherForecast
+      generalSituation
+      tcInfo
+      fireDangerWarning
+      _idc_forecastPeriod
+      _idc_forecastDesc
+      _idc_outlook
+      updateTime
+    ) =
+    div_ [class_ "flex flex-col gap-6 group relative"] $
+      let displayNonEmptyText = \case
+            "" -> div_ [class_ "hidden"] []
+            t -> div_ [class_ "prose"] [text $ ms t]
+       in [ displayNonEmptyText generalSituation,
+            displayNonEmptyText tcInfo,
+            displayNonEmptyText fireDangerWarning,
+            makePopover
+              (Popover PlaceArrowStart PlacePopoverBottom)
+              [ text . ms $
+                  "Updated " <> showRelativeTime mCurrentTime updateTime
+              ]
           ]

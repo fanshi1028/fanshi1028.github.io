@@ -8,47 +8,14 @@ import Component.Dashboard.View.CurrentWeather
 import Component.Dashboard.View.WeatherForcast
 import Component.Foreign.MapLibre
 import Component.Popover
-import Data.Function
-import Data.Interval
-import Data.List
-import Data.Maybe
 import Data.Text hiding (find, foldl')
-import Data.Time
-import DataSource.HongKongObservatoryWeatherAPI.Types
 import Miso
 import Miso.Html.Element
 import Miso.Html.Event
 import Miso.Html.Property hiding (label_)
 import Utils.JS ()
-import Utils.Time
 import View.SVG.LoadSpinner
 import Prelude hiding (show)
-
-viewLocalWeatherForecast :: Maybe UTCTime -> LocalWeatherForecast -> View Model Action
-viewLocalWeatherForecast
-  mCurrentTime
-  ( LocalWeatherForecast
-      generalSituation
-      tcInfo
-      fireDangerWarning
-      _idc_forecastPeriod
-      _idc_forecastDesc
-      _idc_outlook
-      updateTime
-    ) =
-    div_ [class_ "flex flex-col gap-6 group relative"] $
-      let displayNonEmptyText = \case
-            "" -> div_ [class_ "hidden"] []
-            t -> div_ [class_ "prose"] [text $ ms t]
-       in [ displayNonEmptyText generalSituation,
-            displayNonEmptyText tcInfo,
-            displayNonEmptyText fireDangerWarning,
-            makePopover
-              (Popover PlaceArrowStart PlacePopoverBottom)
-              [ text . ms $
-                  "Updated " <> showRelativeTime mCurrentTime updateTime
-              ]
-          ]
 
 viewModel :: Model -> View Model Action
 viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict mCurrentWeatherReport mLocalWeatherForecast m9DayWeatherForecast ifDisplayWeatherPanel rainfallDisplayMode ifDisplayTemperature) =
@@ -60,7 +27,7 @@ viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict mCurre
             _ -> "",
           onCreated InitMapLibre
         ]
-        ["mapLibreComponent" +> mapLibreComponent],
+        ["mapLibreComponent" +> Component.Foreign.MapLibre.mapLibreComponent],
       -- case  errCode of
       --   PERMISSION_DENIED -> _
       --   POSITION_UNAVAILABLE -> _
