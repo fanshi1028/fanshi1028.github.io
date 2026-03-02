@@ -68,7 +68,7 @@ modelToViews model =
             link_ [href_ outputCSSPath, rel_ "stylesheet", type_ "text/css"]
           ],
         body_ [] $
-          [ script_ [src_ indexJSPath, type_ "module", defer_ "true"] "",
+          [ script_ [src_ indexJSPath, type_ "module", defer_ True] "",
             viewModel model
           ]
       ]
