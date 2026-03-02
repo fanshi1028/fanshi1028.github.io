@@ -4,8 +4,8 @@
   miso = fetchFromGitHub {
     owner = "dmjio";
     repo = "miso";
-    rev = "d8242ef052010aaea9150b2f96b6ba7342712b1f";
-    sha256 = "sha256-GSJCveJNDhhkI303w6udYSu1TWL11AAcWQ0qB+7zTSE=";
+    rev = "1301c1b2acf1d6ccedff50626bd1b3e249e82fbc";
+    sha256 = "sha256-JLzgQ4NYUa2Z2VCUscZeEJk0WiiAmMDRbPA15txY81Y=";
   };
 
   ieee754 = fetchFromGitHub {
