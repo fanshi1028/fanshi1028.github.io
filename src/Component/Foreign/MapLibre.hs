@@ -73,12 +73,12 @@ mapLibreComponent =
 #endif
 #ifdef PRODUCTION
 #ifdef WASM
-    scripts = [Src "../maplibre-gl-ffi.js"]
-    styles = [Href "../maplibre-gl.css"]
+    scripts = [Src "../maplibre-gl-ffi.js" False]
+    styles = [Href "../maplibre-gl.css" False]
 #endif
 #ifndef WASM
-    scripts = [Src "maplibre-gl-ffi.js"]
-    styles = [Href "maplibre-gl.css"]
+    scripts = [Src "maplibre-gl-ffi.js" False]
+    styles = [Href "maplibre-gl.css" False]
 #endif
 #endif
 

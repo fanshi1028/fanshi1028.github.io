@@ -241,9 +241,18 @@ instance FromJSON UVIndexData where
       <*> o .: "desc"
       <*> o .:? "message"
 
-data UVIndex = UVIndex (NonEmpty UVIndexData) | NoUVIndexData
-  deriving stock (Show, Eq, Generic)
-  deriving anyclass (ToJSVal, FromJSVal)
+data UVIndex = NoUVIndexData | UVIndex (NonEmpty UVIndexData)
+  deriving stock (Show, Eq)
+
+instance ToJSVal UVIndex where
+  toJSVal NoUVIndexData = pure jsNull
+  toJSVal (UVIndex d) = toJSVal d
+
+instance FromJSVal UVIndex where
+  fromJSVal v =
+    isNull v >>= \case
+      True -> pure $ Just NoUVIndexData
+      False -> fmap UVIndex <$> fromJSVal v
 
 instance FromJSON UVIndex where
   parseJSON v =

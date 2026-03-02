@@ -70,10 +70,14 @@ common lib
       Component.Clock
       Component.Clock.View
       Component.Dashboard
+      Component.Dashboard.Types
       Component.Dashboard.View
+      Component.Dashboard.View.CurrentWeather
+      Component.Dashboard.View.WeatherForcast
       Component.Foreign.MapLibre
       Component.Pomodoro
       Component.Pomodoro.View
+      Component.Popover
       DataSource.BrowserGeolocationAPI
       DataSource.CommonSpatialDataInfrastructurePortal
       DataSource.HongKongObservatoryWeatherAPI
@@ -103,10 +107,14 @@ library
     Component.Clock
     Component.Clock.View
     Component.Dashboard
+    Component.Dashboard.Types
     Component.Dashboard.View
+    Component.Dashboard.View.CurrentWeather
+    Component.Dashboard.View.WeatherForcast
     Component.Foreign.MapLibre
     Component.Pomodoro
     Component.Pomodoro.View
+    Component.Popover
     DataSource.BrowserGeolocationAPI
     DataSource.CommonSpatialDataInfrastructurePortal
     DataSource.HongKongObservatoryWeatherAPI

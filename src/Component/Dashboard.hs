@@ -1,9 +1,9 @@
 {-# LANGUAGE ApplicativeDo #-}
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE ViewPatterns #-}
 
 module Component.Dashboard (dashboardComponent) where
 
+import Component.Dashboard.Types
 import Component.Dashboard.View
 import Component.Foreign.MapLibre
 import Control.Monad
@@ -25,16 +25,8 @@ import Miso.Lens hiding ((*~))
 import Miso.Navigator
 import Numeric.Natural
 import Text.Read
+import Utils.Haxl
 import Utils.JS
-
-haxlEnvflags :: Flags
-haxlEnvflags =
-  defaultFlags
-#ifndef PRODUCTION
-    { trace = 1,
-      report = profilingReportFlags
-    }
-#endif
 
 location :: Lens Model (Maybe (Either GeolocationError Geolocation))
 location = lens _location $ \record x -> record {_location = x}
@@ -128,7 +120,11 @@ updateModel = \case
       Nothing -> NoOp <$ consoleError' (ms "getDistrict fromJSVal failed, skipped FocusDistrict", district)
       Just district' -> pure $ FocusDistrict $ Left district'
   SetCurrentTime t -> time .= Just t
-  SetTimeSliderValue v -> timeSliderValue .= fromMaybe 0 (readMaybe $ fromMisoString v)
+  SetTimeSliderValue v -> case readMaybe (fromMisoString v) of
+    Nothing -> io_ $ consoleError' ("impossible! unexpected timeSliderValue: %o", v)
+    Just v' -> do
+      timeSliderValue .= v'
+      io $ pure FetchWeatherData
   SetLocalWeatherForecast w -> localWeatherForecast .= Just w
   SetCurrentWeatherReport w -> currentWeatherReport .= Just w
   Set9DayWeatherForecast w -> nineDayWeatherForecast .= Just w
@@ -137,7 +133,10 @@ updateModel = \case
   AddGeoJSON FocusedDistrictBoundary geoJSON -> io_ . void $ callMapLibreFunctionWithMap (ms "addDistrictBoundaryLayer") geoJSON
   AddGeoJSON WeatherStations geoJSON -> io_ . void $ callMapLibreFunctionWithMap (ms "addWeatherStationsLayer") geoJSON
   ToggleDisplayHardSurfaceSoccerPitch7 -> io_ toggle_hssp7
-  ToggleDisplayWeatherPanel -> displayWeatherPanel %= not
+  ToggleDisplayWeatherPanel ->
+    displayWeatherPanel <%= not >>= \case
+      True -> io $ pure FetchWeatherData
+      False -> pure ()
 
 dashboardComponent :: Component parent Model Action
 dashboardComponent = (component defaultModel updateModel viewModel) {mount = Just InitAction}

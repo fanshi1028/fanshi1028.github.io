@@ -53,7 +53,7 @@ app route' =
 #endif
 -- NOTE: local-dev? production?
 #ifdef LOCALDEV
-    scripts = [Src "https://cdn.tailwindcss.com"]
+    scripts = [Src "https://cdn.tailwindcss.com" False]
     styles = [Style $ ms staticInputCSS]
     logLevel = DebugAll
 #endif

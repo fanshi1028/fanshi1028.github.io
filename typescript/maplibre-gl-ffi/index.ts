@@ -49,31 +49,37 @@ const getGeoJSONFeatures = (data: GeoJSON.GeoJSON) =>
       )
     : data.features
 
-const districtBoundaryLayerId = 'districtBoundaryLayerId'
+const districtBoundaryLayerId = Symbol('districtBoundary')
 
-const addDistrictBoundaryLayer = (map: Map, data: GeoJSON.GeoJSON) =>
-  map
-    .addSource(districtBoundaryLayerId, { type: 'geojson', data })
-    .addLayer({
-      id: districtBoundaryLayerId,
-      source: districtBoundaryLayerId,
-      type: 'line',
-      paint: { 'line-color': '#198EC8' },
-    })
-    .setFilter(districtBoundaryLayerId, ['literal', false])
+const addDistrictBoundaryLayer = (map: Map, data: GeoJSON.GeoJSON) => {
+  if (map.getSource(districtBoundaryLayerId.toString()) === undefined)
+    map
+      .addSource(districtBoundaryLayerId.toString(), { type: 'geojson', data })
+      .addLayer({
+        id: districtBoundaryLayerId.toString(),
+        source: districtBoundaryLayerId.toString(),
+        type: 'line',
+        paint: { 'line-color': '#198EC8' },
+      })
+      .setFilter(districtBoundaryLayerId.toString(), ['literal', false])
+}
 
 const focusDistrict = (map: Map, areaCode: string) => {
   const go = (retry = 5) => {
     if (retry <= 0) {
       console.warn(
-        `layer ${districtBoundaryLayerId} not exists yet. no retry left. abort focusDistrict.`
+        `layer ${districtBoundaryLayerId.toString()} not exists yet. no retry left. abort focusDistrict.`
       )
     } else {
-      if (map.getLayer(districtBoundaryLayerId))
-        map.setFilter(districtBoundaryLayerId, ['==', 'AREA_CODE', areaCode])
+      if (map.getLayer(districtBoundaryLayerId.toString()))
+        map.setFilter(districtBoundaryLayerId.toString(), [
+          '==',
+          'AREA_CODE',
+          areaCode,
+        ])
       else {
         console.debug(
-          `layer ${districtBoundaryLayerId} not exists yet. ${retry} retries left. defer focusDistrict.`
+          `layer ${districtBoundaryLayerId.toString()} not exists yet. ${retry} retries left. defer focusDistrict.`
         )
         setTimeout(() => go(retry - 1), 150)
       }
@@ -97,19 +103,21 @@ const getDistrict = (data: GeoJSON.GeoJSON): any | undefined => {
 
 const sourceId = Symbol('weather-stations')
 
-const addWeatherStationsLayer = (map: Map, data: GeoJSON.GeoJSON) =>
-  map.addSource(sourceId.toString(), { type: 'geojson', data }).addLayer({
-    id: sourceId.toString(),
-    source: sourceId.toString(),
-    type: 'symbol',
-    layout: {
-      'icon-image': 'information',
-      'text-field': ['get', 'Name_tc'],
-      'text-offset': [0, 1.25],
-      'text-anchor': 'top',
-      'text-font': ['Noto Sans Regular'],
-    },
-  })
+const addWeatherStationsLayer = (map: Map, data: GeoJSON.GeoJSON) => {
+  if (map.getSource(sourceId.toString()) === undefined)
+    map.addSource(sourceId.toString(), { type: 'geojson', data }).addLayer({
+      id: sourceId.toString(),
+      source: sourceId.toString(),
+      type: 'symbol',
+      layout: {
+        'icon-image': 'information',
+        'text-field': ['get', 'Name_tc'],
+        'text-offset': [0, 1.25],
+        'text-anchor': 'top',
+        'text-font': ['Noto Sans Regular'],
+      },
+    })
+}
 
 declare global {
   var maplibregl_ffi: unknown
