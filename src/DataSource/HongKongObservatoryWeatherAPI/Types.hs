@@ -191,7 +191,18 @@ data Lightning = Lightning
     occur :: Bool
   }
   deriving stock (Eq, Show, Generic)
-  deriving anyclass (FromJSON, ToJSVal, FromJSVal)
+  deriving anyclass (ToJSVal, FromJSVal)
+
+instance FromJSON Lightning where
+  parseJSON = withObject "Lightning" $ \o -> do
+    place <- o .: "place"
+    occur <-
+      o .: "occur"
+        >>= \case
+          "true" -> pure True
+          "false" -> pure False
+          txt -> typeMismatch "occur" $ String txt
+    pure $ Lightning place occur
 
 data Rainfall = Rainfall
   { interval :: Interval (Length Scientific), -- Minimum & Maximum rainfall record
