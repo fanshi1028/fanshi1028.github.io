@@ -58,19 +58,23 @@ displayRainfall = lens _displayRainfall $ \record x -> record {_displayRainfall 
 displayWeatherPanel :: Lens Model Bool
 displayWeatherPanel = lens _displayWeatherPanel $ \record x -> record {_displayWeatherPanel = x}
 
+defaultStateStore :: StateStore
+defaultStateStore =
+  stateEmpty
+    & stateSet LocationReqState
+    & stateSet HKOWeatherInformationReqState
+    & stateSet CommonSpatialDataInfrastructurePortalReqState
+    & stateSet JSMActionState
+    & stateSet (LocalStorageReqState @HKOWeatherInformationReq)
+    & stateSet (LocalStorageReqState @SimpleFetch)
+    & stateSet (LocalStorageReqState @CommonSpatialDataInfrastructurePortalReq)
+
 fetchData :: Sink Action -> IO ()
 fetchData sink = do
   ioState <- mkConcurrentIOState
   let st =
-        stateEmpty
+        defaultStateStore
           & stateSet (MisoRunActionState sink)
-          & stateSet LocationReqState
-          & stateSet HKOWeatherInformationReqState
-          & stateSet CommonSpatialDataInfrastructurePortalReqState
-          & stateSet JSMActionState
-          & stateSet (LocalStorageReqState @HKOWeatherInformationReq)
-          & stateSet (LocalStorageReqState @SimpleFetch)
-          & stateSet (LocalStorageReqState @CommonSpatialDataInfrastructurePortalReq)
           & stateSet ioState
 
   env' <- initEnv @() st ()
