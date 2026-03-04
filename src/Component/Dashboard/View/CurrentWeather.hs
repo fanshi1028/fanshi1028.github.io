@@ -5,7 +5,6 @@ module Component.Dashboard.View.CurrentWeather where
 
 import Component.Dashboard.Types
 import Component.Popover
-import Data.Function
 import Data.Interval
 import Data.List
 import Data.List.NonEmpty

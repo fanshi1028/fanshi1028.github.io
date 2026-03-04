@@ -8,7 +8,6 @@ import Component.Dashboard.Types
 import Component.Dashboard.View
 import Component.Foreign.MapLibre
 import Control.Monad
-import Data.Foldable
 import Data.Function
 import Data.Time
 import DataSource.BrowserGeolocationAPI
