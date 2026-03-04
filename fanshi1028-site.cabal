@@ -82,7 +82,6 @@ common lib
       DataSource.CommonSpatialDataInfrastructurePortal
       DataSource.HongKongObservatoryWeatherAPI
       DataSource.HongKongObservatoryWeatherAPI.Types
-      DataSource.IO
       DataSource.LocalStorage
       DataSource.MisoRun
       DataSource.SimpleFetch
@@ -119,7 +118,6 @@ library
     DataSource.CommonSpatialDataInfrastructurePortal
     DataSource.HongKongObservatoryWeatherAPI
     DataSource.HongKongObservatoryWeatherAPI.Types
-    DataSource.IO
     DataSource.LocalStorage
     DataSource.MisoRun
     DataSource.SimpleFetch

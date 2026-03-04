@@ -35,14 +35,13 @@ instance DataSourceName LocationReq where
 
 instance DataSource u LocationReq where
   fetch =
-    asyncFetchAcquireRelease
-      newEmptyMVar
-      (const $ pure ())
-      ( \resultMVar -> do
+    syncFetch
+      ( \runService -> do
+          resultMVar <- newEmptyMVar
           options <- create
           setProp "enableHighAccuracy" True options
           successCB <-
-            syncCallback1 $ \v -> do
+            asyncCallback1 $ \v -> do
               result <-
                 fromJSVal v >>= \case
                   Nothing ->
@@ -51,7 +50,7 @@ instance DataSource u LocationReq where
                   Just r -> pure $ Right r
               liftIO $ putMVar resultMVar result
           failCB <-
-            syncCallback1 $ \v -> do
+            asyncCallback1 $ \v -> do
               result <-
                 fromJSVal @GeolocationError v >>= \case
                   Nothing ->
@@ -60,6 +59,7 @@ instance DataSource u LocationReq where
                   Just err -> pure . toException . FetchError . pack $ show err
               liftIO . putMVar resultMVar $ Left result
           void $ jsg "navigator" ! "geolocation" # "getCurrentPosition" $ (successCB, failCB, options)
+          runService resultMVar
       )
       (const $ pure ())
       (\resultMVar GetCurrentPosition -> pure $ readMVar resultMVar)
