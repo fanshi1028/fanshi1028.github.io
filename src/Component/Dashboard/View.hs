@@ -21,17 +21,7 @@ viewModel :: Model -> View Model Action
 viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict mCurrentWeatherReport mLocalWeatherForecast m9DayWeatherForecast ifDisplayWeatherPanel rainfallDisplayMode ifDisplayTemperature) =
   div_
     [class_ "h-min-content flex flex-col gap-8 bg-neutral-600 text-neutral-200"]
-    [ div_
-        [ class_ $ case mELocation of
-            Just (Right _) -> "h-screen w-full"
-            _ -> "",
-          onCreated InitMapLibre
-        ]
-        ["mapLibreComponent" +> Component.Foreign.MapLibre.mapLibreComponent],
-      -- case  errCode of
-      --   PERMISSION_DENIED -> _
-      --   POSITION_UNAVAILABLE -> _
-      --   TIMEOUT -> "timeout while getting your location"
+    [ div_ [class_ "h-screen w-full", onCreated InitMapLibre] $ ["mapLibreComponent" +> Component.Foreign.MapLibre.mapLibreComponent],
       div_ [class_ "z-10 absolute flex flex-col items-start gap-2 p-2 max-w-xs"] $
         [ button_ [onClick FetchWeatherData, class_ "hidden bg-neutral-200 text-neutral-600 p-2 rounded"] [text "TEMP FIXME Test: refetch"],
           div_
