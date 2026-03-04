@@ -23,17 +23,17 @@ viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict mCurre
     [class_ "h-min-content flex flex-col gap-8 bg-neutral-600 text-neutral-200"]
     [ div_ [class_ "h-screen w-full", onCreated InitMapLibre] $ ["mapLibreComponent" +> Component.Foreign.MapLibre.mapLibreComponent],
       div_ [class_ "z-10 absolute flex flex-col items-start gap-2 p-2 max-w-xs"] $
-        [ button_ [onClick FetchWeatherData, class_ "hidden bg-neutral-200 text-neutral-600 p-2 rounded"] [text "TEMP FIXME Test: refetch"],
+        [ button_ [onClick FetchWeatherData, class_ "hidden bg-neutral-200 text-neutral-600 px-2 py-1 rounded"] [text "TEMP FIXME Test: refetch"],
           div_
             [class_ "flex flex-row gap-2"]
             [ button_
-                [onClick ToggleDisplayHardSurfaceSoccerPitch7, class_ "group bg-neutral-200 text-neutral-600 p-2 rounded inline-block relative shadow shadow-neutral-600"]
+                [onClick ToggleDisplayHardSurfaceSoccerPitch7, class_ "group bg-neutral-200 text-neutral-600 px-2 py-1 rounded inline-block relative shadow shadow-neutral-600"]
                 [ p_ [class_ "font-bold text-lg"] ["⚽"],
                   makePopover (Popover PlaceArrowStart PlacePopoverBottom) ["Toggle hard-surface 7-a-side football pitches"]
                 ],
               button_
                 [ onClick ToggleDisplayWeatherPanel,
-                  class_ "group bg-neutral-200 text-neutral-600 p-2 rounded inline-block relative shadow shadow-neutral-600"
+                  class_ "group bg-neutral-200 text-neutral-600 px-2 py-1 rounded inline-block relative shadow shadow-neutral-600"
                 ]
                 [ p_ [class_ "font-bold text-lg"] ["🌞"],
                   makePopover (Popover PlaceArrowStart PlacePopoverBottom) ["Toggle weather info panel"]
@@ -44,7 +44,7 @@ viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict mCurre
                     Just (Right _) -> ClearLocation
                     Just (Left _) -> FindAndSetLocation,
                   classes_
-                    [ "group bg-neutral-200 text-neutral-600 p-2 rounded inline-block relative shadow shadow-neutral-600",
+                    [ "group bg-neutral-200 text-neutral-600 px-2 py-1 rounded inline-block relative shadow shadow-neutral-600",
                       case mELocation of
                         Nothing -> ""
                         Just (Right _) -> ""
