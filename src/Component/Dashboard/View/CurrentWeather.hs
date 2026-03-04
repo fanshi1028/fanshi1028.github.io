@@ -11,7 +11,6 @@ import Data.List
 import Data.List.NonEmpty
 import Data.Maybe
 import Data.Scientific as SCI
-import Data.Text hiding (find, foldl')
 import Data.Time
 import DataSource.CommonSpatialDataInfrastructurePortal
 import DataSource.HongKongObservatoryWeatherAPI.Types
@@ -19,21 +18,23 @@ import Miso
 import Miso.Html.Element
 import Miso.Html.Event
 import Miso.Html.Property hiding (label_)
+import Miso.String hiding (find, foldl')
 import Numeric.Units.Dimensional hiding ((*), (-))
 import Numeric.Units.Dimensional.NonSI
 import Numeric.Units.Dimensional.SIUnits hiding (toDegreeCelsiusAbsolute)
 import Utils.Dimensional
 import Utils.Time
-import Prelude hiding (show)
 
-stripDistrict :: Text -> Text
+stripDistrict :: MisoString -> MisoString
 stripDistrict (strip -> txt) = strip . fromMaybe txt $ stripSuffix "District" txt
 
 -- TEMP HACK FIXME: kind of fuzzy match, I am lazy to check all the district's string. I hope it works for all.
-isSubstringOf :: Text -> Text -> Bool
-isSubstringOf (stripDistrict -> sub) (stripDistrict -> txt) = case breakOn sub txt of
-  (((== txt) -> True), "") -> False
-  _ -> True
+isSubstringOf :: MisoString -> MisoString -> Bool
+isSubstringOf (stripDistrict -> sub) (stripDistrict -> txt)
+  | sub == "" || txt == "" = False
+  | otherwise = case sub `breakOn` txt of
+      (((== txt) -> True), "") -> False
+      _ -> True
 
 timeIntervalDisplayText :: Maybe UTCTime -> Interval TimeData -> MisoString
 timeIntervalDisplayText mCurrentTime timeInterval = case (lowerBound timeInterval, upperBound timeInterval) of
@@ -99,8 +100,8 @@ viewTemperature mCurrentTime mFocusedDistrict (DataWithRecordTime recordTime _da
   div_ [] $
     [ h3_ [class_ "sr-only"] ["Temperature"],
       case mFocusedDistrict of
-        Just (District _ nameEN@(fromMisoString -> nameEN') _) ->
-          case find (\(Temperature place@(fromMisoString -> place') _) -> place == nameEN || place' `isSubstringOf` nameEN' || nameEN' `isSubstringOf` place') _data of
+        Just (District _ nameEN _) ->
+          case find (\(Temperature place _) -> place == nameEN || place `isSubstringOf` nameEN || nameEN `isSubstringOf` place) _data of
             Just (Temperature place value) ->
               div_ [class_ "relative group"] $
                 [ text $ ms ("🌡 " <> show (toDegreeCelsiusAbsolute value)) <> " °C",
