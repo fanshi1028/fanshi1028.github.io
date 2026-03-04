@@ -16,12 +16,15 @@ import Prelude hiding (show)
 data GeoJSONDataId = FocusedDistrictBoundary | WeatherStations
   deriving stock (Eq, Show)
 
+data IfInHK = NotInHK | NotInHKButPretendYouAre | InHK deriving stock (Eq, Show)
+
 data Model
   = Model
   { _time :: Maybe UTCTime,
     _timeSliderValue :: Natural,
     _location :: Maybe (Either GeolocationError Geolocation),
     _focusedDistrict :: Maybe District,
+    _ifInHK :: IfInHK,
     _currentWeatherReport :: Maybe CurrentWeatherReport,
     _localWeatherForecast :: Maybe LocalWeatherForecast,
     _9DayWeatherForecast :: Maybe NineDayWeatherForecast,
@@ -40,6 +43,7 @@ data Action
   | FindAndSetLocation
   | SetLocation Geolocation
   | FocusDistrict District
+  | SetIfInHK IfInHK
   | SetCurrentTime UTCTime
   | SetTimeSliderValue MisoString
   | SetCurrentWeatherReport CurrentWeatherReport
@@ -50,7 +54,8 @@ data Action
   | SetDisplayRainfall Bool
   | ToggleDisplayHardSurfaceSoccerPitch7
   | ToggleDisplayWeatherPanel
+  | SetPretendHKMode
   deriving stock (Eq, Show)
 
 defaultModel :: Model
-defaultModel = Model Nothing 0 Nothing Nothing Nothing Nothing Nothing False False False
+defaultModel = Model Nothing 0 Nothing Nothing NotInHK Nothing Nothing Nothing False False False

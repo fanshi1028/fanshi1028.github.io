@@ -33,6 +33,9 @@ location = lens _location $ \record x -> record {_location = x}
 focusedDistrict :: Lens Model (Maybe District)
 focusedDistrict = lens _focusedDistrict $ \record x -> record {_focusedDistrict = x}
 
+ifInHK :: Lens Model IfInHK
+ifInHK = lens _ifInHK $ \record x -> record {_ifInHK = x}
+
 time :: Lens Model (Maybe UTCTime)
 time = lens _time $ \record x -> record {_time = x}
 
@@ -102,18 +105,24 @@ updateModel = \case
       _ <- callMapLibreFunction "removeLocationMarker" ()
       runWithMap "set zoom" $ \mapLibre -> do
         mapLibre # "setZoom" $ [0 :: Int]
+    ifInHK .= NotInHK
     location .= Nothing
   FindAndSetLocation -> withSink $ \sink ->
     misoRunGenHaxl defaultStateStore sink $ do
       loc <- uncachedRequest GetCurrentPosition
       misoRunAction $ SetLocation loc
-      getDistrictByLocation loc >>= traverse_ (misoRunAction . FocusDistrict)
+      getDistrictByLocation loc >>= \case
+        Nothing -> misoRunAction $ SetIfInHK NotInHK
+        Just district -> do
+          misoRunAction $ SetIfInHK InHK
+          misoRunAction $ FocusDistrict district
   SetLocation loc -> do
     io_ $ addLocationMarkerAndEaseToLocation loc
     location .= Just (Right loc)
   FocusDistrict district@(District code _ _) -> do
     io_ $ focusDistrict code
     focusedDistrict .= Just district
+  SetIfInHK hk -> ifInHK .= hk
   SetCurrentTime t -> time .= Just t
   SetTimeSliderValue v -> case readMaybe (fromMisoString v) of
     Nothing -> io_ $ consoleError' ("impossible! unexpected timeSliderValue: %o" :: MisoString, v)
@@ -132,6 +141,7 @@ updateModel = \case
     displayWeatherPanel <%= not >>= \case
       True -> io $ pure FetchWeatherData
       False -> pure ()
+  SetPretendHKMode -> ifInHK .= NotInHKButPretendYouAre
 
 dashboardComponent :: Component parent Model Action
 dashboardComponent = (component defaultModel updateModel viewModel) {mount = Just InitAction}
