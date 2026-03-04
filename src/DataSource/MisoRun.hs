@@ -38,6 +38,7 @@ instance (Typeable action) => DataSource u (MisoRunAction action) where
         )
         ()
         reqs
+  schedulerHint _ = SubmitImmediately
 
 misoRunAction :: (Typeable action, Show action, Eq action) => action -> GenHaxl u w ()
 misoRunAction = uncachedRequest . MisoRunAction
