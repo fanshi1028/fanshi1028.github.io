@@ -5,7 +5,7 @@ module Utils.Haxl
     fetchGetJSON,
     fetchGetText,
     fetchGetCSV,
-    haxlEnvflags,
+    misoRunGenHaxl,
   )
 where
 
@@ -14,12 +14,15 @@ import Control.Exception (Exception (toException), SomeException)
 import Control.Monad
 import Data.ByteString.Lazy qualified as BSL (fromStrict)
 import Data.Csv
+import Data.Function
 import Data.Functor
 import Data.Text (intercalate, pack, unpack)
 import Data.Text qualified as T (show)
 import Data.Text.Encoding
 import Data.Typeable
 import Data.Vector hiding (create, forM_, (!))
+import DataSource.LocalStorage
+import DataSource.MisoRun
 import Haxl.Core hiding (fetch)
 import Miso hiding (Decoder, URI, consoleLog, defaultOptions, fetch, go, on)
 import Miso.JSON hiding (Object, decode)
@@ -34,6 +37,13 @@ haxlEnvflags =
       report = profilingReportFlags
     }
 #endif
+
+misoRunGenHaxl :: (Typeable a, Typeable action) => StateStore -> Sink action -> GenHaxl () () a -> IO a
+misoRunGenHaxl st sink ma = do
+  env' <- initEnv (st & stateSet (MisoRunActionState sink)) ()
+  r <- runHaxl (env' {flags = haxlEnvflags}) ma
+  saveCacheToLocalStorage $ dataCache env'
+  pure r
 
 failedResponseToException :: Response MisoString -> SomeException
 failedResponseToException = \case

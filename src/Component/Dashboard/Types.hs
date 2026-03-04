@@ -51,6 +51,8 @@ data Action
   | InitAction
   | FetchWeatherData
   | InitMapLibre
+  | ClearLocation
+  | FindAndSetLocation
   | SetLocation Geolocation
   | FocusDistrict (Either District JSVal)
   | SetCurrentTime UTCTime

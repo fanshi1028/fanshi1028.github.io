@@ -7,9 +7,8 @@ module Component.Foreign.MapLibre
     callMapLibreFunction,
     callMapLibreFunctionWithMap,
     createMap,
-    cleanUpMap,
-    runMapLibre,
-    addMarkerAndEaseToLocation,
+    runWithMap,
+    addLocationMarkerAndEaseToLocation,
     focusDistrict,
     toggle_hssp7,
     LngLat (..),
@@ -59,8 +58,12 @@ data Action = CleanUpMapLibre
 
 mapLibreComponent :: Component parent () Action
 mapLibreComponent =
-  ( component () (\CleanUpMapLibre -> io_ $ cleanUpMap) $
-      \() -> div_ [id_ mapLibreId, class_ "h-full"] []
+  ( component
+      ()
+      ( \CleanUpMapLibre -> io_ . runWithMap "clean up map" $ \mapLibre ->
+          mapLibre # "remove" $ ()
+      )
+      $ \() -> div_ [id_ mapLibreId, class_ "h-full"] []
   )
     { scripts,
       styles,
@@ -123,19 +126,19 @@ createMap = do
     )
     $ \_ -> readMVar mapLibreMVar
 
-cleanUpMap :: IO ()
-cleanUpMap =
-  tryTakeMVar mapLibreMVar >>= \case
-    Just mapLibre -> void $ mapLibre # "remove" $ ()
-    Nothing -> consoleWarn "cleanUpMap: no map to be cleaned up"
+runWithMap :: MisoString -> (MapLibre -> IO a) -> IO ()
+runWithMap info f =
+  tryReadMVar mapLibreMVar >>= \case
+    Just mapLibre -> void $ f mapLibre
+    Nothing -> consoleError' ("no map: %s" :: MisoString, info)
 
 geolocationToLngLat :: (Fractional a) => Geolocation -> LngLat a
 geolocationToLngLat (Geolocation lat lon _) = realToFrac <$> LngLat (lon *~ degree) (lat *~ degree)
 
-addMarkerAndEaseToLocation :: Geolocation -> IO ()
-addMarkerAndEaseToLocation =
+addLocationMarkerAndEaseToLocation :: Geolocation -> IO ()
+addLocationMarkerAndEaseToLocation = do
   void
-    . callMapLibreFunctionWithMap "addMarkerAndEaseToLocation"
+    . callMapLibreFunctionWithMap "addLocationMarkerAndEaseToLocation"
     . geolocationToLngLat @Double
 
 focusDistrict :: MisoString -> IO ()

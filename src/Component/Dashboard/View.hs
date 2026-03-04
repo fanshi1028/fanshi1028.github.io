@@ -47,6 +47,34 @@ viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict mCurre
                 ]
                 [ p_ [class_ "font-bold text-lg"] ["🌞"],
                   makePopover (Popover PlaceArrowStart PlacePopoverBottom) ["Toggle weather info panel"]
+                ],
+              button_
+                [ onClick $ case mELocation of
+                    Nothing -> FindAndSetLocation
+                    Just (Right _) -> ClearLocation
+                    Just (Left _) -> FindAndSetLocation,
+                  classes_
+                    [ "group bg-neutral-200 text-neutral-600 p-2 rounded inline-block relative shadow shadow-neutral-600",
+                      case mELocation of
+                        Nothing -> ""
+                        Just (Right _) -> ""
+                        Just (Left _) -> "border border-red-500"
+                    ]
+                ]
+                [ p_
+                    [class_ "font-bold text-lg"]
+                    [ case mELocation of
+                        Nothing -> "🎯"
+                        Just (Right _) -> "🌎"
+                        Just (Left _) -> "🎯"
+                    ],
+                  makePopover
+                    (Popover PlaceArrowStart PlacePopoverBottom)
+                    [ case mELocation of
+                        Nothing -> "Locate"
+                        Just (Right _) -> "Clear Location"
+                        Just (Left err) -> text $ "Retry Locate: " <> ms (show err)
+                    ]
                 ]
             ],
           div_

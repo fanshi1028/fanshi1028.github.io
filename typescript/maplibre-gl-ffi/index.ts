@@ -7,28 +7,37 @@ import {
 
 import { hard_surface_soccer_pitch_7 } from './hard_surface_soccer_pitch_7.ts'
 
+var map: Map | null = null
+var locationMarker: Marker | null = null
+
 const createMap = (
   cid: string,
   transformCameraUpdate?: CameraUpdateTransformFunction
 ) => {
-  const map = new Map({
+  map = new Map({
     container: cid,
     style: 'https://tiles.openfreemap.org/styles/liberty',
-    zoom: 12,
     transformCameraUpdate,
   })
   map.on('style.load', () => {
-    map.setProjection({
+    map?.setProjection({
       type: 'globe', // Set projection to globe
     })
   })
   return map
 }
 
-const addMarkerAndEaseToLocation = (mapLibre: Map, location: LngLatLike) => {
-  new Marker().setLngLat(location).addTo(mapLibre)
+const addLocationMarkerAndEaseToLocation = (
+  mapLibre: Map,
+  location: LngLatLike
+) => {
+  locationMarker = (locationMarker ?? new Marker())
+    .setLngLat(location)
+    .addTo(mapLibre)
   mapLibre.easeTo({ center: location })
 }
+
+const removeLocationMarker = () => locationMarker?.remove()
 
 const getDataURI = (
   data: GeoJSON.GeoJSON,
@@ -125,11 +134,18 @@ declare global {
 
 globalThis.maplibregl_ffi = {
   createMap,
-  addMarkerAndEaseToLocation,
+  addLocationMarkerAndEaseToLocation,
+  removeLocationMarker,
   focusDistrict,
   getDistrict,
   addDistrictBoundaryLayer,
   addWeatherStationsLayer,
   getDataURI,
   hard_surface_soccer_pitch_7,
+  getMap() {
+    return map
+  },
+  getLocationMarker() {
+    return locationMarker
+  },
 }

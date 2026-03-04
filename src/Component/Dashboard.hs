@@ -1,4 +1,5 @@
 {-# LANGUAGE ApplicativeDo #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ViewPatterns #-}
 
 module Component.Dashboard (dashboardComponent) where
@@ -8,18 +9,15 @@ import Component.Dashboard.View
 import Component.Foreign.MapLibre
 import Control.Monad
 import Data.Function
-import Data.Maybe
 import Data.Time
 import DataSource.BrowserGeolocationAPI
 import DataSource.CommonSpatialDataInfrastructurePortal
 import DataSource.HongKongObservatoryWeatherAPI
 import DataSource.HongKongObservatoryWeatherAPI.Types
-import DataSource.IO
 import DataSource.LocalStorage
 import DataSource.MisoRun
 import DataSource.SimpleFetch
 import Haxl.Core
-import Haxl.DataSource.ConcurrentIO
 import Miso
 import Miso.Lens hiding ((*~))
 import Miso.Navigator
@@ -69,63 +67,60 @@ defaultStateStore =
     & stateSet (LocalStorageReqState @SimpleFetch)
     & stateSet (LocalStorageReqState @CommonSpatialDataInfrastructurePortalReq)
 
-fetchData :: Sink Action -> IO ()
-fetchData sink = do
-  ioState <- mkConcurrentIOState
-  let st =
-        defaultStateStore
-          & stateSet (MisoRunActionState sink)
-          & stateSet ioState
+initFetchData :: UTCTime -> GenHaxl () () ()
+initFetchData t = void $ do
+  misoRunAction $ SetCurrentTime t
 
-  env' <- initEnv @() st ()
+  getDistrictBoundary t >>= misoRunAction . AddGeoJSON FocusedDistrictBoundary
 
-  _ <- runHaxl (env' {flags = haxlEnvflags}) $ do
-    t <- uncachedRequest GetCurrentTime
+  getCurrentWeatherReport t >>= misoRunAction . SetCurrentWeatherReport
 
-    misoRunAction $ SetCurrentTime t
+  getLocalWeatherForecast t >>= misoRunAction . SetLocalWeatherForecast
 
-    getDistrictBoundary t >>= misoRunAction . AddGeoJSON FocusedDistrictBoundary
+  get9DayWeatherForecast t >>= misoRunAction . Set9DayWeatherForecast
 
-    getLocalWeatherForecast t >>= misoRunAction . SetLocalWeatherForecast
+  misoRunAction FindAndSetLocation
 
-    get9DayWeatherForecast t >>= misoRunAction . Set9DayWeatherForecast
+  uncachedRequest $ GetWeatherWarningSummary t
+  uncachedRequest $ GetWeatherWarningInfo t
 
-    loc <- uncachedRequest GetCurrentPosition
-    misoRunAction $ SetLocation loc
+  getWeatherStations t >>= misoRunAction . AddGeoJSON WeatherStations
 
-    getDistrictByLocation loc >>= misoRunAction . FocusDistrict . Right
-
-    getCurrentWeatherReport t >>= misoRunAction . SetCurrentWeatherReport
-
-    uncachedRequest $ GetWeatherWarningSummary t
-    uncachedRequest $ GetWeatherWarningInfo t
-
-    getWeatherStations t >>= misoRunAction . AddGeoJSON WeatherStations
-
-    uncachedRequest $ GetSpecialWeatherTips t
-
-  saveCacheToLocalStorage $ dataCache env'
+  uncachedRequest $ GetSpecialWeatherTips t
 
 updateModel :: Action -> Effect parent Model Action
 updateModel = \case
   NoOp -> pure ()
   InitAction -> sync $ pure FetchWeatherData
   InitMapLibre -> io_ . void $ createMap
-  FetchWeatherData -> withSink fetchData
+  FetchWeatherData -> withSink $ \sink ->
+    getCurrentTime
+      >>= misoRunGenHaxl defaultStateStore sink . initFetchData
+  ClearLocation -> do
+    io_ $ do
+      _ <- callMapLibreFunction "removeLocationMarker" ()
+      runWithMap "set zoom" $ \mapLibre -> do
+        mapLibre # "setZoom" $ [0 :: Int]
+    location .= Nothing
+  FindAndSetLocation -> withSink $ \sink ->
+    misoRunGenHaxl defaultStateStore sink $ do
+      loc <- uncachedRequest GetCurrentPosition
+      misoRunAction $ SetLocation loc
+      getDistrictByLocation loc >>= misoRunAction . FocusDistrict . Right
   SetLocation loc -> do
-    io_ $ addMarkerAndEaseToLocation loc
+    io_ $ addLocationMarkerAndEaseToLocation loc
     location .= Just (Right loc)
   FocusDistrict (Left district@(District code _ _)) -> do
     io_ $ focusDistrict code
     focusedDistrict .= Just district
   FocusDistrict (Right geoJSON) -> sync $ do
-    district <- callMapLibreFunction (ms "getDistrict") [geoJSON]
+    district <- callMapLibreFunction "getDistrict" [geoJSON]
     fromJSVal district >>= \case
-      Nothing -> NoOp <$ consoleError' (ms "getDistrict fromJSVal failed, skipped FocusDistrict", district)
+      Nothing -> NoOp <$ consoleError' ("getDistrict fromJSVal failed, skipped FocusDistrict" :: MisoString, district)
       Just district' -> pure $ FocusDistrict $ Left district'
   SetCurrentTime t -> time .= Just t
   SetTimeSliderValue v -> case readMaybe (fromMisoString v) of
-    Nothing -> io_ $ consoleError' ("impossible! unexpected timeSliderValue: %o", v)
+    Nothing -> io_ $ consoleError' ("impossible! unexpected timeSliderValue: %o" :: MisoString, v)
     Just v' -> do
       timeSliderValue .= v'
       io $ pure FetchWeatherData
@@ -134,8 +129,8 @@ updateModel = \case
   Set9DayWeatherForecast w -> nineDayWeatherForecast .= Just w
   SetDisplayTemperature b -> displayTemperature .= b
   SetDisplayRainfall b -> displayRainfall .= b
-  AddGeoJSON FocusedDistrictBoundary geoJSON -> io_ . void $ callMapLibreFunctionWithMap (ms "addDistrictBoundaryLayer") geoJSON
-  AddGeoJSON WeatherStations geoJSON -> io_ . void $ callMapLibreFunctionWithMap (ms "addWeatherStationsLayer") geoJSON
+  AddGeoJSON FocusedDistrictBoundary geoJSON -> io_ . void $ callMapLibreFunctionWithMap "addDistrictBoundaryLayer" geoJSON
+  AddGeoJSON WeatherStations geoJSON -> io_ . void $ callMapLibreFunctionWithMap "addWeatherStationsLayer" geoJSON
   ToggleDisplayHardSurfaceSoccerPitch7 -> io_ toggle_hssp7
   ToggleDisplayWeatherPanel ->
     displayWeatherPanel <%= not >>= \case
