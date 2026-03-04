@@ -41,7 +41,7 @@ instance DataSource u LocationReq where
           options <- create
           setProp "enableHighAccuracy" True options
           successCB <-
-            syncCallback1 $ \v -> do
+            asyncCallback1 $ \v -> do
               result <-
                 fromJSVal v >>= \case
                   Nothing ->
@@ -50,7 +50,7 @@ instance DataSource u LocationReq where
                   Just r -> pure $ Right r
               liftIO $ putMVar resultMVar result
           failCB <-
-            syncCallback1 $ \v -> do
+            asyncCallback1 $ \v -> do
               result <-
                 fromJSVal @GeolocationError v >>= \case
                   Nothing ->
