@@ -8,6 +8,7 @@ import Component.Dashboard.Types
 import Component.Dashboard.View
 import Component.Foreign.MapLibre
 import Control.Monad
+import Data.Foldable
 import Data.Function
 import Data.Time
 import DataSource.BrowserGeolocationAPI
@@ -106,18 +107,13 @@ updateModel = \case
     misoRunGenHaxl defaultStateStore sink $ do
       loc <- uncachedRequest GetCurrentPosition
       misoRunAction $ SetLocation loc
-      getDistrictByLocation loc >>= misoRunAction . FocusDistrict . Right
+      getDistrictByLocation loc >>= traverse_ (misoRunAction . FocusDistrict)
   SetLocation loc -> do
     io_ $ addLocationMarkerAndEaseToLocation loc
     location .= Just (Right loc)
-  FocusDistrict (Left district@(District code _ _)) -> do
+  FocusDistrict district@(District code _ _) -> do
     io_ $ focusDistrict code
     focusedDistrict .= Just district
-  FocusDistrict (Right geoJSON) -> sync $ do
-    district <- callMapLibreFunction "getDistrict" [geoJSON]
-    fromJSVal district >>= \case
-      Nothing -> NoOp <$ consoleError' ("getDistrict fromJSVal failed, skipped FocusDistrict" :: MisoString, district)
-      Just district' -> pure $ FocusDistrict $ Left district'
   SetCurrentTime t -> time .= Just t
   SetTimeSliderValue v -> case readMaybe (fromMisoString v) of
     Nothing -> io_ $ consoleError' ("impossible! unexpected timeSliderValue: %o" :: MisoString, v)

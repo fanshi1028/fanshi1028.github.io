@@ -13,6 +13,7 @@ import Data.Maybe
 import Data.Scientific as SCI
 import Data.Text hiding (find, foldl')
 import Data.Time
+import DataSource.CommonSpatialDataInfrastructurePortal
 import DataSource.HongKongObservatoryWeatherAPI.Types
 import Miso
 import Miso.Html.Element

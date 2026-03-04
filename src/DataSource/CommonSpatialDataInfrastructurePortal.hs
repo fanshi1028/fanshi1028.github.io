@@ -19,6 +19,7 @@ import Haxl.Core hiding (throw)
 import Miso.DSL
 import Miso.JSON
 import Miso.Navigator
+import Miso.String (MisoString, fromMisoString)
 import Network.URI
 import Numeric.Units.Dimensional
 import Numeric.Units.Dimensional.SIUnits
@@ -28,11 +29,22 @@ import Utils.IntervalPeriod
 import Utils.JS ()
 import Utils.Time
 
+data District = District
+  { _AREA_CODE :: MisoString,
+    _NAME_EN :: MisoString,
+    _NAME_TC :: MisoString
+  }
+  deriving stock (Eq, Show, Generic)
+  deriving anyclass (FromJSVal, ToJSVal)
+
+instance FromJSON District where
+  parseJSON = withObject "District" $ \o -> District <$> o .: "AREA_CODE" <*> o .: "NAME_EN" <*> o .: "NAME_TC"
+
 -- NOTE: CSDI Portal API
 data CommonSpatialDataInfrastructurePortalReq a where
   GetLatest15minUVIndexGeoJSON :: IntervalPeriod 15 -> CommonSpatialDataInfrastructurePortalReq JSVal
   GetDistrictBoundary :: OncePer30Days -> CommonSpatialDataInfrastructurePortalReq JSVal
-  GetDistrictByLocation :: LngLat (Fixed 100000) -> CommonSpatialDataInfrastructurePortalReq JSVal
+  GetDistrictByLocation :: LngLat (Fixed 100000) -> CommonSpatialDataInfrastructurePortalReq (Maybe District)
   GetWeatherStations :: OncePer30Days -> CommonSpatialDataInfrastructurePortalReq JSVal
 
 deriving instance Eq (CommonSpatialDataInfrastructurePortalReq a)
@@ -100,7 +112,15 @@ instance DataSource u CommonSpatialDataInfrastructurePortalReq where
       \req -> case req of
         GetLatest15minUVIndexGeoJSON _ -> fetchGetJSON Proxy $ csdiPortalReqToURI req
         GetDistrictBoundary _ -> fetchGetJSON Proxy $ csdiPortalReqToURI req
-        GetDistrictByLocation _ -> fetchGetJSON Proxy $ csdiPortalReqToURI req
+        GetDistrictByLocation _ ->
+          fetchGetJSON @JSVal Proxy (csdiPortalReqToURI req) >>= \case
+            Left err -> pure $ Left err
+            Right v ->
+              callMapLibreFunction "getDistrict" v >>= fromJSVal_Value >>= \case
+                Just v' -> case parseEither parseJSON v' of
+                  Left err -> pure . Left . logicBugToException . UnexpectedType $ fromMisoString err
+                  Right r -> pure $ Right r
+                Nothing -> pure . Left . logicBugToException $ UnexpectedType "impossible! GetDistrictByLocation: fromJSVal_Value failed"
         GetWeatherStations _ -> fetchGetJSON Proxy $ csdiPortalReqToURI req
 
 getLatest15minUVIndexGeoJSON :: UTCTime -> GenHaxl u w JSVal
@@ -109,7 +129,7 @@ getLatest15minUVIndexGeoJSON = fetchCacheable . GetLatest15minUVIndexGeoJSON . u
 getDistrictBoundary :: UTCTime -> GenHaxl u w JSVal
 getDistrictBoundary = fetchCacheable . GetDistrictBoundary . utcTimeToIntervalPeriod Proxy
 
-getDistrictByLocation :: Geolocation -> GenHaxl u w JSVal
+getDistrictByLocation :: Geolocation -> GenHaxl u w (Maybe District)
 getDistrictByLocation = fetchCacheable . GetDistrictByLocation . geolocationToLngLat
 
 getWeatherStations :: UTCTime -> GenHaxl u w JSVal

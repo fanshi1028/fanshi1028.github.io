@@ -3,30 +3,15 @@
 
 module Component.Dashboard.Types where
 
-import Data.Function
 import Data.Maybe
 import Data.Time
+import DataSource.CommonSpatialDataInfrastructurePortal
 import DataSource.HongKongObservatoryWeatherAPI.Types
-import GHC.Generics
 import Miso
 import Miso.Navigator
 import Numeric.Natural
 import Utils.JS ()
 import Prelude hiding (show)
-
-data District = District
-  { _AREA_CODE :: MisoString,
-    _NAME_EN :: MisoString,
-    _NAME_TC :: MisoString
-  }
-  deriving stock (Eq, Show, Generic)
-
-instance FromJSVal District where
-  fromJSVal v = do
-    mAreaCode <- v ! "AREA_CODE" >>= fromJSVal
-    mNameEN <- v ! "NAME_EN" >>= fromJSVal
-    mNameTC <- v ! "NAME_TC" >>= fromJSVal
-    pure $ District <$> mAreaCode <*> mNameEN <*> mNameTC
 
 data GeoJSONDataId = FocusedDistrictBoundary | WeatherStations
   deriving stock (Eq, Show)
@@ -54,7 +39,7 @@ data Action
   | ClearLocation
   | FindAndSetLocation
   | SetLocation Geolocation
-  | FocusDistrict (Either District JSVal)
+  | FocusDistrict District
   | SetCurrentTime UTCTime
   | SetTimeSliderValue MisoString
   | SetCurrentWeatherReport CurrentWeatherReport
