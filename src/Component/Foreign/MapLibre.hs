@@ -60,8 +60,10 @@ mapLibreComponent :: Component parent () Action
 mapLibreComponent =
   ( component
       ()
-      ( \CleanUpMapLibre -> io_ . runWithMap "clean up map" $ \mapLibre ->
-          mapLibre # "remove" $ ()
+      ( \CleanUpMapLibre -> io_ . runWithMap "clean up map" $ \mapLibre -> do
+          _ <- mapLibre # "remove" $ ()
+
+          tryTakeMVar mapLibreMVar
       )
       $ \() -> div_ [id_ mapLibreId, class_ "h-full"] []
   )
