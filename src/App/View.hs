@@ -97,7 +97,7 @@ homeButton =
     [ onClickWithOptions preventDefault $ GotoRoute Index,
       Router.href_ Index,
       classes_
-        [ "flex items-center justify-center",
+        [ "flex items-center justify-end",
           "hover:animate-wiggle hover:[animation-delay:0.25s]",
           "size-8 sm:size-10 md:size-12 lg:size-16 xl:size-20 2xl:size-24",
           "group relative"
@@ -121,7 +121,7 @@ prdButton loading setOpen =
   button_
     [ onClick $ SetPRDOpen setOpen,
       classes_
-        [ "flex items-center justify-center",
+        [ "flex items-center justify-end",
           "size-8 sm:size-10 md:size-12 lg:size-16 xl:size-20 2xl:size-24",
           "group relative",
           if loading then "pointer-events-none animate-pulse" else "hover:animate-wiggle hover:[animation-delay:0.25s]"
@@ -148,9 +148,9 @@ toggleLangButton route' =
   a_
     [ Router.href_ $ RouteForTheOtherLang route',
       classes_
-        [ "flex items-center",
+        [ "flex items-center justify-end",
           "hover:animate-wiggle hover:[animation-delay:0.25s]",
-          "size-8 sm:size-10 md:size-12 lg:size-16 xl:size-20 2xl:size-24",
+          "size-10 sm:size-12 md:size-16 lg:size-20 xl:size-24 2xl:size-28",
           "group relative"
         ]
     ]
@@ -174,7 +174,7 @@ viewModel = \case
     | route' `elem` underConstruction -> div_ [] [prdView False (div_ [dialogButtonClss] [homeButton]) $ routeToPRD route']
     | otherwise ->
         div_ [] $
-          [ nav_ [classes_ $ "fixed flex flex-col z-50 md:gap-2 xl:gap-4" : topRightClss] $ case route' of
+          [ nav_ [classes_ $ "fixed flex flex-col items-end justify-center z-50 md:gap-2 xl:gap-4" : topRightClss] $ case route' of
               Index -> [toggleLangButton route', prdButton loading True]
               _ -> [homeButton, toggleLangButton route', prdButton loading True],
             prdView True (div_ [dialogButtonClss] [prdButton loading False]) $ routeToPRD route',
