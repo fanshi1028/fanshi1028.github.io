@@ -7,6 +7,7 @@ module App.View where
 
 import Component.Dashboard
 import Component.Pomodoro
+import Component.Popover
 import Data.Char
 import GHC.Enum
 import GHC.Generics
@@ -99,7 +100,8 @@ homeButton =
       classes_
         [ "flex items-center justify-center",
           "hover:animate-wiggle hover:[animation-delay:0.25s]",
-          "size-8 sm:size-10 md:size-12 lg:size-16 xl:size-20 2xl:size-24"
+          "size-8 sm:size-10 md:size-12 lg:size-16 xl:size-20 2xl:size-24",
+          "group relative"
         ]
     ]
     [ svg_
@@ -111,7 +113,8 @@ homeButton =
               "hover:size-8 sm:hover:size-10 md:hover:size-12 lg:hover:size-16 xl:hover:size-20 2xl:hover:size-24"
             ]
         ]
-        [path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5V10.75M2.25 21h1.5m18 0h-18M2.25 9l4.5-1.636M18.75 3l-1.5.545m0 6.205 3 1m1.5.5-1.5-.5M6.75 7.364V3h-3v18m3-13.636 10.5-3.819"]]
+        [path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5V10.75M2.25 21h1.5m18 0h-18M2.25 9l4.5-1.636M18.75 3l-1.5.545m0 6.205 3 1m1.5.5-1.5-.5M6.75 7.364V3h-3v18m3-13.636 10.5-3.819"]],
+      makePopover (Popover PlaceArrowEnd PlacePopoverBottom) ["Go Home"]
     ]
 
 prdButton :: Bool -> Bool -> View model Action
@@ -121,7 +124,8 @@ prdButton loading setOpen =
       classes_ $
         (if loading then "pointer-events-none animate-pulse" else "hover:animate-wiggle hover:[animation-delay:0.25s]")
           : [ "flex items-center justify-center",
-              "size-8 sm:size-10 md:size-12 lg:size-16 xl:size-20 2xl:size-24"
+              "size-8 sm:size-10 md:size-12 lg:size-16 xl:size-20 2xl:size-24",
+              "group relative"
             ]
     ]
     [ svg_
@@ -133,7 +137,11 @@ prdButton loading setOpen =
           xmlns_ "http://www.w3.org/2000/svg",
           viewBox_ "0 0 24 24"
         ]
-        [path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"]]
+        [path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"]],
+      makePopover
+        (Popover PlaceArrowEnd PlacePopoverBottom)
+        [ if setOpen then "Show me the PRD" else "Go back"
+        ]
     ]
 
 toggleLangButton :: Bool -> Route -> View model Action
@@ -143,10 +151,22 @@ toggleLangButton loading route' =
       classes_
         [ "flex items-center",
           "hover:animate-wiggle hover:[animation-delay:0.25s]",
-          "size-8 sm:size-10 md:size-12 lg:size-16 xl:size-20 2xl:size-24"
+          "size-8 sm:size-10 md:size-12 lg:size-16 xl:size-20 2xl:size-24",
+          "group relative"
         ]
     ]
-    [toggleLangButtonSVG]
+    [ toggleLangButtonSVG,
+      makePopover
+        (Popover PlaceArrowEnd PlacePopoverBottom)
+        [
+#ifdef WASM
+          "Switch to JS site"
+#endif
+#ifndef WASM
+          "Switch to WASM site"
+#endif
+        ]
+    ]
 
 viewModel :: Model -> View Model Action
 viewModel = \case
