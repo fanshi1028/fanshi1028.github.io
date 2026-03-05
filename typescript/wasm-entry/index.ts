@@ -59,6 +59,5 @@ if (await wasmFeaturesSupportedCheck()) {
   await instance.exports.hs_start()
 } else {
   console.warn('WASM site is not supported: Going back to pure JS site')
-  // @ts-ignore: external as bun fail to consume ghc js backend output as they contain conditional code for nodejs
-  await import('../all.js')
+  window.location.pathname = window.location.pathname.replace('wasm', '')
 }
