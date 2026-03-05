@@ -144,8 +144,8 @@ prdButton loading setOpen =
         ]
     ]
 
-toggleLangButton :: Bool -> Route -> View model Action
-toggleLangButton loading route' =
+toggleLangButton :: Route -> View model Action
+toggleLangButton route' =
   a_
     [ Router.href_ $ RouteForTheOtherLang route',
       classes_
@@ -176,8 +176,8 @@ viewModel = \case
     | otherwise ->
         div_ [] $
           [ nav_ [classes_ $ "fixed flex flex-col z-50 md:gap-2 xl:gap-4" : topRightClss] $ case route' of
-              Index -> [toggleLangButton loading route', prdButton loading True]
-              _ -> [homeButton, toggleLangButton loading route', prdButton loading True],
+              Index -> [toggleLangButton route', prdButton loading True]
+              _ -> [homeButton, toggleLangButton route', prdButton loading True],
             prdView True (div_ [dialogButtonClss] [prdButton loading False]) $ routeToPRD route',
             case route' of
               Index ->
