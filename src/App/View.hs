@@ -85,8 +85,7 @@ routeToPRD = \case
 
 view500 :: Router.RoutingError -> View Model action
 view500 err =
-  div_
-    []
+  div_ [] $
     [ text "TEMP FIXME: Internal Server Error 500",
       br_ [],
       text . ms $ show err
@@ -121,12 +120,12 @@ prdButton :: Bool -> Bool -> View model Action
 prdButton loading setOpen =
   button_
     [ onClick $ SetPRDOpen setOpen,
-      classes_ $
-        (if loading then "pointer-events-none animate-pulse" else "hover:animate-wiggle hover:[animation-delay:0.25s]")
-          : [ "flex items-center justify-center",
-              "size-8 sm:size-10 md:size-12 lg:size-16 xl:size-20 2xl:size-24",
-              "group relative"
-            ]
+      classes_
+        [ "flex items-center justify-center",
+          "size-8 sm:size-10 md:size-12 lg:size-16 xl:size-20 2xl:size-24",
+          "group relative",
+          if loading then "pointer-events-none animate-pulse" else "hover:animate-wiggle hover:[animation-delay:0.25s]"
+        ]
     ]
     [ svg_
         [ classes_
