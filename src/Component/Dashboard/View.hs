@@ -28,7 +28,7 @@ viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict ifInHK
             [class_ "flex flex-row gap-2"]
             [ button_
                 [ onClick $ case ifInHK of
-                    NotInHK -> SetPretendHKMode
+                    NotInHK -> SetIfInHK NotInHKButPretendYouAre
                     NotInHKButPretendYouAre -> ToggleDisplayHardSurfaceSoccerPitch7
                     InHK -> ToggleDisplayHardSurfaceSoccerPitch7,
                   classes_
@@ -51,7 +51,7 @@ viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict ifInHK
                 ],
               button_
                 [ onClick $ case ifInHK of
-                    NotInHK -> SetPretendHKMode
+                    NotInHK -> SetIfInHK NotInHKButPretendYouAre
                     NotInHKButPretendYouAre -> ToggleDisplayWeatherPanel
                     InHK -> ToggleDisplayWeatherPanel,
                   classes_

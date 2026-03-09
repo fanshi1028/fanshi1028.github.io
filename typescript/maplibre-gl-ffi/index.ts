@@ -40,7 +40,11 @@ const addLocationMarkerAndEaseToLocation = (
     .easeTo({ center: location, zoom: 14 })
 }
 
-const removeLocationMarker = () => locationMarker?.remove()
+const clearLocation = () => {
+  locationMarker?.remove()
+  map?.setProjection({ type: 'globe' })
+  fitTheGlobe()
+}
 
 const getDataURI = (
   data: GeoJSON.GeoJSON,
@@ -181,11 +185,19 @@ const cleanupMap = () => {
   map?.remove()
 }
 
+const zoomToHK = () => {
+  map?.fitBounds([
+    [113.81, 22.15],
+    [114.45, 22.62],
+  ])
+}
+
 globalThis.maplibregl_ffi = {
   createMap,
   cleanupMap,
+  zoomToHK,
   addLocationMarkerAndEaseToLocation,
-  removeLocationMarker,
+  clearLocation,
   focusDistrict,
   getDistrict,
   addDistrictBoundaryLayer,
