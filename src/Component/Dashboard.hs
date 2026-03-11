@@ -103,6 +103,7 @@ updateModel = \case
     io_ . void $ callMapLibreFunction "clearLocation" ()
     ifInHK .= NotInHK
     location .= Nothing
+    focusedDistrict .= Nothing
   FindAndSetLocation -> withSink $ \sink ->
     misoRunGenHaxl defaultStateStore sink $ do
       loc <- uncachedRequest GetCurrentPosition

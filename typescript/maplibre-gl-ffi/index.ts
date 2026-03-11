@@ -43,7 +43,10 @@ const addLocationMarkerAndEaseToLocation = (
 
 const clearLocation = () => {
   locationMarker?.remove()
-  map?.setProjection({ type: 'globe' })?.setMaxBounds()
+  map
+    ?.setProjection({ type: 'globe' })
+    ?.setMaxBounds()
+    ?.setFilter(districtBoundaryLayerId.toString(), ['literal', false])
   fitTheGlobe()
 }
 
