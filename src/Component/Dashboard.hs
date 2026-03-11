@@ -100,10 +100,7 @@ updateModel = \case
     getCurrentTime
       >>= misoRunGenHaxl defaultStateStore sink . initFetchData
   ClearLocation -> do
-    io_ $ do
-      _ <- callMapLibreFunction "removeLocationMarker" ()
-      runWithMap "set zoom" $ \mapLibre -> do
-        mapLibre # "setZoom" $ [0 :: Int]
+    io_ . void $ callMapLibreFunction "clearLocation" ()
     ifInHK .= NotInHK
     location .= Nothing
   FindAndSetLocation -> withSink $ \sink ->
@@ -121,7 +118,11 @@ updateModel = \case
   FocusDistrict district@(District code _ _) -> do
     io_ $ focusDistrict code
     focusedDistrict .= Just district
-  SetIfInHK hk -> ifInHK .= hk
+  SetIfInHK hk -> do
+    ifInHK .= hk
+    case hk of
+      NotInHKButPretendYouAre -> io_ . void $ callMapLibreFunction "zoomToHK" ()
+      _ -> pure ()
   SetCurrentTime t -> time .= Just t
   SetTimeSliderValue v -> case readMaybe (fromMisoString v) of
     Nothing -> io_ $ consoleError' ("impossible! unexpected timeSliderValue: %o" :: MisoString, v)
@@ -140,7 +141,6 @@ updateModel = \case
     displayWeatherPanel <%= not >>= \case
       True -> io $ pure FetchWeatherData
       False -> pure ()
-  SetPretendHKMode -> ifInHK .= NotInHKButPretendYouAre
 
 dashboardComponent :: Component parent Model Action
 dashboardComponent = (component defaultModel updateModel viewModel) {mount = Just InitAction}

@@ -20,7 +20,7 @@ import Prelude hiding (show)
 viewModel :: Model -> View Model Action
 viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict ifInHK mCurrentWeatherReport mLocalWeatherForecast m9DayWeatherForecast ifDisplayWeatherPanel rainfallDisplayMode ifDisplayTemperature) =
   div_
-    [class_ "h-min-content flex flex-col gap-8 bg-neutral-400 text-neutral-200"]
+    [class_ "h-min-content flex flex-col gap-8 bg-neutral-200 text-neutral-800"]
     [ div_ [class_ "h-screen w-full", onCreated InitMapLibre] $ ["mapLibreComponent" +> Component.Foreign.MapLibre.mapLibreComponent],
       div_ [class_ "z-10 absolute flex flex-col items-start gap-2 p-2 max-w-xs"] $
         [ button_ [onClick FetchWeatherData, class_ "hidden bg-neutral-200 text-neutral-600 px-2 py-1 rounded"] [text "TEMP FIXME Test: refetch"],
@@ -28,7 +28,7 @@ viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict ifInHK
             [class_ "flex flex-row gap-2"]
             [ button_
                 [ onClick $ case ifInHK of
-                    NotInHK -> SetPretendHKMode
+                    NotInHK -> SetIfInHK NotInHKButPretendYouAre
                     NotInHKButPretendYouAre -> ToggleDisplayHardSurfaceSoccerPitch7
                     InHK -> ToggleDisplayHardSurfaceSoccerPitch7,
                   classes_
@@ -51,7 +51,7 @@ viewModel (Model mCurrentTime timeSliderValue mELocation mFocusedDistrict ifInHK
                 ],
               button_
                 [ onClick $ case ifInHK of
-                    NotInHK -> SetPretendHKMode
+                    NotInHK -> SetIfInHK NotInHKButPretendYouAre
                     NotInHKButPretendYouAre -> ToggleDisplayWeatherPanel
                     InHK -> ToggleDisplayWeatherPanel,
                   classes_

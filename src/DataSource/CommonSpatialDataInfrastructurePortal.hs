@@ -12,6 +12,8 @@ import Data.Fixed
 import Data.Hashable
 import Data.Text hiding (show)
 import Data.Time
+import Data.Time.Calendar.Julian
+import Data.Time.Calendar.Month
 import Data.Typeable
 import DataSource.LocalStorage
 import GHC.Generics
@@ -43,9 +45,9 @@ instance FromJSON District where
 -- NOTE: CSDI Portal API
 data CommonSpatialDataInfrastructurePortalReq a where
   GetLatest15minUVIndexGeoJSON :: IntervalPeriod 15 -> CommonSpatialDataInfrastructurePortalReq JSVal
-  GetDistrictBoundary :: OncePer30Days -> CommonSpatialDataInfrastructurePortalReq JSVal
+  GetDistrictBoundary :: Month -> CommonSpatialDataInfrastructurePortalReq JSVal
   GetDistrictByLocation :: LngLat (Fixed 100000) -> CommonSpatialDataInfrastructurePortalReq (Maybe District)
-  GetWeatherStations :: OncePer30Days -> CommonSpatialDataInfrastructurePortalReq JSVal
+  GetWeatherStations :: Month -> CommonSpatialDataInfrastructurePortalReq JSVal
 
 deriving instance Eq (CommonSpatialDataInfrastructurePortalReq a)
 
@@ -127,13 +129,13 @@ getLatest15minUVIndexGeoJSON :: UTCTime -> GenHaxl u w JSVal
 getLatest15minUVIndexGeoJSON = fetchCacheable . GetLatest15minUVIndexGeoJSON . utcTimeToIntervalPeriod Proxy
 
 getDistrictBoundary :: UTCTime -> GenHaxl u w JSVal
-getDistrictBoundary = fetchCacheable . GetDistrictBoundary . utcTimeToIntervalPeriod Proxy
+getDistrictBoundary (utctDay -> JulianYearMonthDay y m _) = fetchCacheable . GetDistrictBoundary $ YearMonth y m
 
 getDistrictByLocation :: Geolocation -> GenHaxl u w (Maybe District)
 getDistrictByLocation = fetchCacheable . GetDistrictByLocation . geolocationToLngLat
 
 getWeatherStations :: UTCTime -> GenHaxl u w JSVal
-getWeatherStations = fetchCacheable . GetWeatherStations . utcTimeToIntervalPeriod Proxy
+getWeatherStations (utctDay -> JulianYearMonthDay y m _) = fetchCacheable . GetWeatherStations $ YearMonth y m
 
 data UVIndexRecord = UVIndexRecord TimeData Double
   deriving stock (Show, Eq, Generic)

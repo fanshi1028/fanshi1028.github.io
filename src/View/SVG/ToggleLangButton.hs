@@ -13,10 +13,16 @@ makeSVG :: [View model action] -> View model action
 makeSVG =
   svg_
     [ classes_
-        [ "bg-neutral-600",
+        [
+#ifdef WASM
+          "bg-neutral-700",
+#endif
+#ifndef WASM
+          "bg-neutral-200",
+#endif
           "rounded md:rounded-lg xl:rounded-xl",
-          "size-6 sm:size-8 md:size-10 lg:size-12 xl:size-16 2xl:size-20",
-          "hover:size-8 sm:hover:size-10 md:hover:size-12 lg:hover:size-16 xl:hover:size-20 2xl:hover:size-24"
+          "size-8 sm:size-10 md:size-12 lg:size-16 xl:size-20 2xl:size-24",
+          "hover:size-10 sm:hover:size-12 md:hover:size-16 lg:hover:size-20 xl:hover:size-24 2xl:hover:size-28"
         ],
       xmlns_ "http://www.w3.org/2000/svg",
       viewBox_ "-12 0 36 24"

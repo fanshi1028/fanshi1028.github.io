@@ -54,7 +54,6 @@ data Action
   | SetDisplayRainfall Bool
   | ToggleDisplayHardSurfaceSoccerPitch7
   | ToggleDisplayWeatherPanel
-  | SetPretendHKMode
   deriving stock (Eq, Show)
 
 defaultModel :: Model

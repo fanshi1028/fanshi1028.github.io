@@ -4,16 +4,22 @@ const wasmFeaturesSupportedCheck = () =>
     .then((detect) =>
       Promise.all([
         // mandatory wasm extensions
-        detect.saturatedFloatToInt(),
-        detect.signExtensions(),
-        detect.mutableGlobals(),
-        detect.referenceTypes(),
+        detect.saturatedFloatToInt() ||
+          console.warn('WASM extension not supported: saturatedFloatToInt'),
+        detect.signExtensions() ||
+          console.warn('WASM extension not supported: signExtensions'),
+        detect.mutableGlobals() ||
+          console.warn('WASM extension not supported: mutableGlobals'),
+        detect.referenceTypes() ||
+          console.warn('WASM extension not supported: referenceTypes'),
         // optional wasm extensions enabled
-        detect.multiValue(),
-        detect.bulkMemory(),
-        detect.simd(),
+        detect.multiValue() ||
+          console.warn('WASM extension not supported: multiValue'),
+        detect.bulkMemory() ||
+          console.warn('WASM extension not supported: bulkMemory'),
+        detect.simd() || console.warn('WASM extension not supported: simd'),
         // optional wasm extensions not enabled
-        // detect.tailCall(),
+        // detect.tailCall()|| console.info("WASM extension not supported: tailCall"),
       ])
     )
     .then((wasm_feature_detections) => wasm_feature_detections.every((i) => i))
@@ -52,6 +58,6 @@ if (await wasmFeaturesSupportedCheck()) {
   // @ts-ignore
   await instance.exports.hs_start()
 } else {
-  // @ts-ignore: external as bun fail to consume ghc js backend output as they contain conditional code for nodejs
-  await import('../all.js')
+  alert('WASM site is not supported: Going back to pure JS site')
+  window.location.pathname = window.location.pathname.replace('wasm', '')
 }

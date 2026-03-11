@@ -24,5 +24,3 @@ utcTimeToIntervalPeriod proxy t =
 type TwiceADay = IntervalPeriod 720
 
 type OncePerDay = IntervalPeriod 1440
-
-type OncePer30Days = IntervalPeriod 43200

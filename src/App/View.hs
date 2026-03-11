@@ -7,6 +7,7 @@ module App.View where
 
 import Component.Dashboard
 import Component.Pomodoro
+import Component.Popover
 import Data.Char
 import GHC.Enum
 import GHC.Generics
@@ -84,8 +85,7 @@ routeToPRD = \case
 
 view500 :: Router.RoutingError -> View Model action
 view500 err =
-  div_
-    []
+  div_ [] $
     [ text "TEMP FIXME: Internal Server Error 500",
       br_ [],
       text . ms $ show err
@@ -97,9 +97,10 @@ homeButton =
     [ onClickWithOptions preventDefault $ GotoRoute Index,
       Router.href_ Index,
       classes_
-        [ "flex items-center justify-center",
+        [ "flex items-center justify-end",
           "hover:animate-wiggle hover:[animation-delay:0.25s]",
-          "size-8 sm:size-10 md:size-12 lg:size-16 xl:size-20 2xl:size-24"
+          "size-8 sm:size-10 md:size-12 lg:size-16 xl:size-20 2xl:size-24",
+          "group relative"
         ]
     ]
     [ svg_
@@ -111,18 +112,20 @@ homeButton =
               "hover:size-8 sm:hover:size-10 md:hover:size-12 lg:hover:size-16 xl:hover:size-20 2xl:hover:size-24"
             ]
         ]
-        [path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5V10.75M2.25 21h1.5m18 0h-18M2.25 9l4.5-1.636M18.75 3l-1.5.545m0 6.205 3 1m1.5.5-1.5-.5M6.75 7.364V3h-3v18m3-13.636 10.5-3.819"]]
+        [path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5V10.75M2.25 21h1.5m18 0h-18M2.25 9l4.5-1.636M18.75 3l-1.5.545m0 6.205 3 1m1.5.5-1.5-.5M6.75 7.364V3h-3v18m3-13.636 10.5-3.819"]],
+      makePopover (Popover PlaceArrowEnd PlacePopoverBottom) ["Go Home"]
     ]
 
 prdButton :: Bool -> Bool -> View model Action
 prdButton loading setOpen =
   button_
     [ onClick $ SetPRDOpen setOpen,
-      classes_ $
-        (if loading then "pointer-events-none animate-pulse" else "hover:animate-wiggle hover:[animation-delay:0.25s]")
-          : [ "flex items-center justify-center",
-              "size-8 sm:size-10 md:size-12 lg:size-16 xl:size-20 2xl:size-24"
-            ]
+      classes_
+        [ "flex items-center justify-end",
+          "size-8 sm:size-10 md:size-12 lg:size-16 xl:size-20 2xl:size-24",
+          "group relative",
+          if loading then "pointer-events-none animate-pulse" else "hover:animate-wiggle hover:[animation-delay:0.25s]"
+        ]
     ]
     [ svg_
         [ classes_
@@ -133,20 +136,36 @@ prdButton loading setOpen =
           xmlns_ "http://www.w3.org/2000/svg",
           viewBox_ "0 0 24 24"
         ]
-        [path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"]]
+        [path_ [strokeLinecap_ "round", strokeLinejoin_ "round", d_ "M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"]],
+      makePopover
+        (Popover PlaceArrowEnd PlacePopoverBottom)
+        [ if setOpen then "Show me the PRD" else "Go back"
+        ]
     ]
 
-toggleLangButton :: Bool -> Route -> View model Action
-toggleLangButton loading route' =
+toggleLangButton :: Route -> View model Action
+toggleLangButton route' =
   a_
     [ Router.href_ $ RouteForTheOtherLang route',
       classes_
-        [ "flex items-center",
+        [ "flex items-center justify-end",
           "hover:animate-wiggle hover:[animation-delay:0.25s]",
-          "size-8 sm:size-10 md:size-12 lg:size-16 xl:size-20 2xl:size-24"
+          "size-10 sm:size-12 md:size-16 lg:size-20 xl:size-24 2xl:size-28",
+          "group relative"
         ]
     ]
-    [toggleLangButtonSVG]
+    [ toggleLangButtonSVG,
+      makePopover
+        (Popover PlaceArrowEnd PlacePopoverBottom)
+        [
+#ifdef WASM
+          "Switch to JS site"
+#endif
+#ifndef WASM
+          "Switch to WASM site"
+#endif
+        ]
+    ]
 
 viewModel :: Model -> View Model Action
 viewModel = \case
@@ -155,9 +174,9 @@ viewModel = \case
     | route' `elem` underConstruction -> div_ [] [prdView False (div_ [dialogButtonClss] [homeButton]) $ routeToPRD route']
     | otherwise ->
         div_ [] $
-          [ nav_ [classes_ $ "fixed flex flex-col z-50 md:gap-2 xl:gap-4" : topRightClss] $ case route' of
-              Index -> [toggleLangButton loading route', prdButton loading True]
-              _ -> [homeButton, toggleLangButton loading route', prdButton loading True],
+          [ nav_ [classes_ $ "fixed flex flex-col items-end justify-center z-50 md:gap-2 xl:gap-4" : topRightClss] $ case route' of
+              Index -> [toggleLangButton route', prdButton loading True]
+              _ -> [homeButton, toggleLangButton route', prdButton loading True],
             prdView True (div_ [dialogButtonClss] [prdButton loading False]) $ routeToPRD route',
             case route' of
               Index ->
