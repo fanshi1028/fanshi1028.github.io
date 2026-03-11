@@ -2,6 +2,7 @@ import {
   Map,
   Marker,
   type CameraUpdateTransformFunction,
+  type LngLatBoundsLike,
   type LngLatLike,
 } from 'maplibre-gl'
 
@@ -42,7 +43,7 @@ const addLocationMarkerAndEaseToLocation = (
 
 const clearLocation = () => {
   locationMarker?.remove()
-  map?.setProjection({ type: 'globe' })
+  map?.setProjection({ type: 'globe' })?.setMaxBounds()
   fitTheGlobe()
 }
 
@@ -185,12 +186,16 @@ const cleanupMap = () => {
   map?.remove()
 }
 
-const zoomToHK = () => {
-  map?.fitBounds([
-    [113.81, 22.15],
-    [114.45, 22.62],
-  ])
-}
+const hkBounds: LngLatBoundsLike = [
+  [113.81, 22.15],
+  [114.45, 22.62],
+]
+
+const zoomToHK = () =>
+  map
+    ?.setProjection({ type: 'mercator' }) // NOTE: https://github.com/maplibre/maplibre-gl-js/issues/5474
+    ?.fitBounds(hkBounds)
+    ?.setMaxBounds(hkBounds)
 
 globalThis.maplibregl_ffi = {
   createMap,
