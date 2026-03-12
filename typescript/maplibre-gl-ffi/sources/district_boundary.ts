@@ -16,14 +16,14 @@ export const addDistrictBoundaryLayer = (map: Map, data: GeoJSON.GeoJSON) => {
       })
       .addLayer({
         id: source,
-        source: source,
+        source,
         type: 'line',
         paint: { 'line-color': '#198EC8' },
       })
       .setFilter(source, ['literal', false])
       .addLayer({
         id: fillLayerId,
-        source: source,
+        source,
         type: 'fill',
         paint: {
           'fill-color': '#627BC1',
