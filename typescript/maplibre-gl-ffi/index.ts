@@ -7,6 +7,12 @@ import {
 } from 'maplibre-gl'
 
 import { hard_surface_soccer_pitch_7 } from './hard_surface_soccer_pitch_7.ts'
+import {
+  addDistrictBoundaryLayer,
+  focusDistrict,
+  getDistrict,
+  unfocusDistrict,
+} from './sources/districtBoundary.ts'
 
 var map: Map | null = null
 var locationMarker: Marker | null = null
@@ -43,11 +49,11 @@ const addLocationMarkerAndEaseToLocation = (
 
 const clearLocation = () => {
   locationMarker?.remove()
-  map
-    ?.setProjection({ type: 'globe' })
-    ?.setMaxBounds()
-    ?.setFilter(districtBoundaryLayerId.toString(), ['literal', false])
-  fitTheGlobe()
+  if (map) {
+    map.setProjection({ type: 'globe' })?.setMaxBounds()
+    unfocusDistrict(map)
+    fitTheGlobe()
+  }
 }
 
 const getDataURI = (
@@ -60,117 +66,6 @@ const getDataURI = (
   }
 }
 
-
-const getGeoJSONFeatures = (data: GeoJSON.GeoJSON) =>
-  data.type != 'FeatureCollection'
-    ? console.error(
-        'unexpected: GeoJSON is not a FeatureCollection. abort getGeoJSONFeatures. \ngot data: %o',
-        data
-      )
-    : data.features
-
-const districtBoundaryLayerId = Symbol('districtBoundary')
-const districtBoundaryFillLayerId = Symbol('districtBoundary-fill')
-
-let hoveredDistrict: any = null
-
-const addDistrictBoundaryLayer = (map: Map, data: GeoJSON.GeoJSON) => {
-  if (map.getSource(districtBoundaryLayerId.toString()) === undefined)
-    map
-      .addSource(districtBoundaryLayerId.toString(), {
-        type: 'geojson',
-        data,
-        generateId: true,
-      })
-      .addLayer({
-        id: districtBoundaryLayerId.toString(),
-        source: districtBoundaryLayerId.toString(),
-        type: 'line',
-        paint: { 'line-color': '#198EC8' },
-      })
-      .setFilter(districtBoundaryLayerId.toString(), ['literal', false])
-      .addLayer({
-        id: districtBoundaryFillLayerId.toString(),
-        source: districtBoundaryLayerId.toString(),
-        type: 'fill',
-        paint: {
-          'fill-color': '#627BC1',
-          'fill-opacity': [
-            'case',
-            ['boolean', ['feature-state', 'hover'], false],
-            0.8,
-            0,
-          ],
-        },
-      })
-
-  map.on('mousemove', districtBoundaryFillLayerId.toString(), (e) => {
-    if (e?.features?.length || 0 > 0) {
-      if (hoveredDistrict) {
-        map.setFeatureState(
-          { source: districtBoundaryLayerId.toString(), id: hoveredDistrict },
-          { hover: false }
-        )
-      }
-      hoveredDistrict = e.features?.[0]?.id
-      if (hoveredDistrict) {
-        map.setFeatureState(
-          { source: districtBoundaryLayerId.toString(), id: hoveredDistrict },
-          { hover: true }
-        )
-      }
-    }
-  })
-
-  // When the mouse leaves the state-fill layer, update the feature state of the
-  // previously hovered feature.
-  map.on('mouseleave', districtBoundaryFillLayerId.toString(), () => {
-    if (hoveredDistrict) {
-      map.setFeatureState(
-        { source: districtBoundaryLayerId.toString(), id: hoveredDistrict },
-        { hover: false }
-      )
-    }
-    hoveredDistrict = null
-  })
-}
-
-const focusDistrict = (map: Map, areaCode: string) => {
-  const go = (retry = 5) => {
-    if (retry <= 0) {
-      console.warn(
-        `layer ${districtBoundaryLayerId.toString()} not exists yet. no retry left. abort focusDistrict.`
-      )
-    } else {
-      if (map.getLayer(districtBoundaryLayerId.toString()))
-        map.setFilter(districtBoundaryLayerId.toString(), [
-          '==',
-          'AREA_CODE',
-          areaCode,
-        ])
-      else {
-        console.debug(
-          `layer ${districtBoundaryLayerId.toString()} not exists yet. ${retry} retries left. defer focusDistrict.`
-        )
-        setTimeout(() => go(retry - 1), 150)
-      }
-    }
-  }
-  go()
-}
-
-// NOTE: assume "one" district result!
-const getDistrict = (data: GeoJSON.GeoJSON): any | undefined => {
-  const features = getGeoJSONFeatures(data)
-  if (!features || features.length != 1 || !features[0]) {
-    console.error(
-      'unexpected: features should be 1 truthy feature. abort getDistrict. \ngot features: %o',
-      features
-    )
-    return
-  }
-  return features[0].properties
-}
 
 const sourceId = Symbol('weather-stations')
 
