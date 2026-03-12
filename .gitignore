@@ -1,5 +1,5 @@
 *~
-dist*
+dist/*
 result
 public
 /typescript/wasm-entry/fanshi1028-site.wasm

@@ -2,16 +2,16 @@ import { Map, LngLat, type AddLayerObject } from 'maplibre-gl'
 
 import { type Feature } from 'geojson'
 
-import hssp7_data from './facility-hssp7.json'
-import { isNotNull } from './utils'
+import hssp7_data from '../facility-hssp7.json'
+import { isNotNull } from '../utils'
 
-const sourceId = Symbol('facility-hssp7')
+const source = crypto.randomUUID()
 
 let features: Feature[] | null = null
 
 const layerCfg: AddLayerObject = {
-  id: sourceId.toString(),
-  source: sourceId.toString(),
+  id: source,
+  source,
   type: 'symbol',
   layout: {
     'icon-image': 'soccer',
@@ -55,15 +55,14 @@ export const hard_surface_soccer_pitch_7 = {
             'hard_surface_soccer_pitch_7 toggleLayer: feature is empty / all null.'
           )
         : map
-            .addSource(sourceId.toString(), {
+            .addSource(source, {
               type: 'geojson',
               data: { type: 'FeatureCollection', features },
             })
             .addLayer(layerCfg)
     } else {
-      if (map.getLayer(sourceId.toString()) === undefined)
-        map.addLayer(layerCfg)
-      else map.removeLayer(sourceId.toString())
+      if (map.getLayer(source) === undefined) map.addLayer(layerCfg)
+      else map.removeLayer(source)
     }
   },
 }

@@ -58,6 +58,6 @@ if (await wasmFeaturesSupportedCheck()) {
   // @ts-ignore
   await instance.exports.hs_start()
 } else {
-  alert('WASM site is not supported: Going back to pure JS site')
+  alert('The WASM site is not supported by you browser: Going back to the pure JS site')
   window.location.pathname = window.location.pathname.replace('wasm', '')
 }

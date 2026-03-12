@@ -6,6 +6,7 @@ module Component.Foreign.MapLibre
   ( mapLibreComponent,
     callMapLibreFunction,
     callMapLibreFunctionWithMap,
+    callMapLibreFunctionWithMap2,
     createMap,
     runWithMap,
     addLocationMarkerAndEaseToLocation,
@@ -113,6 +114,13 @@ callMapLibreFunctionWithMap fun arg = runMapLibre $ do
   liftIO $ do
     mapLibre <- readMVar mapLibreMVar
     mapLibreLib # fun $ (mapLibre, arg)
+
+callMapLibreFunctionWithMap2 :: (ToJSVal arg1, ToJSVal arg2) => MisoString -> arg1 -> arg2 -> IO JSVal
+callMapLibreFunctionWithMap2 fun arg1 arg2 = runMapLibre $ do
+  mapLibreLib <- ask
+  liftIO $ do
+    mapLibre <- readMVar mapLibreMVar
+    mapLibreLib # fun $ (mapLibre, arg1, arg2)
 
 createMap :: IO MapLibre
 createMap = do
