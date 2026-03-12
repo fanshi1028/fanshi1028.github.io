@@ -19,6 +19,7 @@ import DataSource.MisoRun
 import DataSource.SimpleFetch
 import Haxl.Core
 import Miso
+import Miso.JSON hiding ((.=))
 import Miso.Lens hiding ((*~))
 import Miso.Navigator
 import Numeric.Natural
@@ -135,7 +136,16 @@ updateModel = \case
   Set9DayWeatherForecast w -> nineDayWeatherForecast .= Just w
   SetDisplayTemperature b -> displayTemperature .= b
   SetDisplayRainfall b -> displayRainfall .= b
-  AddGeoJSON FocusedDistrictBoundary geoJSON -> io_ . void $ callMapLibreFunctionWithMap "addDistrictBoundaryLayer" geoJSON
+  AddGeoJSON FocusedDistrictBoundary geoJSON ->
+    withSink $ \sink -> do
+      focusDistrictCb <-
+        asyncCallback1 $ \v ->
+          fromJSVal_Value v >>= \case
+            Nothing -> consoleError' ("impossible district data: %o" :: MisoString, v)
+            Just v' -> case parseEither parseJSON v' of
+              Left err -> consoleError' ("impossible district data (%s): %o" :: MisoString, err, v)
+              Right r -> sink $ FocusDistrict r
+      void $ callMapLibreFunctionWithMap2 "addDistrictBoundaryLayer" geoJSON focusDistrictCb
   AddGeoJSON WeatherStations _geoJSON -> io_ . void $ do
     -- callMapLibreFunctionWithMap "addWeatherStationsLayer" geoJSON
     -- TEMP FIXME

@@ -1,12 +1,17 @@
-import { Map } from 'maplibre-gl'
+import { GeoJSONFeature, Map } from 'maplibre-gl'
 import { getGeoJSONFeatures } from '../utils'
 
 const source = crypto.randomUUID()
 const fillLayerId = crypto.randomUUID()
+const textLayerId = crypto.randomUUID()
 
 let hoveredDistrict: any = null
 
-export const addDistrictBoundaryLayer = (map: Map, data: GeoJSON.GeoJSON) => {
+export const addDistrictBoundaryLayer = (
+  map: Map,
+  data: GeoJSON.GeoJSON,
+  focusedDistrict: (district: GeoJSONFeature['properties']) => void
+) => {
   if (map.getSource(source) === undefined)
     map
       .addSource(source, {
@@ -35,8 +40,22 @@ export const addDistrictBoundaryLayer = (map: Map, data: GeoJSON.GeoJSON) => {
           ],
         },
       })
+      .addLayer({
+        id: textLayerId,
+        source,
+        type: 'symbol',
+        layout: {
+          'symbol-placement': 'line-center',
+          'icon-image': 'information',
+          'text-field': ['get', 'NAME_TC'],
+          'text-offset': [0, 1.25],
+          'text-anchor': 'top',
+          'text-font': ['Noto Sans Regular'],
+        },
+      })
 
   map.on('mousemove', fillLayerId, (e) => {
+    map.getCanvas().style.cursor = 'pointer'
     if (e?.features?.length || 0 > 0) {
       if (hoveredDistrict) {
         map.setFeatureState(
@@ -55,6 +74,7 @@ export const addDistrictBoundaryLayer = (map: Map, data: GeoJSON.GeoJSON) => {
   })
 
   map.on('mouseleave', fillLayerId, () => {
+    map.getCanvas().style.cursor = ''
     if (hoveredDistrict) {
       map.setFeatureState(
         { source: source, id: hoveredDistrict },
@@ -62,6 +82,11 @@ export const addDistrictBoundaryLayer = (map: Map, data: GeoJSON.GeoJSON) => {
       )
     }
     hoveredDistrict = null
+  })
+
+  map.on('click', fillLayerId, (e) => {
+    const feature = e.features?.[0]
+    if (feature) focusedDistrict(feature.properties)
   })
 }
 
