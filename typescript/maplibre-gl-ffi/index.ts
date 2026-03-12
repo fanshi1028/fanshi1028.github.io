@@ -12,8 +12,8 @@ import {
   focusDistrict,
   getDistrict,
   unfocusDistrict,
-} from './sources/districtBoundary.ts'
-import { addWeatherStationsLayer } from './sources/weatherStations.ts'
+} from './sources/district_boundary.ts'
+import { addWeatherStationsLayer } from './sources/weather_stations.ts'
 
 var map: Map | null = null
 var locationMarker: Marker | null = null
