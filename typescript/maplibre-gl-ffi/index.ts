@@ -6,7 +6,7 @@ import {
   type LngLatLike,
 } from 'maplibre-gl'
 
-import { hard_surface_soccer_pitch_7 } from './hard_surface_soccer_pitch_7.ts'
+import { hard_surface_soccer_pitch_7 } from './sources/hard_surface_soccer_pitch_7.ts'
 import {
   addDistrictBoundaryLayer,
   focusDistrict,

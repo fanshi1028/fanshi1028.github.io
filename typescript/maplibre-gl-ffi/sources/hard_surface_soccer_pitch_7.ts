@@ -2,8 +2,8 @@ import { Map, LngLat, type AddLayerObject } from 'maplibre-gl'
 
 import { type Feature } from 'geojson'
 
-import hssp7_data from './facility-hssp7.json'
-import { isNotNull } from './utils'
+import hssp7_data from '../facility-hssp7.json'
+import { isNotNull } from '../utils'
 
 const source = crypto.randomUUID()
 
