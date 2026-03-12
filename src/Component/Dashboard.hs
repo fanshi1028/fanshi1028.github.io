@@ -136,7 +136,10 @@ updateModel = \case
   SetDisplayTemperature b -> displayTemperature .= b
   SetDisplayRainfall b -> displayRainfall .= b
   AddGeoJSON FocusedDistrictBoundary geoJSON -> io_ . void $ callMapLibreFunctionWithMap "addDistrictBoundaryLayer" geoJSON
-  AddGeoJSON WeatherStations geoJSON -> io_ . void $ callMapLibreFunctionWithMap "addWeatherStationsLayer" geoJSON
+  AddGeoJSON WeatherStations _geoJSON -> io_ . void $ do
+    -- callMapLibreFunctionWithMap "addWeatherStationsLayer" geoJSON
+    -- TEMP FIXME
+    pure ()
   ToggleDisplayHardSurfaceSoccerPitch7 -> io_ toggle_hssp7
   ToggleDisplayWeatherPanel ->
     displayWeatherPanel <%= not >>= \case
