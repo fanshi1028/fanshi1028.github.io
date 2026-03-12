@@ -13,6 +13,7 @@ import {
   getDistrict,
   unfocusDistrict,
 } from './sources/districtBoundary.ts'
+import { addWeatherStationsLayer } from './sources/weatherStations.ts'
 
 var map: Map | null = null
 var locationMarker: Marker | null = null
@@ -66,24 +67,6 @@ const getDataURI = (
   }
 }
 
-
-const sourceId = Symbol('weather-stations')
-
-const addWeatherStationsLayer = (map: Map, data: GeoJSON.GeoJSON) => {
-  if (map.getSource(sourceId.toString()) === undefined)
-    map.addSource(sourceId.toString(), { type: 'geojson', data }).addLayer({
-      id: sourceId.toString(),
-      source: sourceId.toString(),
-      type: 'symbol',
-      layout: {
-        'icon-image': 'information',
-        'text-field': ['get', 'Name_tc'],
-        'text-offset': [0, 1.25],
-        'text-anchor': 'top',
-        'text-font': ['Noto Sans Regular'],
-      },
-    })
-}
 
 declare global {
   var maplibregl_ffi: unknown
